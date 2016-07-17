@@ -949,6 +949,49 @@ ShowProgress (
   return EFI_SUCCESS;
 }
 
+static EFI_STATUS GopSetModeAndReconnectTextOut(
+  IN EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput,
+  IN UINT32 ModeNumber)
+{
+    UINTN       HandleCount;
+    UINTN       Index;
+    EFI_HANDLE  *HandleBuffer;
+    EFI_STATUS  Status;
+
+    if (GraphicsOutput == NULL) {
+        return EFI_UNSUPPORTED;
+    }
+
+    Status = GraphicsOutput->SetMode(GraphicsOutput, ModeNumber);
+
+    if (!EFI_ERROR (Status)) { 
+        // When we change mode on GOP, we need to reconnect the drivers which produce simple text out
+        // Otherwise, they won't produce text based on the new resolution
+        Status = gBS->LocateHandleBuffer (
+            ByProtocol,
+            &gEfiSimpleTextOutProtocolGuid,
+            NULL,
+            &HandleCount,
+            &HandleBuffer
+            );
+        if (!EFI_ERROR (Status)) {
+            for (Index = 0; Index < HandleCount; Index++) {
+                gBS->DisconnectController (HandleBuffer[Index], NULL, NULL);
+            }
+            for (Index = 0; Index < HandleCount; Index++) {
+                gBS->ConnectController (HandleBuffer[Index], NULL, NULL, TRUE);
+            }
+            if (HandleBuffer != NULL) {
+                FreePool (HandleBuffer);
+            }
+        }
+        // return value is according to whether SetMode succeeded
+        Status = EFI_SUCCESS;
+    }
+
+    return Status;
+}
+
 /**
   This function is the main entry of the platform setup entry.
   The function will present the main menu of the system setup,
@@ -1013,11 +1056,16 @@ PlatformBdsEnterFrontPage (
     }
 
     if (GraphicsOutput != NULL) {
+      Status = GopSetModeAndReconnectTextOut(GraphicsOutput, 0);
+
       //
       // Get current video resolution and text mode.
       //
       mBootHorizontalResolution = GraphicsOutput->Mode->Info->HorizontalResolution;
       mBootVerticalResolution   = GraphicsOutput->Mode->Info->VerticalResolution;
+      
+      mSetupHorizontalResolution = GraphicsOutput->Mode->Info->HorizontalResolution;
+      mSetupVerticalResolution   = GraphicsOutput->Mode->Info->VerticalResolution;
     }
 
     if (SimpleTextOut != NULL) {
@@ -1034,8 +1082,6 @@ PlatformBdsEnterFrontPage (
     //
     // Get user defined text mode for setup.
     //
-    mSetupHorizontalResolution = PcdGet32 (PcdSetupVideoHorizontalResolution);
-    mSetupVerticalResolution   = PcdGet32 (PcdSetupVideoVerticalResolution);
     mSetupTextModeColumn       = PcdGet32 (PcdSetupConOutColumn);
     mSetupTextModeRow          = PcdGet32 (PcdSetupConOutRow);
 
