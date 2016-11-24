@@ -390,7 +390,7 @@ UsbBootInquiry (
   // from the inquiry data.
   //
   UsbMass->Pdt          = (UINT8) (USB_BOOT_PDT (UsbMass->InquiryData.Pdt));
-  Media->RemovableMedia = (BOOLEAN) (USB_BOOT_REMOVABLE (UsbMass->InquiryData.Removable));
+  Media->RemovableMedia = TRUE;
   //
   // Set block size to the default value of 512 Bytes, in case no media is present at first time.
   //
