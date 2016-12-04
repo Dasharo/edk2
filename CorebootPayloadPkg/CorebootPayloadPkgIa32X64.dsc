@@ -494,6 +494,11 @@
   IntelFrameworkModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2keyboardDxe.inf
 
   #
+  # DataHubDxe
+  #
+  IntelFrameworkModulePkg/Universal/DataHubDxe/DataHubDxe.inf
+
+  #
   # Console Support
   #
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf

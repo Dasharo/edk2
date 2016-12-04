@@ -144,6 +144,9 @@ INF MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
 INF MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
 INF MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 
+# DataHubDxe
+INF  IntelFrameworkModulePkg/Universal/DataHubDxe/DataHubDxe.inf
+
 #
 # SCSI/ATA/IDE/DISK Support
 #
