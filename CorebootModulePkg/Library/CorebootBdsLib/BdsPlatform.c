@@ -1131,6 +1131,46 @@ Returns:
 
 VOID
 EFIAPI
+InternalBdsEmptyCallbackFuntion (
+  IN EFI_EVENT                Event,
+  IN VOID                     *Context
+  )
+{
+  return;
+}
+
+VOID
+InstallReadyToLock (
+  VOID
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_EVENT                             EndOfDxeEvent;
+
+  DEBUG((DEBUG_INFO,"InstallReadyToLock  entering......\n"));
+  //
+  // Inform the SMM infrastructure that we're entering BDS and may run 3rd party code hereafter
+  // Since PI1.2.1, we need signal EndOfDxe as ExitPmAuth
+  //
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_CALLBACK,
+                  InternalBdsEmptyCallbackFuntion,
+                  NULL,
+                  &gEfiEndOfDxeEventGroupGuid,
+                  &EndOfDxeEvent
+                  );
+  ASSERT_EFI_ERROR (Status);
+  gBS->SignalEvent (EndOfDxeEvent);
+  gBS->CloseEvent (EndOfDxeEvent);
+  DEBUG((DEBUG_INFO,"All EndOfDxe callbacks have returned successfully\n"));
+
+  DEBUG((DEBUG_INFO,"InstallReadyToLock  end\n"));
+  return;
+}
+
+VOID
+EFIAPI
 PlatformBdsPolicyBehavior (
   IN OUT LIST_ENTRY              *DriverOptionList,
   IN OUT LIST_ENTRY              *BootOptionList,
@@ -1163,6 +1203,8 @@ Returns:
   UINTN                              Index;
   EFI_INPUT_KEY                      Key;
   EFI_BOOT_MODE                      BootMode;
+
+  InstallReadyToLock();
 
   //
   // Init the time out value

@@ -58,6 +58,7 @@
   gEfiSmbiosTableGuid
   gEfiAcpiTableGuid
   gLdrMemoryDescriptorGuid
+  gEfiEndOfDxeEventGroupGuid
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
