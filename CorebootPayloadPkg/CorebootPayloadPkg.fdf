@@ -158,6 +158,12 @@ INF MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 
 INF FatPkg/EnhancedFatDxe/Fat.inf
 
+!if $(ARCH) == IA32
+!else
+INF  RuleOverride=BINARY USE = X64 FSDrivers/ntfs.inf
+INF  RuleOverride=BINARY USE = X64 FSDrivers/ext4.inf
+!endif
+
 #
 # SD/eMMC Support
 #
