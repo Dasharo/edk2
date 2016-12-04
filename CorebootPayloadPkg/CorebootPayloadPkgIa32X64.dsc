@@ -165,6 +165,7 @@
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
   UefiScsiLib|MdePkg/Library/UefiScsiLib/UefiScsiLib.inf
   OemHookStatusCodeLib|MdeModulePkg/Library/OemHookStatusCodeLibNull/OemHookStatusCodeLibNull.inf
+  GenericBdsLib|IntelFrameworkModulePkg/Library/GenericBdsLib/GenericBdsLib.inf
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   SecurityManagementLib|MdeModulePkg/Library/DxeSecurityManagementLib/DxeSecurityManagementLib.inf
   UefiBootManagerLib|MdeModulePkg/Library/UefiBootManagerLib/UefiBootManagerLib.inf
@@ -183,7 +184,7 @@
   ResetSystemLib|CorebootPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
   SerialPortLib|CorebootModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
   PlatformHookLib|CorebootPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
-  PlatformBootManagerLib|CorebootPayloadPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
+  PlatformBdsLib|CorebootModulePkg/Library/CorebootBdsLib/PlatformBds.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
   CbPlatformSupportLib|CorebootModulePkg/Library/CbPlatformSupportLibNull/CbPlatformSupportLibNull.inf
 
@@ -399,13 +400,12 @@
   #
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
   UefiCpuPkg/CpuDxe/CpuDxe.inf
-  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-  MdeModulePkg/Application/UiApp/UiApp.inf {
+  
+  IntelFrameworkModulePkg/Universal/BdsDxe/BdsDxe.inf {
     <LibraryClasses>
-      NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
-      NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
-      NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+      PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   }
+
 !if $(USE_HPET_TIMER) == TRUE
   PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
 !else

@@ -95,8 +95,9 @@ INF MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntime
 
 INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
 INF UefiCpuPkg/CpuDxe/CpuDxe.inf
-INF MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-INF MdeModulePkg/Application/UiApp/UiApp.inf
+
+INF  IntelFrameworkModulePkg/Universal/BdsDxe/BdsDxe.inf
+
 !if $(USE_HPET_TIMER) == TRUE
 INF PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
 !else
