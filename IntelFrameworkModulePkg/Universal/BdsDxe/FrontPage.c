@@ -897,10 +897,15 @@ UpdateFrontPageStrings (
     SmbiosTable = GetSmbiosTableFromType (EntryPoint, SMBIOS_TYPE_PROCESSOR_INFORMATION , 0);
     if (SmbiosTable.Raw == NULL) {
     } else {
+      NewString3 = AllocateZeroPool (0x60);
       StrIndex = SmbiosTable.Type4->ProcessorVersion;
       GetOptionalStringByIndex ((CHAR8*)((UINT8*)SmbiosTable.Raw + SmbiosTable.Hdr->Length), StrIndex, &NewString);
+      StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString);
+      while (NewString3[0] == 0x20) {
+        NewString3 = &NewString3[1];
+      }
       TokenToUpdate = STRING_TOKEN (STR_FRONT_PAGE_CPU_MODEL);
-      HiiSetString (gFrontPagePrivate.HiiHandle, TokenToUpdate, NewString, NULL);
+      HiiSetString (gFrontPagePrivate.HiiHandle, TokenToUpdate, NewString3, NULL);
       FreePool (NewString);
     }
 
