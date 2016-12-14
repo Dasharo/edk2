@@ -84,7 +84,7 @@
   FrontPageStrings.uni
   FrontPage.c
   BdsEntry.c
-
+  AddBGRT.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -136,6 +136,8 @@
   ## SOMETIMES_CONSUMES ## Variable:L"ConOutDev" # The device path of console out device
   ## SOMETIMES_CONSUMES ## Variable:L"ErrOutDev" # The device path of error out device
   ## SOMETIMES_PRODUCES ## Variable:L"BootNext"  # The number of next boot option
+  gEfiAcpiTableGuid
+  gEfiAcpi20TableGuid
   gEfiGlobalVariableGuid
   gEfiFileSystemVolumeLabelInfoIdGuid           ## SOMETIMES_CONSUMES ## UNDEFINED # Indicate the information type is volume
   gEfiFileInfoGuid                              ## SOMETIMES_CONSUMES ## UNDEFINED # Indicate the information type is file
@@ -215,6 +217,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution            ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution              ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable                      ## CONSUMES
+  gEfiIntelFrameworkModulePkgTokenSpaceGuid.PcdLogoFile
 
 [Depex]
   TRUE

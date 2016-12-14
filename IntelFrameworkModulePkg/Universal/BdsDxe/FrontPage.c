@@ -74,6 +74,8 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath = {
   }
 };
 
+void AddBGRT();
+
 /**
   This function allows a caller to extract the current configuration for one
   or more named elements from the target driver.
@@ -1234,6 +1236,7 @@ PlatformBdsEnterFrontPage (
     mModeInitialized           = TRUE;
   }
 
+  AddBGRT();
 
   //
   // goto FrontPage directly when EFI_OS_INDICATIONS_BOOT_TO_FW_UI is set
