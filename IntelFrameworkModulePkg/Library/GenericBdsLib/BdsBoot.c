@@ -3128,8 +3128,10 @@ BdsLibEnumerateAllBootOption (
   UINT16                        HarddriveNumber;
   UINT16                        CdromNumber;
   UINT16                        UsbNumber;
+  UINT16                        SdNumber;
   UINT16                        MiscNumber;
   UINT16                        ScsiNumber;
+  UINT16                        NvmeNumber;
   UINT16                        NonBlockNumber;
   UINTN                         NumberBlockIoHandles;
   EFI_HANDLE                    *BlockIoHandles;
@@ -3162,8 +3164,10 @@ BdsLibEnumerateAllBootOption (
   HarddriveNumber = 0;
   CdromNumber     = 0;
   UsbNumber       = 0;
+  SdNumber        = 0;
   MiscNumber      = 0;
   ScsiNumber      = 0;
+  NvmeNumber      = 0;
   PlatLang        = NULL;
   LastLang        = NULL;
   ZeroMem (Buffer, sizeof (Buffer));
@@ -3306,14 +3310,42 @@ BdsLibEnumerateAllBootOption (
         ScsiNumber++;
         break;
 
-      case BDS_EFI_MESSAGE_MISC_BOOT:
-      default:
+      case BDS_EFI_MESSAGE_EMMC_BOOT:
         if (MiscNumber != 0) {
-          UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_MISC)), MiscNumber);
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device %d", MiscNumber);
         } else {
-          UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_MISC)));
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device");
         }
         BdsLibBuildOptionFromHandle (BlockIoHandles[Index], BdsBootOptionList, Buffer);
+        MiscNumber++;
+        break;
+
+      case BDS_EFI_MESSAGE_SD_BOOT:
+        if (SdNumber != 0) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI SD Device %d", SdNumber);
+        } else {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI SD Device");
+        }
+        BdsLibBuildOptionFromHandle (BlockIoHandles[Index], BdsBootOptionList, Buffer);
+        SdNumber++;
+        break;
+      
+      case BDS_EFI_MESSAGE_NVME_BOOT:
+        if (NvmeNumber != 0) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI NVMe Device %d", NvmeNumber);
+        } else {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI NVMe Device");
+        }
+        BdsLibBuildOptionFromHandle (BlockIoHandles[Index], BdsBootOptionList, Buffer);
+        NvmeNumber++;
+        break;
+
+      case BDS_EFI_MESSAGE_MISC_BOOT:
+      default:
+        if (MiscNumber == 0) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device");
+          BdsLibBuildOptionFromHandle (BlockIoHandles[Index], BdsBootOptionList, Buffer);
+        }
         MiscNumber++;
         break;
       }
@@ -3960,8 +3992,20 @@ BdsGetBootTypeFromDevicePath (
           BootType = BDS_EFI_MESSAGE_MAC_BOOT;
           break;
 
+        case MSG_EMMC_DP:
+          BootType = BDS_EFI_MESSAGE_EMMC_BOOT;
+          break;
+        
+        case MSG_SD_DP:
+          BootType = BDS_EFI_MESSAGE_SD_BOOT;
+          break;
+
+        case MSG_NVME_NAMESPACE_DP:
+          BootType = BDS_EFI_MESSAGE_NVME_BOOT;
+          break;
+
         default:
-          BootType = BDS_EFI_MESSAGE_MISC_BOOT;
+          BootType = DevicePathSubType (TempDevicePath);
           break;
         }
         return BootType;

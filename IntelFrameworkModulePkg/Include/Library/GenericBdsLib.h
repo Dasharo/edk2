@@ -821,6 +821,9 @@ SetupResetReminder (
 #define  BDS_EFI_MESSAGE_USB_DEVICE_BOOT  0x0305 // Type 03; Sub-Type 05
 #define  BDS_EFI_MESSAGE_SATA_BOOT        0x0312 // Type 03; Sub-Type 18
 #define  BDS_EFI_MESSAGE_MAC_BOOT         0x030b // Type 03; Sub-Type 11
+#define  BDS_EFI_MESSAGE_SD_BOOT          0x030c // Type 03; Sub-Type 12
+#define  BDS_EFI_MESSAGE_EMMC_BOOT        0x030d // Type 03; Sub-Type 13
+#define  BDS_EFI_MESSAGE_NVME_BOOT        0x030e // Type 03; Sub-Type 14
 #define  BDS_EFI_MESSAGE_MISC_BOOT        0x03FF
 
 ///
