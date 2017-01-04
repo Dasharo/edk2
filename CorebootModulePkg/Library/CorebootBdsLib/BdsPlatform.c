@@ -1266,6 +1266,11 @@ Returns:
   ASSERT (Status == EFI_SUCCESS);
 
   //
+  // invoke SMM handler to put eMMC/SD devices into ACPI mode for OS
+  //
+  IoWrite8(0xb2, 0xcd);
+
+  //
   // To give the User a chance to enter Setup here, if user set TimeOut is 0.
   // BDS should still give user a chance to enter Setup
   // Check whether the user input after the duration time has expired 

@@ -42,6 +42,7 @@ Abstract:
 #include <Library/UefiLib.h>
 #include <Library/DxeServicesTableLib.h>
 #include <Library/DevicePathLib.h>
+#include <Library/IoLib.h>
 
 #include <Protocol/PciIo.h>
 
