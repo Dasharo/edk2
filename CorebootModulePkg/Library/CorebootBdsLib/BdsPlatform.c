@@ -1237,8 +1237,22 @@ Returns:
     //
     PlatformBdsNoConsoleAction ();
   }
+  
   //
-  // Create a 300ms duration event to ensure user has enough input time to enter Setup
+  // Perform some platform specific connect sequence
+  //
+  PlatformBdsConnectSequence ();
+
+  //
+  // Memory test and Logo show
+  //
+  PlatformBdsDiagnostics (IGNORE, TRUE, BaseMemoryTest);
+
+  //
+  BdsLibConnectAll ();
+  
+  //
+  // Create a 1s duration event to ensure user has enough input time to enter Setup
   //
   Status = gBS->CreateEvent (
                   EVT_TIMER,
@@ -1248,50 +1262,8 @@ Returns:
                   &UserInputDurationTime
                   );
   ASSERT (Status == EFI_SUCCESS);
-  Status = gBS->SetTimer (UserInputDurationTime, TimerRelative, 3000000);
+  Status = gBS->SetTimer (UserInputDurationTime, TimerRelative, 10000000);
   ASSERT (Status == EFI_SUCCESS);
-  //
-  // Memory test and Logo show
-  //
-  PlatformBdsDiagnostics (IGNORE, TRUE, BaseMemoryTest);
-
-  //
-  // Perform some platform specific connect sequence
-  //
-  PlatformBdsConnectSequence ();
-
-  //
-  // Give one chance to enter the setup if we
-  // have the time out
-  //
-  // BUGBUG: hard code timeout to 5 second to show logo in graphic mode.
-  Timeout = 5;  
-  if (Timeout != 0) {
-    PlatformBdsEnterFrontPage (Timeout, FALSE);
-  }
-
-  //
-  //BdsLibConnectAll ();
-  //BdsLibEnumerateAllBootOption (BootOptionList);  
-  
-  //
-  // Please uncomment above ConnectAll and EnumerateAll code and remove following first boot
-  // checking code in real production tip.
-  //          
-  // In BOOT_WITH_FULL_CONFIGURATION boot mode, should always connect every device 
-  // and do enumerate all the default boot options. But in development system board, the boot mode 
-  // cannot be BOOT_ASSUMING_NO_CONFIGURATION_CHANGES because the machine box
-  // is always open. So the following code only do the ConnectAll and EnumerateAll at first boot.
-  //
-  Status = BdsLibBuildOptionFromVar (BootOptionList, L"BootOrder");
-  if (EFI_ERROR(Status)) {
-    //
-    // If cannot find "BootOrder" variable,  it may be first boot. 
-    // Try to connect all devices and enumerate all boot options here.
-    //
-    BdsLibConnectAll ();
-    BdsLibEnumerateAllBootOption (BootOptionList);
-  } 
 
   //
   // To give the User a chance to enter Setup here, if user set TimeOut is 0.
@@ -1307,8 +1279,13 @@ Returns:
     // Enter Setup if user input 
     //
     Timeout = 0xffff;
-    PlatformBdsEnterFrontPage (Timeout, FALSE);
+  } else {
+    Timeout = 0;
   }
+  
+  BdsLibEnumerateAllBootOption (BootOptionList);
+  PlatformBdsEnterFrontPage (Timeout, FALSE);
+  //not run/reached if Timeout = 0xffff
   
   return ;
 
