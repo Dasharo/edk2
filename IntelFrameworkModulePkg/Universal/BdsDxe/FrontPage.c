@@ -1098,49 +1098,6 @@ ShowProgress (
   return EFI_SUCCESS;
 }
 
-static EFI_STATUS GopSetModeAndReconnectTextOut(
-  IN EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput,
-  IN UINT32 ModeNumber)
-{
-    UINTN       HandleCount;
-    UINTN       Index;
-    EFI_HANDLE  *HandleBuffer;
-    EFI_STATUS  Status;
-
-    if (GraphicsOutput == NULL) {
-        return EFI_UNSUPPORTED;
-    }
-
-    Status = GraphicsOutput->SetMode(GraphicsOutput, ModeNumber);
-
-    if (!EFI_ERROR (Status)) { 
-        // When we change mode on GOP, we need to reconnect the drivers which produce simple text out
-        // Otherwise, they won't produce text based on the new resolution
-        Status = gBS->LocateHandleBuffer (
-            ByProtocol,
-            &gEfiSimpleTextOutProtocolGuid,
-            NULL,
-            &HandleCount,
-            &HandleBuffer
-            );
-        if (!EFI_ERROR (Status)) {
-            for (Index = 0; Index < HandleCount; Index++) {
-                gBS->DisconnectController (HandleBuffer[Index], NULL, NULL);
-            }
-            for (Index = 0; Index < HandleCount; Index++) {
-                gBS->ConnectController (HandleBuffer[Index], NULL, NULL, TRUE);
-            }
-            if (HandleBuffer != NULL) {
-                FreePool (HandleBuffer);
-            }
-        }
-        // return value is according to whether SetMode succeeded
-        Status = EFI_SUCCESS;
-    }
-
-    return Status;
-}
-
 /**
   This function is the main entry of the platform setup entry.
   The function will present the main menu of the system setup,
@@ -1160,7 +1117,6 @@ PlatformBdsEnterFrontPage (
   )
 {
   EFI_STATUS                         Status;
-  EFI_STATUS                         StatusHotkey;
   EFI_BOOT_LOGO_PROTOCOL             *BootLogo;
   EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput;
   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL    *SimpleTextOut;
@@ -1205,8 +1161,6 @@ PlatformBdsEnterFrontPage (
     }
 
     if (GraphicsOutput != NULL) {
-      Status = GopSetModeAndReconnectTextOut(GraphicsOutput, 0);
-
       //
       // Get current video resolution and text mode.
       //
@@ -1235,7 +1189,7 @@ PlatformBdsEnterFrontPage (
 
     mModeInitialized           = TRUE;
   }
-
+  
   AddBGRT();
 
   //
@@ -1278,34 +1232,11 @@ PlatformBdsEnterFrontPage (
       gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
     }
 
-    //
-    // Ensure screen is clear when switch Console from Graphics mode to Text mode
-    //
-    gST->ConOut->EnableCursor (gST->ConOut, TRUE);
-    gST->ConOut->ClearScreen (gST->ConOut);
-
   } else {
 
-    HotkeyBoot ();
-    if (TimeoutDefault != 0xffff) {
-      Status = ShowProgress (TimeoutDefault);
-      StatusHotkey = HotkeyBoot ();
+    if (TimeoutDefault == 0) {
+      goto Exit;
 
-      if (!FeaturePcdGet(PcdBootlogoOnlyEnable) || !EFI_ERROR(Status) || !EFI_ERROR(StatusHotkey)){
-        //
-        // Ensure screen is clear when switch Console from Graphics mode to Text mode
-        // Skip it in normal boot
-        //
-        gST->ConOut->EnableCursor (gST->ConOut, TRUE);
-        gST->ConOut->ClearScreen (gST->ConOut);
-      }
-
-      if (EFI_ERROR (Status)) {
-        //
-        // Timeout or user press enter to continue
-        //
-        goto Exit;
-      }
     }
   }
 
