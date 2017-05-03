@@ -261,8 +261,9 @@ CbPeiEntryPoint (
     EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
     EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
     ),
-    (EFI_PHYSICAL_ADDRESS)(0),
-    (UINT64)(0xA0000)
+    // Lower 640KB, except for first 4KB where the lower coreboot pointer ("LBIO") resides
+    (EFI_PHYSICAL_ADDRESS)(0 + 0x1000),
+    (UINT64)(0xA0000 - 0x1000)
     );
 
 
