@@ -695,7 +695,6 @@ EmmcSwitchClockFreq (
   Status = EmmcSendStatus (PassThru, Slot, Rca, &DevStatus);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "EmmcSwitchClockFreq: Send status fails with %r\n", Status));
-    return Status;
   }
   //
   // Check the switch operation is really successful or not.
@@ -1166,7 +1165,10 @@ EmmcIdentification (
   Private->Slot[Slot].CardType = EmmcCardType;
 
   Status = EmmcSetBusMode (PciIo, PassThru, Slot, Rca);
-
-  return Status;
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "EmmcSetBusMode: fails with %r\n", Status));
+  }
+ 
+  return EFI_SUCCESS;
 }
 
