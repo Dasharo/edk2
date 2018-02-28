@@ -885,12 +885,19 @@ UpdateFrontPageStrings (
       StrIndex = SmbiosTable.Type1->ProductName;
       Str2Index = SmbiosTable.Type1->Manufacturer;
       GetOptionalStringByIndex ((CHAR8*)((UINT8*)SmbiosTable.Raw + SmbiosTable.Hdr->Length), StrIndex, &NewString);
-      NewString2 = AllocateZeroPool (0x60);
-      GetDeviceNameFromProduct(NewString, &NewString2);
-      StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString2);
-      StrCatS (NewString3, 0x60 / sizeof (CHAR16), L" (");
-      StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString);
-      StrCatS (NewString3, 0x60 / sizeof (CHAR16), L")");
+      GetOptionalStringByIndex ((CHAR8*)((UINT8*)SmbiosTable.Raw + SmbiosTable.Hdr->Length), Str2Index, &NewString2);
+       if (!StrCmp(NewString2, L"GOOGLE")) {
+          NewString2 = AllocateZeroPool (0x60);
+          GetDeviceNameFromProduct(NewString, &NewString2);
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString2);
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), L" (");
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString);
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), L")");
+       } else {
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString2);
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), L" ");
+          StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString);
+       }
       TokenToUpdate = STRING_TOKEN (STR_FRONT_PAGE_COMPUTER_MODEL);
       HiiSetString (gFrontPagePrivate.HiiHandle, TokenToUpdate, NewString3, NULL);
       FreePool (NewString);
