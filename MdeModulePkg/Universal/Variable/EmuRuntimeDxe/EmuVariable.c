@@ -14,7 +14,52 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 **/
 
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include "Variable.h"
+
+
+EFI_EVENT   mVirtualAddressChangeEvent2 = NULL;
+int storeInitialized = 0;
+VOID *rt_buffer;
+UINTN rt_buffer_phys;
+
+/*
+ * calls into SMM with the given cmd and subcmd in eax, and arg in ebx
+ *
+ * static inline because the resulting assembly is often smaller than
+ * the call sequence due to constant folding.
+ */
+static inline UINT32 call_smm(UINT8 cmd, UINT8 subcmd, UINT32 arg) {
+	UINT32 res = 0;
+	__asm__ __volatile__ (
+		"outb %b0, $0xb2"
+		: "=a" (res)
+		: "a" ((subcmd << 8) | cmd), "b" (arg)
+		: "memory");
+	return res;
+}
+
+#define SMMSTORE_APM_CNT 0xed
+
+#define SMMSTORE_RET_SUCCESS 0
+#define SMMSTORE_RET_FAILURE 1
+#define SMMSTORE_RET_UNSUPPORTED 2
+
+#define SMMSTORE_CMD_CLEAR 1
+#define SMMSTORE_CMD_READ 2
+#define SMMSTORE_CMD_APPEND 3
+
+struct smmstore_params_read {
+        UINT32 buf;
+        UINT32 bufsize;
+};
+
+struct smmstore_params_append {
+        UINT32 key;
+        UINT32 keysize;
+        UINT32 val;
+        UINT32 valsize;
+};
 
 ///
 /// Don't use module globals after the SetVirtualAddress map is signaled
@@ -1044,6 +1089,33 @@ UpdateVariable (
     DataSize
     );
 
+  if (storeInitialized && ((Attributes & EFI_VARIABLE_NON_VOLATILE) != 0)) {
+
+    /* TODO: add hook for logging nv changes here */
+
+    int keysize = sizeof (EFI_GUID) + VarNameSize;
+    int valsize = DataSize;
+
+    struct smmstore_params_append *data = rt_buffer;
+    void *keydata = rt_buffer + sizeof(*data);
+    void *valdata = keydata + keysize;
+    data->key = (UINT32)(UINTN)rt_buffer_phys + sizeof(*data);
+    data->keysize = keysize;
+    data->val = data->key + keysize;
+    data->valsize = valsize;
+
+    CopyMem (keydata, VendorGuid, sizeof (EFI_GUID));
+    CopyMem (keydata + sizeof (EFI_GUID), VariableName, VarNameSize);
+    CopyMem (valdata, Data, DataSize);
+
+    call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_APPEND, (UINT32)rt_buffer_phys);
+    /* call into SMM through EFI_ISA_IO_PROTOCOL to write to 0xb2:
+     * set registers (how?)
+     * UINT8 Data = ...;
+     * IsaIo->Io.Write (IsaIo, EfiIsaIoWidthUInt8, 0xb2, 1, &Data);
+     */
+  }
+
   //
   // Mark the old variable as deleted
   //
@@ -1769,6 +1841,19 @@ InitializeVariableStore (
   return EFI_SUCCESS;
 }
 
+VOID
+EFIAPI
+EmuVariableAddressChangeEvent (
+  IN  EFI_EVENT        Event,
+  IN  VOID             *Context
+  )
+{
+  //
+  // Converts a pointer for runtime memory management to a new virtual address.
+  //
+  EfiConvertPointer (0x0, (VOID **) &rt_buffer);
+}
+
 /**
   Initializes variable store area for non-volatile and volatile variable.
 
@@ -1815,6 +1900,78 @@ VariableCommonInitialize (
   // Intialize non volatile variable store
   //
   Status = InitializeVariableStore (FALSE);
+
+  /* TODO: add hook for filling nv store from log here */
+  const int bufsize = 64 * 1024;
+  rt_buffer = AllocateRuntimePool (bufsize);
+
+  /* needed later for the 32bit 1:1 mapped SMM interface */
+  rt_buffer_phys = (UINTN)rt_buffer;
+  ASSERT(rt_buffer_phys <= 0x100000000 - bufsize);
+
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_NOTIFY,
+                  EmuVariableAddressChangeEvent,
+                  NULL,
+                  &gEfiEventVirtualAddressChangeGuid,
+                  &mVirtualAddressChangeEvent2
+                 );
+  ASSERT_EFI_ERROR (Status);
+
+  /* read store */
+  /* we're still phys mapped here, so no magic necessary */
+  UINT8 buf[0x40000];
+  ASSERT((UINTN)buf <= 0x100000000 - sizeof(buf));
+  struct smmstore_params_read read_cmd = {
+    .buf = (UINT32)(UINTN)&buf,
+    .bufsize = sizeof(buf),
+  };
+  ASSERT((UINTN)&read_cmd <= 0x100000000 - sizeof(read_cmd));
+  call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_READ, (UINT32)(UINTN)&read_cmd);
+
+  DEBUG ((DEBUG_WARN, "Initialize buffer from 0x%x bytes of flash\n", read_cmd.bufsize));
+  int i = 0;
+  while (i < read_cmd.bufsize) {
+    // assume native endian
+    UINT32 keysz = ((UINT32 *)(buf + i))[0];
+    if (keysz == 0xffffffff)
+      break; // no more entries
+    UINTN valsz = ((UINT32 *)(buf + i))[1];
+
+    if (i + keysz + valsz + 1 > read_cmd.bufsize)
+      break;
+    // TODO: check if entry is properly terminated
+
+    DEBUG ((DEBUG_WARN, "Found variable: key size: 0x%x, val size: %x\n", keysz, valsz));
+    if (keysz > sizeof (EFI_GUID)) {
+      CHAR16 *varname = (CHAR16 *)(buf + i + 8 + sizeof (EFI_GUID));
+      EFI_GUID *guid = (EFI_GUID *)(buf + i + 8);
+      VOID *data = (VOID *)(buf + i + 8 + keysz);
+
+      DEBUG ((DEBUG_WARN, "Fetching variable: %s\n", varname));
+      DEBUG ((DEBUG_WARN, "buf: %p, buf+i: %p, guid: %p, varname: %p, data: %p\n", buf, buf + i, guid, varname, data));
+      VARIABLE_POINTER_TRACK Variable;
+      FindVariable (varname, guid, &Variable, (VARIABLE_GLOBAL *)mVariableModuleGlobal);
+
+      DEBUG ((DEBUG_WARN, "Updating variable: %s\n", varname));
+      UpdateVariable (
+        varname,
+	      guid,
+	      data,
+        valsz,
+	      // all of these variables are nv
+        EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+        &Variable
+      );
+    }
+    DEBUG ((DEBUG_WARN, "Added variable: 0x%x, val size: %x\n", keysz, valsz));
+    // no UEFI variable since it's at most the GUID part, so skip
+    i += 8 + keysz + valsz + 1;
+    i = (i + 3) & ~3;
+  }
+
+  storeInitialized = 1;
 
   return Status;
 }
