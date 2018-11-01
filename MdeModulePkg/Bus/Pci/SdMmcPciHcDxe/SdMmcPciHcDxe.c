@@ -672,18 +672,12 @@ SdMmcPciHcDriverBindingStart (
     //
     // Check whether there is a SD/MMC card attached
     //
-    if (Private->Slot[Slot].SlotType == RemovableSlot) {
-      Status = SdMmcHcCardDetect (PciIo, Slot, &MediaPresent);
-      if (EFI_ERROR (Status) && (Status != EFI_MEDIA_CHANGED)) {
-        continue;
-      } else if (!MediaPresent) {
-        DEBUG ((
-          DEBUG_INFO,
-          "SdMmcHcCardDetect: No device attached in Slot[%d]!!!\n",
-          Slot
-          ));
-        continue;
-      }
+    Status = SdMmcHcCardDetect (PciIo, Slot, &MediaPresent);
+    if (EFI_ERROR (Status) && (Status != EFI_MEDIA_CHANGED)) {
+      continue;
+    } else if (!MediaPresent) {
+      DEBUG ((DEBUG_INFO, "SdMmcHcCardDetect: No device attached in Slot[%d]!!!\n", Slot));
+      continue;
     }
 
     Status = SdMmcHcInitHost (Private, Slot);
