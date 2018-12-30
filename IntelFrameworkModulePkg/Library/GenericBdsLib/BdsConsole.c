@@ -861,8 +861,8 @@ EnableQuietBoot (
       break;
 
     case EfiBadgingDisplayAttributeCenter:
-      DestX = (GraphicsOutput->Mode->Info->HorizontalResolution - 200)/2;
-      DestY = (GraphicsOutput->Mode->Info->VerticalResolution * 2/3 - 161)/2;
+      DestX = (GraphicsOutput->Mode->Info->HorizontalResolution - 224)/2;
+      DestY = (GraphicsOutput->Mode->Info->VerticalResolution * 2/3 - 180)/2;
       break;
 
     case EfiBadgingDisplayAttributeCustomized:
