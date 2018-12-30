@@ -1262,7 +1262,7 @@ Returns:
                   &UserInputDurationTime
                   );
   ASSERT (Status == EFI_SUCCESS);
-  Status = gBS->SetTimer (UserInputDurationTime, TimerRelative, 10000000);
+  Status = gBS->SetTimer (UserInputDurationTime, TimerRelative, 20000000);
   ASSERT (Status == EFI_SUCCESS);
 
   //
