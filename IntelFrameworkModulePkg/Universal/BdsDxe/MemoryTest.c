@@ -338,27 +338,11 @@ BdsMemoryTest (
 
 Done:
   if (!FeaturePcdGet(PcdBootlogoOnlyEnable)) {
-    UnicodeValueToStringS (StrTotalMemory, StrTotalMemorySize, COMMA_TYPE, TotalMemorySize, 0);
-    if (StrTotalMemory[0] == L',') {
-      StrTotalMemory++;
-      StrTotalMemorySize -= sizeof (CHAR16);
-    }
-
-    TmpStr = GetStringById (STRING_TOKEN (STR_MEM_TEST_COMPLETED));
-    if (TmpStr != NULL) {
-      StrnCatS (
-        StrTotalMemory,
-        StrTotalMemorySize / sizeof (CHAR16),
-        TmpStr,
-        StrTotalMemorySize / sizeof (CHAR16) - StrLen (StrTotalMemory) - 1
-        );
-      FreePool (TmpStr);
-    }
-
+    
     PlatformBdsShowProgress (
       Foreground,
       Background,
-      StrTotalMemory,
+      L"Press ESC for Boot Options/Settings",
       Color,
       100,
       (UINTN) PreviousValue
