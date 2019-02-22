@@ -179,7 +179,6 @@ BdsMemoryTest (
   BOOLEAN                           TestAbort;
   EFI_INPUT_KEY                     Key;
   CHAR16                            StrPercent[80];
-  CHAR16                            *StrTotalMemory;
   CHAR16                            *Pos;
   CHAR16                            *TmpStr;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL     Foreground;
@@ -198,8 +197,6 @@ BdsMemoryTest (
   if (Pos == NULL) {
     return ReturnStatus;
   }
-
-  StrTotalMemory    = Pos;
 
   TestedMemorySize  = 0;
   TotalMemorySize   = 0;
