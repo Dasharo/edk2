@@ -733,7 +733,11 @@ GetDeviceNameFromProduct (
   OUT     CHAR16                  **DeviceName
   )
 {
-  if (!StrCmp(Product, L"Auron")) {
+  if (!StrCmp(Product, L"Akali")) {
+    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 13");
+  } else if (!StrCmp(Product, L"Akali 360")) {
+    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook Spin 13");
+  }else if (!StrCmp(Product, L"Auron")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook C740/C910");
   } else if (!StrCmp(Product, L"Auron_Paine")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 11 C740");
@@ -799,6 +803,8 @@ GetDeviceNameFromProduct (
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"AOpen Chromebox Commercial");
   } else if (!StrCmp(Product, L"Orco")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo Ideapad 100s");
+  } else if (!StrCmp(Product, L"Pantheon")) {
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo Yoga Chromebook C630");
   } else if (!StrCmp(Product, L"Panther")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebox CN60");
   } else if (!StrCmp(Product, L"Parrot")) {
@@ -821,6 +827,8 @@ GetDeviceNameFromProduct (
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook 11 G5");
   } else if (!StrCmp(Product, L"Sion")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebox CXI3");
+  } else if (!StrCmp(Product, L"Soraka")) {
+    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook x2");
   } else if (!StrCmp(Product, L"Squawks")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebook C200");
   } else if (!StrCmp(Product, L"Stout")) {
@@ -841,6 +849,8 @@ GetDeviceNameFromProduct (
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebox 3010");
   } else if (!StrCmp(Product, L"Ultima")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad 11e/Yoga Chromebook (G3)");
+  } else if (!StrCmp(Product, L"Vayne")) {
+    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Inspiron Chromebook 14");
   } else if (!StrCmp(Product, L"Winky")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Samsung Chromebook 2");
   } else if (!StrCmp(Product, L"Wizpig")) {
