@@ -1,6 +1,7 @@
 #include "Bds.h"
 #include "FrontPage.h"
 #include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/Bmp.h>
 #include <Protocol/FirmwareVolume2.h>
 #include <Protocol/SimpleFileSystem.h>
 
@@ -224,6 +225,7 @@ void AddBGRT(){
   EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput;
   EFI_PHYSICAL_ADDRESS BmpAddress;
   UINT32 BmpSize;
+  BMP_IMAGE_HEADER *BmpHeader;
   const char data[0x38] =
     "BGRT" "\x38\x00\x00\x00" "\x00" "\xd6" "INTEL " "    EDK2"
     "\x20\x17\x00\x00" "PTL " "\x02\x00\x00\x00"
@@ -259,9 +261,11 @@ void AddBGRT(){
 
   if (GraphicsOutput != NULL && GraphicsOutput->Mode != NULL && GraphicsOutput->Mode->Info != NULL) 
   {
+      BmpHeader = (BMP_IMAGE_HEADER *)BmpAddress;
       bgrt->image_address = (UINTN)BmpAddress;
-      bgrt->image_offset_x = (GraphicsOutput->Mode->Info->HorizontalResolution - 200)/2;
-      bgrt->image_offset_y = (GraphicsOutput->Mode->Info->VerticalResolution * 2/3 - 161)/2;
+      bgrt->image_offset_x = (GraphicsOutput->Mode->Info->HorizontalResolution - BmpHeader->PixelWidth) / 2;
+      bgrt->image_offset_y = ((GraphicsOutput->Mode->Info->VerticalResolution * 382) / 1000) -
+                             (BmpHeader->PixelHeight / 2);
       DEBUG ((EFI_D_INFO, "HackBGRT Set checksum\n"));
       SetAcpiSdtChecksum(bgrt);
       DEBUG ((EFI_D_INFO, "HackBGRT Add Table\n"));
