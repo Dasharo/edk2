@@ -862,7 +862,7 @@ EnableQuietBoot (
 
     case EfiBadgingDisplayAttributeCenter:
       DestX = (SizeOfX - Width) / 2;
-      DestY = ((SizeOfY * 2 / 3) - Height) / 2;
+      DestY = ((SizeOfY * 382) / 1000) - Height / 2;
       break;
 
     case EfiBadgingDisplayAttributeCustomized:
