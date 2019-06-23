@@ -775,6 +775,8 @@ GetDeviceNameFromProduct (
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad 11e");
   } else if (!StrCmp(Product, L"Gnawty")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 11 CB3-111/131");
+  } else if (!StrCmp(Product, L"Grunt")) {
+    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"AMD StonyRidge Chromebook");
   } else if (!StrCmp(Product, L"Guado")) {
     StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebox 2 / CN62");
   } else if (!StrCmp(Product, L"Kefka")) {
