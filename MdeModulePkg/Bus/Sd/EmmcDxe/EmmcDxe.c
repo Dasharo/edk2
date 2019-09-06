@@ -481,7 +481,7 @@ InstallProtocolOnPartition (
                         );
         if (EFI_ERROR (Status)) {
           gBS->UninstallMultipleProtocolInterfaces (
-                 &Partition->Handle,
+                 Partition->Handle,
                  &gEfiDevicePathProtocolGuid,
                  Partition->DevicePath,
                  &gEfiBlockIoProtocolGuid,

@@ -671,7 +671,7 @@ CreateSerialDevice (
 
   if (EFI_ERROR (Status)) {
     gBS->UninstallMultipleProtocolInterfaces (
-           &SerialDevice->Handle,
+           SerialDevice->Handle,
            &gEfiDevicePathProtocolGuid, SerialDevice->DevicePath,
            &gEfiSerialIoProtocolGuid, &SerialDevice->SerialIo,
            NULL
