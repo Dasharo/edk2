@@ -945,6 +945,7 @@ UpdateVariable (
   VARIABLE_GLOBAL         *Global;
   UINTN                   NonVolatileVarableStoreSize;
   UINT32                  Result;
+  BOOLEAN                 Delete = FALSE;
 
   Global = &mVariableModuleGlobal->VariableGlobal[Physical];
 
@@ -977,10 +978,8 @@ UpdateVariable (
     // specified causes it to be deleted.
     //
     if (DataSize == 0 || (Attributes & (EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS)) == 0) {
-      Variable->CurrPtr->State &= VAR_DELETED;
-      UpdateVariableInfo (VariableName, VendorGuid, Variable->Volatile, FALSE, FALSE, TRUE, FALSE);
-      Status = EFI_SUCCESS;
-      goto Done;
+      DataSize = 0;
+      Delete = TRUE;
     }
 
     //
@@ -990,8 +989,12 @@ UpdateVariable (
     if (Variable->CurrPtr->DataSize == DataSize &&
         CompareMem (Data, GetVariableDataPtr (Variable->CurrPtr), DataSize) == 0
           ) {
-      Status = EFI_SUCCESS;
-      goto Done;
+      if (Delete) {
+        goto Update;
+      } else {
+        Status = EFI_SUCCESS;
+        goto Done;
+      }
     } else if (Variable->CurrPtr->State == VAR_ADDED) {
       //
       // Mark the old variable as in delete transition
@@ -1032,6 +1035,10 @@ UpdateVariable (
   VarNameSize   = StrSize (VariableName);
   VarDataOffset = VarNameOffset + VarNameSize + GET_PAD_SIZE (VarNameSize);
   VarSize       = VarDataOffset + DataSize + GET_PAD_SIZE (DataSize);
+
+  if (Delete) {
+    goto Store;
+  }
 
   if ((Attributes & EFI_VARIABLE_NON_VOLATILE) != 0) {
     NonVolatileVarableStoreSize = ((VARIABLE_STORE_HEADER *)(UINTN)(Global->NonVolatileVariableBase))->Size;
@@ -1090,7 +1097,16 @@ UpdateVariable (
     DataSize
     );
 
-  if (storeInitialized && ((Attributes & EFI_VARIABLE_NON_VOLATILE) != 0)) {
+Store:
+  // If the store is initialized
+  // And we are storing or deleting a non volatile variable
+  // Send the new data to SMMSTORE
+  if (storeInitialized && (
+      (Attributes & EFI_VARIABLE_NON_VOLATILE) != 0 || (
+        Delete &&
+        (Variable->CurrPtr->Attributes & EFI_VARIABLE_NON_VOLATILE) != 0
+      )
+    )) {
 
     /* TODO: add hook for logging nv changes here */
 
@@ -1120,6 +1136,7 @@ UpdateVariable (
      */
   }
 
+Update:
   //
   // Mark the old variable as deleted
   //
@@ -1127,7 +1144,11 @@ UpdateVariable (
     Variable->CurrPtr->State &= VAR_DELETED;
   }
 
-  UpdateVariableInfo (VariableName, VendorGuid, Variable->Volatile, FALSE, TRUE, FALSE, FALSE);
+  if (Delete) {
+    UpdateVariableInfo (VariableName, VendorGuid, Variable->Volatile, FALSE, FALSE, TRUE, FALSE);
+  } else {
+    UpdateVariableInfo (VariableName, VendorGuid, Variable->Volatile, FALSE, TRUE, FALSE, FALSE);
+  }
 
   Status = EFI_SUCCESS;
 
@@ -1943,7 +1964,7 @@ VariableCommonInitialize (
   while (i < read_cmd.bufsize) {
     // assume native endian
     UINT32 keysz = ((UINT32 *)(buf + i))[0];
-    if (keysz == 0xffffffff)
+    if (keysz == 0 || keysz == 0xffffffff)
       break; // no more entries
     UINTN valsz = ((UINT32 *)(buf + i))[1];
 
