@@ -44,8 +44,8 @@ EFI_DRIVER_BINDING_PROTOCOL gPartitionDriverBinding = {
 //
 PARTITION_DETECT_ROUTINE mPartitionDetectRoutineTable[] = {
   PartitionInstallGptChildHandles,
-  PartitionInstallMbrChildHandles,
   PartitionInstallUdfChildHandles,
+  PartitionInstallMbrChildHandles,
   NULL
 };
 
