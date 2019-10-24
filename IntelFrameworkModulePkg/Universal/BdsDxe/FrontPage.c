@@ -908,10 +908,10 @@ UpdateFrontPageStrings (
       Str2Index = SmbiosTable.Type0->BiosReleaseDate;
       GetOptionalStringByIndex ((CHAR8*)((UINT8*)SmbiosTable.Raw + SmbiosTable.Hdr->Length), StrIndex, &NewString);
       GetOptionalStringByIndex ((CHAR8*)((UINT8*)SmbiosTable.Raw + SmbiosTable.Hdr->Length), Str2Index, &NewString2);
-      StrCatS (NewString3, 0x40 / sizeof (CHAR16), L"FW: ");
-      StrCatS (NewString3, 0x40 / sizeof (CHAR16), NewString);
-      StrCatS (NewString3, 0x40 / sizeof (CHAR16), L" ");
-      StrCatS (NewString3, 0x40 / sizeof (CHAR16), NewString2);
+      StrCatS (NewString3, 0x60 / sizeof (CHAR16), L"FW: ");
+      StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString);
+      StrCatS (NewString3, 0x60 / sizeof (CHAR16), L" ");
+      StrCatS (NewString3, 0x60 / sizeof (CHAR16), NewString2);
       TokenToUpdate = STRING_TOKEN (STR_FRONT_PAGE_BIOS_VERSION);
       HiiSetString (gFrontPagePrivate.HiiHandle, TokenToUpdate, NewString3, NULL);
       FreePool (NewString);
