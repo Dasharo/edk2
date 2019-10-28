@@ -1,0 +1,9 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = system76-firmware-smmstore
+  FILE_GUID                      = 764f0f8d-658b-4d32-a057-b44fb209512c
+  MODULE_TYPE                    = UEFI_DRIVER
+  VERSION_STRING                 = 1.0
+
+[Binaries.X64]
+  PE32|s76-smmstore.efi|*

@@ -110,6 +110,10 @@ INF MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
 INF MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
 INF MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
 INF PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
+!if $(ARCH) == IA32
+!else
+INF  RuleOverride=BINARY USE = X64 CorebootPayloadPkg/s76-smmstore/s76-smmstore.inf
+!endif
 INF MdeModulePkg/Universal/Variable/EmuRuntimeDxe/EmuVariableRuntimeDxe.inf
 
 INF UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
