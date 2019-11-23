@@ -48,17 +48,7 @@ formset
     banner
       title = STRING_TOKEN(STR_FRONT_PAGE_COMPUTER_MODEL),
       line  1,
-      align left;
-
-    banner
-      title = STRING_TOKEN(STR_FRONT_PAGE_CPU_MODEL),
-      line  2,
-      align left;
-
-    banner
-      title = STRING_TOKEN(STR_FRONT_PAGE_CPU_SPEED),
-      line  2,
-      align right;
+      align center;
 
     banner
       title = STRING_TOKEN(STR_FRONT_PAGE_BIOS_VERSION),
@@ -66,40 +56,16 @@ formset
       align left;
 
     banner
+      title = STRING_TOKEN(STR_FRONT_PAGE_CPU_MODEL),
+      line  4,
+      align left;
+
+    banner
       title = STRING_TOKEN(STR_FRONT_PAGE_MEMORY_SIZE),
-      line  3,
-      align right;
+      line  5,
+      align left;
 
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_0_LEFT),
-//      line  0,
-//      align left;
-
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_0_RIGHT),
-//      line  0,
-//      align right;
-
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_1_LEFT),
-//      line  1,
-//      align left;
-
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_1_RIGHT),
-//      line  1,
-//      align right;
-
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_2_LEFT),
-//      line  2,
-//      align left;
-
-//    banner
-//      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_3_LEFT),
-//      line  3,
-//      align left;
-
+    subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
     text
       help    = STRING_TOKEN(STR_CONTINUE_HELP),
@@ -107,12 +73,7 @@ formset
       flags   = INTERACTIVE,
       key     = FRONT_PAGE_KEY_CONTINUE;
 
-    label LABEL_SELECT_LANGUAGE;
-    //
-    // This is where we will dynamically add a OneOf type op-code to select
-    // Languages from the currently available choices
-    //
-    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
     goto FRONT_PAGE_ITEM_THREE,
       prompt  = STRING_TOKEN(STR_BOOT_MANAGER),
@@ -120,11 +81,7 @@ formset
       flags   = INTERACTIVE,
       key     = FRONT_PAGE_KEY_BOOT_MANAGER;
 
-    goto FRONT_PAGE_ITEM_FOUR,
-      prompt  = STRING_TOKEN(STR_DEVICE_MANAGER),
-      help    = STRING_TOKEN(STR_DEVICE_MANAGER_HELP),
-      flags   = INTERACTIVE,
-      key     = FRONT_PAGE_KEY_DEVICE_MANAGER;
+    subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
     goto FRONT_PAGE_ITEM_FIVE,
       prompt  = STRING_TOKEN(STR_BOOT_MAINT_MANAGER),
