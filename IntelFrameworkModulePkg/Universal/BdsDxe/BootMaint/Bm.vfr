@@ -29,27 +29,25 @@ formset
   form formid = FORM_MAIN_ID,
        title = STRING_TOKEN(STR_FORM_MAIN_TITLE);
 
-    goto FORM_BOOT_SETUP_ID,
-         prompt = STRING_TOKEN(STR_FORM_BOOT_SETUP_TITLE),
-         help = STRING_TOKEN(STR_FORM_BOOT_SETUP_HELP),
-         flags = INTERACTIVE,
-         key = FORM_BOOT_SETUP_ID;
+     goto FORM_BOOT_CHG_ID,
+          prompt = STRING_TOKEN(STR_FORM_BOOT_CHG_TITLE),
+          help = STRING_TOKEN(STR_FORM_BOOT_IMMEDIATE_HELP),
+          flags = INTERACTIVE,
+          key = FORM_BOOT_CHG_ID;
 
-    subtitle text = STRING_TOKEN(STR_NULL_STRING);
+     subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
-    goto FORM_DRIVER_SETUP_ID,
-         prompt = STRING_TOKEN(STR_FORM_DRIVER_SETUP_TITLE),
-         help = STRING_TOKEN(STR_FORM_DRIVER_SETUP_HELP),
-         flags = INTERACTIVE,
-         key = FORM_DRIVER_SETUP_ID;
+     goto FORM_BOOT_ADD_ID,
+          prompt = STRING_TOKEN(STR_FORM_BOOT_ADD_TITLE),
+          help = STRING_TOKEN(STR_FORM_BOOT_ADD_HELP),
+          flags = INTERACTIVE,
+          key = FORM_BOOT_ADD_ID;
 
-    subtitle text = STRING_TOKEN(STR_NULL_STRING);
-
-    goto FORM_CON_MAIN_ID,
-         prompt = STRING_TOKEN(STR_FORM_CON_MAIN_TITLE),
-         help = STRING_TOKEN(STR_FORM_CON_MAIN_HELP),
-         flags = INTERACTIVE,
-         key = FORM_CON_MAIN_ID;
+     goto FORM_BOOT_DEL_ID,
+          prompt = STRING_TOKEN(STR_FORM_BOOT_DEL_TITLE),
+          help = STRING_TOKEN(STR_FORM_BOOT_IMMEDIATE_HELP),
+          flags = INTERACTIVE,
+          key = FORM_BOOT_DEL_ID;
 
     subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
@@ -61,94 +59,12 @@ formset
 
     subtitle text = STRING_TOKEN(STR_NULL_STRING);
 
-//    label FORM_MAIN_ID;
-
-    goto FORM_BOOT_NEXT_ID,
-         prompt = STRING_TOKEN(STR_FORM_BOOT_NEXT_TITLE),
-         help = STRING_TOKEN(STR_FORM_BOOT_NEXT_HELP),
-         flags = INTERACTIVE,
-         key = FORM_BOOT_NEXT_ID;
-
-    goto FORM_TIME_OUT_ID,
-         prompt = STRING_TOKEN(STR_FORM_TIME_OUT_TITLE),
-         help = STRING_TOKEN(STR_FORM_TIME_OUT_HELP),
-         flags = INTERACTIVE,
-         key = FORM_TIME_OUT_ID;
-
-    subtitle text = STRING_TOKEN(STR_NULL_STRING);
-
     text
          help   = STRING_TOKEN(STR_RESET),
          text   = STRING_TOKEN(STR_RESET),
          flags  = INTERACTIVE,
          key    = FORM_RESET;
 
-  endform;
-
-  form formid = FORM_BOOT_SETUP_ID,
-       title = STRING_TOKEN(STR_FORM_BOOT_SETUP_TITLE);
-
-       goto FORM_MAIN_ID,
-            prompt = STRING_TOKEN(STR_FORM_GOTO_MAIN),
-            help = STRING_TOKEN(STR_FORM_GOTO_MAIN);
-            //flags = INTERACTIVE,
-            //key = FORM_MAIN_ID;
-
-       goto FORM_BOOT_ADD_ID,
-            prompt = STRING_TOKEN(STR_FORM_BOOT_ADD_TITLE),
-            help = STRING_TOKEN(STR_FORM_BOOT_ADD_HELP),
-            flags = INTERACTIVE,
-            key = FORM_BOOT_ADD_ID;
-
-       goto FORM_BOOT_DEL_ID,
-            prompt = STRING_TOKEN(STR_FORM_BOOT_DEL_TITLE),
-            help = STRING_TOKEN(STR_FORM_BOOT_IMMEDIATE_HELP),
-            flags = INTERACTIVE,
-            key = FORM_BOOT_DEL_ID;
-
-       goto FORM_BOOT_CHG_ID,
-            prompt = STRING_TOKEN(STR_FORM_BOOT_CHG_TITLE),
-            help = STRING_TOKEN(STR_FORM_BOOT_IMMEDIATE_HELP),
-            flags = INTERACTIVE,
-            key = FORM_BOOT_CHG_ID;
-
-       subtitle text = STRING_TOKEN(STR_NULL_STRING);
-           //
-     // We will add "Select Legacy Boot Floppy Drive" and "Select Legacy Boot Hard Drive"
-     // here dynamically
-     //
-       label FORM_BOOT_LEGACY_DEVICE_ID;
-       label LABEL_END;
-
-  endform;
-
-  form formid = FORM_DRIVER_SETUP_ID,
-       title = STRING_TOKEN(STR_FORM_DRIVER_SETUP_TITLE);
-
-       goto FORM_MAIN_ID,
-            prompt = STRING_TOKEN(STR_FORM_GOTO_MAIN),
-            help = STRING_TOKEN(STR_FORM_GOTO_MAIN);
-            //help = STRING_TOKEN(STR_FORM_GOTO_MAIN),
-            //flags = INTERACTIVE,
-            //key = FORM_MAIN_ID;
-
-       goto FORM_DRV_ADD_ID,
-            prompt = STRING_TOKEN(STR_FORM_DRV_ADD_TITLE),
-            help = STRING_TOKEN(STR_FORM_DRV_ADD_HELP),
-            flags = INTERACTIVE,
-            key = FORM_DRV_ADD_ID;
-
-       goto FORM_DRV_DEL_ID,
-            prompt = STRING_TOKEN(STR_FORM_DRV_DEL_TITLE),
-            help = STRING_TOKEN(STR_FORM_NEXT_BOOT_HELP),
-            flags = INTERACTIVE,
-            key = FORM_DRV_DEL_ID;
-
-       goto FORM_DRV_CHG_ID,
-            prompt = STRING_TOKEN(STR_FORM_DRV_CHG_TITLE),
-            help = STRING_TOKEN(STR_FORM_NEXT_BOOT_HELP),
-            flags = INTERACTIVE,
-            key = FORM_DRV_CHG_ID;
   endform;
 
   form formid = FORM_BOOT_DEL_ID,
@@ -166,37 +82,6 @@ formset
 
   endform;
 
-  form formid = FORM_BOOT_NEXT_ID,
-       title = STRING_TOKEN(STR_FORM_BOOT_NEXT_TITLE);
-
-       label FORM_BOOT_NEXT_ID;
-       label LABEL_END;
-  endform;
-
-  form formid = FORM_TIME_OUT_ID,
-       title = STRING_TOKEN(STR_FORM_TIME_OUT_TITLE);
-
-       label FORM_TIME_OUT_ID;
-       label LABEL_END;
-  endform;
-
-  form formid = FORM_DRV_ADD_ID,
-       title = STRING_TOKEN(STR_FORM_DRV_ADD_TITLE);
-
-       goto FORM_MAIN_ID,
-            prompt = STRING_TOKEN(STR_FORM_GOTO_MAIN),
-            help = STRING_TOKEN(STR_FORM_GOTO_MAIN);
-            //flags = INTERACTIVE,
-            //key = FORM_MAIN_ID;
-
-       goto FORM_DRV_ADD_FILE_ID,
-            prompt = STRING_TOKEN(STR_FORM_DRV_ADD_FILE_TITLE),
-            help = STRING_TOKEN(STR_FORM_DRV_ADD_FILE_TITLE),
-            flags = INTERACTIVE,
-            key = FORM_DRV_ADD_FILE_ID;
-
-  endform;
-
   form formid = FORM_DRV_DEL_ID,
        title = STRING_TOKEN(STR_FORM_DRV_DEL_TITLE);
 
@@ -205,74 +90,8 @@ formset
 
   endform;
 
-  form formid = FORM_DRV_CHG_ID,
-       title = STRING_TOKEN(STR_FORM_DRV_CHG_TITLE);
 
-       label FORM_DRV_CHG_ID;
-       label LABEL_END;
 
-  endform;
-
-  form formid = FORM_CON_MAIN_ID,
-       title = STRING_TOKEN(STR_FORM_CON_MAIN_TITLE);
-
-       goto FORM_MAIN_ID,
-       prompt = STRING_TOKEN(STR_FORM_GOTO_MAIN),
-       help = STRING_TOKEN(STR_FORM_GOTO_MAIN);
-       //flags = INTERACTIVE,
-       //key = FORM_MAIN_ID;
-
-       goto FORM_CON_IN_ID,
-       prompt = STRING_TOKEN(STR_FORM_CON_IN_TITLE),
-       help = STRING_TOKEN(STR_FORM_CON_IN_HELP),
-       flags = INTERACTIVE,
-       key = FORM_CON_IN_ID;
-
-       goto FORM_CON_OUT_ID,
-       prompt = STRING_TOKEN(STR_FORM_CON_OUT_TITLE),
-       help = STRING_TOKEN(STR_FORM_CON_OUT_HELP),
-       flags = INTERACTIVE,
-       key = FORM_CON_OUT_ID;
-
-       goto FORM_CON_ERR_ID,
-       prompt = STRING_TOKEN(STR_FORM_STD_ERR_TITLE),
-       help = STRING_TOKEN(STR_FORM_STD_ERR_HELP),
-       flags = INTERACTIVE,
-       key = FORM_CON_ERR_ID;
-
-       goto FORM_CON_MODE_ID,
-       prompt = STRING_TOKEN(STR_FORM_MODE_TITLE),
-       help = STRING_TOKEN(STR_FORM_MODE_HELP),
-       flags = INTERACTIVE,
-       key = FORM_CON_MODE_ID;
-
-       goto FORM_CON_COM_ID,
-       prompt = STRING_TOKEN(STR_FORM_COM_TITLE),
-       help = STRING_TOKEN(STR_FORM_COM_HELP),
-       flags = INTERACTIVE,
-       key = FORM_CON_COM_ID;
-  endform;
-
-  form formid = FORM_CON_MODE_ID,
-       title = STRING_TOKEN(STR_FORM_MODE_TITLE);
-
-       label FORM_CON_MODE_ID;
-       label LABEL_END;
-  endform;
-
-  form formid = FORM_CON_COM_ID,
-       title = STRING_TOKEN(STR_FORM_COM_TITLE);
-
-       label FORM_CON_COM_ID;
-       label LABEL_END;
-  endform;
-
-  form formid = FORM_CON_COM_SETUP_ID,
-       title = STRING_TOKEN(STR_CON_COM_SETUP);
-
-       label FORM_CON_COM_SETUP_ID;
-       label LABEL_END;
-  endform;
 
   form formid = FORM_FILE_SEEK_ID,
        title = STRING_TOKEN(STR_FORM_BOOT_ADD_TITLE);
@@ -288,28 +107,7 @@ formset
        label LABEL_END;
   endform;
 
-  form formid = FORM_DRV_ADD_HANDLE_ID,
-       title = STRING_TOKEN(STR_FORM_DRV_ADD_HANDLE_TITLE);
 
-       label FORM_DRV_ADD_HANDLE_ID;
-       label LABEL_END;
-  endform;
-
-  form formid = FORM_DRV_ADD_HANDLE_DESC_ID,
-       title = STRING_TOKEN(STR_FORM_DRV_ADD_DESC_TITLE);
-
-       label FORM_DRV_ADD_HANDLE_DESC_ID;
-       label LABEL_END;
-
-  endform;
-
-  form formid = FORM_CON_IN_ID,
-       title = STRING_TOKEN(STR_FORM_CON_IN_TITLE);
-
-       label FORM_CON_IN_ID;
-       label LABEL_END;
-
-  endform;
 
   form formid = FORM_CON_OUT_ID,
        title = STRING_TOKEN(STR_FORM_CON_OUT_TITLE);
