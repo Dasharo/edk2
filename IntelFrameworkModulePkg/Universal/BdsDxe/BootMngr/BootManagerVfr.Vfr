@@ -42,8 +42,6 @@ formset
     label LABEL_BOOT_OPTION;
     label LABEL_BOOT_OPTION_END;
 
-    subtitle text = STRING_TOKEN(STR_LAST_STRING);
-    subtitle text = STRING_TOKEN(STR_HELP_FOOTER);
 
   endform;
 
