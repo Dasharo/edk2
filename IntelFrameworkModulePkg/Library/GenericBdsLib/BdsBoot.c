@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #include "InternalBdsLib.h"
 #include "String.h"
+#include "InternalBm.h"
 
 BOOLEAN mEnumBootDevice = FALSE;
 EFI_HII_HANDLE gBdsLibStringPackHandle = NULL;
@@ -3150,7 +3151,7 @@ BdsLibEnumerateAllBootOption (
   EFI_FIRMWARE_VOLUME2_PROTOCOL *Fv;
   EFI_DEVICE_PATH_PROTOCOL      *DevicePath;
   UINTN                         DevicePathType;
-  CHAR16                        Buffer[40];
+  CHAR16                        Buffer[80];
   EFI_HANDLE                    *FileSystemHandles;
   UINTN                         NumberFileSystemHandles;
   BOOLEAN                       NeedDelete;
@@ -3255,9 +3256,16 @@ BdsLibEnumerateAllBootOption (
       DevicePath  = DevicePathFromHandle (BlockIoHandles[Index]);
       DevicePathType = BdsGetBootTypeFromDevicePath (DevicePath);
 
+      //
+      // get description for current block handle
+      //
+      CHAR16 * DevName = BmGetBootDescription(BlockIoHandles[Index]);
+
       switch (DevicePathType) {
       case BDS_EFI_ACPI_FLOPPY_BOOT:
-        if (FloppyNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"Floppy: %s", DevName);
+        } else if (FloppyNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_FLOPPY)), FloppyNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_FLOPPY)));
@@ -3272,14 +3280,22 @@ BdsLibEnumerateAllBootOption (
       case BDS_EFI_MESSAGE_ATAPI_BOOT:
       case BDS_EFI_MESSAGE_SATA_BOOT:
         if (BlkIo->Media->RemovableMedia) {
-          if (CdromNumber != 0) {
+          if (DevName != NULL) {
+            UnicodeSPrint (Buffer, sizeof (Buffer), L"CD/DVD: %s", DevName);
+          } else if (CdromNumber != 0) {
             UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_CD_DVD)), CdromNumber);
           } else {
             UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_CD_DVD)));
           }
           CdromNumber++;
         } else {
-          if (HarddriveNumber != 0) {
+          if (DevName != NULL) {
+            if (DevicePathType == BDS_EFI_MESSAGE_ATAPI_BOOT) {
+              UnicodeSPrint (Buffer, sizeof (Buffer), L"IDE: %s", DevName);
+            } else {
+              UnicodeSPrint (Buffer, sizeof (Buffer), L"SATA: %s", DevName);
+            }
+          } else if (HarddriveNumber != 0) {
             UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_HARDDRIVE)), HarddriveNumber);
           } else {
             UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_HARDDRIVE)));
@@ -3291,7 +3307,9 @@ BdsLibEnumerateAllBootOption (
         break;
 
       case BDS_EFI_MESSAGE_USB_DEVICE_BOOT:
-        if (UsbNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"USB: %s", DevName);
+        } else if (UsbNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_USB)), UsbNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_USB)));
@@ -3301,7 +3319,9 @@ BdsLibEnumerateAllBootOption (
         break;
 
       case BDS_EFI_MESSAGE_SCSI_BOOT:
-        if (ScsiNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"SCSI: %s", DevName);
+        } else if (ScsiNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s %d", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_SCSI)), ScsiNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"%s", BdsLibGetStringById (STRING_TOKEN (STR_DESCRIPTION_SCSI)));
@@ -3311,7 +3331,9 @@ BdsLibEnumerateAllBootOption (
         break;
 
       case BDS_EFI_MESSAGE_EMMC_BOOT:
-        if (MiscNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"eMMC: %s", DevName);
+        } else if (MiscNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device %d", MiscNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device");
@@ -3321,7 +3343,9 @@ BdsLibEnumerateAllBootOption (
         break;
 
       case BDS_EFI_MESSAGE_SD_BOOT:
-        if (SdNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"SD: %s", DevName);
+        } else if (SdNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI SD Device %d", SdNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI SD Device");
@@ -3331,7 +3355,9 @@ BdsLibEnumerateAllBootOption (
         break;
       
       case BDS_EFI_MESSAGE_NVME_BOOT:
-        if (NvmeNumber != 0) {
+        if (DevName != NULL) {
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"NVMe: %s", DevName);
+        } else if (NvmeNumber != 0) {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI NVMe Device %d", NvmeNumber);
         } else {
           UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI NVMe Device");
@@ -3343,7 +3369,7 @@ BdsLibEnumerateAllBootOption (
       case BDS_EFI_MESSAGE_MISC_BOOT:
       default:
         if (MiscNumber == 0) {
-          UnicodeSPrint (Buffer, sizeof (Buffer), L"EFI eMMC Device");
+          UnicodeSPrint (Buffer, sizeof (Buffer), L"eMMC: Internal Drive");
           BdsLibBuildOptionFromHandle (BlockIoHandles[Index], BdsBootOptionList, Buffer);
         }
         MiscNumber++;
