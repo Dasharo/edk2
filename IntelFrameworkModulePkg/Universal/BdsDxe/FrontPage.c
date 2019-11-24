@@ -734,133 +734,133 @@ GetDeviceNameFromProduct (
   )
 {
   if (!StrCmp(Product, L"Akali")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 13");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 13");
   } else if (!StrCmp(Product, L"Akali 360")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook Spin 13");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook Spin 13");
   }else if (!StrCmp(Product, L"Auron")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook C740/C910");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook C740/C910");
   } else if (!StrCmp(Product, L"Auron_Paine")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 11 C740");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 11 C740");
   } else if (!StrCmp(Product, L"Auron_Yuna")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 15 C910");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 15 C910");
   } else if (!StrCmp(Product, L"Banjo")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 15 CB3-571");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 15 CB3-571");
   } else if (!StrCmp(Product, L"Banon")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 15 CB5-532");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 15 CB5-532");
   }else if (!StrCmp(Product, L"Buddy")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebase 24");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebase 24");
   } else if (!StrCmp(Product, L"Butterfly")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Pavilion Chromebook 14");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Pavilion Chromebook 14");
   } else if (!StrCmp(Product, L"Candy")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Chromebook 11 3120");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebook 11 3120");
   } else if (!StrCmp(Product, L"Cave")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebook Flip C302");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebook Flip C302");
   } else if (!StrCmp(Product, L"Celes")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Samsung Chromebook 3");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Samsung Chromebook 3");
   } else if (!StrCmp(Product, L"Chell")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook 13 G1");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebook 13 G1");
   } else if (!StrCmp(Product, L"Clapper")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo N20 Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo N20 Chromebook");
   } else if (!StrCmp(Product, L"Cyan")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook R11 / C738T");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook R11 / C738T");
   } else if (!StrCmp(Product, L"Edgar")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 14");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 14");
   } else if (!StrCmp(Product, L"Enguarde")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo N21 Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo N21 Chromebook");
   } else if (!StrCmp(Product, L"Falco")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook 14");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebook 14");
   } else if (!StrCmp(Product, L"Gandof")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Toshiba Chromebook2 2015");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Toshiba Chromebook2 2015");
   } else if (!StrCmp(Product, L"Glimmer")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad 11e");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo ThinkPad 11e");
   } else if (!StrCmp(Product, L"Gnawty")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 11 CB3-111/131");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 11 CB3-111/131");
   } else if (!StrCmp(Product, L"Grunt")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"AMD StonyRidge Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"AMD StonyRidge Chromebook");
   } else if (!StrCmp(Product, L"Guado")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebox 2 / CN62");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebox 2 / CN62");
   } else if (!StrCmp(Product, L"Kefka")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Chromebook 11 3180/3189");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebook 11 3180/3189");
   } else if (!StrCmp(Product, L"Kench")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebox G2");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebox G2");
   } else if (!StrCmp(Product, L"Kip")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook 11 G3/G4");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebook 11 G3/G4");
   } else if (!StrCmp(Product, L"Lars")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 14 for Work");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 14 for Work");
   } else if (!StrCmp(Product, L"Leon")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Toshiba Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Toshiba Chromebook");
   } else if (!StrCmp(Product, L"Librem 13 v2")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Purism Librem 13 v2");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Purism Librem 13 v2");
   } else if (!StrCmp(Product, L"Lulu")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Chromebook 13 7310");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebook 13 7310");
   } else if (!StrCmp(Product, L"Link")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Google Chromebook Pixel 2013");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Google Chromebook Pixel 2013");
   } else if (!StrCmp(Product, L"Lumpy")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Samsung Chromebook Series 5 550");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Samsung Chromebook Series 5 550");
   } else if (!StrCmp(Product, L"Mccloud")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebox CXI");
   } else if (!StrCmp(Product, L"Monroe")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"LG Chromebase");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"LG Chromebase");
   } else if (!StrCmp(Product, L"Ninja")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"AOpen Chromebox Commercial");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"AOpen Chromebox Commercial");
   } else if (!StrCmp(Product, L"Orco")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo Ideapad 100s");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo Ideapad 100s");
   } else if (!StrCmp(Product, L"Pantheon")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo Yoga Chromebook C630");
   } else if (!StrCmp(Product, L"Panther")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebox CN60");
   } else if (!StrCmp(Product, L"Parrot")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook C710");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook C710");
   } else if (!StrCmp(Product, L"Peppy")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook C720");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook C720");
   } else if (!StrCmp(Product, L"Quawks")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebook C300");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebook C300");
   } else if (!StrCmp(Product, L"Reks")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo N22 Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo N22 Chromebook");
   } else if (!StrCmp(Product, L"Relm")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebook 11 N7");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebook 11 N7");
   } else if (!StrCmp(Product, L"Rikku")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebox CXI2");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebox CXI2");
   } else if (!StrCmp(Product, L"Samus")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Google Chromebook Pixel 2015");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Google Chromebook Pixel 2015");
   } else if (!StrCmp(Product, L"Sentry")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad 13 Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo ThinkPad 13 Chromebook");
   } else if (!StrCmp(Product, L"Setzer")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook 11 G5");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebook 11 G5");
   } else if (!StrCmp(Product, L"Sion")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Acer Chromebox CXI3");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Acer Chromebox CXI3");
   } else if (!StrCmp(Product, L"Soraka")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"HP Chromebook x2");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebook x2");
   } else if (!StrCmp(Product, L"Squawks")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebook C200");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebook C200");
   } else if (!StrCmp(Product, L"Stout")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad X131e Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo ThinkPad X131e Chromebook");
   } else if (!StrCmp(Product, L"Stumpy")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Samsung Chromebox Series 3");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Samsung Chromebox Series 3");
   } else if (!StrCmp(Product, L"Sumo")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"AOpen Chromebase Commercial");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"AOpen Chromebase Commercial");
   } else if (!StrCmp(Product, L"Swanky")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Toshiba Chromebook2 2014");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Toshiba Chromebook2 2014");
   } else if (!StrCmp(Product, L"Teemo")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebox 3 / CN65");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebox 3 / CN65");
   } else if (!StrCmp(Product, L"Terra")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Asus Chromebook C202SA/C300SA");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebook C202SA/C300SA");
   } else if (!StrCmp(Product, L"Tidus")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkCentre Chromebox");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo ThinkCentre Chromebox");
   } else if (!StrCmp(Product, L"Tricky")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebox 3010");
   } else if (!StrCmp(Product, L"Ultima")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Lenovo ThinkPad 11e/Yoga Chromebook (G3)");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Lenovo ThinkPad 11e/Yoga Chromebook (G3)");
   } else if (!StrCmp(Product, L"Vayne")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Inspiron Chromebook 14");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Inspiron Chromebook 14");
   } else if (!StrCmp(Product, L"Winky")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Samsung Chromebook 2");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Samsung Chromebook 2");
   } else if (!StrCmp(Product, L"Wizpig")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"White Box Braswell Chromebook");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"White Box Braswell Chromebook");
   } else if (!StrCmp(Product, L"Wolf")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"Dell Chromebook 11 2013");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebook 11 2013");
   } else if (!StrCmp(Product, L"Wukong")) {
-    StrCatS (*DeviceName, 0x40 / sizeof (CHAR16), L"CTL Chromebox CBX1");
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"CTL Chromebox CBX1");
   } else if (!StrCmp(Product, L"Zako")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Chromebox CB1");
   } 
