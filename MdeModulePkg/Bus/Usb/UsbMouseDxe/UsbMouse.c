@@ -209,7 +209,7 @@ USBMouseDriverBindingStart (
   EndpointNumber = UsbMouseDevice->InterfaceDescriptor.NumEndpoints;
 
   //
-  // Traverse endpoints to find interrupt endpoint
+  // Traverse endpoints to find interrupt endpoint IN
   //
   Found = FALSE;
   for (Index = 0; Index < EndpointNumber; Index++) {
@@ -219,7 +219,8 @@ USBMouseDriverBindingStart (
              &EndpointDescriptor
              );
 
-    if ((EndpointDescriptor.Attributes & (BIT0 | BIT1)) == USB_ENDPOINT_INTERRUPT) {
+    if ((EndpointDescriptor.Attributes & (BIT0 | BIT1)) == USB_ENDPOINT_INTERRUPT &&
+          (EndpointDescriptor.EndpointAddress & USB_ENDPOINT_DIR_IN) ) {
       //
       // We only care interrupt endpoint here
       //
