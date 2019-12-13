@@ -757,6 +757,8 @@ GetDeviceNameFromProduct (
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"HP Pavilion Chromebook 14");
   } else if (!StrCmp(Product, L"Candy")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Dell Chromebook 11 3120");
+  } else if (!StrCmp(Product, L"Caroline")) {
+    StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Samsung Chromebook Pro");
   } else if (!StrCmp(Product, L"Cave")) {
     StrCatS (*DeviceName, 0x60 / sizeof (CHAR16), L"Asus Chromebook Flip C302");
   } else if (!StrCmp(Product, L"Celes")) {
