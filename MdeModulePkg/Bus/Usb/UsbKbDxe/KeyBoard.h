@@ -329,4 +329,18 @@ InitializeKeyState (
   OUT EFI_KEY_STATE        *KeyState
   );
 
+/**
+  Determine if SetIdle request is needed
+
+  @param  DevDesc     The EFI_USB_DEVICE_DESCRIPTOR instance.
+
+  @retval TRUE        The USB device requires SetIdle to be called.
+  @retval FALSE       The USB device does not require SetIdle to be called.
+
+**/
+BOOLEAN
+UsbQuirkRequireSetIdle (
+  IN EFI_USB_DEVICE_DESCRIPTOR   DevDesc
+  );
+
 #endif

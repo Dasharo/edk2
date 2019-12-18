@@ -794,6 +794,29 @@ InitKeyboardLayout (
 
 
 /**
+  Determine if SetIdle request is needed
+
+  @param  DevDesc     The EFI_USB_DEVICE_DESCRIPTOR instance.
+
+  @retval TRUE        The USB device requires SetIdle to be called.
+  @retval FALSE       The USB device does not require SetIdle to be called.
+
+**/
+BOOLEAN
+UsbQuirkRequireSetIdle (
+  IN EFI_USB_DEVICE_DESCRIPTOR   DevDesc
+  )
+{
+  switch (DevDesc.IdVendor) {
+    case 0x0557:
+      return DevDesc.IdProduct == 0x2419;
+    default:
+      return FALSE;
+  }
+}
+
+
+/**
   Initialize USB keyboard device and all private data structures.
 
   @param  UsbKeyboardDevice  The USB_KB_DEV instance.
@@ -807,7 +830,8 @@ InitUSBKeyboard (
   IN OUT USB_KB_DEV   *UsbKeyboardDevice
   )
 {
-  EFI_STATUS          Status;
+  EFI_STATUS                  Status;
+  EFI_USB_DEVICE_DESCRIPTOR   DevDesc;
 
   REPORT_STATUS_CODE_WITH_DEVICE_PATH (
     EFI_PROGRESS_CODE,
@@ -818,6 +842,17 @@ InitUSBKeyboard (
   InitQueue (&UsbKeyboardDevice->UsbKeyQueue, sizeof (USB_KEY));
   InitQueue (&UsbKeyboardDevice->EfiKeyQueue, sizeof (EFI_KEY_DATA));
   InitQueue (&UsbKeyboardDevice->EfiKeyQueueForNotify, sizeof (EFI_KEY_DATA));
+
+  //
+  // Get device descriptor so vendor/device IDs available
+  // for quirk handling
+  //
+  Status = UsbKeyboardDevice->UsbIo->UsbGetDeviceDescriptor (
+             UsbKeyboardDevice->UsbIo,
+             &DevDesc);
+  if (EFI_ERROR (Status)) {
+    return EFI_DEVICE_ERROR;
+  }
 
   //
   // Set boot protocol for the USB Keyboard.
@@ -864,6 +899,16 @@ InitUSBKeyboard (
   UsbKeyboardDevice->AltGrOn      = FALSE;
 
   UsbKeyboardDevice->CurrentNsKey = NULL;
+
+  //
+  // Some keyboards don't send interrupt transfers until SetIdle is called
+  //
+  if (UsbQuirkRequireSetIdle(DevDesc)) {
+    UsbSetIdleRequest(UsbKeyboardDevice->UsbIo,
+      UsbKeyboardDevice->InterfaceDescriptor.InterfaceNumber,
+      0,
+      0);
+  }
 
   //
   // Sync the initial state of lights on keyboard.
