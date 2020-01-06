@@ -526,15 +526,34 @@ EmmcTuningClkForHs200 (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+
+  if(BhtHostPciSupport(PciIo)) {
+    //set data transfer with 4bit
+    Status = SdMmcHcSetBusWidth (PciIo, Slot, 4);
+    //enable hardware tuning
+    HostCtrl2 = (UINT8)(~0x10);
+    Status = SdMmcHcAndMmio (PciIo, Slot, 0x110,sizeof (HostCtrl2), &HostCtrl2);
+
+    Status = EmmcSendTuningBlk (PassThru, Slot, 4);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "EmmcTuningClkForHs200: Send tuning block fails with %r\n", Status));
+      return Status;
+    }
+  }
+
   //
   // Ask the device to send a sequence of tuning blocks till the tuning procedure is done.
   //
   Retry = 0;
   do {
-    Status = EmmcSendTuningBlk (PassThru, Slot, BusWidth);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "EmmcTuningClkForHs200: Send tuning block fails with %r\n", Status));
-      return Status;
+    if(!BhtHostPciSupport(PciIo)) {
+      Status = EmmcSendTuningBlk (PassThru, Slot, BusWidth);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "EmmcTuningClkForHs200: Send tuning block fails with %r\n", Status));
+        return Status;
+      }
+    } else {
+      gBS->Stall(5000);
     }
 
     Status = SdMmcHcRwMmio (PciIo, Slot, SD_MMC_HC_HOST_CTRL2, TRUE, sizeof (HostCtrl2), &HostCtrl2);
@@ -547,6 +566,10 @@ EmmcTuningClkForHs200 (
     }
 
     if ((HostCtrl2 & (BIT6 | BIT7)) == BIT7) {
+      if(BhtHostPciSupport(PciIo)) {
+        //set data transfer with default
+        Status = SdMmcHcSetBusWidth (PciIo, Slot, BusWidth);
+      }
       return EFI_SUCCESS;
     }
   } while (++Retry < 40);
@@ -770,10 +793,21 @@ EmmcSwitchToHighSpeed (
 
   Private = SD_MMC_HC_PRIVATE_FROM_THIS (PassThru);
 
+  DbgMsg("switch to HS mode %dMHz\n", ClockFreq);
+
   Status = EmmcSwitchBusWidth (PciIo, PassThru, Slot, Rca, IsDdr, BusWidth);
   if (EFI_ERROR (Status)) {
     return Status;
   }
+  
+  if (BhtHostPciSupport(PciIo)) {
+    HsTiming = 1;
+    Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   //
   // Set to Hight Speed timing
   //
@@ -796,8 +830,10 @@ EmmcSwitchToHighSpeed (
     return Status;
   }
 
-  HsTiming = 1;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+  if (!BhtHostPciSupport(PciIo)) {
+    HsTiming = 1;
+    Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+  }
 
   return Status;
 }
@@ -837,6 +873,8 @@ EmmcSwitchToHS200 (
 
   Private = SD_MMC_HC_PRIVATE_FROM_THIS (PassThru);
 
+  DbgMsg("switch to HS200 mode %dMHz\n", ClockFreq);
+
   if ((BusWidth != 4) && (BusWidth != 8)) {
     return EFI_INVALID_PARAMETER;
   }
@@ -845,6 +883,15 @@ EmmcSwitchToHS200 (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+  
+  if (BhtHostPciSupport(PciIo)){
+    HsTiming = 2;
+    Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+  
   //
   // Set to HS200/SDR104 timing
   //
@@ -866,17 +913,40 @@ EmmcSwitchToHS200 (
   //
   // Wait Internal Clock Stable in the Clock Control register to be 1 before set SD Clock Enable bit
   //
-  Status = SdMmcHcWaitMmioSet (
-             PciIo,
-             Slot,
-             SD_MMC_HC_CLOCK_CTRL,
-             sizeof (ClockCtrl),
-             BIT1,
-             BIT1,
-             SD_MMC_HC_GENERIC_TIMEOUT
+  if (BhtHostPciSupport(PciIo)) {
+  	    Status = SdMmcHcWaitMmioSet (
+               PciIo,
+               Slot,
+               0x1cc,
+               sizeof (ClockCtrl),
+               BIT14,
+               BIT14,
+               SD_MMC_HC_GENERIC_TIMEOUT
              );
+  } else { 
+    Status = SdMmcHcWaitMmioSet (
+               PciIo,
+               Slot,
+               SD_MMC_HC_CLOCK_CTRL,
+               sizeof (ClockCtrl),
+               BIT1,
+               BIT1,
+               SD_MMC_HC_GENERIC_TIMEOUT
+             );
+  }
   if (EFI_ERROR (Status)) {
     return Status;
+  }
+
+  if (BhtHostPciSupport(PciIo)) {
+    //Wait 2nd Card Detect debounce Finished by wait twice of debounce max time
+    UINT32 value32;
+    while (1) {
+	  Status = SdMmcHcRwMmio (PciIo, Slot, SD_MMC_HC_PRESENT_STATE, TRUE, sizeof(value32), &value32);
+  	  if (((value32 >> 18) & 0x01) == ((value32 >> 16) & 0x01)) {
+	      break;
+      }
+    }
   }
   //
   // Set SD Clock Enable in the Clock Control register to 1
@@ -884,13 +954,32 @@ EmmcSwitchToHS200 (
   ClockCtrl = BIT2;
   Status = SdMmcHcOrMmio (PciIo, Slot, SD_MMC_HC_CLOCK_CTRL, sizeof (ClockCtrl), &ClockCtrl);
 
-  HsTiming = 2;
-  Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
-  if (EFI_ERROR (Status)) {
-    return Status;
+  if (!BhtHostPciSupport(PciIo)) {
+    HsTiming = 2;
+    Status = EmmcSwitchClockFreq (PciIo, PassThru, Slot, Rca, HsTiming, Timing, ClockFreq);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  } else {
+    Status = SdMmcHcWaitMmioSet (
+        PciIo,
+        Slot,
+              0x1cc,
+        sizeof (ClockCtrl),
+        BIT11,
+        BIT11,
+        SD_MMC_CLOCK_STABLE_TIMEOUT
+        );
+    if (EFI_ERROR(Status)) {
+      DbgMsg("Wait Clock Stable timeout, ClockFreq=%d\n", ClockFreq);
+      return Status;
+    }
   }
 
   Status = EmmcTuningClkForHs200 (PciIo, PassThru, Slot, BusWidth);
+  if (EFI_ERROR(Status)) {
+    DbgMsg("Emmc tuning failed\n");
+  } 
 
   return Status;
 }
@@ -1068,6 +1157,37 @@ EmmcSetBusMode (
 
   DEBUG ((DEBUG_INFO, "EmmcSetBusMode: HsTiming %d ClockFreq %d BusWidth %d Ddr %a\n", HsTiming, ClockFreq, BusWidth, IsDdr ? "TRUE":"FALSE"));
 
+  if (BhtHostPciSupport(PciIo)) {
+    UINT8	EmmcVar;
+    UINTN 	EmmcVarSize;
+    Status = gRT->GetVariable (
+                 L"EMMC_FORCE_CARD_MODE",
+                 &gEfiGenericVariableGuid,
+                 NULL,
+                 &EmmcVarSize,
+                 &EmmcVar
+               );
+    if (!EFI_ERROR(Status) && EmmcVar <= 2) {
+      if (EmmcVar == 2) {
+        HsTiming  = 2;
+        IsDdr     = FALSE;
+        ClockFreq = 200;
+      } else if (EmmcVar == 1) {
+        HsTiming	= 2;
+        IsDdr 	= FALSE;
+        ClockFreq = 100;
+      } else {
+        HsTiming  = 1;
+        IsDdr     = FALSE;
+        ClockFreq = 52;
+      }
+    } else {
+      HsTiming  = 1;
+      IsDdr     = FALSE;
+      ClockFreq = 52;
+    }
+  }
+
   if (HsTiming == 3) {
     //
     // Execute HS400 timing switch procedure
@@ -1078,6 +1198,60 @@ EmmcSetBusMode (
     // Execute HS200 timing switch procedure
     //
     Status = EmmcSwitchToHS200 (PciIo, PassThru, Slot, Rca, ClockFreq, BusWidth);
+  if (EFI_ERROR(Status)) {
+      if (BhtHostPciSupport(PciIo)) {
+        UINT32 val32;
+        UINT16	EmmcVar;
+        UINTN 	EmmcVarSize;
+        DbgMsg("switch to HS200 200MHZ failed, freq decrease to 100MHz\n");
+#if !defined(HS100_ALLPASS_PHASE) || HS100_ALLPASS_PHASE > 10 || HS100_ALLPASS_PHASE < 0
+#error "HS100_ALLPASS_PHASE is undefined or value is invalid"
+#else
+        val32 = PciBhtRead32(PciIo, 0x300);
+        val32 &= 0xFF0FFFFF;
+        EmmcVarSize = sizeof(EmmcVar);
+        Status = gRT->GetVariable (
+                  L"EMMC_HS100_ALLPASS_PHASE",
+                  &gEfiGenericVariableGuid,
+                  NULL,
+                  &EmmcVarSize,
+                  &EmmcVar
+                );
+        if (EFI_ERROR(Status) || EmmcVar > 10)
+          EmmcVar = HS100_ALLPASS_PHASE;
+        val32 |= (EmmcVar << 20);
+        PciBhtWrite32(PciIo, 0x300, 0x21000033 | val32);
+#endif
+        ClockFreq = 100;
+
+        SdMmcHcRwMmio (PciIo, Slot, 0x3C, TRUE, sizeof(val32), &val32);
+        val32 &= ~BIT22;
+        SdMmcHcRwMmio (PciIo, Slot, 0x3C, FALSE, sizeof(val32), &val32);
+        val32 = (BIT26 | BIT25);
+        SdMmcHcOrMmio (PciIo, Slot, 0x2C, sizeof(val32), &val32);
+      
+        Status = EmmcSwitchToHS200 (PciIo, PassThru, Slot, Rca, ClockFreq, BusWidth);
+        if (EFI_ERROR(Status)) {
+          if (((ExtCsd.DeviceType & BIT1)  != 0) && (Private->Capability[Slot].HighSpeed != 0)) {
+            DbgMsg("switch to HS200 100MHZ failed, mode decrease to HS 50MHz\n");
+
+            HsTiming  = 1;
+            IsDdr     = FALSE;
+            ClockFreq = 52;
+            Status = EmmcSwitchToHighSpeed (PciIo, PassThru, Slot, Rca, ClockFreq, IsDdr, BusWidth);
+          } else if (((ExtCsd.DeviceType & BIT0)  != 0) && (Private->Capability[Slot].HighSpeed != 0)) {
+            DbgMsg("switch to HS200 100MHZ failed, mode decrease to HS 25MHz\n");
+
+            HsTiming  = 1;
+            IsDdr     = FALSE;
+            ClockFreq = 26;
+            Status = EmmcSwitchToHighSpeed (PciIo, PassThru, Slot, Rca, ClockFreq, IsDdr, BusWidth);
+          }	else {
+            DbgMsg("switch to HS200 100MHZ failed, but emmc chip didn't support hs mode\n");
+      }
+    }
+      }
+    }
   } else {
     //
     // Execute High Speed timing switch procedure

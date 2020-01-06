@@ -25,6 +25,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiLib.h>
@@ -37,6 +38,8 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #include <Protocol/ComponentName2.h>
 #include <Protocol/SdMmcOverride.h>
 #include <Protocol/SdMmcPassThru.h>
+
+#include <Guid/DebugMask.h>
 
 #include "SdMmcPciHci.h"
 
@@ -51,10 +54,16 @@ extern EDKII_SD_MMC_OVERRIDE        *mOverride;
 #define SD_MMC_HC_PRIVATE_FROM_THIS(a) \
     CR(a, SD_MMC_HC_PRIVATE_DATA, PassThru, SD_MMC_HC_PRIVATE_SIGNATURE)
 
+#define HOST_CLK_DRIVE_STRENGTH    2
+#define HOST_DAT_DRIVE_STRENGTH    2
+#define HS200_ALLPASS_PHASE        0
+#define HS100_ALLPASS_PHASE        6
+
 //
 // Generic time out value, 1 microsecond as unit.
 //
 #define SD_MMC_HC_GENERIC_TIMEOUT     1 * 1000 * 1000
+#define SD_MMC_CLOCK_STABLE_TIMEOUT   3 * 1000
 
 //
 // SD/MMC async transfer timer interval, set by experience.

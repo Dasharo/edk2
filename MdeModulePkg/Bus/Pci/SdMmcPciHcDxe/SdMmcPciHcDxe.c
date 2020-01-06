@@ -295,6 +295,13 @@ SdMmcPciHcEnumerateDevice (
           continue;
         }
 
+    if (BhtHostPciSupport(Private->PciIo)) {
+      Status = SdMmcHcGetCapability (Private->PciIo, Slot, &Private->Capability[Slot]);
+      if (EFI_ERROR (Status)) {
+        continue;
+      }
+    }
+
         Private->Slot[Slot].MediaPresent = TRUE;
         Private->Slot[Slot].Initialized  = TRUE;
         RoutineNum = sizeof (mCardTypeDetectRoutineTable) / sizeof (CARD_TYPE_DETECT_ROUTINE);
@@ -311,6 +318,7 @@ SdMmcPciHcEnumerateDevice (
         // This card doesn't get initialized correctly.
         //
         if (Index == RoutineNum) {
+          DEBUG ((DEBUG_INFO, "Load driver failure\n"));
           Private->Slot[Slot].Initialized = FALSE;
         }
 
@@ -530,6 +538,8 @@ SdMmcPciHcDriverBindingStart (
   UINT32                          RoutineNum;
   BOOLEAN                         MediaPresent;
   BOOLEAN                         Support64BitDma;
+  UINT16                          IntStatus;
+  UINT32                          value;
 
   DEBUG ((DEBUG_INFO, "SdMmcPciHcDriverBindingStart: Start\n"));
 
@@ -685,6 +695,13 @@ SdMmcPciHcDriverBindingStart (
       continue;
     }
 
+  if (BhtHostPciSupport(PciIo)) {
+    Status = SdMmcHcGetCapability (PciIo, Slot, &Private->Capability[Slot]);
+      if (EFI_ERROR (Status)) {
+        continue;
+      }
+  }
+
     Private->Slot[Slot].MediaPresent = TRUE;
     Private->Slot[Slot].Initialized  = TRUE;
     RoutineNum = sizeof (mCardTypeDetectRoutineTable) / sizeof (CARD_TYPE_DETECT_ROUTINE);
@@ -701,8 +718,51 @@ SdMmcPciHcDriverBindingStart (
     // This card doesn't get initialized correctly.
     //
     if (Index == RoutineNum) {
+      DEBUG ((DEBUG_INFO, "Load driver failure\n"));
       Private->Slot[Slot].Initialized = FALSE;
     }
+  }
+  if (BhtHostPciSupport(Private->PciIo)) {
+    DbgMsg("HOST_CLK_DRIVE_STRENGTH: 0x%x\n",HOST_CLK_DRIVE_STRENGTH);
+    DbgMsg("HOST_DAT_DRIVE_STRENGTH: 0x%x\n",HOST_DAT_DRIVE_STRENGTH);
+    DbgMsg("HS200_ALLPASS_PHASE: 0x%x\n",HS200_ALLPASS_PHASE);
+    DbgMsg("HS100_ALLPASS_PHASE: 0x%x\n",HS100_ALLPASS_PHASE);
+
+    SdMmcHcRwMmio (Private->PciIo,0,0x110,TRUE,sizeof (value),&value);
+    DbgMsg("0x110: 0x%x\n",value);
+
+    SdMmcHcRwMmio (Private->PciIo,0,0x114,TRUE,sizeof (value),&value);
+    DbgMsg("0x114: 0x%x\n",value);
+
+    SdMmcHcRwMmio (Private->PciIo,0,0x1a8,TRUE,sizeof (value),&value);
+    DbgMsg("MEM 1A8: 0x%x\n",value);
+    SdMmcHcRwMmio (Private->PciIo,0,0x1ac,TRUE,sizeof (value),&value);
+    DbgMsg("MEM 1AC: 0x%x\n",value);
+    SdMmcHcRwMmio (Private->PciIo,0,0x1B0,TRUE,sizeof (value),&value);
+    DbgMsg("MEM 1B0: 0x%x\n",value);
+    SdMmcHcRwMmio (Private->PciIo,0,0x1CC,TRUE,sizeof (value),&value);
+    DbgMsg("MEM 1CC: 0x%x\n",value);
+
+    DbgMsg(" - pcr 0x300 = 0x%08x\n", PciBhtRead32(Private->PciIo, 0x300));
+    DbgMsg(" - pcr 0x304 = 0x%08x\n", PciBhtRead32(Private->PciIo, 0x304));
+    DbgMsg(" - pcr 0x328 = 0x%08x\n", PciBhtRead32(Private->PciIo, 0x328));
+    DbgMsg(" - pcr 0x3e4 = 0x%08x\n", PciBhtRead32(Private->PciIo, 0x3e4));
+
+    SdMmcHcRwMmio (Private->PciIo,0,0x040,TRUE,sizeof (value),&value);
+    DbgMsg("0x40: 0x%x\n",value);
+
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_PRESENT_STATE,TRUE,sizeof (value),&value);
+    DbgMsg("Present State: 0x%x\n",value);
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_HOST_CTRL1,TRUE,sizeof (IntStatus),&IntStatus);
+    DbgMsg("Power&Host1: 0x%x\n",IntStatus);
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_CLOCK_CTRL,TRUE,sizeof (IntStatus),&IntStatus);
+    DbgMsg("CLK: 0x%x\n",IntStatus);
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_TIMEOUT_CTRL,TRUE,sizeof (IntStatus),&IntStatus);
+    DbgMsg("SWR&Timeout: 0x%x\n",IntStatus);
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_NOR_INT_STS,TRUE,sizeof (value),&value);
+    DbgMsg("INR&IER: 0x%x\n",value);
+    SdMmcHcRwMmio (Private->PciIo,0,SD_MMC_HC_HOST_CTRL2,TRUE,sizeof (IntStatus),&IntStatus);
+    DbgMsg("Host2: 0x%x\n",IntStatus);
   }
 
   //

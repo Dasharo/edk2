@@ -552,4 +552,42 @@ SdMmcHcUhsSignaling (
   IN SD_MMC_BUS_MODE        Timing
   );
 
+
+
+BOOLEAN 
+BhtHostPciSupport(EFI_PCI_IO_PROTOCOL *PciIo);
+UINT32 
+PciBhtRead32(EFI_PCI_IO_PROTOCOL *PciIo, UINT32 offset);
+void 
+PciBhtWrite32(EFI_PCI_IO_PROTOCOL *PciIo, UINT32 offset, UINT32 value);
+void 
+PciBhtOr32(EFI_PCI_IO_PROTOCOL *PciIo, UINT32 offset, UINT32 value);
+void 
+PciBhtAnd32(EFI_PCI_IO_PROTOCOL *PciIo, UINT32 offset, UINT32 value);
+extern void 
+DbgNull(IN CONST CHAR16 * fmt, ...);
+
+
+#if(0)
+#define DbgMsg(arg, ...) Print(L##arg, __VA_ARGS__)
+#else
+#define DbgMsg(...) DEBUG((DEBUG_INFO, __VA_ARGS__))
+#endif
+
+
+#define PCI_DEV_ID_RJ      0x8320
+#define PCI_DEV_ID_SDS0    0x8420
+#define PCI_DEV_ID_SDS1    0x8421
+#define PCI_DEV_ID_FJ2     0x8520
+#define PCI_DEV_ID_SB0     0x8620
+#define PCI_DEV_ID_SB1     0x8621
+
+
+// O2/BHT add BAR1 for PCIR mapping registers
+// These registers is defined by O2/BHT, but we may follow name definition rule.
+#define	BHT_PCIRMappingVal    (0x200) /* PCI CFG Space Register Mapping Value Register */
+#define	BHT_PCIRMappingCtl    (0x204) /* PCI CFG Space Register Mapping Control Register */
+#define	BHT_PCIRMappingEn     (0x208) /* PCI CFG Space Register Mapping Enable Register */
+#define	BHT_GPIOCTL           (0x210) /* GPIO control register*/
+
 #endif
