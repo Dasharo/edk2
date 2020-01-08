@@ -944,6 +944,7 @@ UpdateVariable (
   UINTN                   VarSize;
   VARIABLE_GLOBAL         *Global;
   UINTN                   NonVolatileVarableStoreSize;
+  UINT32                  Result;
 
   Global = &mVariableModuleGlobal->VariableGlobal[Physical];
 
@@ -1108,7 +1109,10 @@ UpdateVariable (
     CopyMem (keydata + sizeof (EFI_GUID), VariableName, VarNameSize);
     CopyMem (valdata, Data, DataSize);
 
-    call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_APPEND, (UINT32)rt_buffer_phys);
+    Result = call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_APPEND, (UINT32)rt_buffer_phys);
+    if (Result != SMMSTORE_RET_SUCCESS) {
+      return EFI_DEVICE_ERROR;
+    }
     /* call into SMM through EFI_ISA_IO_PROTOCOL to write to 0xb2:
      * set registers (how?)
      * UINT8 Data = ...;
@@ -1875,7 +1879,7 @@ VariableCommonInitialize (
   )
 {
   EFI_STATUS  Status;
-
+  UINT32      Result;
   //
   // Allocate memory for mVariableModuleGlobal
   //
@@ -1928,7 +1932,11 @@ VariableCommonInitialize (
     .bufsize = sizeof(buf),
   };
   ASSERT((UINTN)&read_cmd <= 0x100000000 - sizeof(read_cmd));
-  call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_READ, (UINT32)(UINTN)&read_cmd);
+  Result = call_smm(SMMSTORE_APM_CNT, SMMSTORE_CMD_READ, (UINT32)(UINTN)&read_cmd);
+  if (Result != SMMSTORE_RET_SUCCESS) {
+    // The SMM store hasn't been compiled in. There's nothing we can do.
+    return EFI_SUCCESS;
+  }
 
   DEBUG ((DEBUG_WARN, "Initialize buffer from 0x%x bytes of flash\n", read_cmd.bufsize));
   int i = 0;
