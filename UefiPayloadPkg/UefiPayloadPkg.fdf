@@ -110,6 +110,8 @@ INF MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 INF UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
 INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+INF MdeModulePkg/Logo/LogoDxe.inf
+
 #
 # PCI Support
 #
