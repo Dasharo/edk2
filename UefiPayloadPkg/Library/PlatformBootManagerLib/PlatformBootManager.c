@@ -270,18 +270,22 @@ PlatformBootManagerAfterConsole (
   PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
 
   if (FixedPcdGetBool (PcdBootManagerEscape)) {
-    Print (
-      L"\n"
-      L"    Esc or Down      to enter Boot Manager Menu.\n"
-      L"    ENTER            to boot directly.\n"
-      L"\n"
+    BootLogoUpdateProgress (
+      White,
+      Black,
+      L"Press ESC for Boot Options/Settings",
+      White,
+      0,
+      0
       );
   } else {
-    Print (
-      L"\n"
-      L"    F2 or Down      to enter Boot Manager Menu.\n"
-      L"    ENTER           to boot directly.\n"
-      L"\n"
+    BootLogoUpdateProgress (
+      White,
+      Black,
+      L"Press F2 or Down for Boot Options/Settings",
+      White,
+      0,
+      0
       );
   }
 }
@@ -299,6 +303,9 @@ PlatformBootManagerWaitCallback (
 {
   if (mUniversalPayloadPlatformBootManagerOverrideInstance != NULL) {
     mUniversalPayloadPlatformBootManagerOverrideInstance->WaitCallback (TimeoutRemain);
+  }
+  if (TimeoutRemain == 0) {
+    BootLogoClearProgress ();
   }
 
   return;
