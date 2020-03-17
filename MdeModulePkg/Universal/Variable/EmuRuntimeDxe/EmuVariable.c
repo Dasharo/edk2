@@ -1100,13 +1100,14 @@ UpdateVariable (
 Store:
   // If the store is initialized
   // And we are storing or deleting a non volatile variable
+  // And variable name starts with 'Boot'
   // Send the new data to SMMSTORE
   if (storeInitialized && (
       (Attributes & EFI_VARIABLE_NON_VOLATILE) != 0 || (
         Delete &&
         (Variable->CurrPtr->Attributes & EFI_VARIABLE_NON_VOLATILE) != 0
-      )
-    )) {
+      )) && (!StrnCmp(L"Boot", VariableName, StrLen(L"Boot")))
+    ) {
 
     /* TODO: add hook for logging nv changes here */
 
@@ -1978,23 +1979,27 @@ VariableCommonInitialize (
       EFI_GUID *guid = (EFI_GUID *)(buf + i + 8);
       VOID *data = (VOID *)(buf + i + 8 + keysz);
 
-      DEBUG ((DEBUG_WARN, "Fetching variable: %s\n", varname));
-      DEBUG ((DEBUG_WARN, "buf: %p, buf+i: %p, guid: %p, varname: %p, data: %p\n", buf, buf + i, guid, varname, data));
-      VARIABLE_POINTER_TRACK Variable;
-      FindVariable (varname, guid, &Variable, (VARIABLE_GLOBAL *)mVariableModuleGlobal);
+      // only update Boot* variables 
+      if (!StrnCmp(L"Boot", varname, StrLen(L"Boot"))) {
+        DEBUG ((DEBUG_WARN, "Fetching variable: %s\n", varname));
+        DEBUG ((DEBUG_WARN, "buf: %p, buf+i: %p, guid: %p, varname: %p, data: %p\n", buf, buf + i, guid, varname, data));
+        VARIABLE_POINTER_TRACK Variable;
+        FindVariable (varname, guid, &Variable, (VARIABLE_GLOBAL *)mVariableModuleGlobal);
 
-      DEBUG ((DEBUG_WARN, "Updating variable: %s\n", varname));
-      UpdateVariable (
-        varname,
-	      guid,
-	      data,
-        valsz,
-	      // all of these variables are nv
-        EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-        &Variable
-      );
+        DEBUG ((DEBUG_WARN, "Updating variable: %s\n", varname));
+        UpdateVariable (
+          varname,
+          guid,
+          data,
+          valsz,
+          // all of these variables are nv
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+          &Variable
+        );
+      } else {
+        DEBUG ((DEBUG_WARN, "Skipping non-Boot variable: %s\n", varname));
+      }
     }
-    DEBUG ((DEBUG_WARN, "Added variable: 0x%x, val size: %x\n", keysz, valsz));
     // no UEFI variable since it's at most the GUID part, so skip
     i += 8 + keysz + valsz + 1;
     i = (i + 3) & ~3;
