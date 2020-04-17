@@ -57,6 +57,7 @@
   gEfiGraphicsInfoHobGuid
   gEfiGraphicsDeviceInfoHobGuid
   gUefiAcpiBoardInfoGuid
+  gEfiSmmStoreInfoHobGuid
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid
