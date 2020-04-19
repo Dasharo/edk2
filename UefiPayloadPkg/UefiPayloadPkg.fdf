@@ -139,6 +139,10 @@ INF MdeModulePkg/Logo/LogoDxe.inf
 INF UefiPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
 !endif
 
+FILE FREEFORM = PCD(gEfiMdeModulePkgTokenSpaceGuid.PcdLogoFile) {
+  SECTION RAW = MdeModulePkg/Logo/Logo.bmp
+}
+
 #
 # PCI Support
 #

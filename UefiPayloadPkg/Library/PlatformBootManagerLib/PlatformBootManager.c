@@ -509,6 +509,9 @@ PlatformBootManagerAfterConsole (
 
   Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
          SetupMenuKey, BootMenuKey);
+
+  // Inject boot logo into BGRT table
+  AddBGRT();
 }
 
 /**
