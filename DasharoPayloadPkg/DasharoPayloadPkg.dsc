@@ -109,6 +109,7 @@
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
   DEFINE RAM_DISK_ENABLE                = FALSE
   DEFINE APU_CONFIG_ENABLE              = FALSE
+  DEFINE USE_PLATFORM_GOP               = FALSE
 
   #
   # Network definition
@@ -825,8 +826,14 @@
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
   MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
-  DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
   DasharoPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
+
+!if $(USE_PLATFORM_GOP) == TRUE
+  DasharoPayloadPkg/PlatformGopPolicy/PlatformGopPolicy.inf
+!else
+  DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
+!endif
+
 
   #
   # Network Support
