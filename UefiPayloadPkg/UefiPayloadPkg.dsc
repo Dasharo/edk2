@@ -737,8 +737,57 @@
 !if $(SERIAL_TERMINAL) == TRUE
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 !endif
+
+!if $(USE_PLATFORM_GOP) == TRUE
+  UefiPayloadPkg/PlatformGopPolicy/PlatformGopPolicy.inf
+!else
   UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
   UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
+!endif
+
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
+!endif
+  #
+  # SMM Support
+  #
+!if $(SMM_SUPPORT) == TRUE
+  UefiPayloadPkg/SmmAccessDxe/SmmAccessDxe.inf
+  UefiPayloadPkg/SmmControlRuntimeDxe/SmmControlRuntimeDxe.inf
+  UefiPayloadPkg/BlSupportSmm/BlSupportSmm.inf
+  MdeModulePkg/Core/PiSmmCore/PiSmmIpl.inf
+  MdeModulePkg/Core/PiSmmCore/PiSmmCore.inf
+  UefiPayloadPkg/PchSmiDispatchSmm/PchSmiDispatchSmm.inf
+  UefiCpuPkg/PiSmmCpuDxeSmm/PiSmmCpuDxeSmm.inf
+  UefiCpuPkg/CpuIo2Smm/CpuIo2Smm.inf
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableSmm/FirmwarePerformanceSmm.inf
+!endif
+!endif
+
+!if $(VARIABLE_SUPPORT) == "EMU"
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
+!elseif $(VARIABLE_SUPPORT) == "SMMSTORE"
+  UefiPayloadPkg/SmmStoreFvb/SmmStoreFvbRuntimeDxe.inf
+  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
+    <LibraryClasses>
+      NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
+      NULL|EmbeddedPkg/Library/NvVarStoreFormattedLib/NvVarStoreFormattedLib.inf
+  }
+!elseif $(VARIABLE_SUPPORT) == "SPI"
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmm.inf {
+    <LibraryClasses>
+      NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
+      NULL|MdeModulePkg/Library/VarCheckHiiLib/VarCheckHiiLib.inf
+      NULL|MdeModulePkg/Library/VarCheckPcdLib/VarCheckPcdLib.inf
+      NULL|MdeModulePkg/Library/VarCheckPolicyLib/VarCheckPolicyLib.inf
+  }
+
+  UefiPayloadPkg/FvbRuntimeDxe/FvbSmm.inf
+  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteSmm.inf
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableSmmRuntimeDxe.inf
+!endif
 
   #
   # Network Support
