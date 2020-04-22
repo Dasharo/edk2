@@ -7,7 +7,7 @@ for the UEFI and PI specifications from www.uefi.org.
 
 To build on Linux run:
 
-`build -D SECURE_BOOT_ENABLE=TRUE -D BOOTLOADER=COREBOOT -D PCIE_BASE=0xe0000000 -DPS2_KEYBOARD_ENABLE -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc`
+`build -D SERIAL_TERMINAL=FALSE -D SECURE_BOOT_ENABLE=TRUE -D BOOTLOADER=COREBOOT -D PCIE_BASE=0xe0000000 -DPS2_KEYBOARD_ENABLE -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc`
 
 
 # License Details
