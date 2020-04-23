@@ -196,6 +196,11 @@ INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
 #
+# Network Support
+#
+!include NetworkPkg/Network.fdf.inc
+
+#
 # Security
 #
 !if $(SECURE_BOOT_ENABLE) == TRUE
