@@ -87,6 +87,16 @@
   #
   DEFINE SECURE_BOOT_ENABLE           = FALSE
 
+  #
+  # Network definition
+  #
+  DEFINE NETWORK_TLS_ENABLE             = FALSE
+  DEFINE NETWORK_IP6_ENABLE             = FALSE
+  DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
+  DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
+
+!include NetworkPkg/NetworkDefines.dsc.inc
+
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
   GCC:*_UNIXGCC_*_CC_FLAGS       = -DMDEPKG_NDEBUG
@@ -223,8 +233,14 @@
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   ShellCEntryLib|ShellPkg/Library/UefiShellCEntryLib/UefiShellCEntryLib.inf
 
+#
+# Network
+#
+!include NetworkPkg/NetworkLibs.dsc.inc
+
 !if $(NETWORK_TLS_ENABLE) == TRUE
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
+  TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
 !else
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
 !endif
@@ -236,6 +252,9 @@
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
 
+  #
+  # SMMSTORE
+  #
 !if $(BOOTLOADER) == "COREBOOT"
   SmmStoreLib|DasharoPayloadPkg/Library/CbSMMStoreLib/CbSMMStoreLib.inf
 !else
@@ -298,7 +317,9 @@
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/DxeReportStatusCodeLib/DxeReportStatusCodeLib.inf
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
-
+!if $(NETWORK_ENABLE) == TRUE
+  BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+!endif
 ################################################################################
 #
 # Pcd Section - list of all EDK II PCD Entries defined by this Platform.
@@ -340,6 +361,11 @@
 !else
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
 !endif
+
+  #
+  # Network Pcds
+  #
+!include NetworkPkg/NetworkPcds.dsc.inc
 
   #
   # The following parameters are set by Library/PlatformHookLib
@@ -574,6 +600,18 @@
   DasharoPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
 !endif
 
+  #
+  # Network Support
+  #
+!include NetworkPkg/NetworkComponents.dsc.inc
+
+!if $(NETWORK_TLS_ENABLE) == TRUE
+  NetworkPkg/TlsAuthConfigDxe/TlsAuthConfigDxe.inf {
+    <LibraryClasses>
+      NULL|OvmfPkg/Library/TlsAuthConfigLib/TlsAuthConfigLib.inf
+  }
+!endif
+
   #------------------------------
   #  Build the shell
   #------------------------------
@@ -588,7 +626,6 @@
   DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
   FileHandleLib|MdePkg/Library/UefiFileHandleLib/UefiFileHandleLib.inf
   ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
-  !include NetworkPkg/NetworkLibs.dsc.inc
 
 [Components.X64]
   ShellPkg/DynamicCommand/TftpDynamicCommand/TftpDynamicCommand.inf {

@@ -227,6 +227,11 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !endif
 
 #
+# Network Support
+#
+!include NetworkPkg/Network.fdf.inc
+
+#
 # Shell
 #
 !if $(SHELL_TYPE) == BUILD_SHELL
