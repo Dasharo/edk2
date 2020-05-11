@@ -396,7 +396,35 @@ ParseMemoryInfo (
     MemoryMap.Base = cb_unpack64(Range->start);
     MemoryMap.Size = cb_unpack64(Range->size);
     MemoryMap.Type = (UINT8)Range->type;
-    MemoryMap.Flag = 0;
+
+    switch (Range->type) {
+      case CB_MEM_RAM:
+        MemoryMap.Type = EFI_RESOURCE_SYSTEM_MEMORY;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      /* Only MMIO is marked reserved */
+      case CB_MEM_RESERVED:
+        MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      case CB_MEM_UNUSABLE:
+        MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+        MemoryMap.Flag = 0;
+        break;
+      case CB_MEM_VENDOR_RSVD:
+        MemoryMap.Type = EFI_RESOURCE_FIRMWARE_DEVICE;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      /* ACPI/SMBIOS/CBMEM has it's own tag */
+      case CB_MEM_ACPI:
+      case CB_MEM_TABLE:
+        MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      default:
+        continue;
+    }
+
     DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
             Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
 
