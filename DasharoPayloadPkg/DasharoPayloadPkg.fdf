@@ -232,6 +232,15 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !include NetworkPkg/Network.fdf.inc
 
 #
+# iPXE support
+#
+!if $(NETWORK_IPXE) == TRUE
+  FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
+   SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/ipxe.efi
+  }
+!endif
+
+#
 # Random Number Generator
 #
 INF SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
