@@ -289,7 +289,17 @@ PlatformBootManagerAfterConsole (
   //
   PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
 
-  Print (L"Press ESC to enter Boot Manager Menu.\n");
+  //
+  // Register iPXE
+  //
+  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+
+  Print (
+    L"\n"
+    L"F2 or Down      to enter Boot Manager Menu.\n"
+    L"ENTER           to boot directly.\n"
+    L"\n"
+  );
 }
 
 /**
