@@ -99,6 +99,10 @@
   DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
 
 !include NetworkPkg/NetworkDefines.dsc.inc
+  #
+  # IPXE support
+  #
+  DEFINE NETWORK_IPXE                   = FALSE
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
