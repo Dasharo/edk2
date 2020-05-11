@@ -11,15 +11,15 @@
 ################################################################################
 [FD.UefiPayload]
 BaseAddress   = 0x800000|gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-Size          = 0x410000|gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+Size          = 0xE00000|gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
 ErasePolarity = 1
 BlockSize     = 0x1000
-NumBlocks     = 0x410
+NumBlocks     = 0xE00
 
-0x00000000|0x030000
+0x00000000|0x060000
 FV = PEIFV
 
-0x00030000|0x3E0000
+0x00060000|0xDA0000
 FV = DXEFV
 
 ################################################################################
