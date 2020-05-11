@@ -200,6 +200,12 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 !include NetworkPkg/Network.fdf.inc
 
+
+#
+# Random Number Generator
+#
+INF SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
+
 #
 # Security
 #
