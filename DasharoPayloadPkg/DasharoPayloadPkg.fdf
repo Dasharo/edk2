@@ -232,6 +232,20 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !include NetworkPkg/Network.fdf.inc
 
 #
+# Network modules (only available on X64)
+#
+!if $(NETWORK_LAN_ROM) == TRUE
+#
+# Build system must place the LanRom.efi before building the UEFI Payload.
+
+# Typically will be done per platform needs by coreboot.
+#
+  FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
+    SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/LanRom.efi
+  }
+!endif
+
+#
 # iPXE support
 #
 !if $(NETWORK_IPXE) == TRUE
