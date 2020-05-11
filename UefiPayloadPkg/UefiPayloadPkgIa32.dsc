@@ -93,10 +93,14 @@
   #
   # Network definition
   #
+  DEFINE NETWORK_PXE_BOOT               = FALSE
+  DEFINE NETWORK_ENABLE                 = FALSE
   DEFINE NETWORK_TLS_ENABLE             = FALSE
   DEFINE NETWORK_IP6_ENABLE             = FALSE
+  DEFINE NETWORK_IP4_ENABLE             = FALSE
+  DEFINE NETWORK_SNP_ENABLE             = FALSE
   DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
-  DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
+  DEFINE NETWORK_ISCSI_ENABLE           = FALSE
 
 !include NetworkPkg/NetworkDefines.dsc.inc
 
