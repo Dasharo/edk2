@@ -306,13 +306,14 @@ MemInfoCallback (
   )
 {
   PAYLOAD_MEM_INFO        *MemInfo;
-  UINTN                   Attribue;
+  UINTN                   Attribute;
   EFI_PHYSICAL_ADDRESS    Base;
   EFI_RESOURCE_TYPE       Type;
   UINT64                  Size;
   UINT32                  SystemLowMemTop;
+  UINT8                   Flag;
 
-  Attribue = EFI_RESOURCE_ATTRIBUTE_PRESENT |
+  Attribute = EFI_RESOURCE_ATTRIBUTE_PRESENT |
              EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
              EFI_RESOURCE_ATTRIBUTE_TESTED |
              EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
@@ -321,9 +322,10 @@ MemInfoCallback (
              EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
 
   MemInfo = (PAYLOAD_MEM_INFO *)Params;
-  Type    = (MemoryMapEntry->Type == 1) ? EFI_RESOURCE_SYSTEM_MEMORY : EFI_RESOURCE_MEMORY_RESERVED;
+  Type    = MemoryMapEntry->Type;
   Base    = MemoryMapEntry->Base;
   Size    = MemoryMapEntry->Size;
+  Flag    = MemoryMapEntry->Flag;
 
   if ((Base  < 0x100000) && ((Base + Size) > 0x100000)) {
     Size -= (0x100000 - Base);
@@ -331,24 +333,36 @@ MemInfoCallback (
   }
 
   if (Base >= 0x100000) {
-    if (Type == EFI_RESOURCE_SYSTEM_MEMORY) {
+    if (!(Flag & EFI_RESOURCE_ATTRIBUTE_PRESENT)) {
+      BuildResourceDescriptorHob (
+        Type,
+        0,
+        (EFI_PHYSICAL_ADDRESS)Base,
+        Size
+        );
+    } else if (Type == EFI_RESOURCE_SYSTEM_MEMORY) {
       if (Base < 0x100000000ULL) {
         MemInfo->UsableLowMemTop = (UINT32)(Base + Size);
       } else {
-        Attribue &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
+        Attribute &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
       }
       BuildResourceDescriptorHob (
         EFI_RESOURCE_SYSTEM_MEMORY,
-        Attribue,
+        Attribute,
         (EFI_PHYSICAL_ADDRESS)Base,
         Size
         );
     } else if (Type == EFI_RESOURCE_MEMORY_RESERVED) {
       BuildResourceDescriptorHob (
         EFI_RESOURCE_MEMORY_RESERVED,
-        Attribue,
+        Attribute,
         (EFI_PHYSICAL_ADDRESS)Base,
         Size
+        );
+      BuildMemoryAllocationHob (
+        (EFI_PHYSICAL_ADDRESS)Base,
+        Size,
+        EfiACPIReclaimMemory
         );
       if (Base < 0x100000000ULL) {
         SystemLowMemTop = ((UINT32)(Base + Size) + 0x0FFFFFFF) & 0xF0000000;
@@ -356,6 +370,37 @@ MemInfoCallback (
           MemInfo->SystemLowMemTop = SystemLowMemTop;
         }
       }
+    } else if (Type == EFI_RESOURCE_MEMORY_MAPPED_IO) {
+      BuildResourceDescriptorHob (
+          EFI_RESOURCE_MEMORY_RESERVED,
+          (EFI_RESOURCE_ATTRIBUTE_PRESENT    |
+          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_TESTED),
+          (EFI_PHYSICAL_ADDRESS)Base,
+          Size
+          );
+
+      BuildMemoryAllocationHob (
+        (EFI_PHYSICAL_ADDRESS)Base,
+        Size,
+        EfiMemoryMappedIO
+        );
+    } else if (Type == EFI_RESOURCE_FIRMWARE_DEVICE) {
+      BuildResourceDescriptorHob (
+          EFI_RESOURCE_FIRMWARE_DEVICE,
+          (EFI_RESOURCE_ATTRIBUTE_PRESENT    |
+          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+          EFI_RESOURCE_ATTRIBUTE_TESTED),
+          (EFI_PHYSICAL_ADDRESS)Base,
+          Size
+          );
+      BuildMemoryAllocationHob (
+        (EFI_PHYSICAL_ADDRESS)Base,
+        Size,
+        EfiACPIMemoryNVS
+        );
     }
   }
 
