@@ -94,6 +94,7 @@ ParseMemoryInfo (
   )
 {
   MEMROY_MAP_INFO               *MemoryMapInfo;
+  MEMROY_MAP_ENTRY               MemoryMap;
   UINTN                          Idx;
 
   MemoryMapInfo = (MEMROY_MAP_INFO *) GetGuidHobDataFromSbl (&gLoaderMemoryMapInfoGuid);
@@ -103,7 +104,23 @@ ParseMemoryInfo (
   }
 
   for (Idx = 0; Idx < MemoryMapInfo->Count; Idx++) {
-    MemInfoCallback (&MemoryMapInfo->Entry[Idx], Params);
+    MemoryMap.Base = MemoryMapInfo->Entry[Idx].Base;
+    MemoryMap.Size = MemoryMapInfo->Entry[Idx].Size;
+
+    switch (MemoryMapInfo->Entry[Idx].Type) {
+      case 1:
+        MemoryMap.Type = EFI_RESOURCE_SYSTEM_MEMORY;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      case 2:
+        MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        break;
+      default:
+        continue;
+    }
+
+    MemInfoCallback (&MemoryMap, Params);
   }
 
   return RETURN_SUCCESS;
