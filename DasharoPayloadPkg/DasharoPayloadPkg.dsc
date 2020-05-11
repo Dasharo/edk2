@@ -615,6 +615,14 @@
   }
 !endif
 
+  #
+  # Random Number Generator
+  #
+  SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf {
+      <LibraryClasses>
+      RngLib|DasharoPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
+  }
+
   #------------------------------
   #  Build the shell
   #------------------------------
