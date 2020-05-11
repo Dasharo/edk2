@@ -100,6 +100,11 @@
 
 !include NetworkPkg/NetworkDefines.dsc.inc
 
+  #
+  # IPXE support
+  #
+  DEFINE NETWORK_IPXE                   = FALSE
+
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
   GCC:*_UNIXGCC_*_CC_FLAGS       = -DMDEPKG_NDEBUG
