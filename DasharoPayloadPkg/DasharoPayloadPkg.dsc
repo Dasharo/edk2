@@ -610,6 +610,7 @@
   MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
   DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
+  DasharoPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
 
   #
   # SMMSTORE
