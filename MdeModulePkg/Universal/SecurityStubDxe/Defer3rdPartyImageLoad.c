@@ -25,7 +25,7 @@ typedef struct {
 } DEFERRED_3RD_PARTY_IMAGE_TABLE;
 
 BOOLEAN                          mImageLoadedAfterEndOfDxe   = FALSE;
-BOOLEAN                          mEndOfDxe                   = FALSE;
+BOOLEAN                          mEndOfDxe                   = TRUE;
 DEFERRED_3RD_PARTY_IMAGE_TABLE   mDeferred3rdPartyImage = {
   0,       // Deferred image count
   NULL     // The deferred image info
