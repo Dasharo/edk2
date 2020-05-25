@@ -16,10 +16,10 @@ ErasePolarity = 1
 BlockSize     = 0x1000
 NumBlocks     = 0x800
 
-0x00000000|0x030000
+0x00000000|0x040000
 FV = PEIFV
 
-0x00030000|0x7D0000
+0x00040000|0x7C0000
 FV = DXEFV
 
 ################################################################################
@@ -50,6 +50,12 @@ INF MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.
 INF MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
 INF UefiPayloadPkg/BlSupportPei/BlSupportPei.inf
 INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+
+!if $(TPM_ENABLE) == TRUE
+INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
+INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
+INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
+!endif
 
 ################################################################################
 
@@ -199,6 +205,7 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 !include NetworkPkg/Network.fdf.inc
 
+
 #
 # Network modules (only available on X64)
 # Available at https://downloadcenter.intel.com/download/29137?v=t
@@ -276,6 +283,12 @@ INF SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
     SECTION UI = "SecureBootDbxCert"
   }
 
+!endif
+
+!if $(TPM_ENABLE) == TRUE
+INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
+INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
+INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 !endif
 
 #
