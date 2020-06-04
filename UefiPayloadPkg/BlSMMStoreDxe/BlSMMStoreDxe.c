@@ -266,7 +266,7 @@ BlSMMSTOREInitialise (
   // Finally mark the SMM communication buffer provided by CB or SBL as runtime memory
   //
   Status      = gDS->GetMemorySpaceDescriptor (SMMStoreInfoHob->ComBuffer, &GcdDescriptor);
-  if (EFI_ERROR (Status)) {
+  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeReserved) {
     DEBUG((EFI_D_INFO, "%a: No memory space descriptor for com buffer found\n",
       __FUNCTION__));
 
@@ -287,6 +287,39 @@ BlSMMSTOREInitialise (
   Status = gDS->SetMemorySpaceAttributes (
                   SMMStoreInfoHob->ComBuffer,
                   SMMStoreInfoHob->ComBufferSize,
+                  EFI_MEMORY_RUNTIME
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  if (!SMMStoreInfoHob->MmioAddress)
+    return Status;
+
+  //
+  // Mark the memory mapped store as MMIO memory
+  //
+  Status      = gDS->GetMemorySpaceDescriptor (SMMStoreInfoHob->MmioAddress, &GcdDescriptor);
+  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeMemoryMappedIo) {
+    DEBUG((EFI_D_INFO, "%a: No memory space descriptor for com buffer found\n",
+      __FUNCTION__));
+
+    //
+    // Add a new entry if not covered by existing mapping
+    //
+    Status = gDS->AddMemorySpace (
+        EfiGcdMemoryTypeMemoryMappedIo,
+        SMMStoreInfoHob->MmioAddress,
+        SMMStoreInfoHob->NumBlocks * SMMStoreInfoHob->BlockSize,
+        EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  //
+  // Mark as runtime service
+  //
+  Status = gDS->SetMemorySpaceAttributes (
+                  SMMStoreInfoHob->MmioAddress,
+                  SMMStoreInfoHob->NumBlocks * SMMStoreInfoHob->BlockSize,
                   EFI_MEMORY_RUNTIME
                   );
   ASSERT_EFI_ERROR (Status);

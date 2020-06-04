@@ -245,6 +245,7 @@ SMMStoreVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mArgComBuf);
   if (mSmmStoreInfo) {
     EfiConvertPointer (0x0, (VOID**)&mSmmStoreInfo->ComBuffer);
+    EfiConvertPointer (0x0, (VOID**)&mSmmStoreInfo);
   }
 
   return;
