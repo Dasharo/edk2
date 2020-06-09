@@ -118,8 +118,6 @@ SmbusGetSMBaseAddress (
     goto CloseAndReturn;
   }
 
-  DEBUG ((EFI_D_ERROR, "HostC %x\n", Reg32));
-
 CloseAndReturn:
   //
   // Close the I/O Abstraction(s) used to perform the supported test
@@ -178,7 +176,6 @@ SmbusExecuteCommand (
 	/* Start the command. */
   IoWrite8 (IoBase + SMBHSTCTL, IoRead8(IoBase + SMBHSTCTL) | SMBHSTCNT_START);
 		Status = IoRead8 (IoBase + SMBHSTSTAT);
-      DEBUG ((EFI_D_ERROR, "Status 0x%x\n", Status));
 
 	/* Poll for it to start. */
 	do {
