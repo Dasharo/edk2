@@ -44,6 +44,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/PlatformBootManager.h>
 #include <Protocol/PartitionInfo.h>
 
+#include <Guid/ImageAuthentication.h>
 #include <Guid/MemoryTypeInformation.h>
 #include <Guid/FileInfo.h>
 #include <Guid/GlobalVariable.h>
