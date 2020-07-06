@@ -10,10 +10,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "SMBusi801Dxe.h"
 #include <Bus/Pci/PciBusDxe/PciBus.h>
 #include <Library/TimerLib.h>
+#include <Library/PciExpressLib.h>
 #include <Library/IoLib.h>
 
+
 EFI_HANDLE      mDriverHandle = NULL;
-EFI_HANDLE      mPciDevice = NULL;
+UINT32      PciDevice = 0;
 
 /* SMBus register offsets. */
 #define SMBHSTSTAT		0x0
@@ -66,37 +68,11 @@ SmbusGetSMBaseAddress (
   IN VOID
   )
 {
-  EFI_STATUS                           Status;
-  IN EFI_PCI_IO_PROTOCOL               *PciIo;
   UINT32                               Reg32;
   UINT16                               IoBase;
 
   IoBase = 0;
-
-  Status = gBS->HandleProtocol (
-                  mPciDevice,
-                  &gEfiPciIoProtocolGuid,
-                  (VOID **) &PciIo
-                  );
-  if (EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_INFO, "%a: Failed to open gEfiPciIoProtocolGuid\n", __FUNCTION__));
-
-    return 0;
-  }
-
-  //
-  // Read SMBUS I/O base address
-  //
-  Status = PciIo->Pci.Read(
-                          PciIo,
-                          EfiPciWidthUint32,
-                          0x20,
-                          1,
-                          &Reg32
-                          );
-  if (EFI_ERROR (Status)) {
-    goto CloseAndReturn;
-  }
+  Reg32 = PciExpressRead16(PciDevice + 0x20);
 
   if (!(Reg32 & 1) || !(Reg32 & 0xfffc) || ((Reg32 & 0xfffc) == 0xfffc)) {
     goto CloseAndReturn;
@@ -104,30 +80,7 @@ SmbusGetSMBaseAddress (
 
   IoBase = Reg32 & 0xfffc;
 
-  //
-  // Read SMBUS I/O base address
-  //
-  Status = PciIo->Pci.Read(
-                          PciIo,
-                          EfiPciWidthUint32,
-                          0x40,
-                          1,
-                          &Reg32
-                          );
-  if (EFI_ERROR (Status)) {
-    goto CloseAndReturn;
-  }
-
-CloseAndReturn:
-  //
-  // Close the I/O Abstraction(s) used to perform the supported test
-  //
-  gBS->CloseProtocol (
-        mPciDevice,
-        &gEfiPciIoProtocolGuid,
-        PciIo,
-        mPciDevice
-        );
+  CloseAndReturn:
 
   return IoBase;
 }
@@ -519,70 +472,39 @@ InstallSmbusProtocol (
   )
 {
   EFI_STATUS                Status;
-  UINTN                     HandleCount;
-  EFI_HANDLE                *HandleBuffer;
-  UINTN                     Index;
-  EFI_PCI_IO_PROTOCOL       *PciIo;
   UINT16                    IoBase;
+  UINT8                     Device;
+  UINT8                     Function;
+  BOOLEAN                   BreakLoop;
 
+  BreakLoop = FALSE;
+  Status = EFI_SUCCESS;
   //
-  // Start to check all the PciIo to find all possible device
+  // Search for SMBus Controller within PCI Devices
   //
-  HandleCount = 0;
-  HandleBuffer = NULL;
-  Status = gBS->LocateHandleBuffer (
-             ByProtocol,
-             &gEfiPciIoProtocolGuid,
-             NULL,
-             &HandleCount,
-             &HandleBuffer
-           );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
+  for (Device = 0; Device < 32; Device++) {
+    for (Function = 0; Function < 8; Function++) {
+      if (PciExpressRead16(PCI_EXPRESS_LIB_ADDRESS(0, Device, Function, 0x00)) != 0x8086)
+        continue;
 
-  for (Index = 0; Index < HandleCount; Index++) {
-    Status = gBS->HandleProtocol (HandleBuffer[Index], &gEfiPciIoProtocolGuid, (VOID **)&PciIo);
-    if (EFI_ERROR (Status)) {
-      continue;
+      UINT8 BaseClass = PciExpressRead8(PCI_EXPRESS_LIB_ADDRESS(0, Device, Function, 0x0B));
+
+      if (BaseClass == 0x0C) {
+        UINT8 SubClass = PciExpressRead8(PCI_EXPRESS_LIB_ADDRESS(0, Device, Function, 0xA));
+
+        if (SubClass == 0x05) {
+          BreakLoop = TRUE;
+          PciDevice = PCI_EXPRESS_LIB_ADDRESS(0, Device, Function, 0x00);
+          break;
+        }
+      }
     }
-
-    PCI_TYPE00                Pci;
-
-    //
-    // Check for all PCI device
-    //
-    Status = PciIo->Pci.Read (
-              PciIo,
-              EfiPciIoWidthUint32,
-              0,
-              sizeof (Pci) / sizeof (UINT32),
-              &Pci
-            );
-    if (EFI_ERROR (Status)) {
-       continue;
-    }
-
-    //
-    // Here we decide whether it is a i801 SMBUS controller
-    //
-    if ((IS_CLASS2 (&Pci, PCI_CLASS_SERIAL, PCI_CLASS_SERIAL_SMB)) &&
-         (Pci.Hdr.VendorId == 0x8086) &&
-         ((Pci.Hdr.Command & 1) == 1)
-       ) {
-        mPciDevice = HandleBuffer[Index];
-        break;
-    }
+    if (BreakLoop)
+      break;
   }
 
-  gBS->FreePool (HandleBuffer);
+  DEBUG (( EFI_D_INFO, "PCI Device found on 0-%x-%x\n", Device, Function));
 
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-  if (mPciDevice == NULL) {
-    return EFI_UNSUPPORTED;
-  }
 
   IoBase = SmbusGetSMBaseAddress();
   if (!IoBase) {
@@ -602,5 +524,5 @@ InstallSmbusProtocol (
       return Status;
   }
 
-  return Status;
+  return EFI_SUCCESS;
 }
