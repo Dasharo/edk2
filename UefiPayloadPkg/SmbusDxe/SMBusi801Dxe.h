@@ -12,7 +12,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <IndustryStandard/Pci.h>
 #include <IndustryStandard/Pci22.h>
-#include <Protocol/PciIo.h>
 #include <Protocol/SmbusHc.h>
 
 #endif

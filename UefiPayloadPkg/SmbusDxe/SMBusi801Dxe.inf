@@ -36,10 +36,10 @@
   IoLib
   UefiLib
   TimerLib
-
-[Depex]
-  gEfiPciIoProtocolGuid
+  PciExpressLib
 
 [Protocols]
   gEfiSmbusHcProtocolGuid                       ## PRODUCES
-  gEfiPciIoProtocolGuid                         ## COMSUMES
+
+[Depex]
+  TRUE
