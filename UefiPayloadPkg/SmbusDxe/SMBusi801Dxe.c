@@ -15,7 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 
 EFI_HANDLE      mDriverHandle = NULL;
-UINT32      PciDevice = 0;
+UINT32          PciDevice = 0;
 
 /* SMBus register offsets. */
 #define SMBHSTSTAT		0x0

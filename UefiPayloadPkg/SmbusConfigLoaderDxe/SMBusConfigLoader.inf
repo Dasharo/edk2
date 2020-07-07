@@ -29,17 +29,26 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+  SecurityPkg/SecurityPkg.dec
+
+[Guids]
+  gEfiBoardSettingsVariableGuid
+  gEfiSecureBootEnableDisableGuid
 
 [LibraryClasses]
   UefiDriverEntryPoint
   DebugLib
   DevicePathLib
-  UefiLib
   SmbusLib
+  UefiRuntimeServicesTableLib
+  UefiBootServicesTableLib
+  PciExpressLib
+  BaseLib
 
 [Depex]
-  gEfiSmbusHcProtocolGuid AND gEfiPciIoProtocolGuid
+  gEfiSmbusHcProtocolGuid
 
 [Protocols]
-  gEfiSmbusHcProtocolGuid                       ## PRODUCES
-  gEfiPciIoProtocolGuid                         ## COMSUMES
+  gEfiSmbusHcProtocolGuid                       ## CONSUMES
+
