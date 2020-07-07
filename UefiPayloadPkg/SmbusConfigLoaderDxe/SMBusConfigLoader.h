@@ -12,7 +12,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <IndustryStandard/Pci.h>
 #include <IndustryStandard/Pci22.h>
-#include <Protocol/PciIo.h>
 #include <Protocol/SmbusHc.h>
+#include <Guid/BoardSettingsGuid.h>
+
+#define BOARD_SETTINGS_OFFSET   0x1f00
+#define BOARD_SETTINGS_SIZE     0x6
+
+#define HOSTC                   0x40
+#define I2C_EN_HOSTC            (1 << 2)
 
 #endif
