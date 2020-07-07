@@ -127,7 +127,7 @@ InstallSMBusConfigLoader (
   DEBUG (( EFI_D_INFO, "SMBusConfigLoader: Board Settings:\n"));
   DEBUG (( EFI_D_INFO, "SMBusConfigLoader: CRC: %08x - SecureBoot: %02x - PrimaryVideo: %02x\n", BoardSettings.Signature, BoardSettings.SecureBoot, BoardSettings.PrimaryVideo));
 
-  CRC32Array = CalculateCrc32(&Array[4], 2);
+  CRC32Array = CalculateCrc32(&Array[4], BOARD_SETTINGS_SIZE - 4);
   if (CRC32Array != BoardSettings.Signature) {
     DEBUG ((EFI_D_ERROR, "SMBusConfigLoader: Checksum invalid. Reseting to defaults."));
     BoardSettings.PrimaryVideo = 0;
