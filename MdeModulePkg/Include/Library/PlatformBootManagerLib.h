@@ -66,4 +66,8 @@ PlatformBootManagerUnableToBoot (
   VOID
   );
 
+VOID
+EFIAPI
+SetPrimaryVideoOutput (
+  );
 #endif
