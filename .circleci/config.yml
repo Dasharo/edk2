@@ -1,0 +1,62 @@
+version: 2.1
+jobs:
+  PatchCheck:
+    docker:
+      - image: "debian:stable"
+    steps:
+      - run:
+          name: "Installing dependencies"
+          command: |
+            apt-get update
+            apt-get install -y git ssh python3
+      - checkout
+      - run:
+          name: "Run PatchCheck"
+          command: |
+            python3 BaseTools/Scripts/PatchCheck.py ${CIRCLE_BRANCH}
+  Build:
+    parameters:
+      extraArgs:
+        type: string
+        default: ""
+    docker:
+      - image: "debian:stable"
+    steps:
+      - run:
+          name: "Installing dependencies"
+          command: |
+            apt-get update
+            apt-get install -y git ssh gcc g++ build-essential python3 python3-distutils-extra nasm uuid-dev acpica-tools libc6-dev-i386
+            update-alternatives --install /usr/bin/python python /usr/bin/python3 1337
+      - checkout
+      - run:
+          name: "Update submodules"
+          command: |
+            git submodule init
+            git submodule sync --recursive
+            git submodule update --recursive
+      - run:
+          name: "Build basetools"
+          command: |
+            make -C BaseTools
+      - run:
+          name: Build X64
+          command: |
+            source ./edksetup.sh
+            build -D BOOTLOADER=COREBOOT << parameters.extraArgs >> -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
+
+workflows:
+  check-and-build:
+    jobs:
+      - PatchCheck
+      - Build:
+          name: "Default_Build"
+      - Build:
+          name: "SecureBoot_Build"
+          extraArgs: "-D SECURE_BOOT_ENABLE=TRUE"
+      - Build:
+          name: "PXE_PRO1000_Build"
+          extraArgs: "-D NETWORK_INTEL_PRO1000=TRUE -D NETWORK_ENABLE=TRUE -D NETWORK_PXE_BOOT=TRUE"
+      - Build:
+          name: "iPXE_Build"
+          extraArgs: "-D NETWORK_IPXE=TRUE"
