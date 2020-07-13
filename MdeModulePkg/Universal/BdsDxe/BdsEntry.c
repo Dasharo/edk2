@@ -683,6 +683,7 @@ BdsEntry (
   EFI_DEVICE_PATH_PROTOCOL        *FilePath;
   EFI_STATUS                      BootManagerMenuStatus;
   EFI_BOOT_MANAGER_LOAD_OPTION    PlatformDefaultBootOption;
+  EFI_EVENT                       Event;
 
   HotkeyTriggered = NULL;
   Status          = EFI_SUCCESS;
@@ -980,6 +981,14 @@ BdsEntry (
     //
     ASSERT_EFI_ERROR (Status);
   }
+
+  Status = EfiCreateEventReadyToBootEx (
+             TPL_CALLBACK,
+             SetPrimaryVideoOutput,
+             NULL,
+             &Event
+             );
+  ASSERT_EFI_ERROR (Status);
 
   //
   // Launch Boot Manager Menu directly when EFI_OS_INDICATIONS_BOOT_TO_FW_UI is set. Skip HotkeyBoot
