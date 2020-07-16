@@ -40,15 +40,15 @@ jobs:
           command: |
             make -C BaseTools
       - run:
-          name: Build X64
+          name: "Build UefiPayloadPkgIa32X64"
           command: |
             source ./edksetup.sh
             build -D BOOTLOADER=COREBOOT << parameters.extraArgs >> -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
 
 workflows:
-  check-and-build:
+  build:
     jobs:
-      - PatchCheck
+      #- PatchCheck
       - Build:
           name: "Default_Build"
       - Build:
