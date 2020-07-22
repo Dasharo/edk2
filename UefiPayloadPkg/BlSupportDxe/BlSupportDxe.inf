@@ -54,5 +54,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution
 
+[Protocols]
+  gEfiSmbiosProtocolGuid
+
 [Depex]
-  TRUE
+  gEfiSmbiosProtocolGuid
