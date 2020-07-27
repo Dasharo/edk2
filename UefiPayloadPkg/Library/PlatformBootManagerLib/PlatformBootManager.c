@@ -9,6 +9,19 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "PlatformBootManager.h"
 #include "PlatformConsole.h"
+#include <Library/FrameBufferBltLib.h>
+#include <Library/UefiBootManagerLib.h>
+#include <string.h>
+#include <Guid/BoardSettingsGuid.h>
+
+#define PCIE_SLOT1  L"PciRoot(0x0)/Pci(0x1B" //Wildcard
+#define PCIE_SLOT2  L"PciRoot(0x0)/Pci(0x1,0x0)"
+#define PCIE_SLOT3  L"PciRoot(0x0)/Pci(0x1C,0x0)"
+#define PCIE_SLOT4  L"PciRoot(0x0)/Pci(0x1,0x2)"
+#define PCIE_SLOT5  L"PciRoot(0x0)/Pci(0x1D,0x0)"
+#define PCIE_SLOT6  L"PciRoot(0x0)/Pci(0x1,0x1)"
+#define GRAPHICS_IGD_OUTPUT   L"PciRoot(0x0)/Pci(0x2,0x0)"
+#define GRAPHICS_KVM_OUTPUT   L"PciRoot(0x0)/Pci(0x1D,0x6)"
 
 VOID
 InstallReadyToLock (
@@ -209,6 +222,183 @@ ConnectRootBridge (
                   FALSE             // Recursive
                   );
   return Status;
+}
+
+EFI_GRAPHICS_OUTPUT_PROTOCOL  *mGop = NULL;
+
+VOID
+EFIAPI
+SetPrimaryVideoOutput(
+  VOID
+)
+{
+  EFI_STATUS                      Status;
+  UINTN                           HandleCount;
+  EFI_HANDLE                      *Handle;
+  UINTN                           Index;
+  EFI_DEVICE_PATH_PROTOCOL        *TempDevicePath;
+  CHAR16                          *Str;
+  BOARD_SETTINGS                  BoardSettings;
+  UINTN                           BoardSettingsSize;
+
+  Handle = NULL;
+  Index = 0;
+  BoardSettingsSize = sizeof(BOARD_SETTINGS);
+
+  DEBUG ((EFI_D_ERROR, "SetPrimaryVideoOutput\n"));
+
+  // Fetch Board Settings
+  Status = gRT->GetVariable(BOARD_SETTINGS_NAME,
+    &gEfiBoardSettingsVariableGuid,
+    NULL,
+    &BoardSettingsSize,
+    &BoardSettings);
+
+  if (EFI_ERROR(Status)) {
+    DEBUG((EFI_D_ERROR, "Fetching Board Settings errored with %x\n", Status));
+    return;
+  }
+
+  // Locate all GOPs
+  Status = gBS->LocateHandleBuffer(ByProtocol, 
+                  &gEfiGraphicsOutputProtocolGuid,
+                  NULL,
+                  &HandleCount,
+                  &Handle);
+
+  if (EFI_ERROR(Status)) {
+    DEBUG((EFI_D_ERROR, "Fetching handles errored with %x\n", Status));
+    return;
+  }
+
+  DEBUG ((EFI_D_INFO, "Amount of Handles: %x\n", HandleCount));
+
+  // Loop through all GOPs to find the primary one
+  for (Index=0; Index < HandleCount; Index++) {
+    // Get Device Path of GOP
+    Status = gBS->HandleProtocol (Handle[Index], &gEfiDevicePathProtocolGuid,   (VOID*)&TempDevicePath);
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+    // Get Protocol of GOP
+    Status = gBS->HandleProtocol (Handle[Index], &gEfiGraphicsOutputProtocolGuid, (VOID**)&mGop);
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    Str = ConvertDevicePathToText(TempDevicePath, FALSE, TRUE);
+    DEBUG ((EFI_D_INFO, "Current Device: %s\n", Str));
+    // Check which GOP should be enabled
+    if ((!StrnCmp(Str, GRAPHICS_KVM_OUTPUT, StrLen(GRAPHICS_KVM_OUTPUT))) && (HandleCount > 2))  {
+      DEBUG ((EFI_D_INFO, "Found the KVM Device.."));
+      // If Primary Video not KVM - disable.
+      if (BoardSettings.PrimaryVideo != 0) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if (!StrnCmp(Str, GRAPHICS_IGD_OUTPUT, StrLen(GRAPHICS_IGD_OUTPUT))) {
+      DEBUG ((EFI_D_INFO, "Found the IGD Device.."));
+      // If Primary Video not IGD - disable.
+      if (BoardSettings.PrimaryVideo != 1) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT1, StrLen(PCIE_SLOT1)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT1 Graphics Device.."));
+      // If Primary Video not PCI - disable.
+      if (BoardSettings.PrimaryVideo != 2) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT2, StrLen(PCIE_SLOT2)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT2 Graphics Device.."));
+      // If Primary Video not PEG - disable.
+      if (BoardSettings.PrimaryVideo != 3) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT3, StrLen(PCIE_SLOT3)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT3 Graphics Device.."));
+      // If Primary Video not PEG - disable.
+      if (BoardSettings.PrimaryVideo != 4) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT4, StrLen(PCIE_SLOT4)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT4 Graphics Device.."));
+      // If Primary Video not PEG - disable.
+      if (BoardSettings.PrimaryVideo != 5) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT5, StrLen(PCIE_SLOT5)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT5 Graphics Device.."));
+      // If Primary Video not PEG - disable.
+      if (BoardSettings.PrimaryVideo != 6) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+
+      DEBUG ((EFI_D_INFO, "\n"));
+    } else if
+    (!StrnCmp(Str, PCIE_SLOT6, StrLen(PCIE_SLOT6)))
+    {
+      DEBUG ((EFI_D_INFO, "Found PCI SLOT2 Graphics Device.."));
+      // If Primary Video not PEG - disable.
+      if (BoardSettings.PrimaryVideo != 7) {
+        DEBUG ((EFI_D_INFO, "Disabling"));
+        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
+        if (EFI_ERROR (Status)) {
+          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
+        }
+      }
+
+      DEBUG ((EFI_D_INFO, "\n"));
+    }
+
+  } // for loop
+  
+  return;
 }
 
 /**

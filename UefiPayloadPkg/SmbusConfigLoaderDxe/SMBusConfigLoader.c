@@ -80,7 +80,6 @@ ReadBoardOptionFromEEPROM (
         DEBUG ((EFI_D_ERROR, "Failed to read SMBUS byte at offset 0x%x\n", Index));
         continue;
     }
-    DEBUG (( EFI_D_ERROR, "Read %x\n", Value));
     CopyMem(&Buffer[Index-BOARD_SETTINGS_OFFSET], &Value, sizeof(Value));
   }
 }
@@ -129,7 +128,7 @@ InstallSMBusConfigLoader (
 
   CRC32Array = CalculateCrc32(&Array[4], BOARD_SETTINGS_SIZE - 4);
   if (CRC32Array != BoardSettings.Signature) {
-    DEBUG ((EFI_D_ERROR, "SMBusConfigLoader: Checksum invalid. Reseting to defaults."));
+    DEBUG ((EFI_D_ERROR, "SMBusConfigLoader: Checksum invalid. Should be %04X - is: %04x.\nReseting to defaults.\n", CRC32Array, BoardSettings.Signature));
     BoardSettings.PrimaryVideo = 0;
     BoardSettings.SecureBoot = 1;
   }

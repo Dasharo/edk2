@@ -50,6 +50,7 @@
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
+  gEfiBoardSettingsVariableGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES
@@ -59,6 +60,7 @@
   gEfiDxeSmmReadyToLockProtocolGuid
   gEfiSmmAccess2ProtocolGuid
   gEfiPciRootBridgeIoProtocolGuid               ## CONSUMES
+  gEfiDevicePathProtocolGuid      ## CONSUMES
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
