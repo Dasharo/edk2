@@ -1,0 +1,76 @@
+---
+name: Testing
+
+on:
+  push:
+    branches: [9elements]
+  pull_request:
+    branches: [9elements]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -qq update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get -qqy install \
+          git python3 python3-distutils-extra build-essential nasm iasl uuid-dev
+          DEBIAN_FRONTEND=noninteractive sudo apt-get clean
+          sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1337
+
+      - uses: actions/checkout@v2
+
+      - name: Update submodules
+        run: |
+          git submodule init
+          git submodule sync --recursive
+          git submodule update --recursive
+
+      - name: Build BaseTools
+        run: |
+          make -C BaseTools
+
+      - name: Build default Payload
+        run: |
+          export extraFlags=""
+          source ./edksetup.sh
+          build $extraFlags -D BOOTLOADER=COREBOOT -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: DEFAULT_UEFIPAYLOAD.fd
+          path: /home/runner/work/edk2-1/edk2-1/Build/UefiPayloadPkgX64/DEBUG_GCC5/FV/UEFIPAYLOAD.fd
+
+      - name: Build SecureBoot Payload
+        run: |
+          export extraFlags="-D SECURE_BOOT_ENABLE=TRUE"
+          source ./edksetup.sh
+          build $extraFlags -D BOOTLOADER=COREBOOT -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: SECUREBOOT_UEFIPAYLOAD.fd
+          path: /home/runner/work/edk2-1/edk2-1/Build/UefiPayloadPkgX64/DEBUG_GCC5/FV/UEFIPAYLOAD.fd
+
+      - name: Build PXE_PRO1000 Payload
+        run: |
+          export extraFlags="-D NETWORK_INTEL_PRO1000=TRUE -D NETWORK_ENABLE=TRUE -D NETWORK_PXE_BOOT=TRUE"
+          source ./edksetup.sh
+          build $extraFlags -D BOOTLOADER=COREBOOT -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: PXE_PRO1000_UEFIPAYLOAD.fd
+          path: /home/runner/work/edk2-1/edk2-1/Build/UefiPayloadPkgX64/DEBUG_GCC5/FV/UEFIPAYLOAD.fd
+
+      - name: Build iPXE Payload
+        run: |
+          export extraFlags="-D NETWORK_IPXE=TRUE"
+          source ./edksetup.sh
+          build $extraFlags -D BOOTLOADER=COREBOOT -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: IPXE_UEFIPAYLOAD.fd
+          path: /home/runner/work/edk2-1/edk2-1/Build/UefiPayloadPkgX64/DEBUG_GCC5/FV/UEFIPAYLOAD.fd
