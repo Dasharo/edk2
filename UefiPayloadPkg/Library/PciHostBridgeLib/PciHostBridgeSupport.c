@@ -399,7 +399,7 @@ ScanForRootBridges (
   // update the Primary Bus Number for the next PCI root bridge to be this PCI
   // root bridge's subordinate bus number + 1.
   //
-  for (PrimaryBus = 0; PrimaryBus <= PCI_MAX_BUS; PrimaryBus = SubBus + 1) {
+  for (PrimaryBus = 0; PrimaryBus <= 64; PrimaryBus = SubBus + 1) {
     SubBus = PrimaryBus;
     Attributes = 0;
 
