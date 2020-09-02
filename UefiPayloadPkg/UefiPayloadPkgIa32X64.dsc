@@ -510,10 +510,6 @@
   }
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
-   UefiPayloadPkg/SmbusConfigLoaderDxe/SMBusConfigLoader.inf {
-    <LibraryClasses>
-      SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
-  }
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
   UefiPayloadPkg/SecureBootEnrollDefaultKeys/SecureBootSetup.inf
@@ -620,12 +616,6 @@
   OvmfPkg/SioBusDxe/SioBusDxe.inf
   MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
 !endif
-
-  #
-  # SMBUS Support
-  #
-  UefiPayloadPkg/SmbusDxe/SMBusi801Dxe.inf
-  UefiPayloadPkg/SmbusConfigLoaderDxe/SMBusConfigLoader.inf
 
   #
   # Console Support

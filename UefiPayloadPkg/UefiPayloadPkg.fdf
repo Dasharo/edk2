@@ -91,15 +91,7 @@ APRIORI DXE {
   # Init Test Driver before Secure Boot
   # INF  UefiPayloadPkg/TestDriverDxe/TestDriver.inf
   INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
-  INF  UefiPayloadPkg/SmbusDxe/SMBusi801Dxe.inf
-  INF  UefiPayloadPkg/SmbusConfigLoaderDxe/SMBusConfigLoader.inf
 }
-
-#
-# SMBUS Support
-#
-INF UefiPayloadPkg/SmbusDxe/SMBusi801Dxe.inf
-INF UefiPayloadPkg/SmbusConfigLoaderDxe/SMBusConfigLoader.inf
 
 #
 # DXE Phase modules
