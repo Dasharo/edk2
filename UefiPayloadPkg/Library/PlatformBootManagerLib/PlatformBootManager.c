@@ -9,9 +9,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "PlatformBootManager.h"
 #include "PlatformConsole.h"
+#include <Library/BaseLib.h>
 #include <Library/FrameBufferBltLib.h>
 #include <Library/UefiBootManagerLib.h>
-#include <string.h>
 #include <Guid/BoardSettingsGuid.h>
 
 #define PCIE_SLOT1  L"PciRoot(0x0)/Pci(0x1B" //Wildcard
