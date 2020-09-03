@@ -277,5 +277,8 @@ SMMStoreInitialize (
 
   mSmmStoreInfo = SmmStoreInfoHob;
 
+  DEBUG((EFI_D_INFO, "%a: mArgComBuf %p, mArgComBufPhys %p, mSmmStoreInfo %p\n",
+      __FUNCTION__,mArgComBuf, mArgComBufPhys, mSmmStoreInfo));
+
   return EFI_SUCCESS;
 }
