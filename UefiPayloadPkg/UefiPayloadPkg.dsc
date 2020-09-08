@@ -221,12 +221,6 @@
   #
   # CPU
   #
-
-!if $(BOOTLOADER) == "COREBOOT" && $(DISABLE_MTRR_PROGRAMMING) == TRUE
-  MtrrLib|UefiPayloadPkg/Library/MtrrLibNull/MtrrLibNull.inf
-!else
-  MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
-!endif
   LocalApicLib|UefiCpuPkg/Library/BaseXApicX2ApicLib/BaseXApicX2ApicLib.inf
 
   #
