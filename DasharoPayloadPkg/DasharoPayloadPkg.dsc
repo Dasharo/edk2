@@ -493,6 +493,9 @@
 
   gUefiCpuPkgTokenSpaceGuid.PcdFirstTimeWakeUpAPsBySipi|FALSE
 
+  # Disable MTRR programming as coreboot has already done it
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuDisableMtrrProgramming|TRUE
+
 !if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
 !else
