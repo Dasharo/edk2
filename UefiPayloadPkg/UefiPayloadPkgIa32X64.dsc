@@ -471,6 +471,7 @@
 
   UefiPayloadPkg/BlSupportPei/BlSupportPei.inf
   MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+  UefiPayloadPkg/NullVariable/NullVariablePei.inf
 
 !if $(TPM_ENABLE) == TRUE
   UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf

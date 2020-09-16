@@ -1,0 +1,45 @@
+## @file
+#  Implements stub Variable Services required by PEIM and installs PEI ReadOnly Varaiable2 PPI.
+#
+#  Copyright (c) 2006 - 2019, Intel Corporation. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PeiVariableNull
+  MODULE_UNI_FILE                = PeiVariableNull.uni
+  FILE_GUID                      = 83B805F1-4393-48EB-AF50-4D022C5DB55C
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PeimInitializeVariableServices
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  NullVariable.c
+  NullVariable.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  PeimEntryPoint
+  PeiServicesTablePointerLib
+  PeiServicesLib
+
+[Ppis]
+  gEfiPeiReadOnlyVariable2PpiGuid   ## PRODUCES
+
+[Depex]
+  TRUE
+
+[UserExtensions.TianoCore."ExtraFiles"]
+  PeiVariableNullExtra.uni
