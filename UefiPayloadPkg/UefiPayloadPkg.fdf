@@ -53,7 +53,7 @@ INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 INF UefiPayloadPkg/NullVariable/NullVariablePei.inf
 
 !if $(TPM_ENABLE) == TRUE
-INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
+INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
 #INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
