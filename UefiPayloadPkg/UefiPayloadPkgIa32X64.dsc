@@ -395,6 +395,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|100
 
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|0
 
 ################################################################################
 #
