@@ -474,7 +474,7 @@
   UefiPayloadPkg/NullVariable/NullVariablePei.inf
 
 !if $(TPM_ENABLE) == TRUE
-  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
+  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
   SecurityPkg/Tcg/TcgPei/TcgPei.inf
   SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf {
     <LibraryClasses>
