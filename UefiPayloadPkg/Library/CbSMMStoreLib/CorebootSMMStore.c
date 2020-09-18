@@ -145,7 +145,7 @@ SMMStoreRead (
     return EFI_NO_RESPONSE;
   }
 
-  CopyMem (Buffer, (VOID *)(mSmmStoreInfo->ComBuffer + Offset), *NumBytes);
+  CopyMem (Buffer, (VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), *NumBytes);
 
   return EFI_SUCCESS;
 }
@@ -186,7 +186,7 @@ SMMStoreWrite (
   mArgComBuf->raw_write.bufoffset = Offset;
   mArgComBuf->raw_write.block_id = Lba;
 
-  CopyMem ((VOID *)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
+  CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
 
   Result = call_smm(mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_WRITE, mArgComBufPhys);
   if (Result == SMMSTORE_RET_FAILURE) {

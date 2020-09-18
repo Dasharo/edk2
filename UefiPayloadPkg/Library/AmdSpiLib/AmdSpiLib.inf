@@ -1,0 +1,39 @@
+## @file
+#  AMD SPI library
+#
+#  Copyright (c) 2020 3mdeb Embedded Systems Consulting.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = AmdSpi
+  FILE_GUID                      = c2c2e656-ee66-41e0-bee3-29c6f16f49c0
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = AmdSpiLib
+
+[Sources]
+  Adesto.c
+  AmdSpiLib.c
+  FchSPICtrl.c
+  GenericSPI.c
+  GenericSPI.h
+  SPIFlashInternal.c
+  SPIFlashInternal.h
+  Winbond.c
+  Winbond.h
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  BaseLib
+  DebugLib
+  PciLib
+  TimerLib

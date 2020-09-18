@@ -112,6 +112,7 @@ PcRtcInit (
   BOOLEAN         Enabled;
   BOOLEAN         Pending;
 
+  DEBUG((DEBUG_INFO, "%a\n", __FUNCTION__));
   //
   // Acquire RTC Lock to make access to RTC atomic
   //
@@ -148,6 +149,7 @@ PcRtcInit (
   //
   Status = RtcWaitToUpdate (PcdGet32 (PcdRealTimeClockUpdateTimeout));
   if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "%a: RTC not functional\n", __FUNCTION__));
     //
     // Set the variable with default value if the RTC is functioning incorrectly.
     //
@@ -233,6 +235,7 @@ PcRtcInit (
   //
   Status = PcRtcSetTime (&Time, Global);
   if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "%a: failed to set RTC time\n", __FUNCTION__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -272,8 +275,9 @@ PcRtcInit (
   Status = RtcWaitToUpdate (PcdGet32 (PcdRealTimeClockUpdateTimeout));
   if (EFI_ERROR (Status)) {
     if (!EfiAtRuntime ()) {
-    EfiReleaseLock (&Global->RtcLock);
+      EfiReleaseLock (&Global->RtcLock);
     }
+    DEBUG((DEBUG_INFO, "%a: faield to update RTC\n", __FUNCTION__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -293,6 +297,7 @@ PcRtcInit (
     if (!EfiAtRuntime ()) {
       EfiReleaseLock (&Global->RtcLock);
     }
+    DEBUG((DEBUG_INFO, "%a: failed to set variable RTCALARM\n", __FUNCTION__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -366,6 +371,7 @@ PcRtcGetTime (
   //
   Status = RtcWaitToUpdate (PcdGet32 (PcdRealTimeClockUpdateTimeout));
   if (EFI_ERROR (Status)) {
+      DEBUG((DEBUG_INFO, "%a RTC did not update\n", __FUNCTION__));
       if (!EfiAtRuntime ()) {
         EfiReleaseLock (&Global->RtcLock);
       }
@@ -407,6 +413,7 @@ PcRtcGetTime (
     Status = RtcTimeFieldsValid (Time);
   }
   if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "%a time fields invalid after convert to EFI\n", __FUNCTION__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -458,6 +465,7 @@ PcRtcSetTime (
   //
   Status = RtcTimeFieldsValid (Time);
   if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "%a time fields invalid\n", __FUNCTION__));
     return Status;
   }
 
@@ -474,6 +482,7 @@ PcRtcSetTime (
   //
   Status = RtcWaitToUpdate (PcdGet32 (PcdRealTimeClockUpdateTimeout));
   if (EFI_ERROR (Status)) {
+     DEBUG((DEBUG_INFO, "%a RTC did not update\n", __FUNCTION__));
      if (!EfiAtRuntime ()) {
        EfiReleaseLock (&Global->RtcLock);
      }
@@ -507,6 +516,7 @@ PcRtcSetTime (
   }
 
   if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "%a failed to set variables\n", __FUNCTION__));
     if (!EfiAtRuntime ()) {
       EfiReleaseLock (&Global->RtcLock);
     }
@@ -988,6 +998,14 @@ RtcTimeFieldsValid (
       Time->Nanosecond > 999999999 ||
       (!(Time->TimeZone == EFI_UNSPECIFIED_TIMEZONE || (Time->TimeZone >= -1440 && Time->TimeZone <= 1440))) ||
       ((Time->Daylight & (~(EFI_TIME_ADJUST_DAYLIGHT | EFI_TIME_IN_DAYLIGHT))) != 0)) {
+      DEBUG ((DEBUG_INFO, "Year: %04x\n", Time->Year));
+      DEBUG ((DEBUG_INFO, "Month: %02x\n", Time->Month));
+      DEBUG ((DEBUG_INFO, "Hour: %02x\n", Time->Hour));
+      DEBUG ((DEBUG_INFO, "Minute: %02x\n", Time->Minute));
+      DEBUG ((DEBUG_INFO, "Second: %02x\n", Time->Second));
+      DEBUG ((DEBUG_INFO, "Nanosecond: %08x\n", Time->Nanosecond));
+      DEBUG ((DEBUG_INFO, "TimeZone: %d\n", Time->TimeZone));
+      DEBUG ((DEBUG_INFO, "Daylight: %02x\n", Time->Daylight));
     return EFI_INVALID_PARAMETER;
   }
 

@@ -128,12 +128,15 @@ InitializePcRtc (
   EFI_STATUS  Status;
   EFI_EVENT   Event;
 
+  DEBUG((DEBUG_INFO, "%a\n", __FUNCTION__));
+
   EfiInitializeLock (&mModuleGlobal.RtcLock, TPL_CALLBACK);
   mModuleGlobal.CenturyRtcAddress = GetCenturyRtcAddress ();
 
   Status = PcRtcInit (&mModuleGlobal);
   ASSERT_EFI_ERROR (Status);
 
+  DEBUG((DEBUG_INFO, "%a: CreateEventEx1\n", __FUNCTION__));
   Status = gBS->CreateEventEx (
                   EVT_NOTIFY_SIGNAL,
                   TPL_CALLBACK,
@@ -144,6 +147,7 @@ InitializePcRtc (
                   );
   ASSERT_EFI_ERROR (Status);
 
+  DEBUG((DEBUG_INFO, "%a: CreateEventEx2\n", __FUNCTION__));
   Status = gBS->CreateEventEx (
                   EVT_NOTIFY_SIGNAL,
                   TPL_CALLBACK,
@@ -158,7 +162,8 @@ InitializePcRtc (
   gRT->SetTime       = PcRtcEfiSetTime;
   gRT->GetWakeupTime = PcRtcEfiGetWakeupTime;
   gRT->SetWakeupTime = PcRtcEfiSetWakeupTime;
-
+  
+  DEBUG((DEBUG_INFO, "%a: Install protocol interfaces\n", __FUNCTION__));
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &mHandle,
                   &gEfiRealTimeClockArchProtocolGuid,

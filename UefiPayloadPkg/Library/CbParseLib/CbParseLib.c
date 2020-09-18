@@ -595,36 +595,36 @@ ParseGfxDeviceInfo (
   @retval RETURN_NOT_FOUND   Failed to find the SMM store buffer information .
 
 **/
-RETURN_STATUS
-EFIAPI
-ParseSMMSTOREInfo (
-  OUT SMMSTORE_INFO       *SMMSTOREInfo
-  )
-{
-  struct cb_smmstorev2                  *CbSSRec;
+// RETURN_STATUS
+// EFIAPI
+// ParseSMMSTOREInfo (
+//   OUT SMMSTORE_INFO       *SMMSTOREInfo
+//   )
+// {
+//   struct cb_smmstorev2                  *CbSSRec;
 
-  if (SMMSTOREInfo == NULL) {
-    return RETURN_INVALID_PARAMETER;
-  }
+//   if (SMMSTOREInfo == NULL) {
+//     return RETURN_INVALID_PARAMETER;
+//   }
 
-  CbSSRec = FindCbTag (CB_TAG_SMMSTOREV2);
-  if (CbSSRec == NULL) {
-    return RETURN_NOT_FOUND;
-  }
+//   CbSSRec = FindCbTag (CB_TAG_SMMSTOREV2);
+//   if (CbSSRec == NULL) {
+//     return RETURN_NOT_FOUND;
+//   }
 
-  DEBUG ((DEBUG_INFO, "Found SMM Store information\n"));
-  DEBUG ((DEBUG_INFO, "block size: 0x%x\n", CbSSRec->block_size));
-  DEBUG ((DEBUG_INFO, "number of blocks: 0x%x\n", CbSSRec->num_blocks));
-  DEBUG ((DEBUG_INFO, "communication buffer: 0x%x\n", CbSSRec->com_buffer));
-  DEBUG ((DEBUG_INFO, "communication buffer size: 0x%x\n", CbSSRec->com_buffer_size));
-  DEBUG ((DEBUG_INFO, "MMIO address of store: 0x%x\n", CbSSRec->mmap_addr));
+//   DEBUG ((DEBUG_INFO, "Found SMM Store information\n"));
+//   DEBUG ((DEBUG_INFO, "block size: 0x%x\n", CbSSRec->block_size));
+//   DEBUG ((DEBUG_INFO, "number of blocks: 0x%x\n", CbSSRec->num_blocks));
+//   DEBUG ((DEBUG_INFO, "communication buffer: 0x%x\n", CbSSRec->com_buffer));
+//   DEBUG ((DEBUG_INFO, "communication buffer size: 0x%x\n", CbSSRec->com_buffer_size));
+//   DEBUG ((DEBUG_INFO, "MMIO address of store: 0x%x\n", CbSSRec->mmap_addr));
 
-  SMMSTOREInfo->ComBuffer = CbSSRec->com_buffer;
-  SMMSTOREInfo->ComBufferSize = CbSSRec->com_buffer_size;
-  SMMSTOREInfo->BlockSize = CbSSRec->block_size;
-  SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
-  SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
-  SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
+//   SMMSTOREInfo->ComBuffer = CbSSRec->com_buffer;
+//   SMMSTOREInfo->ComBufferSize = CbSSRec->com_buffer_size;
+//   SMMSTOREInfo->BlockSize = CbSSRec->block_size;
+//   SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
+//   SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
+//   SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
 
-  return RETURN_SUCCESS;
-}
+//   return RETURN_SUCCESS;
+// }

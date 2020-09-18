@@ -12,7 +12,7 @@
 ///
 /// System Table Information GUID
 ///
-extern EFI_GUID gEfiSMMSTOREInfoHobGuid;
+// extern EFI_GUID gEfiSMMSTOREInfoHobGuid;
 
 typedef struct {
   UINT64    ComBuffer;

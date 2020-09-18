@@ -12,7 +12,7 @@
 #include <Guid/SerialPortInfoGuid.h>
 #include <Guid/SystemTableInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
-#include <Guid/SMMSTOREInfoGuid.h>
+//#include <Guid/SMMSTOREInfoGuid.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
@@ -127,10 +127,10 @@ ParseGfxDeviceInfo (
   @retval RETURN_NOT_FOUND   Failed to find the SMM store buffer information .
 
 **/
-RETURN_STATUS
-EFIAPI
-ParseSMMSTOREInfo (
-  OUT SMMSTORE_INFO       *SMMSTOREInfo
-  );
+// RETURN_STATUS
+// EFIAPI
+// ParseSMMSTOREInfo (
+//   OUT SMMSTORE_INFO       *SMMSTOREInfo
+//   );
 
 #endif

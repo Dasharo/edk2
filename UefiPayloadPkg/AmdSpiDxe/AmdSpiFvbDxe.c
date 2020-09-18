@@ -1,4 +1,4 @@
-/*++ @file  BlSMMStoreFvbDxe.c
+/*++ @file  AmdSpiFvbDxe.c
 
  Copyright (c) 2020, 9elements Agency GmbH<BR>
 
@@ -17,13 +17,13 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DxeServicesTableLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/SMMStoreLib.h>
+#include <Library/AmdSpiLib.h>
 
 #include <Guid/VariableFormat.h>
 #include <Guid/SystemNvDataGuid.h>
 #include <Guid/NvVarStoreFormatted.h>
 
-#include "BlSMMStoreDxe.h"
+#include "AmdSpiDxe.h"
 
 STATIC EFI_EVENT mFvbVirtualAddrChangeEvent;
 STATIC UINTN     mFlashNvStorageVariableBase;
@@ -39,6 +39,127 @@ STATIC UINTN     mFlashNvStorageVariableBase;
 ///
 
 /**
+  Check the integrity of firmware volume header.
+
+  @param[in] FwVolHeader - A pointer to a firmware volume header
+
+  @retval  EFI_SUCCESS   - The firmware volume is consistent
+  @retval  EFI_NOT_FOUND - The firmware volume has been corrupted.
+
+**/
+EFI_STATUS
+ValidateFvHeader (
+  IN  AMD_SPI_INSTANCE *Instance
+  )
+{
+  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
+  UINT16                      Checksum;
+  EFI_FIRMWARE_VOLUME_HEADER  *FwVolHeader;
+  VARIABLE_STORE_HEADER       *VariableStoreHeader;
+  UINTN                       VariableStoreLength;
+  UINTN                       FvLength;
+  EFI_STATUS                  TempStatus;
+  UINTN                       BufferSize;
+  UINTN                       BufferSizeReqested;
+
+  BufferSizeReqested = sizeof(EFI_FIRMWARE_VOLUME_HEADER);
+  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
+  if (!FwVolHeader) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  BufferSize = BufferSizeReqested;
+  TempStatus = FvbRead (&Instance->FvbProtocol, 0, 0, &BufferSize, (UINT8 *)FwVolHeader);
+  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
+    FreePool (FwVolHeader);
+    return EFI_DEVICE_ERROR;
+  }
+
+  FvLength = PcdGet32(PcdFlashNvStorageVariableSize) + PcdGet32(PcdFlashNvStorageFtwWorkingSize) +
+      PcdGet32(PcdFlashNvStorageFtwSpareSize);
+
+  //
+  // Verify the header revision, header signature, length
+  // Length of FvBlock cannot be 2**64-1
+  // HeaderLength cannot be an odd number
+  //
+  if (   (FwVolHeader->Revision  != EFI_FVH_REVISION)
+      || (FwVolHeader->Signature != EFI_FVH_SIGNATURE)
+      || (FwVolHeader->FvLength  != FvLength)
+      )
+  {
+    DEBUG ((EFI_D_INFO, "%a: No Firmware Volume header present\n", __FUNCTION__));
+    FreePool (FwVolHeader);
+    return EFI_NOT_FOUND;
+  }
+
+  // Check the Firmware Volume Guid
+  if( CompareGuid (&FwVolHeader->FileSystemGuid, &gEfiSystemNvDataFvGuid) == FALSE ) {
+    DEBUG ((EFI_D_INFO, "%a: Firmware Volume Guid non-compatible\n", __FUNCTION__));
+    FreePool (FwVolHeader);
+    return EFI_NOT_FOUND;
+  }
+
+  BufferSizeReqested = FwVolHeader->HeaderLength;
+  FreePool (FwVolHeader);
+  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
+  if (!FwVolHeader) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  BufferSize = BufferSizeReqested;
+  TempStatus = FvbRead (&Instance->FvbProtocol, 0, 0, &BufferSize, (UINT8 *)FwVolHeader);
+  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
+    FreePool (FwVolHeader);
+    return EFI_DEVICE_ERROR;
+  }
+
+  // Verify the header checksum
+  Checksum = CalculateSum16((UINT16*)FwVolHeader, FwVolHeader->HeaderLength);
+  if (Checksum != 0) {
+    DEBUG ((EFI_D_INFO, "%a: FV checksum is invalid (Checksum:0x%X)\n",
+      __FUNCTION__, Checksum));
+    FreePool (FwVolHeader);
+    return EFI_NOT_FOUND;
+  }
+
+  BufferSizeReqested = sizeof(VARIABLE_STORE_HEADER);
+  VariableStoreHeader = (VARIABLE_STORE_HEADER*)AllocatePool(BufferSizeReqested);
+  if (!VariableStoreHeader) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  BufferSize = BufferSizeReqested;
+  TempStatus = FvbRead (&Instance->FvbProtocol, 0, FwVolHeader->HeaderLength, &BufferSize, (UINT8 *)VariableStoreHeader);
+  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
+    FreePool (VariableStoreHeader);
+    FreePool (FwVolHeader);
+    return EFI_DEVICE_ERROR;
+  }
+
+  // Check the Variable Store Guid
+  if (!CompareGuid (&VariableStoreHeader->Signature, &gEfiVariableGuid) &&
+      !CompareGuid (&VariableStoreHeader->Signature, &gEfiAuthenticatedVariableGuid)) {
+    DEBUG ((EFI_D_INFO, "%a: Variable Store Guid non-compatible\n",
+      __FUNCTION__));
+    FreePool (FwVolHeader);
+    FreePool (VariableStoreHeader);
+    return EFI_NOT_FOUND;
+  }
+
+  VariableStoreLength = PcdGet32 (PcdFlashNvStorageVariableSize) - FwVolHeader->HeaderLength;
+  if (VariableStoreHeader->Size != VariableStoreLength) {
+    DEBUG ((EFI_D_INFO, "%a: Variable Store Length does not match\n",
+      __FUNCTION__));
+    FreePool (FwVolHeader);
+    FreePool (VariableStoreHeader);
+    return EFI_NOT_FOUND;
+  }
+
+  FreePool (FwVolHeader);
+  FreePool (VariableStoreHeader);
+
+  return EFI_SUCCESS;
+}
+
+/**
   Initialises the FV Header and Variable Store Header
   to support variable operations.
 
@@ -47,7 +168,7 @@ STATIC UINTN     mFlashNvStorageVariableBase;
 **/
 EFI_STATUS
 InitializeFvAndVariableStoreHeaders (
-  IN SMMSTORE_INSTANCE *Instance
+  IN AMD_SPI_INSTANCE *Instance
   )
 {
   DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
@@ -105,139 +226,16 @@ InitializeFvAndVariableStoreHeaders (
   // VARIABLE_STORE_HEADER
   //
   VariableStoreHeader = (VARIABLE_STORE_HEADER*)((UINTN)Headers + FirmwareVolumeHeader->HeaderLength);
-  CopyGuid (&VariableStoreHeader->Signature, &gEfiVariableGuid);
+  CopyGuid (&VariableStoreHeader->Signature, &gEfiAuthenticatedVariableGuid);
   VariableStoreHeader->Size = PcdGet32(PcdFlashNvStorageVariableSize) - FirmwareVolumeHeader->HeaderLength;
   VariableStoreHeader->Format            = VARIABLE_STORE_FORMATTED;
   VariableStoreHeader->State             = VARIABLE_STORE_HEALTHY;
 
   // Install the combined super-header in the store
   Status = FvbWrite (&Instance->FvbProtocol, 0, 0, &HeadersLength, Headers);
-
   FreePool (Headers);
+
   return Status;
-}
-
-/**
-  Check the integrity of firmware volume header.
-
-  @param[in] FwVolHeader - A pointer to a firmware volume header
-
-  @retval  EFI_SUCCESS   - The firmware volume is consistent
-  @retval  EFI_NOT_FOUND - The firmware volume has been corrupted.
-
-**/
-EFI_STATUS
-ValidateFvHeader (
-  IN  SMMSTORE_INSTANCE *Instance
-  )
-{
-  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
-  UINT16                      Checksum;
-  EFI_FIRMWARE_VOLUME_HEADER  *FwVolHeader;
-  VARIABLE_STORE_HEADER       *VariableStoreHeader;
-  UINTN                       VariableStoreLength;
-  UINTN                       FvLength;
-  EFI_STATUS                  TempStatus;
-  UINTN                       BufferSize;
-  UINTN                       BufferSizeReqested;
-
-  BufferSizeReqested = sizeof(EFI_FIRMWARE_VOLUME_HEADER);
-  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
-  if (!FwVolHeader) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-  BufferSize = BufferSizeReqested;
-  TempStatus = SMMStoreRead (0, 0, &BufferSize, (UINT8 *)FwVolHeader);
-  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
-    FreePool (FwVolHeader);
-    return EFI_DEVICE_ERROR;
-  }
-
-  FvLength = PcdGet32(PcdFlashNvStorageVariableSize) + PcdGet32(PcdFlashNvStorageFtwWorkingSize) +
-      PcdGet32(PcdFlashNvStorageFtwSpareSize);
-
-  //
-  // Verify the header revision, header signature, length
-  // Length of FvBlock cannot be 2**64-1
-  // HeaderLength cannot be an odd number
-  //
-  if (   (FwVolHeader->Revision  != EFI_FVH_REVISION)
-      || (FwVolHeader->Signature != EFI_FVH_SIGNATURE)
-      || (FwVolHeader->FvLength  != FvLength)
-      )
-  {
-    DEBUG ((EFI_D_INFO, "%a: No Firmware Volume header present\n",
-      __FUNCTION__));
-    FreePool (FwVolHeader);
-    return EFI_NOT_FOUND;
-  }
-
-  // Check the Firmware Volume Guid
-  if( CompareGuid (&FwVolHeader->FileSystemGuid, &gEfiSystemNvDataFvGuid) == FALSE ) {
-    DEBUG ((EFI_D_INFO, "%a: Firmware Volume Guid non-compatible\n",
-      __FUNCTION__));
-    FreePool (FwVolHeader);
-    return EFI_NOT_FOUND;
-  }
-
-  BufferSizeReqested = FwVolHeader->HeaderLength;
-  FreePool (FwVolHeader);
-  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
-  if (!FwVolHeader) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-  BufferSize = BufferSizeReqested;
-  TempStatus = SMMStoreRead (0, 0, &BufferSize, (UINT8 *)FwVolHeader);
-  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
-    FreePool (FwVolHeader);
-    return EFI_DEVICE_ERROR;
-  }
-
-  // Verify the header checksum
-  Checksum = CalculateSum16((UINT16*)FwVolHeader, FwVolHeader->HeaderLength);
-  if (Checksum != 0) {
-    DEBUG ((EFI_D_INFO, "%a: FV checksum is invalid (Checksum:0x%X)\n",
-      __FUNCTION__, Checksum));
-    FreePool (FwVolHeader);
-    return EFI_NOT_FOUND;
-  }
-
-  BufferSizeReqested = sizeof(VARIABLE_STORE_HEADER);
-  VariableStoreHeader = (VARIABLE_STORE_HEADER*)AllocatePool(BufferSizeReqested);
-  if (!VariableStoreHeader) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-  BufferSize = BufferSizeReqested;
-  TempStatus = SMMStoreRead (0, FwVolHeader->HeaderLength, &BufferSize, (UINT8 *)VariableStoreHeader);
-  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
-    FreePool (VariableStoreHeader);
-    FreePool (FwVolHeader);
-    return EFI_DEVICE_ERROR;
-  }
-
-  // Check the Variable Store Guid
-  if (!CompareGuid (&VariableStoreHeader->Signature, &gEfiVariableGuid) &&
-      !CompareGuid (&VariableStoreHeader->Signature, &gEfiAuthenticatedVariableGuid)) {
-    DEBUG ((EFI_D_INFO, "%a: Variable Store Guid non-compatible\n",
-      __FUNCTION__));
-    FreePool (FwVolHeader);
-    FreePool (VariableStoreHeader);
-    return EFI_NOT_FOUND;
-  }
-
-  VariableStoreLength = PcdGet32 (PcdFlashNvStorageVariableSize) - FwVolHeader->HeaderLength;
-  if (VariableStoreHeader->Size != VariableStoreLength) {
-    DEBUG ((EFI_D_INFO, "%a: Variable Store Length does not match\n",
-      __FUNCTION__));
-    FreePool (FwVolHeader);
-    FreePool (VariableStoreHeader);
-    return EFI_NOT_FOUND;
-  }
-
-  FreePool (FwVolHeader);
-  FreePool (VariableStoreHeader);
-
-  return EFI_SUCCESS;
 }
 
 /**
@@ -262,7 +260,7 @@ FvbGetAttributes(
 {
   DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
   EFI_FVB_ATTRIBUTES_2  FlashFvbAttributes;
-  SMMSTORE_INSTANCE *Instance;
+  AMD_SPI_INSTANCE *Instance;
 
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
@@ -390,7 +388,7 @@ FvbGetBlockSize (
 {
   DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
   EFI_STATUS Status;
-  SMMSTORE_INSTANCE *Instance;
+  AMD_SPI_INSTANCE *Instance;
 
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
@@ -462,9 +460,8 @@ FvbRead (
   IN OUT    UINT8                                 *Buffer
   )
 {
-  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
-  UINTN         BlockSize;
-  SMMSTORE_INSTANCE *Instance;
+  UINTN            BlockSize;
+  AMD_SPI_INSTANCE *Instance;
 
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
@@ -489,7 +486,7 @@ FvbRead (
     return EFI_BAD_BUFFER_SIZE;
   }
 
-  return SMMStoreRead (Lba, Offset, NumBytes, Buffer);
+  return AmdSpiRead (Lba, Offset, NumBytes, Buffer);
 }
 
 /**
@@ -556,12 +553,9 @@ FvbWrite (
   IN        UINT8                                 *Buffer
   )
 {
-  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
-  UINTN         BlockSize;
-  SMMSTORE_INSTANCE *Instance;
 
-  // FIXME: Delay subsequent writes as it may coause EFI_NO_RESPONSE error
-  MicroSecondDelay(5000);
+  UINTN            BlockSize;
+  AMD_SPI_INSTANCE *Instance;
 
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
@@ -579,12 +573,12 @@ FvbWrite (
     return EFI_BAD_BUFFER_SIZE;
   }
 
-  // We must have some bytes to read
+  // We must have some bytes to write
   if (*NumBytes == 0) {
     return EFI_BAD_BUFFER_SIZE;
   }
 
-  return SMMStoreWrite (Lba, Offset, NumBytes, Buffer);
+  return AmdSpiWrite (Lba, Offset, NumBytes, Buffer);
 }
 
 /**
@@ -637,12 +631,12 @@ FvbEraseBlocks (
   ...
   )
 {
-  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
+
   EFI_STATUS  Status;
   VA_LIST     Args;
   EFI_LBA     StartingLba; // Lba from which we start erasing
   UINTN       NumOfLba; // Number of Lba blocks to erase
-  SMMSTORE_INSTANCE *Instance;
+  AMD_SPI_INSTANCE *Instance;
 
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
@@ -711,7 +705,7 @@ FvbEraseBlocks (
     while (NumOfLba > 0) {
       // Erase it
       DEBUG ((DEBUG_BLKIO, "FvbEraseBlocks: Erasing Lba=%ld\n", StartingLba));
-      Status = SMMStoreEraseBlock (StartingLba);
+      Status = AmdSpiEraseBlock (StartingLba);
       if (EFI_ERROR(Status)) {
         VA_END (Args);
         Status = EFI_DEVICE_ERROR;
@@ -721,7 +715,6 @@ FvbEraseBlocks (
       // Move to the next Lba
       StartingLba++;
       NumOfLba--;
-      MicroSecondDelay(20000);
     }
   } while (TRUE);
   VA_END (Args);
@@ -752,8 +745,8 @@ FvbVirtualNotifyEvent (
 
 EFI_STATUS
 EFIAPI
-SMMStoreFvbInitialize (
-  IN SMMSTORE_INSTANCE* Instance
+AmdSpiFvbInitialize (
+  IN AMD_SPI_INSTANCE* Instance
   )
 {
   DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
@@ -794,6 +787,7 @@ SMMStoreFvbInitialize (
     // Install all appropriate headers
     Status = InitializeFvAndVariableStoreHeaders (Instance);
     if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_INFO, "%a: FVB header init failed\n", __FUNCTION__));
       return Status;
     }
   } else {

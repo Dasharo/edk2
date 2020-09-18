@@ -9,16 +9,16 @@
 #**/
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = UefiPayloadBlSMMStoreDxe
-  FILE_GUID                      = A0402FCA-6B25-4CEA-B7DD-C08F99714B29
+  BASE_NAME                      = UefiPayloadAmdSpiDxe
+  FILE_GUID                      = D419A03E-3543-4DE8-8AFD-D6AD124D1D61
   MODULE_TYPE                    = DXE_RUNTIME_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = BlSMMSTOREInitialise
+  ENTRY_POINT                    = BlAmdSpiInitialise
 
 [Sources.common]
-  BlSMMStoreDxe.h
-  BlSMMStoreDxe.c
-  BlSMMStoreFvbDxe.c
+  AmdSpiDxe.h
+  AmdSpiDxe.c
+  AmdSpiFvbDxe.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -31,7 +31,7 @@
   BaseLib
   DebugLib
   HobLib
-  SmmStoreLib
+  AmdSpiLib
   UefiLib
   TimerLib
   UefiDriverEntryPoint
@@ -45,7 +45,6 @@
   gEfiAuthenticatedVariableGuid
   gEfiEventVirtualAddressChangeGuid
   gEdkiiNvVarStoreFormattedGuid     ## PRODUCES ## PROTOCOL
-  # gEfiSMMSTOREInfoHobGuid
 
 [Protocols]
   gEfiBlockIoProtocolGuid

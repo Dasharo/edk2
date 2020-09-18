@@ -127,6 +127,7 @@ InitEmuNonVolatileVariableStore (
   @retval EFI_VOLUME_CORRUPTED  Variable Store or Firmware Volume for Variable Store is corrupted.
 
 **/
+
 EFI_STATUS
 InitRealNonVolatileVariableStore (
   OUT EFI_PHYSICAL_ADDRESS              *VariableStoreBase

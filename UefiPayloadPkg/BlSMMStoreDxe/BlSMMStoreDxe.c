@@ -170,7 +170,8 @@ BlSMMSTOREInitialise (
   //
   // Find the SMMSTORE information guid hob
   //
-  GuidHob = GetFirstGuidHob (&gEfiSMMSTOREInfoHobGuid);
+  // GuidHob = GetFirstGuidHob (&gEfiSMMSTOREInfoHobGuid);
+  GuidHob = NULL;
   if (GuidHob == NULL) {
     DEBUG ((DEBUG_WARN, "SMMSTORE not supported! Skipping driver init.\n"));
     PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
@@ -219,12 +220,12 @@ BlSMMSTOREInitialise (
   }
 
   // Update PCDs for Variable/RuntimeDxe
-  PcdSet32S (PcdFlashNvStorageVariableBase,
-      PcdGet32 (PcdFlashNvStorageVariableBase) + SMMStoreInfoHob->MmioAddress);
-  PcdSet32S (PcdFlashNvStorageFtwWorkingBase,
-      PcdGet32 (PcdFlashNvStorageFtwWorkingBase) + SMMStoreInfoHob->MmioAddress);
-  PcdSet32S (PcdFlashNvStorageFtwSpareBase,
-      PcdGet32 (PcdFlashNvStorageFtwSpareBase) + SMMStoreInfoHob->MmioAddress);
+  PcdSet32S(PcdFlashNvStorageVariableBase,
+      PcdGet32(PcdFlashNvStorageVariableBase) + SMMStoreInfoHob->MmioAddress);
+  PcdSet32S(PcdFlashNvStorageFtwWorkingBase,
+      PcdGet32(PcdFlashNvStorageFtwWorkingBase) + SMMStoreInfoHob->MmioAddress);
+  PcdSet32S(PcdFlashNvStorageFtwSpareBase,
+      PcdGet32(PcdFlashNvStorageFtwSpareBase) + SMMStoreInfoHob->MmioAddress);
 
   mSMMStoreInstance = AllocateRuntimePool (sizeof(SMMSTORE_INSTANCE*));
   if (!mSMMStoreInstance) {

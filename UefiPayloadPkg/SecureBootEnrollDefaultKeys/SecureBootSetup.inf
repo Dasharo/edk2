@@ -34,6 +34,7 @@
   gEfiCertX509Guid
   gEfiCustomModeEnableGuid
   gEfiGlobalVariableGuid
+  gEfiVendorKeysNvGuid
   gEfiImageSecurityDatabaseGuid
   gEfiSecureBootEnableDisableGuid
 

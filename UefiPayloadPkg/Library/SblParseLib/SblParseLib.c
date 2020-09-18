@@ -247,11 +247,11 @@ ParseGfxDeviceInfo (
   @retval RETURN_NOT_FOUND   Failed to find the SMM store buffer information .
 
 **/
-RETURN_STATUS
-EFIAPI
-ParseSMMSTOREInfo (
-  OUT SMMSTORE_INFO       *SMMSTOREInfo
-  )
-{
-  return RETURN_NOT_FOUND;
-}
+// RETURN_STATUS
+// EFIAPI
+// ParseSMMSTOREInfo (
+//   OUT SMMSTORE_INFO       *SMMSTOREInfo
+//   )
+// {
+//   return RETURN_NOT_FOUND;
+// }
