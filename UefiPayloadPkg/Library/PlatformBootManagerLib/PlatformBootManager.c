@@ -154,22 +154,15 @@ PlatformFindLoadOption (
   return -1;
 }
 
-/**
-  Register a boot option using a file GUID in the FV.
-
-  @param FileGuid     The file GUID name in FV.
-  @param Description  The boot option description.
-  @param Attributes   The attributes used for the boot option loading.
-**/
 VOID
 PlatformRegisterFvBootOption (
   EFI_GUID                         *FileGuid,
   CHAR16                           *Description,
   UINT32                           Attributes
-)
+  )
 {
   EFI_STATUS                        Status;
-  UINTN                             OptionIndex;
+  INTN                              OptionIndex;
   EFI_BOOT_MANAGER_LOAD_OPTION      NewOption;
   EFI_BOOT_MANAGER_LOAD_OPTION      *BootOptions;
   UINTN                             BootOptionCount;
@@ -177,14 +170,21 @@ PlatformRegisterFvBootOption (
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
 
-  Status = gBS->HandleProtocol (gImageHandle, &gEfiLoadedImageProtocolGuid, (VOID **) &LoadedImage);
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
   ASSERT_EFI_ERROR (Status);
 
   EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
   DevicePath = AppendDevicePathNode (
-                 DevicePathFromHandle (LoadedImage->DeviceHandle),
+                 DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
-               );
+                 );
+  ASSERT (DevicePath != NULL);
 
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
@@ -195,19 +195,24 @@ PlatformRegisterFvBootOption (
              DevicePath,
              NULL,
              0
-           );
-  if (!EFI_ERROR (Status)) {
-    BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
 
-    OptionIndex = PlatformFindLoadOption (&NewOption, BootOptions, BootOptionCount);
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount, LoadOptionTypeBoot
+                  );
 
-    if (OptionIndex == -1) {
-      Status = EfiBootManagerAddLoadOptionVariable (&NewOption, (UINTN) -1);
-      ASSERT_EFI_ERROR (Status);
-    }
-    EfiBootManagerFreeLoadOption (&NewOption);
-    EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption, BootOptions, BootOptionCount
+                  );
+
+  if (OptionIndex == -1) {
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+    ASSERT_EFI_ERROR (Status);
   }
+  EfiBootManagerFreeLoadOption (&NewOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
 
 STATIC
