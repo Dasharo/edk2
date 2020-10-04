@@ -552,6 +552,9 @@ FvbWrite (
   UINTN         BlockSize;
   SMMSTORE_INSTANCE *Instance;
 
+  // FIXME: Delay subsequent writes as it may coause EFI_NO_RESPONSE error
+  MicroSecondDelay(5000);
+
   Instance = INSTANCE_FROM_FVB_THIS(This);
 
   DEBUG ((DEBUG_BLKIO, "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n", Lba, Offset, *NumBytes, Buffer));
