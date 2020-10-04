@@ -12,6 +12,7 @@
 #include <Library/BaseLib.h>
 #include <Library/HobLib.h>
 #include <Library/UefiLib.h>
+#include <Library/TimerLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DxeServicesTableLib.h>
@@ -708,6 +709,7 @@ FvbEraseBlocks (
       // Move to the next Lba
       StartingLba++;
       NumOfLba--;
+      MicroSecondDelay(20000);
     }
   } while (TRUE);
   VA_END (Args);
