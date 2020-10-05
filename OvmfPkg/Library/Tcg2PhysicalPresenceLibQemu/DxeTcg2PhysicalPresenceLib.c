@@ -26,9 +26,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/HiiLib.h>
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PcdLib.h>
 #include <Library/PrintLib.h>
-#include <Library/QemuFwCfgLib.h>
 #include <Library/Tpm2CommandLib.h>
+#include <Library/Tcg2PhysicalPresencePlatformLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -38,43 +39,14 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define CONFIRM_BUFFER_SIZE  4096
 
+/* Wait 3 minutes for user input */
+#define TIMEOUT                     (1000 * 1000 * 60 * 3)
+
 EFI_HII_HANDLE  mTcg2PpStringPackHandle;
 
 #define TPM_PPI_FLAGS  (QEMU_TPM_PPI_FUNC_ALLOWED_USR_REQ)
 
 STATIC volatile QEMU_TPM_PPI  *mPpi;
-
-/**
-  Reads QEMU PPI config from fw_cfg.
-
-  @param[out]  The Config structure to read to.
-
-  @retval EFI_SUCCESS           Operation completed successfully.
-  @retval EFI_PROTOCOL_ERROR    Invalid fw_cfg entry size.
-**/
-STATIC
-EFI_STATUS
-QemuTpmReadConfig (
-  OUT QEMU_FWCFG_TPM_CONFIG  *Config
-  )
-{
-  EFI_STATUS            Status;
-  FIRMWARE_CONFIG_ITEM  FwCfgItem;
-  UINTN                 FwCfgSize;
-
-  Status = QemuFwCfgFindFile ("etc/tpm/config", &FwCfgItem, &FwCfgSize);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  if (FwCfgSize != sizeof (*Config)) {
-    return EFI_PROTOCOL_ERROR;
-  }
-
-  QemuFwCfgSelectItem (FwCfgItem);
-  QemuFwCfgReadBytes (sizeof (*Config), Config);
-  return EFI_SUCCESS;
-}
 
 /**
   Initializes QEMU PPI memory region.
@@ -90,6 +62,7 @@ QemuTpmInitPPI (
 {
   EFI_STATUS                       Status;
   QEMU_FWCFG_TPM_CONFIG            Config;
+  BOOLEAN                          PPIinMMIO;
   EFI_PHYSICAL_ADDRESS             PpiAddress64;
   EFI_GCD_MEMORY_SPACE_DESCRIPTOR  Descriptor;
   UINTN                            Idx;
@@ -98,7 +71,7 @@ QemuTpmInitPPI (
     return EFI_SUCCESS;
   }
 
-  Status = QemuTpmReadConfig (&Config);
+  Status = TpmPPIPlatformReadConfig (&Config, &PPIinMMIO);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -123,14 +96,22 @@ QemuTpmInitPPI (
     ASSERT_EFI_ERROR (Status);
     goto InvalidPpiAddress;
   }
-
-  if (!EFI_ERROR (Status) &&
-      ((Descriptor.GcdMemoryType != EfiGcdMemoryTypeMemoryMappedIo) &&
-       (Descriptor.GcdMemoryType != EfiGcdMemoryTypeNonExistent)))
-  {
-    DEBUG ((DEBUG_ERROR, "[TPM2PP] mPpi has an invalid memory type\n"));
-    goto InvalidPpiAddress;
+  if (PPIinMMIO) {
+    if (!EFI_ERROR (Status) &&
+        (Descriptor.GcdMemoryType != EfiGcdMemoryTypeMemoryMappedIo &&
+        Descriptor.GcdMemoryType != EfiGcdMemoryTypeNonExistent)) {
+      DEBUG ((DEBUG_ERROR, "[TPM2PP] mPpi has an invalid memory type\n"));
+      goto InvalidPpiAddress;
+    }
+  } else {
+    if (!EFI_ERROR (Status) &&
+      (Descriptor.GcdMemoryType != EfiGcdMemoryTypeReserved &&
+       Descriptor.GcdMemoryType != EfiGcdMemoryTypeSystemMemory)) {
+      DEBUG ((DEBUG_ERROR, "[TPM2PP] mPpi has an invalid memory type\n"));
+      goto InvalidPpiAddress;
+    }
   }
+
 
   for (Idx = 0; Idx < ARRAY_SIZE (mPpi->Func); Idx++) {
     mPpi->Func[Idx] = 0;
@@ -359,12 +340,16 @@ Tcg2ExecutePhysicalPresence (
 STATIC
 BOOLEAN
 Tcg2ReadUserKey (
-  IN     BOOLEAN  CautionKey
+  IN     BOOLEAN  CautionKey,
+  IN     UINTN    Timeout
   )
 {
   EFI_STATUS     Status;
   EFI_INPUT_KEY  Key;
   UINT16         InputKey;
+  UINTN          Delay;
+
+  Delay = Timeout / 50;
 
   InputKey = 0;
   do {
@@ -383,7 +368,13 @@ Tcg2ReadUserKey (
         InputKey = Key.ScanCode;
       }
     }
-  } while (InputKey == 0);
+    gBS->Stall (50);
+    Delay--;
+  } while (InputKey == 0 && Delay > 0);
+
+  if (Delay == 0) {
+    return FALSE;
+  }
 
   if (InputKey != SCAN_ESC) {
     return TRUE;
@@ -652,7 +643,7 @@ Tcg2UserConfirm (
   FreePool (ConfirmText);
   HiiRemovePackages (mTcg2PpStringPackHandle);
 
-  if (Tcg2ReadUserKey (CautionKey)) {
+  if (Tcg2ReadUserKey (CautionKey, TIMEOUT)) {
     return TRUE;
   }
 
@@ -925,4 +916,35 @@ Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
   mPpi->RequestParameter = RequestParameter;
 
   return TCG_PP_SUBMIT_REQUEST_TO_PREOS_SUCCESS;
+}
+
+/**
+  Return TPM2 ManagementFlags set by PP interface.
+
+  @retval    ManagementFlags    TPM2 Management Flags.
+**/
+UINT32
+EFIAPI
+Tcg2PhysicalPresenceLibGetManagementFlags (
+  VOID
+  )
+{
+  EFI_STATUS                        Status;
+  EFI_TCG2_PHYSICAL_PRESENCE_FLAGS  PpiFlags;
+  UINTN                             DataSize;
+
+  DEBUG ((EFI_D_INFO, "[TPM2] GetManagementFlags\n"));
+
+  DataSize = sizeof (EFI_TCG2_PHYSICAL_PRESENCE_FLAGS);
+  Status = gRT->GetVariable (
+                  TCG2_PHYSICAL_PRESENCE_FLAGS_VARIABLE,
+                  &gEfiTcg2PhysicalPresenceGuid,
+                  NULL,
+                  &DataSize,
+                  &PpiFlags
+                  );
+  if (EFI_ERROR (Status)) {
+    PpiFlags.PPFlags = PcdGet32(PcdTcg2PhysicalPresenceFlags);
+  }
+  return PpiFlags.PPFlags;
 }

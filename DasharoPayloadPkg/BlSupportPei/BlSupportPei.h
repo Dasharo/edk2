@@ -29,6 +29,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/SMMSTOREInfoGuid.h>
+#include <Guid/TcgPhysicalPresenceGuid.h>
 #include <Ppi/MasterBootMode.h>
 #include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
 
