@@ -16,6 +16,7 @@
 #include <Guid/SystemTableInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/SMMSTOREInfoGuid.h>
+#include <Guid/TcgPhysicalPresenceGuid.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
@@ -153,4 +154,20 @@ ParseBootLogo (
   OUT UINT64 *BmpAddress,
   OUT UINT32 *BmpSize
   );
+
+/**
+  Find the Tcg Physical Presence store information
+
+  @param  PPIInfo       Pointer to the TCG_PHYSICAL_PRESENCE_INFO structure
+
+  @retval RETURN_SUCCESS     Successfully find the SMM store buffer information.
+  @retval RETURN_NOT_FOUND   Failed to find the SMM store buffer information .
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseTPMPPIInfo (
+  OUT TCG_PHYSICAL_PRESENCE_INFO       *PPIInfo
+  );
+
 #endif
