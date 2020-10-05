@@ -493,6 +493,11 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerRefreshAllBootOption ();
 
   //
+  // Process TPM PPI request
+  //
+  Tcg2PhysicalPresenceLibProcessRequest (NULL);
+
+  //
   // Register UEFI Shell
   //
   DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
