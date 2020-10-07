@@ -2625,10 +2625,14 @@ HddPasswordNotificationEvent (
   UINTN                          DevNum;
   UINTN                          FuncNum;
 
-  if (mHddPasswordEndOfDxe) {
-    gBS->CloseEvent (Event);
-    return;
-  }
+  // FIXME: AtaPassThruProtocol is installed in BDS, which makes it impossible
+  // to create a list of disks for the UI menu before END_OF_DXE signal which
+  // sets mHddPasswordEndOfDxe via notify function. It creates a dead end
+  // resulting in empty HDD password menu.
+  // if (mHddPasswordEndOfDxe) {
+  //   gBS->CloseEvent (Event);
+  //   return;
+  // }
 
   Private = (HDD_PASSWORD_DXE_PRIVATE_DATA *)Context;
 
