@@ -55,8 +55,14 @@ INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 INF  DasharoPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
 INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+!endif
 !endif
 
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/HddPassword/HddPasswordPei.inf
+!endif
 ################################################################################
 
 [FV.DXEFV]
@@ -273,6 +279,13 @@ INF SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
 INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
 INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+!endif
+!endif
+
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
 #
