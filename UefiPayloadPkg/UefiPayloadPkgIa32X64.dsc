@@ -489,9 +489,6 @@
   }
 !endif
 
-  SecurityPkg/HddPassword/HddPasswordPei.inf
-  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
-
 [Components.X64]
   #
   # DXE Core

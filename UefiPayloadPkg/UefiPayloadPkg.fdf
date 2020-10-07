@@ -57,9 +57,6 @@ INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
 
-INF SecurityPkg/HddPassword/HddPasswordPei.inf
-INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
-
 ################################################################################
 
 [FV.DXEFV]
