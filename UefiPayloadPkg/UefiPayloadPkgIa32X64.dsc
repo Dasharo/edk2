@@ -683,7 +683,10 @@
 !endif
 
   SecurityPkg/HddPassword/HddPasswordDxe.inf
-  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf {
+    <LibraryClasses>
+    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+  }
 
   #------------------------------
   #  Build the shell
