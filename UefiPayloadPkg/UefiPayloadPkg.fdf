@@ -57,6 +57,9 @@ INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
 
+INF SecurityPkg/HddPassword/HddPasswordPei.inf
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+
 ################################################################################
 
 [FV.DXEFV]
@@ -294,6 +297,9 @@ INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
 INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 !endif
+
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 
 #
 # Shell
