@@ -486,6 +486,9 @@
   }
 !endif
 
+  SecurityPkg/HddPassword/HddPasswordPei.inf
+  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+
 [Components.X64]
   #
   # DXE Core
@@ -677,6 +680,9 @@
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
   }
 !endif
+
+  SecurityPkg/HddPassword/HddPasswordDxe.inf
+  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
 
   #------------------------------
   #  Build the shell
