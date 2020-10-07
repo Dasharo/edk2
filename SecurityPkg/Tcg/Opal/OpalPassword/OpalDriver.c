@@ -2717,10 +2717,6 @@ OpalEfiDriverBindingSupported (
   EFI_STATUS                             Status;
   EFI_STORAGE_SECURITY_COMMAND_PROTOCOL  *SecurityCommand;
 
-  if (mOpalEndOfDxe) {
-    return EFI_UNSUPPORTED;
-  }
-
   //
   // Test EFI_STORAGE_SECURITY_COMMAND_PROTOCOL on controller Handle.
   //
