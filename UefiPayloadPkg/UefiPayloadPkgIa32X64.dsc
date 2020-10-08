@@ -490,6 +490,8 @@
   }
 !endif
 
+  SecurityPkg/HddPassword/HddPasswordPei.inf
+
 [Components.X64]
   #
   # DXE Core
