@@ -33,6 +33,7 @@
   HobLib
   SmmStoreLib
   UefiLib
+  TimerLib
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   UefiRuntimeLib
