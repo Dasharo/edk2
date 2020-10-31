@@ -12,6 +12,7 @@
 #include <Library/BaseLib.h>
 #include <Library/HobLib.h>
 #include <Library/UefiLib.h>
+#include <Library/TimerLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DxeServicesTableLib.h>
@@ -572,6 +573,8 @@ FvbWrite (
     return EFI_BAD_BUFFER_SIZE;
   }
 
+  MicroSecondDelay(5000);
+
   return SMMStoreWrite (Lba, Offset, NumBytes, Buffer);
 }
 
@@ -708,6 +711,7 @@ FvbEraseBlocks (
       // Move to the next Lba
       StartingLba++;
       NumOfLba--;
+      MicroSecondDelay(5000);
     }
   } while (TRUE);
   VA_END (Args);
