@@ -258,6 +258,7 @@
 !if $(SECURE_BOOT_ENABLE) == TRUE
   PlatformSecureLib|OvmfPkg/Library/PlatformSecureLib/PlatformSecureLib.inf
   AuthVariableLib|SecurityPkg/Library/AuthVariableLib/AuthVariableLib.inf
+  AmdSpiLib|UefiPayloadPkg/Library/AmdSpiLib/AmdSpiLib.inf
 !else
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
@@ -488,7 +489,6 @@
   SecurityPkg/HddPassword/HddPasswordPei.inf
 
 [Components.X64]
-  UefiPayloadPkg/SPI/SPI.inf
   #
   # DXE Core
   #
@@ -643,6 +643,8 @@
   }
 !endif
 
+
+  UefiPayloadPkg/AmdSpiDxe/AmdSpiDxe.inf
   #
   # Random Number Generator
   #

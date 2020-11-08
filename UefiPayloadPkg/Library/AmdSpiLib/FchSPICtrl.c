@@ -134,7 +134,7 @@ VOID spi_init(VOID)
 STATIC VOID dump_state(UINT8 phase)
 {
 	UINT8 dump_size;
-	UINT32 addr;
+	UINTN addr;
 
 	if (phase == 0)
 		DEBUG ((DEBUG_BLKIO, "SPI: Before execute\n"));
@@ -156,7 +156,7 @@ STATIC VOID dump_state(UINT8 phase)
 	}
 
 	if (dump_size > 0)
-		InternalDumpHex((VOID *)addr, dump_size);
+		InternalDumpHex((UINT8 *)addr, dump_size);
 }
 
 STATIC EFI_STATUS execute_command(void)

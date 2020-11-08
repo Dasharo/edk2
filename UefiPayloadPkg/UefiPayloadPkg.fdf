@@ -10,16 +10,16 @@
 
 ################################################################################
 [FD.UefiPayload]
-BaseAddress   = 0x440000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-Size          = 0x440000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+BaseAddress   = 0x800000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
+Size          = 0x800000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
 ErasePolarity = 1
 BlockSize     = 0x1000
-NumBlocks     = 0x440
+NumBlocks     = 0x800
 
 0x00000000|0x040000
 FV = PEIFV
 
-0x00040000|0x400000
+0x00040000|0x7C0000
 FV = DXEFV
 
 ################################################################################
@@ -53,7 +53,7 @@ INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 !if $(TPM_ENABLE) == TRUE
 INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
-#INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
+INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
 
@@ -169,12 +169,41 @@ INF MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 INF FatPkg/EnhancedFatDxe/Fat.inf
 
 #
+# Filesystem drivers
+#
+!if $(ARCH) == IA32
+INF  RuleOverride=BINARY USE = IA32 FSDrivers/exfat.inf
+INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext2.inf
+INF  RuleOverride=BINARY USE = IA32 FSDrivers/ntfs.inf
+INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext4.inf
+!else
+INF  RuleOverride=BINARY USE = X64 FSDrivers/exfat.inf
+INF  RuleOverride=BINARY USE = X64 FSDrivers/ext2.inf
+INF  RuleOverride=BINARY USE = X64 FSDrivers/ntfs.inf
+INF  RuleOverride=BINARY USE = X64 FSDrivers/ext4.inf
+!endif
+
+#
+# SD/eMMC Support
+#
+INF MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+
+#
 # Usb Support
 #
+INF MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
 INF MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
 INF MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
+INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
+#
+# Network Support
+#
+!include NetworkPkg/Network.fdf.inc
 
 #
 # Network modules (only available on X64)
@@ -251,6 +280,7 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !endif
 
 !if $(TPM_ENABLE) == TRUE
+INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
 INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 INF  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
