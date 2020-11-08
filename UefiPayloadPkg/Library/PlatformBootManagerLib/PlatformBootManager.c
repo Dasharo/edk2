@@ -490,7 +490,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Map Escape to Boot Manager Menu
   //
-  Escape.ScanCode    = SCAN_F10;
+  Escape.ScanCode    = SCAN_ESC;
   Escape.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Escape, NULL);
@@ -567,7 +567,7 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  Print (L"Press F10 to enter Boot Manager Menu.\n");
+  Print (L"Press ESC to enter Boot Manager Menu.\n");
 }
 
 /**
