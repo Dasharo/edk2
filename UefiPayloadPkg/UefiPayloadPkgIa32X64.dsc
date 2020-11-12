@@ -78,44 +78,13 @@
   #
   # Shell options: [BUILD_SHELL, MIN_BIN, NONE, UEFI_BIN]
   #
-  DEFINE SHELL_TYPE                   = BUILD_SHELL
+  DEFINE SHELL_TYPE                   = NONE
 
   #
   # Security options:
   #
   DEFINE SECURE_BOOT_ENABLE           = FALSE
   DEFINE TPM_ENABLE                   = TRUE
-
-  #
-  # Network definition
-  #
-  DEFINE NETWORK_PXE_BOOT               = FALSE
-  DEFINE NETWORK_ENABLE                 = FALSE
-  DEFINE NETWORK_TLS_ENABLE             = FALSE
-  DEFINE NETWORK_IP6_ENABLE             = FALSE
-  DEFINE NETWORK_IP4_ENABLE             = TRUE
-  DEFINE NETWORK_INTEL_10GBE            = FALSE
-  DEFINE NETWORK_INTEL_PRO1000          = FALSE
-  DEFINE NETWORK_INTEL_40GBE            = FALSE
-  DEFINE NETWORK_INTEL_GBE              = FALSE
-
-!if $(NETWORK_PXE_BOOT) == TRUE
-  DEFINE NETWORK_SNP_ENABLE             = TRUE
-  DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
-  DEFINE NETWORK_ISCSI_ENABLE           = FALSE
-!else
-  DEFINE NETWORK_SNP_ENABLE             = FALSE
-  DEFINE NETWORK_HTTP_BOOT_ENABLE       = TRUE
-  DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
-  DEFINE NETWORK_ISCSI_ENABLE           = TRUE
-!endif
-
-
-!include NetworkPkg/NetworkDefines.dsc.inc
-  #
-  # IPXE support
-  #
-  DEFINE NETWORK_IPXE                   = FALSE
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
@@ -234,26 +203,16 @@
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
-  TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
 
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
-  ShellCEntryLib|ShellPkg/Library/UefiShellCEntryLib/UefiShellCEntryLib.inf
+  #ShellCEntryLib|ShellPkg/Library/UefiShellCEntryLib/UefiShellCEntryLib.inf
 
-  TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
-  TcgStorageOpalLib|SecurityPkg/Library/TcgStorageOpalLib/TcgStorageOpalLib.inf
+  #TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
+  #TcgStorageOpalLib|SecurityPkg/Library/TcgStorageOpalLib/TcgStorageOpalLib.inf
   S3BootScriptLib|MdePkg/Library/BaseS3BootScriptLibNull/BaseS3BootScriptLibNull.inf
 
-#
-# Network
-#
-!include NetworkPkg/NetworkLibs.dsc.inc
-!if $(NETWORK_TLS_ENABLE) == TRUE
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
-  TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
-!else
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
-!endif
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   PlatformSecureLib|OvmfPkg/Library/PlatformSecureLib/PlatformSecureLib.inf
@@ -269,6 +228,8 @@
   Tcg2PhysicalPresenceLib|SecurityPkg/Library/DxeTcg2PhysicalPresenceLib/DxeTcg2PhysicalPresenceLib.inf
   Tcg2PpVendorLib|SecurityPkg/Library/Tcg2PpVendorLibNull/Tcg2PpVendorLibNull.inf
   TpmMeasurementLib|SecurityPkg/Library/DxeTpmMeasurementLib/DxeTpmMeasurementLib.inf
+!else
+  TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
 !endif
 
 [LibraryClasses.IA32.SEC]
@@ -321,7 +282,7 @@
   CpuExceptionHandlerLib|UefiCpuPkg/Library/CpuExceptionHandlerLib/DxeCpuExceptionHandlerLib.inf
   MpInitLib|UefiCpuPkg/Library/MpInitLib/DxeMpInitLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
-  SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
+  #SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -329,16 +290,13 @@
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/RuntimeDxeReportStatusCodeLib/RuntimeDxeReportStatusCodeLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/RuntimeCryptLib.inf
-  SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
+  #SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
 
 [LibraryClasses.common.UEFI_DRIVER,LibraryClasses.common.UEFI_APPLICATION]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/DxeReportStatusCodeLib/DxeReportStatusCodeLib.inf
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
-!if $(NETWORK_ENABLE) == TRUE
-  BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
-!endif
 ################################################################################
 #
 # Pcd Section - list of all EDK II PCD Entries defined by this Platform.
@@ -377,11 +335,6 @@
 !else
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
 !endif
-
-  #
-  # Network Pcds
-  #
-!include NetworkPkg/NetworkPcds.dsc.inc
 
   #
   # The following parameters are set by Library/PlatformHookLib
@@ -474,7 +427,7 @@
 
 !if $(TPM_ENABLE) == TRUE
   UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
-  SecurityPkg/Tcg/TcgPei/TcgPei.inf
+  #SecurityPkg/Tcg/TcgPei/TcgPei.inf
   SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf {
     <LibraryClasses>
       HashLib|SecurityPkg/Library/HashLibBaseCryptoRouter/HashLibBaseCryptoRouterPei.inf
@@ -506,20 +459,18 @@
       NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
 !endif
 !if $(TPM_ENABLE) == TRUE
-      NULL|SecurityPkg/Library/DxeTpmMeasureBootLib/DxeTpmMeasureBootLib.inf
       NULL|SecurityPkg/Library/DxeTpm2MeasureBootLib/DxeTpm2MeasureBootLib.inf
 !endif
   }
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
-  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
-  OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
+  #SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   UefiPayloadPkg/SecureBootEnrollDefaultKeys/SecureBootSetup.inf
 !endif
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-  MdeModulePkg/Logo/LogoDxe.inf
+  #MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
@@ -535,7 +486,7 @@
   MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
   PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
-  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
+  #MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
@@ -563,12 +514,12 @@
   #
   # SMBIOS Support
   #
-  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+  #MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
   #
   # ACPI Support
   #
-  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+  #MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 
   #
   # PCI Support
@@ -596,18 +547,18 @@
   #
   # SD/eMMC Support
   #
-  MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
-  MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
-  MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+  #MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+  #MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  #MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
   #
   # Usb Support
   #
-  MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
+  #MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
   MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
   MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
-  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
+  #MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   #
@@ -624,34 +575,20 @@
   #
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
-  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+  #MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
 !if $(SERIAL_TERMINAL) == TRUE
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 !endif
-  UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
+  #UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
   UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
-
-  #
-  # Network Support
-  #
-!include NetworkPkg/NetworkComponents.dsc.inc
-
-!if $(NETWORK_TLS_ENABLE) == TRUE
-  NetworkPkg/TlsAuthConfigDxe/TlsAuthConfigDxe.inf {
-    <LibraryClasses>
-      NULL|OvmfPkg/Library/TlsAuthConfigLib/TlsAuthConfigLib.inf
-  }
-!endif
-
-
   UefiPayloadPkg/AmdSpiDxe/AmdSpiDxe.inf
   #
   # Random Number Generator
   #
-  SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf {
-      <LibraryClasses>
-      RngLib|UefiPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
-  }
+  #SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf {
+  #    <LibraryClasses>
+  #    RngLib|UefiPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
+  #}
 
 !if $(TPM_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf {
@@ -665,25 +602,25 @@
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
   }
-  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf {
-    <LibraryClasses>
-    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
-  }
-  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
-    <LibraryClasses>
-      Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
-  }
-  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf{
-    <LibraryClasses>
-      Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
-  }
+  #SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf {
+  #  <LibraryClasses>
+  #  Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+  #}
+  #SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
+  #  <LibraryClasses>
+  #    Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+  #}
+  #SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf{
+  #  <LibraryClasses>
+  #    Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+  #}
 !endif
 
-  SecurityPkg/HddPassword/HddPasswordDxe.inf
-  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf {
-    <LibraryClasses>
-    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
-  }
+  #SecurityPkg/HddPassword/HddPasswordDxe.inf
+  #SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf {
+  #  <LibraryClasses>
+  #  Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+  #}
 
   #------------------------------
   #  Build the shell

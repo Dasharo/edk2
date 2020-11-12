@@ -53,11 +53,11 @@ INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 !if $(TPM_ENABLE) == TRUE
 INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
-INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
+#INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
 
-INF SecurityPkg/HddPassword/HddPasswordPei.inf
+#INF SecurityPkg/HddPassword/HddPasswordPei.inf
 
 ################################################################################
 
@@ -112,7 +112,7 @@ INF MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
 INF MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
 INF MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
 INF PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
-INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
+#INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
 INF MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
 
 INF UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
@@ -123,7 +123,7 @@ INF MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 INF UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
-INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+#INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   INF UefiPayloadPkg/AmdSpiDxe/AmdSpiDxe.inf
@@ -171,85 +171,40 @@ INF FatPkg/EnhancedFatDxe/Fat.inf
 #
 # Filesystem drivers
 #
-!if $(ARCH) == IA32
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/exfat.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext2.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ntfs.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext4.inf
-!else
-INF  RuleOverride=BINARY USE = X64 FSDrivers/exfat.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ext2.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ntfs.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ext4.inf
-!endif
+#!if $(ARCH) == IA32
+#INF  RuleOverride=BINARY USE = IA32 FSDrivers/exfat.inf
+#INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext2.inf
+#INF  RuleOverride=BINARY USE = IA32 FSDrivers/ntfs.inf
+#INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext4.inf
+#!else
+#INF  RuleOverride=BINARY USE = X64 FSDrivers/exfat.inf
+#INF  RuleOverride=BINARY USE = X64 FSDrivers/ext2.inf
+#INF  RuleOverride=BINARY USE = X64 FSDrivers/ntfs.inf
+#INF  RuleOverride=BINARY USE = X64 FSDrivers/ext4.inf
+#!endif
 
 #
 # SD/eMMC Support
 #
-INF MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
-INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
-INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+#INF MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+#INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+#INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
 #
 # Usb Support
 #
-INF MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
+#INF MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
 INF MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
 INF MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
-INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
+#INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-
-#
-# Network Support
-#
-!include NetworkPkg/Network.fdf.inc
-
-#
-# Network modules (only available on X64)
-# Available at https://downloadcenter.intel.com/download/29137?v=t
-#
-!if $(NETWORK_ENABLE)
-!if $(ARCH) == IA32
-  # FIXME
-!else
-!if $(NETWORK_INTEL_GBE)
-  FILE DRIVER = D25C6DB6-0218-4BE9-802A-2841A7DA5ABE {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0027X7.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_40GBE)
-  FILE DRIVER = F49F4961-BE4F-4102-A07D-111E148D0974 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E4015X5.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_10GBE)
-  FILE DRIVER = 3E04EC12-5FDA-4BA8-88BB-5AB1467F280E {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E7512X4.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_PRO1000)
-  FILE DRIVER = BF21AF15-235B-4387-B62B-79134BC81E22 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E9112X3.EFI
-  }
-!endif
-!endif
-!endif
-
-#
-# iPXE support
-#
-!if $(NETWORK_IPXE) == TRUE
-  FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
-   SECTION PE32 = UefiPayloadPkg/NetworkDrivers/ipxe.efi
-  }
-!endif
 
 #
 # Security
 #
 !if $(SECURE_BOOT_ENABLE) == TRUE
-  INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
+  #INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   INF  UefiPayloadPkg/SecureBootEnrollDefaultKeys/SecureBootSetup.inf
 
   FILE FREEFORM = A23665E3-ACA6-4F6D-80CC-341E7D7B8CC6 {
@@ -280,14 +235,14 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !endif
 
 !if $(TPM_ENABLE) == TRUE
-INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
+#INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
-INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
-INF  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
+#INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
+#INF  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
 !endif
 
-INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
-INF SecurityPkg/HddPassword/HddPasswordDxe.inf
+#INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+#INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 
 #
 # Shell
@@ -319,14 +274,14 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 # GetNonVolatileMaxVariableSize () < (VariableStoreLength - sizeof (VARIABLE_STORE_HEADER))
 DEFINE BLOCK_SIZE        = 0x10000
 
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase = 0xFF800000
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase = 0xFF860000
 SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize = $(BLOCK_SIZE)
 
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase = gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize = $(BLOCK_SIZE)
+#SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase = gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+#SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize = $(BLOCK_SIZE)
 
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase = gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize = $(BLOCK_SIZE)
+#SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase = gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase + gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
+#SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize = $(BLOCK_SIZE)
 
 ################################################################################
 #
