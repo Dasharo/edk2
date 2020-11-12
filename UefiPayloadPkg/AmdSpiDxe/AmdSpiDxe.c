@@ -176,7 +176,7 @@ BlAmdSpiInitialise (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  Status = AmdSpiCreateInstance (1, 0x10000, &mAMDSpiInstance);
+  Status = AmdSpiCreateInstance (3, 0x10000, &mAMDSpiInstance);
   if (EFI_ERROR(Status)) {
     DEBUG((EFI_D_ERROR, "%a: Fail to create instance for AmdSpi\n",
       __FUNCTION__));
@@ -211,7 +211,7 @@ BlAmdSpiInitialise (
     Status = gDS->AddMemorySpace (
         EfiGcdMemoryTypeMemoryMappedIo,
         PcdGet32(PcdFlashNvStorageVariableBase),
-        4 * 0x10000,
+        3 * 0x10000,
         EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
         );
     ASSERT_EFI_ERROR (Status);
@@ -222,7 +222,7 @@ BlAmdSpiInitialise (
   //
   Status = gDS->SetMemorySpaceAttributes (
                   PcdGet32(PcdFlashNvStorageVariableBase),
-                  4 * 0x10000,
+                  3 * 0x10000,
                   EFI_MEMORY_RUNTIME
                   );
   ASSERT_EFI_ERROR (Status);

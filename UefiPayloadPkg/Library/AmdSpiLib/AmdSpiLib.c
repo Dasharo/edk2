@@ -6,11 +6,7 @@
 #include "Winbond.h"
 
 #define BLOCK_SIZE 0x10000
-#define ADDRESS(Lba, Offset) (((BLOCK_SIZE) * (Lba)) + (Offset))
-#define OFFSET_FROM_PAGE_START(Address) ((Address) % (PAGE_SIZE))
-#define REMAINING_SPACE(Offset, MaxSize) ((MaxSize) - (Offset))
-#define REMAINING_SPACE_IN_BLOCK(Offset) REMAINING_SPACE((Offset), (BLOCK_SIZE))
-#define REMAINING_SPACE_IN_PAGE(Offset) REMAINING_SPACE((Offset), (PAGE_SIZE))
+#define ADDRESS(Lba, Offset) (UINT32)(((BLOCK_SIZE) * (Lba)) + (Offset))
 
 STATIC struct spi_flash flash;
 
@@ -22,7 +18,7 @@ AmdSpiRead (
   IN        UINT8                                *Buffer
   )
 {
-  UINTN address = ADDRESS(Lba, Offset);
+  UINT32 address = ADDRESS(Lba, Offset);
 
   if (*NumBytes == 0 || Buffer == NULL)
     return EFI_INVALID_PARAMETER;
@@ -38,7 +34,7 @@ AmdSpiWrite (
   IN        UINT8                                *Buffer
   )
 {
-  UINTN address = ADDRESS(Lba, Offset);
+  UINT32 address = ADDRESS(Lba, Offset);
 
   if (*NumBytes == 0 || Buffer == NULL)
     return EFI_INVALID_PARAMETER;
@@ -57,7 +53,7 @@ AmdSpiEraseBlock (
   IN    EFI_LBA     Lba
   )
 {
-  UINTN address = ADDRESS(Lba, 0);
+  UINT32 address = ADDRESS(Lba, 0);
 
   return spi_flash_erase(&flash, address, BLOCK_SIZE);
 }
