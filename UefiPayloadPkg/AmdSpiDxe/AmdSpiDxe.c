@@ -176,7 +176,7 @@ BlAmdSpiInitialise (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  Status = AmdSpiCreateInstance (3, 0x10000, &mAMDSpiInstance);
+  Status = AmdSpiCreateInstance (1, 0x10000, &mAMDSpiInstance);
   if (EFI_ERROR(Status)) {
     DEBUG((EFI_D_ERROR, "%a: Fail to create instance for AmdSpi\n",
       __FUNCTION__));
