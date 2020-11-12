@@ -6,7 +6,7 @@
 #include "Winbond.h"
 
 #define BLOCK_SIZE 0x10000
-#define ADDRESS(Lba, Offset) (UINT32)(((BLOCK_SIZE) * (Lba)) + (Offset))
+#define ADDRESS(Lba, Offset) (UINT32)(((BLOCK_SIZE) * (Lba)) + (Offset) + 0x120000)
 
 STATIC struct spi_flash flash;
 
