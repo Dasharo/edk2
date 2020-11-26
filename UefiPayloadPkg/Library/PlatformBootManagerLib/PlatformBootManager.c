@@ -558,14 +558,14 @@ PlatformBootManagerAfterConsole (
   //
   // Register UEFI Shell
   //
-  DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
+  //DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
+  //PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
 
   //
   // Register iPXE
   //
-  DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+  //DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
+  //PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
   Print (L"Press ESC to enter Boot Manager Menu.\n");
 }
