@@ -9,6 +9,11 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "PlatformBootManager.h"
 #include "PlatformConsole.h"
+#include <Protocol/FirmwareVolume2.h>
+
+EFI_GUID mBootMenuFile = {
+  0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
+};
 
 VOID
 InstallReadyToLock (
@@ -216,6 +221,148 @@ ConnectRootBridge (
   return Status;
 }
 
+EFI_DEVICE_PATH *
+FvFilePath (
+  EFI_GUID                     *FileGuid
+  )
+{
+
+  EFI_STATUS                         Status;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+  return AppendDevicePathNode (
+           DevicePathFromHandle (LoadedImage->DeviceHandle),
+           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
+           );
+}
+
+/**
+  Create one boot option for BootManagerMenuApp.
+
+  @param  FileGuid          Input file guid for the BootManagerMenuApp.
+  @param  Description       Description of the BootManagerMenuApp boot option.
+  @param  Position          Position of the new load option to put in the ****Order variable.
+  @param  IsBootCategory    Whether this is a boot category.
+
+
+  @retval OptionNumber      Return the option number info.
+
+**/
+UINTN
+RegisterBootManagerMenuAppBootOption (
+  EFI_GUID                         *FileGuid,
+  CHAR16                           *Description,
+  UINTN                            Position,
+  BOOLEAN                          IsBootCategory
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
+  EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
+  UINTN                            OptionNumber;
+
+  DevicePath = FvFilePath (FileGuid);
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+  ASSERT_EFI_ERROR (Status);
+
+  OptionNumber = NewOption.OptionNumber;
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+
+  return OptionNumber;
+}
+
+/**
+  Check if it's a Device Path pointing to BootManagerMenuApp.
+
+  @param  DevicePath     Input device path.
+
+  @retval TRUE   The device path is BootManagerMenuApp File Device Path.
+  @retval FALSE  The device path is NOT BootManagerMenuApp File Device Path.
+**/
+BOOLEAN
+IsBootManagerMenuAppFilePath (
+  EFI_DEVICE_PATH_PROTOCOL     *DevicePath
+)
+{
+  EFI_HANDLE                      FvHandle;
+  VOID                            *NameGuid;
+  EFI_STATUS                      Status;
+
+  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &DevicePath, &FvHandle);
+  if (!EFI_ERROR (Status)) {
+    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *) DevicePath);
+    if (NameGuid != NULL) {
+      return CompareGuid (NameGuid, &mBootMenuFile);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+  Return the boot option number to the BootManagerMenuApp.
+
+  If not found it in the current boot option, create a new one.
+
+  @retval OptionNumber   Return the boot option number to the BootManagerMenuApp.
+
+**/
+UINTN
+GetBootManagerMenuAppOption (
+  VOID
+  )
+{
+  UINTN                        BootOptionCount;
+  EFI_BOOT_MANAGER_LOAD_OPTION *BootOptions;
+  UINTN                        Index;
+  UINTN                        OptionNumber;
+
+  OptionNumber = 0;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+    if (IsBootManagerMenuAppFilePath (BootOptions[Index].FilePath)) {
+      OptionNumber = BootOptions[Index].OptionNumber;
+      break;
+    }
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+
+  if (Index >= BootOptionCount) {
+    //
+    // If not found the BootManagerMenuApp, create it.
+    //
+    OptionNumber = (UINT16) RegisterBootManagerMenuAppBootOption (&mBootMenuFile, L"UEFI BootManagerMenuApp", (UINTN) -1, FALSE);
+  }
+
+  return OptionNumber;
+}
+
 /**
   Do the platform specific action before the console is connected.
 
@@ -230,8 +377,11 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                Escape;
-  EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
+  EFI_INPUT_KEY                  Enter;
+  EFI_INPUT_KEY                  Esc;
+  EFI_INPUT_KEY                  F12;
+  EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
+  UINTN                          OptionNumber;
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
@@ -239,12 +389,26 @@ PlatformBootManagerBeforeConsole (
   PlatformConsoleInit ();
 
   //
-  // Map Escape to Boot Manager Menu
+  // Register ENTER as CONTINUE key
   //
-  Escape.ScanCode    = SCAN_ESC;
-  Escape.UnicodeChar = CHAR_NULL;
+  Enter.ScanCode    = SCAN_NULL;
+  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
+  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
+  //
+  // Map ESC to Boot Manager Menu
+  //
+  Esc.ScanCode    = SCAN_ESC;
+  Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Escape, NULL);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
+
+  //
+  // Map F12 to Boot Device List menu
+  //
+  F12.ScanCode     = SCAN_F12;
+  F12.UnicodeChar  = CHAR_NULL;
+  OptionNumber    = GetBootManagerMenuAppOption ();
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
 
   //
   // Install ready to lock.
@@ -257,6 +421,7 @@ PlatformBootManagerBeforeConsole (
   //
   EfiBootManagerDispatchDeferredImages ();
 }
+
 
 /**
   Do the platform specific action after the console is connected.
@@ -301,12 +466,7 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  Print (
-    L"\n"
-    L"F2 or Down      to enter Boot Manager Menu.\n"
-    L"ENTER           to boot directly.\n"
-    L"\n"
-  );
+  Print (L"ESC   to enter Setup\nF12   to enter Boot Manager Menu\nEnter to boot directly");
 }
 
 /**
