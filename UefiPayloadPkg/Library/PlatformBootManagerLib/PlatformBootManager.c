@@ -12,16 +12,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/BaseLib.h>
 #include <Library/FrameBufferBltLib.h>
 #include <Library/UefiBootManagerLib.h>
+#include <Protocol/FirmwareVolume2.h>
 #include <Guid/BoardSettingsGuid.h>
-
-#define PCIE_SLOT1  L"PciRoot(0x0)/Pci(0x1B" //Wildcard
-#define PCIE_SLOT2  L"PciRoot(0x0)/Pci(0x1,0x0)"
-#define PCIE_SLOT3  L"PciRoot(0x0)/Pci(0x1C,0x0)"
-#define PCIE_SLOT4  L"PciRoot(0x0)/Pci(0x1,0x2)"
-#define PCIE_SLOT5  L"PciRoot(0x0)/Pci(0x1D,0x0)"
-#define PCIE_SLOT6  L"PciRoot(0x0)/Pci(0x1,0x1)"
-#define GRAPHICS_IGD_OUTPUT   L"PciRoot(0x0)/Pci(0x2,0x0)"
-#define GRAPHICS_KVM_OUTPUT   L"PciRoot(0x0)/Pci(0x1D,0x6)"
 
 #define DP_NODE_LEN(Type) { (UINT8)sizeof (Type), (UINT8)(sizeof (Type) >> 8) }
 
@@ -38,6 +30,10 @@ typedef struct {
           0xD3987D4B, 0x971A, 0x435F, \
           { 0x8C, 0xAF, 0x49, 0x67, 0xEB, 0x62, 0x72, 0x41 } \
           }
+
+EFI_GUID mBootMenuFile = {
+  0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
+};
 
 STATIC PLATFORM_SERIAL_CONSOLE mSerialConsole = {
   //
@@ -288,181 +284,146 @@ ConnectRootBridge (
   return Status;
 }
 
-EFI_GRAPHICS_OUTPUT_PROTOCOL  *mGop = NULL;
+EFI_DEVICE_PATH *
+FvFilePath (
+  EFI_GUID                     *FileGuid
+  )
+{
 
-VOID
-EFIAPI
-SetPrimaryVideoOutput(
-  VOID
+  EFI_STATUS                         Status;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+  return AppendDevicePathNode (
+           DevicePathFromHandle (LoadedImage->DeviceHandle),
+           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
+           );
+}
+
+/**
+  Create one boot option for BootManagerMenuApp.
+
+  @param  FileGuid          Input file guid for the BootManagerMenuApp.
+  @param  Description       Description of the BootManagerMenuApp boot option.
+  @param  Position          Position of the new load option to put in the ****Order variable.
+  @param  IsBootCategory    Whether this is a boot category.
+
+
+  @retval OptionNumber      Return the option number info.
+
+**/
+UINTN
+RegisterBootManagerMenuAppBootOption (
+  EFI_GUID                         *FileGuid,
+  CHAR16                           *Description,
+  UINTN                            Position,
+  BOOLEAN                          IsBootCategory
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
+  EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
+  UINTN                            OptionNumber;
+
+  DevicePath = FvFilePath (FileGuid);
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+  ASSERT_EFI_ERROR (Status);
+
+  OptionNumber = NewOption.OptionNumber;
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+
+  return OptionNumber;
+}
+
+/**
+  Check if it's a Device Path pointing to BootManagerMenuApp.
+
+  @param  DevicePath     Input device path.
+
+  @retval TRUE   The device path is BootManagerMenuApp File Device Path.
+  @retval FALSE  The device path is NOT BootManagerMenuApp File Device Path.
+**/
+BOOLEAN
+IsBootManagerMenuAppFilePath (
+  EFI_DEVICE_PATH_PROTOCOL     *DevicePath
 )
 {
+  EFI_HANDLE                      FvHandle;
+  VOID                            *NameGuid;
   EFI_STATUS                      Status;
-  UINTN                           HandleCount;
-  EFI_HANDLE                      *Handle;
-  UINTN                           Index;
-  EFI_DEVICE_PATH_PROTOCOL        *TempDevicePath;
-  CHAR16                          *Str;
-  BOARD_SETTINGS                  BoardSettings;
-  UINTN                           BoardSettingsSize;
 
-  Handle = NULL;
-  Index = 0;
-  BoardSettingsSize = sizeof(BOARD_SETTINGS);
-
-  DEBUG ((EFI_D_ERROR, "SetPrimaryVideoOutput\n"));
-
-  // Fetch Board Settings
-  Status = gRT->GetVariable(BOARD_SETTINGS_NAME,
-    &gEfiBoardSettingsVariableGuid,
-    NULL,
-    &BoardSettingsSize,
-    &BoardSettings);
-
-  if (EFI_ERROR(Status)) {
-    DEBUG((EFI_D_ERROR, "Fetching Board Settings errored with %x\n", Status));
-    return;
+  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &DevicePath, &FvHandle);
+  if (!EFI_ERROR (Status)) {
+    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *) DevicePath);
+    if (NameGuid != NULL) {
+      return CompareGuid (NameGuid, &mBootMenuFile);
+    }
   }
 
-  // Locate all GOPs
-  Status = gBS->LocateHandleBuffer(ByProtocol, 
-                  &gEfiGraphicsOutputProtocolGuid,
-                  NULL,
-                  &HandleCount,
-                  &Handle);
+  return FALSE;
+}
 
-  if (EFI_ERROR(Status)) {
-    DEBUG((EFI_D_ERROR, "Fetching handles errored with %x\n", Status));
-    return;
+/**
+  Return the boot option number to the BootManagerMenuApp.
+
+  If not found it in the current boot option, create a new one.
+
+  @retval OptionNumber   Return the boot option number to the BootManagerMenuApp.
+
+**/
+UINTN
+GetBootManagerMenuAppOption (
+  VOID
+  )
+{
+  UINTN                        BootOptionCount;
+  EFI_BOOT_MANAGER_LOAD_OPTION *BootOptions;
+  UINTN                        Index;
+  UINTN                        OptionNumber;
+
+  OptionNumber = 0;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+    if (IsBootManagerMenuAppFilePath (BootOptions[Index].FilePath)) {
+      OptionNumber = BootOptions[Index].OptionNumber;
+      break;
+    }
   }
 
-  DEBUG ((EFI_D_INFO, "Amount of Handles: %x\n", HandleCount));
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
-  // Loop through all GOPs to find the primary one
-  for (Index=0; Index < HandleCount; Index++) {
-    // Get Device Path of GOP
-    Status = gBS->HandleProtocol (Handle[Index], &gEfiDevicePathProtocolGuid,   (VOID*)&TempDevicePath);
-    if (EFI_ERROR (Status)) {
-      continue;
-    }
-    // Get Protocol of GOP
-    Status = gBS->HandleProtocol (Handle[Index], &gEfiGraphicsOutputProtocolGuid, (VOID**)&mGop);
-    if (EFI_ERROR (Status)) {
-      continue;
-    }
+  if (Index >= BootOptionCount) {
+    //
+    // If not found the BootManagerMenuApp, create it.
+    //
+    OptionNumber = (UINT16) RegisterBootManagerMenuAppBootOption (&mBootMenuFile, L"UEFI BootManagerMenuApp", (UINTN) -1, FALSE);
+  }
 
-    Str = ConvertDevicePathToText(TempDevicePath, FALSE, TRUE);
-    DEBUG ((EFI_D_INFO, "Current Device: %s\n", Str));
-    // Check which GOP should be enabled
-    if ((!StrnCmp(Str, GRAPHICS_KVM_OUTPUT, StrLen(GRAPHICS_KVM_OUTPUT))) && (HandleCount > 2))  {
-      DEBUG ((EFI_D_INFO, "Found the KVM Device.."));
-      // If Primary Video not KVM - disable.
-      if (BoardSettings.PrimaryVideo != 0) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if (!StrnCmp(Str, GRAPHICS_IGD_OUTPUT, StrLen(GRAPHICS_IGD_OUTPUT))) {
-      DEBUG ((EFI_D_INFO, "Found the IGD Device.."));
-      // If Primary Video not IGD - disable.
-      if (BoardSettings.PrimaryVideo != 1) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT1, StrLen(PCIE_SLOT1)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT1 Graphics Device.."));
-      // If Primary Video not PCI - disable.
-      if (BoardSettings.PrimaryVideo != 2) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT2, StrLen(PCIE_SLOT2)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT2 Graphics Device.."));
-      // If Primary Video not PEG - disable.
-      if (BoardSettings.PrimaryVideo != 3) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT3, StrLen(PCIE_SLOT3)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT3 Graphics Device.."));
-      // If Primary Video not PEG - disable.
-      if (BoardSettings.PrimaryVideo != 4) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT4, StrLen(PCIE_SLOT4)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT4 Graphics Device.."));
-      // If Primary Video not PEG - disable.
-      if (BoardSettings.PrimaryVideo != 5) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT5, StrLen(PCIE_SLOT5)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT5 Graphics Device.."));
-      // If Primary Video not PEG - disable.
-      if (BoardSettings.PrimaryVideo != 6) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-
-      DEBUG ((EFI_D_INFO, "\n"));
-    } else if
-    (!StrnCmp(Str, PCIE_SLOT6, StrLen(PCIE_SLOT6)))
-    {
-      DEBUG ((EFI_D_INFO, "Found PCI SLOT2 Graphics Device.."));
-      // If Primary Video not PEG - disable.
-      if (BoardSettings.PrimaryVideo != 7) {
-        DEBUG ((EFI_D_INFO, "Disabling"));
-        Status = gBS->UninstallProtocolInterface(Handle[Index], &gEfiGraphicsOutputProtocolGuid, mGop);
-        if (EFI_ERROR (Status)) {
-          DEBUG((DEBUG_ERROR, "Uninstalling Handle errored with %x\n", Status));
-        }
-      }
-
-      DEBUG ((EFI_D_INFO, "\n"));
-    }
-
-  } // for loop
-  
-  return;
+  return OptionNumber;
 }
 
 /**
@@ -479,8 +440,11 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                Escape;
-  EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
+  EFI_INPUT_KEY                  Enter;
+  EFI_INPUT_KEY                  Esc;
+  EFI_INPUT_KEY                  F12;
+  EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
+  UINTN                          OptionNumber;
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
@@ -488,17 +452,32 @@ PlatformBootManagerBeforeConsole (
   PlatformConsoleInit ();
 
   //
-  // Map Escape to Boot Manager Menu
+  // Register ENTER as CONTINUE key
   //
-  Escape.ScanCode    = SCAN_ESC;
-  Escape.UnicodeChar = CHAR_NULL;
+  Enter.ScanCode    = SCAN_NULL;
+  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
+  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
+  //
+  // Map ESC to Boot Manager Menu
+  //
+  Esc.ScanCode    = SCAN_ESC;
+  Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Escape, NULL);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
+
+  //
+  // Map F12 to Boot Device List menu
+  //
+  F12.ScanCode     = SCAN_F12;
+  F12.UnicodeChar  = CHAR_NULL;
+  OptionNumber    = GetBootManagerMenuAppOption ();
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
 
   mSerialConsole.Uart.BaudRate = PcdGet64 (PcdUartDefaultBaudRate);
   mSerialConsole.Uart.DataBits = PcdGet8 (PcdUartDefaultDataBits);
   mSerialConsole.Uart.Parity = PcdGet8 (PcdUartDefaultParity);
   mSerialConsole.Uart.StopBits = PcdGet8 (PcdUartDefaultStopBits);
+
   //
   // Add the hardcoded serial console device path to ConIn, ConOut, ErrOut.
   //
@@ -511,7 +490,6 @@ PlatformBootManagerBeforeConsole (
   EfiBootManagerUpdateConsoleVariable (ErrOut,
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole, NULL);
 
-
   //
   // Install ready to lock.
   // This needs to be done before option rom dispatched.
@@ -523,6 +501,7 @@ PlatformBootManagerBeforeConsole (
   //
   EfiBootManagerDispatchDeferredImages ();
 }
+
 
 /**
   Do the platform specific action after the console is connected.
@@ -567,7 +546,9 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  Print (L"Pess ESC to enter Boot Manager Menu.\n");
+  PrintXY (10, 10, &White, &Black, L"ESC   to enter Setup.                              ");
+  PrintXY (10, 30, &White, &Black, L"F12   to enter Boot Manager Menu.");
+  PrintXY (10, 50, &White, &Black, L"Enter to boot directly.");
 }
 
 /**
