@@ -68,6 +68,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid    ## CONSUMES
 
 [Depex]
+  gEfiTcgProtocolGuid               AND
   gEfiHiiConfigRoutingProtocolGuid  AND
   gEfiHiiDatabaseProtocolGuid       AND
   gEfiVariableArchProtocolGuid      AND
