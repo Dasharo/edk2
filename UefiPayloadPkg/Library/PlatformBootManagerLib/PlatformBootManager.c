@@ -481,6 +481,8 @@ PlatformBootManagerBeforeConsole (
 {
   EFI_INPUT_KEY                Escape;
   EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
+  UINT16                       BootTimeOut;
+  EFI_STATUS                   Status;
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
@@ -511,7 +513,16 @@ PlatformBootManagerBeforeConsole (
   EfiBootManagerUpdateConsoleVariable (ErrOut,
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole, NULL);
 
-
+  Status = gRT->GetVariable(
+                    L"Timeout",
+                    &gEfiGlobalVariableGuid,
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+                    sizeof(UINT16),
+                    &BootTimeOut)
+                    );
+  if (!EFI_ERROR(Status)) {
+     PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
+  }
   //
   // Install ready to lock.
   // This needs to be done before option rom dispatched.
