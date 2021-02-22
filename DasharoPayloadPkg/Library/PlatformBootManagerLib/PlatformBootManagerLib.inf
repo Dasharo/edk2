@@ -51,6 +51,7 @@
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
+  gEfiGlobalVariableGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES
