@@ -894,6 +894,7 @@ BootMaintRouteConfig (
       goto Exit;
     }
 
+    PcdSet16S (PcdPlatformBootTimeOut, NewBmmData->BootTimeOut);
     Private->BmmOldFakeNVData.BootTimeOut = NewBmmData->BootTimeOut;
   }
 
