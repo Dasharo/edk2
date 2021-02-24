@@ -548,9 +548,7 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  PrintXY (10, 10, &White, &Black, L"ESC   to enter Setup.                              ");
-  PrintXY (10, 30, &White, &Black, L"F12   to enter Boot Manager Menu.");
-  PrintXY (10, 50, &White, &Black, L"Enter to boot directly.");
+  Print (L"ESC   to enter Setup\nF12   to enter Boot Manager Menu\nEnter to boot directly");
 }
 
 /**
