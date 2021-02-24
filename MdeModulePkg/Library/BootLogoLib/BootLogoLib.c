@@ -535,7 +535,7 @@ BootLogoUpdateProgress (
                           0,
                           PosX,
                           PosY,
-                          BlockWidth - 1,
+                          BlockWidth,
                           BlockHeight,
                           (BlockWidth) * sizeof (EFI_UGA_PIXEL)
                           );
