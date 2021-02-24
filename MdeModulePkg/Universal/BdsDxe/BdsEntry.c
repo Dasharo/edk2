@@ -728,10 +728,19 @@ BdsEntry (
 
   InitializeHwErrRecSupport ();
 
-  //
-  // Initialize L"Timeout" EFI global variable.
-  //
-  BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
+  Status = gRT->GetVariable(
+                  L"Timeout",
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &BootTimeOut
+                  );
+  if (!EFI_ERROR (Status) && BootTimeOut != 0 && BootTimeOut != 0xFFFF) {
+    PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
+  } else {
+    BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
+  }
+
   if (BootTimeOut != 0xFFFF) {
     //
     // If time out value equal 0xFFFF, no need set to 0xFFFF to variable area because UEFI specification
