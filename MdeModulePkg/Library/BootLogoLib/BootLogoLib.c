@@ -522,7 +522,7 @@ BootLogoUpdateProgress (
                                  0,
                                  PosX,
                                  PosY,
-                                 BlockWidth - 1,
+                                 BlockWidth,
                                  BlockHeight,
                                  (BlockWidth) * sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
                                  );
@@ -541,6 +541,37 @@ BootLogoUpdateProgress (
                           );
     } else {
       return EFI_UNSUPPORTED;
+    }
+  }
+
+  /* Draw any reminder pixels at the right end of the screen when progress is 100% */
+  if (Progress == 100) {
+    if (GraphicsOutput != NULL) {
+      Status = GraphicsOutput->Blt (
+                                 GraphicsOutput,
+                                 &ProgressColor,
+                                 EfiBltVideoFill,
+                                 0,
+                                 0,
+                                 PosX,
+                                 PosY,
+                                 SizeOfX - PosX,
+                                 BlockHeight,
+                                 (SizeOfX - PosX) * sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
+                                 );
+    } else if (FeaturePcdGet (PcdUgaConsumeSupport)) {
+      Status = UgaDraw->Blt (
+                          UgaDraw,
+                          (EFI_UGA_PIXEL *)&ProgressColor,
+                          EfiUgaVideoFill,
+                          0,
+                          0,
+                          PosX,
+                          PosY,
+                          SizeOfX - PosX,
+                          BlockHeight,
+                          (SizeOfX - PosX) * sizeof (EFI_UGA_PIXEL)
+                          );
     }
   }
 
