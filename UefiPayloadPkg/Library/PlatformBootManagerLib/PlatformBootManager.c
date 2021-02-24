@@ -447,9 +447,6 @@ PlatformBootManagerBeforeConsole (
   EFI_INPUT_KEY                  F12;
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
   UINTN                          OptionNumber;
-  EFI_STATUS                     Status;
-  UINT16                         BootTimeOut;
-  UINTN                          VarSize;
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
@@ -494,17 +491,6 @@ PlatformBootManagerBeforeConsole (
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole, NULL);
   EfiBootManagerUpdateConsoleVariable (ErrOut,
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole, NULL);
-
-  Status = gRT->GetVariable(
-                  L"Timeout",
-                  &gEfiGlobalVariableGuid,
-                  NULL,
-                  &VarSize,
-                  &BootTimeOut
-                  );
-  if (!EFI_ERROR (Status) && BootTimeOut != 0) {
-      PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
-  }
 
   //
   // Install ready to lock.
@@ -590,7 +576,7 @@ PlatformBootManagerWaitCallback (
   BootLogoUpdateProgress (
     White.Pixel,
     Black.Pixel,
-    L"Start boot option",
+    L"",
     White.Pixel,
     (Timeout - TimeoutRemain) * 100 / Timeout,
     0
