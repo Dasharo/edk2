@@ -502,10 +502,8 @@ PlatformBootManagerBeforeConsole (
                   &VarSize,
                   &BootTimeOut
                   );
-  if (!EFI_ERROR (Status)) {
-    if (VarSize == sizeof(UINT16) && BootTimeOut != 0) {
+  if (!EFI_ERROR (Status) && BootTimeOut != 0) {
       PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
-    }
   }
 
   //

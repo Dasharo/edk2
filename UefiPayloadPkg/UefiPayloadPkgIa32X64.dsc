@@ -362,6 +362,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDxeIplSwitchToLongMode|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdVariableCollectStatistics|TRUE
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
@@ -540,6 +541,9 @@
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
+  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
+  MdeModulePkg/Application/VariableInfo/VariableInfo.inf
+  MdeModulePkg/Application/DumpDynPcd/DumpDynPcd.inf
 
   PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
   MdeModulePkg/Universal/Metronome/Metronome.inf
