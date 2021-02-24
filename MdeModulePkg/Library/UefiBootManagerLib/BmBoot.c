@@ -2841,7 +2841,7 @@ BmRegisterBootManagerMenu (
              LoadOptionNumberUnassigned,
              LoadOptionTypeBoot,
              LOAD_OPTION_CATEGORY_APP | LOAD_OPTION_ACTIVE | LOAD_OPTION_HIDDEN,
-             (Description != NULL) ? Description : L"Boot Manager Menu",
+             L"Setup",
              DevicePath,
              NULL,
              0
