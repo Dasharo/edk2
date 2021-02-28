@@ -19,7 +19,6 @@
 #include <IndustryStandard/Pci22.h>
 #include <Coreboot.h>
 
-
 /**
   Convert a packed value from cbuint64 to a UINT64 value.
 
@@ -645,6 +644,49 @@ ParseSMMSTOREInfo (
   SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
   SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
   SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
+
+  return RETURN_SUCCESS;
+}
+
+PACKED struct timestamp_entry {
+	UINT32	entry_id;
+	UINT64	entry_stamp;
+};
+
+PACKED struct timestamp_table {
+	UINT64	base_time;
+	UINT16	max_entries;
+	UINT16	tick_freq_mhz;
+	UINT32	num_entries;
+	struct timestamp_entry entries[0]; /* Variable number of entries */
+};
+
+
+/**
+  Parse the coreboto timestamps
+
+  @retval RETURN_SUCCESS     Successfully find the timestamps information.
+  @retval RETURN_NOT_FOUND   Failed to find the tiemstamps information .
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseTimestampTable (
+  OUT FIRMWARE_SEC_PERFORMANCE *Performance
+  )
+{
+  struct timestamp_table                  *CbTsRec;
+
+  if (Performance == NULL) {
+    return RETURN_INVALID_PARAMETER;
+  }
+
+  CbTsRec = FindCbTag (CB_TAG_TIMESTAMPS);
+  if (CbTsRec == NULL) {
+    return RETURN_NOT_FOUND;
+  }
+
+  Performance->ResetEnd = CbTsRec->base_time;
 
   return RETURN_SUCCESS;
 }
