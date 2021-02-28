@@ -50,6 +50,7 @@ INF MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.
 INF MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
 INF UefiPayloadPkg/BlSupportPei/BlSupportPei.inf
 INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+INF MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTablePei/FirmwarePerformancePei.inf
 
 !if $(TPM_ENABLE) == TRUE
 INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
@@ -147,9 +148,13 @@ FILE FREEFORM = PCD(gEfiMdeModulePkgTokenSpaceGuid.PcdLogoFile) {
 #
 # ACPI Support
 #
+<<<<<<< HEAD
 INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 INF UefiPayloadPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
 INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+=======
+INF UefiPayloadPkg/AcpiTableDxe/AcpiTableDxe.inf
+>>>>>>> 7ddb30a760 (UefiPayloadPkg: add new modules)
 
 #
 # PCI Support
