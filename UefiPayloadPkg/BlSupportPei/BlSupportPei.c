@@ -138,7 +138,6 @@ PeiReportRemainedFvs (
   }
 }
 
-
 /**
   Find the board related info from ACPI table
 
@@ -439,6 +438,7 @@ BlPeiEntryPoint (
   EFI_PEI_GRAPHICS_INFO_HOB        *NewGfxInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB GfxDeviceInfo;
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB *NewGfxDeviceInfo;
+  FIRMWARE_SEC_PERFORMANCE         Performance;
 
   // Report lower 640KB of RAM.
   // Mark memory as reserved to keep coreboot header in place.
@@ -619,6 +619,14 @@ BlPeiEntryPoint (
     ASSERT (NewAcpiBoardInfo != NULL);
     CopyMem (NewAcpiBoardInfo, &AcpiBoardInfo, sizeof (ACPI_BOARD_INFO));
     DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
+  }
+
+  // Build SEC Performance Data Hob
+  Status =   ParseTimestampTable(&Performance);
+  if (!EFI_ERROR (Status)) {
+    BuildGuidDataHob (&gEfiFirmwarePerformanceGuid, &Performance, sizeof (Performance));
+  } else {
+    DEBUG ((DEBUG_ERROR, "Error when parsing timestamp info, Status = %r\n", Status));
   }
 
   //

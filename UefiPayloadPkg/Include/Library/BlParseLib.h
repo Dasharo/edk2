@@ -13,6 +13,7 @@
 #include <Guid/SystemTableInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/SMMSTOREInfoGuid.h>
+#include <Ppi/SecPerformance.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
@@ -131,6 +132,19 @@ RETURN_STATUS
 EFIAPI
 ParseSMMSTOREInfo (
   OUT SMMSTORE_INFO       *SMMSTOREInfo
+  );
+
+/**
+  Parse the coreboto timestamps
+
+  @retval RETURN_SUCCESS     Successfully find the timestamps information.
+  @retval RETURN_NOT_FOUND   Failed to find the tiemstamps information .
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseTimestampTable (
+  OUT FIRMWARE_SEC_PERFORMANCE *Performance
   );
 
 #endif
