@@ -370,6 +370,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableCollectStatistics|TRUE
+!if $(CSM_ENABLE) == TRUE
+  gUefiPayloadPkgTokenSpaceGuid.PcdCsmEnable|TRUE
+!endif
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
@@ -546,13 +549,23 @@
 !endif
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
-  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
+  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf {
+    <LibraryClasses>
+!if $(CSM_ENABLE) == TRUE
+      NULL|UefiPayloadPkg/Library/CsmSupportLib/CsmSupportLib.inf
+      NULL|OvmfPkg/Csm/LegacyBootManagerLib/LegacyBootManagerLib.inf
+!endif
+  }
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+!if $(CSM_ENABLE) == TRUE
+      NULL|OvmfPkg/Csm/LegacyBootManagerLib/LegacyBootManagerLib.inf
+      NULL|OvmfPkg/Csm/LegacyBootMaintUiLib/LegacyBootMaintUiLib.inf
+!endif
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
@@ -587,6 +600,7 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
   MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
+  MdeModulePkg/Universal/MemoryTest/GenericMemoryTestDxe/GenericMemoryTestDxe.inf
 
   UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
@@ -642,6 +656,19 @@
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
+
+  #
+  # CSM support
+  #
+!if $(CSM_ENABLE) == TRUE
+  OvmfPkg/Csm/BiosThunk/VideoDxe/VideoDxe.inf {
+    <LibraryClasses>
+      PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+  }
+  OvmfPkg/Csm/LegacyBiosDxe/LegacyBiosDxe.inf
+  OvmfPkg/Csm/Csm16/Csm16.inf
+  OvmfPkg/8259InterruptControllerDxe/8259.inf
+!endif
 
   #
   # ISA Support

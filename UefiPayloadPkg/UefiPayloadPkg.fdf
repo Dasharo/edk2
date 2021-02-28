@@ -11,15 +11,15 @@
 ################################################################################
 [FD.UefiPayload]
 BaseAddress   = 0x800000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-Size          = 0x800000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+Size          = 0x860000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
 ErasePolarity = 1
 BlockSize     = 0x1000
-NumBlocks     = 0x800
+NumBlocks     = 0x860
 
 0x00000000|0x060000
 FV = PEIFV
 
-0x00060000|0x7A0000
+0x00060000|0x800000
 FV = DXEFV
 
 ################################################################################
@@ -104,6 +104,7 @@ INF MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
 INF MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
 INF MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
 INF MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
+INF MdeModulePkg/Universal/MemoryTest/GenericMemoryTestDxe/GenericMemoryTestDxe.inf
 
 INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
 INF UefiCpuPkg/CpuDxe/CpuDxe.inf
@@ -217,6 +218,16 @@ INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
+
+#
+# CSM Support
+#
+!if $(CSM_ENABLE) == TRUE
+INF OvmfPkg/Csm/BiosThunk/VideoDxe/VideoDxe.inf
+INF OvmfPkg/Csm/LegacyBiosDxe/LegacyBiosDxe.inf
+INF  RuleOverride=CSM OvmfPkg/Csm/Csm16/Csm16.inf
+INF OvmfPkg/8259InterruptControllerDxe/8259.inf
+!endif
 
 #
 # Network Support
