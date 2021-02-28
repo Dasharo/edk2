@@ -17,6 +17,7 @@
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/SMMSTOREInfoGuid.h>
 #include <Guid/TcgPhysicalPresenceGuid.h>
+#include <Ppi/SecPerformance.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__
@@ -147,7 +148,6 @@ ParseSMMSTOREInfo (
   @retval RETURN_NOT_FOUND    Failed to find the boot logo.
 
 **/
-
 RETURN_STATUS
 EFIAPI
 ParseBootLogo (
@@ -162,7 +162,6 @@ ParseBootLogo (
 
   @retval RETURN_SUCCESS     Successfully find the SMM store buffer information.
   @retval RETURN_NOT_FOUND   Failed to find the SMM store buffer information .
-
 **/
 RETURN_STATUS
 EFIAPI
@@ -178,13 +177,24 @@ ParseTPMPPIInfo (
 
   @retval RETURN_SUCCESS      Successfully found VBoot data.
   @retval RETURN_NOT_FOUND    Failed to find VBoot data.
-
 **/
 RETURN_STATUS
 EFIAPI
 ParseVBootWorkbuf (
   OUT UINT8        *RecoveryCode,
   OUT CONST CHAR8 **RecoveryReason
+  );
+
+/**
+  Parse the coreboto timestamps
+
+  @retval RETURN_SUCCESS     Successfully find the timestamps information.
+  @retval RETURN_NOT_FOUND   Failed to find the tiemstamps information .
+**/
+RETURN_STATUS
+EFIAPI
+ParseTimestampTable (
+  OUT FIRMWARE_SEC_PERFORMANCE *Performance
   );
 
 #endif
