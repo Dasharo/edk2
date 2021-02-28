@@ -985,14 +985,15 @@ LegacyBiosInstall (
   //
   // Allocate 0 - 4K for real mode interrupt vectors and BDA.
   //
-  AllocateLegacyMemory (
-    AllocateAddress,
-    EfiReservedMemoryType,
-    0,
-    1,
-    &MemoryAddress
-    );
-  ASSERT (MemoryAddress == 0x000000000);
+  DEBUG ((DEBUG_INFO, "%a: Allocate memory for int vectors and BDA\n", __FUNCTION__));
+  Status = AllocateLegacyMemory (
+            AllocateAddress,
+            EfiReservedMemoryType,
+            0,
+            1,
+            &MemoryAddress
+            );
+  ASSERT (!EFI_ERROR (Status));
 
   ClearPtr = (VOID *) ((UINTN) 0x0000);
 
