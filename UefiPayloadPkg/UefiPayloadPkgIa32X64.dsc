@@ -26,6 +26,7 @@
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = TRUE
+  DEFINE CSM_ENABLE                   = FALSE
 
   #
   # SBL:      UEFI payload for Slim Bootloader
