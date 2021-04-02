@@ -876,11 +876,11 @@ BootMaintRouteConfig (
                     sizeof(UINT16),
                     &(NewBmmData->BootTimeOut)
                     );
+    PcdSet16S (PcdPlatformBootTimeOut, NewBmmData->BootTimeOut);
     if (EFI_ERROR (Status)) {
       Offset = OFFSET_OF (BMM_FAKE_NV_DATA, BootTimeOut);
       goto Exit;
     }
-    PcdSet16S (PcdPlatformBootTimeOut, NewBmmData->BootTimeOut);
     Private->BmmOldFakeNVData.BootTimeOut = NewBmmData->BootTimeOut;
   }
 
