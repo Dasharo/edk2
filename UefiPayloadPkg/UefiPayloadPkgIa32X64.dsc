@@ -516,7 +516,7 @@
   #
   # SMBIOS Support
   #
-  #MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
   #
   # ACPI Support

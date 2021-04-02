@@ -124,7 +124,7 @@ INF MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 INF UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
-#INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   INF UefiPayloadPkg/AmdSpiDxe/AmdSpiDxe.inf
