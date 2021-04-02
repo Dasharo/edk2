@@ -12,7 +12,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/BaseLib.h>
 #include <Library/FrameBufferBltLib.h>
 #include <Library/UefiBootManagerLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Guid/BoardSettingsGuid.h>
+#include <Guid/GlobalVariable.h>
 
 #define PCIE_SLOT1  L"PciRoot(0x0)/Pci(0x1B" //Wildcard
 #define PCIE_SLOT2  L"PciRoot(0x0)/Pci(0x1,0x0)"
@@ -479,10 +481,11 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                Escape;
+  EFI_INPUT_KEY                F9;
   EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
   UINT16                       BootTimeOut;
   EFI_STATUS                   Status;
+  UINTN                        VarSize;
 
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
@@ -490,12 +493,12 @@ PlatformBootManagerBeforeConsole (
   PlatformConsoleInit ();
 
   //
-  // Map Escape to Boot Manager Menu
+  // Map F9 to Boot Manager Menu
   //
-  Escape.ScanCode    = SCAN_F9;
-  Escape.UnicodeChar = CHAR_NULL;
+  F9.ScanCode    = SCAN_F9;
+  F9.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Escape, NULL);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &F9, NULL);
 
   mSerialConsole.Uart.BaudRate = PcdGet64 (PcdUartDefaultBaudRate);
   mSerialConsole.Uart.DataBits = PcdGet8 (PcdUartDefaultDataBits);
@@ -514,12 +517,12 @@ PlatformBootManagerBeforeConsole (
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole, NULL);
 
   Status = gRT->GetVariable(
-                    L"Timeout",
-                    &gEfiGlobalVariableGuid,
-                    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-                    sizeof(UINT16),
-                    &BootTimeOut)
-                    );
+                  L"Timeout",
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &VarSize,
+                  &BootTimeOut
+                  );
   if (!EFI_ERROR(Status)) {
      PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
   }
