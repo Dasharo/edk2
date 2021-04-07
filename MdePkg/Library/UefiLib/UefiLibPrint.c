@@ -467,8 +467,9 @@ InternalPrintGraphic (
   } else {
     PrintNum = 0;
   }
-
-  FreePool (RowInfoArray);
+  if (RowInfoArray != NULL) {
+    FreePool (RowInfoArray);
+  }
   FreePool (Blt);
   return PrintNum;
 
