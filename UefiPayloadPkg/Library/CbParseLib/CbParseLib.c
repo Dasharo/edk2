@@ -12,6 +12,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/PcdLib.h>
+#include <Library/PciLib.h>
 #include <Library/IoLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
@@ -583,7 +584,19 @@ ParseGfxDeviceInfo (
   OUT EFI_PEI_GRAPHICS_DEVICE_INFO_HOB       *GfxDeviceInfo
   )
 {
-  return RETURN_NOT_FOUND;
+
+  if (PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0)) == MAX_UINT32) {
+    return RETURN_NOT_FOUND;
+  }
+
+  GfxDeviceInfo->VendorId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0));
+  GfxDeviceInfo->DeviceId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0x2));
+  GfxDeviceInfo->SubsystemVendorId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0x2C));
+  GfxDeviceInfo->SubsystemId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0x2E));
+  GfxDeviceInfo->RevisionId = PciRead8 (PCI_LIB_ADDRESS(0, 2, 0, 0x8));
+  GfxDeviceInfo->BarIndex = 2;
+
+  return EFI_SUCCESS;
 }
 
 /**
