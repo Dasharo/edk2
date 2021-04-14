@@ -584,6 +584,8 @@ FvbWrite (
     return EFI_BAD_BUFFER_SIZE;
   }
 
+  MicroSecondDelay(5000);
+
   return SMMStoreWrite (Lba, Offset, NumBytes, Buffer);
 }
 
@@ -721,7 +723,7 @@ FvbEraseBlocks (
       // Move to the next Lba
       StartingLba++;
       NumOfLba--;
-      MicroSecondDelay(20000);
+      MicroSecondDelay(5000);
     }
   } while (TRUE);
   VA_END (Args);
