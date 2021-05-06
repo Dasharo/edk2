@@ -461,11 +461,6 @@ InstallSecureBootHook (
     return;
   }
 
-  if(Settings.SecureBootEnable != SECURE_BOOT_MODE_ENABLE) {
-    DEBUG ((EFI_D_ERROR, "SecureBootSetup: SecureBootEnable is disabled.\n"));
-    return;
-  }
-
   PrintSettings (&Settings);
 
   if (Settings.CustomMode != CUSTOM_SECURE_BOOT_MODE) {
@@ -502,6 +497,9 @@ InstallSecureBootHook (
             EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS),
            MicrosoftDbxSize, MicrosoftDbx);
   ASSERT_EFI_ERROR (Status);
+
+	
+  DEBUG ((DEBUG_INFO, "SecureBootSetup: enrolling certs.\n"));
 
   Status = EnrollListOfCerts (
     EFI_IMAGE_SECURITY_DATABASE,
@@ -542,29 +540,6 @@ InstallSecureBootHook (
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "SecureBootSetup: SetVariable(\"%s\", %g): %r\n", EFI_CUSTOM_MODE_NAME,
       &gEfiCustomModeEnableGuid, Status));
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  // FIXME: Force SecureBoot to ON. The AuthService will do this if authenticated variables
-  // are supported, which aren't as the SMM handler isn't able to verify them.
-
-  Settings.SecureBootEnable = SECURE_BOOT_ENABLE;
-  Status = gRT->SetVariable (EFI_SECURE_BOOT_ENABLE_NAME, &gEfiSecureBootEnableDisableGuid,
-           EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-           sizeof Settings.SecureBootEnable, &Settings.SecureBootEnable);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "SecureBootSetup: SetVariable(\"%s\", %g): %r\n", EFI_SECURE_BOOT_ENABLE_NAME,
-      &gEfiSecureBootEnableDisableGuid, Status));
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  Settings.SecureBoot = SECURE_BOOT_ENABLE;
-  Status = gRT->SetVariable (EFI_SECURE_BOOT_MODE_NAME, &gEfiGlobalVariableGuid,
-           EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-           sizeof Settings.SecureBoot, &Settings.SecureBoot);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "SecureBootSetup: SetVariable(\"%s\", %g): %r\n", EFI_SECURE_BOOT_MODE_NAME,
-      &gEfiGlobalVariableGuid, Status));
     ASSERT_EFI_ERROR (Status);
   }
 
