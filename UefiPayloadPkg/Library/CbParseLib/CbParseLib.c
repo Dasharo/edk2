@@ -590,8 +590,8 @@ ParseGfxDeviceInfo (
     return RETURN_NOT_FOUND;
   }
 
-  if (!(PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0x11)) == PCI_CLASS_DISPLAY &&
-        PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0x10)) == PCI_CLASS_DISPLAY_VGA)) {
+  if (!(PciRead8 (PCI_LIB_ADDRESS(0, 2, 0, 0x11)) == PCI_CLASS_DISPLAY &&
+        PciRead8 (PCI_LIB_ADDRESS(0, 2, 0, 0x10)) == PCI_CLASS_DISPLAY_VGA)) {
     return RETURN_NOT_FOUND;
   }
 
