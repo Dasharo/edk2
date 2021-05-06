@@ -16,6 +16,7 @@
 #include <Library/IoLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/Pci22.h>
 #include <Coreboot.h>
 
 
@@ -588,6 +589,12 @@ ParseGfxDeviceInfo (
   if (PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0)) == MAX_UINT32) {
     return RETURN_NOT_FOUND;
   }
+
+  if (!(PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0x11)) == PCI_CLASS_DISPLAY &&
+        PciRead32 (PCI_LIB_ADDRESS(0, 2, 0, 0x10)) == PCI_CLASS_DISPLAY_VGA)) {
+    return RETURN_NOT_FOUND;
+  }
+
 
   GfxDeviceInfo->VendorId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0));
   GfxDeviceInfo->DeviceId = PciRead16 (PCI_LIB_ADDRESS(0, 2, 0, 0x2));
