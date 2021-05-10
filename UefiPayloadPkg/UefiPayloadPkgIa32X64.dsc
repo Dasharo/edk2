@@ -57,6 +57,8 @@
   # Enabling the serial terminal will slow down the boot menu redering!
   DEFINE SERIAL_TERMINAL              = FALSE
 
+  DEFINE PLATFORM_BOOT_TIMEOUT        = 5
+
   #
   #  typedef struct {
   #    UINT16  VendorId;          ///< Vendor ID to match the PCI device.  The value 0xFFFF terminates the list of entries.
@@ -433,7 +435,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|2
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|$(PLATFORM_BOOT_TIMEOUT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|FALSE
 
   ## This PCD defines the video horizontal resolution.
