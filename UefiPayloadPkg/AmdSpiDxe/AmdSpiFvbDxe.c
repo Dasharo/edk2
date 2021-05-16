@@ -1,6 +1,6 @@
 /*++ @file  AmdSpiFvbDxe.c
 
- Copyright (c) 2020, 9elements Agency GmbH<BR>
+ Copyright (c) 2021, 3mdeb Embedded Systems Consulting<BR>
 
  SPDX-License-Identifier: BSD-2-Clause-Patent
 
