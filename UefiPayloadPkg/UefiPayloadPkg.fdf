@@ -320,6 +320,7 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 # GetNonVolatileMaxVariableSize () < (VariableStoreLength - sizeof (VARIABLE_STORE_HEADER))
 DEFINE BLOCK_SIZE        = 0x10000
 
+SET gEfiMdeModulePkgTokenSpaceGuid.PcdSpiBarVariableBase = 0xFEC10000
 SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase = 0xFF800000
 SET gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize = $(BLOCK_SIZE)
 

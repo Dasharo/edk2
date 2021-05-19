@@ -1569,6 +1569,8 @@
   # @Prompt Size of flash NV variable range.
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x0|UINT32|0x30000002
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSpiBarVariableBase|0x0|UINT32|0x30000042
+
   ## Base address of the FTW spare block range in flash device. Note that this value should be block size aligned.
   # @Prompt Base address of flash FTW spare block range.
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0x0|UINT32|0x30000013

@@ -37,12 +37,19 @@ ReserveResourceInGcd (
                     GcdType,
                     BaseAddress,
                     Length,
-                    EFI_MEMORY_UC
+        	    EFI_MEMORY_UC
                     );
     if (EFI_ERROR (Status)) {
       DEBUG ((
         DEBUG_ERROR,
         "Failed to add memory space :0x%lx 0x%lx\n",
+        BaseAddress,
+        Length
+        ));
+    } else {
+      DEBUG ((
+        DEBUG_ERROR,
+        "Succesfully added memory space :0x%lx 0x%lx\n",
         BaseAddress,
         Length
         ));

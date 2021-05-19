@@ -176,7 +176,7 @@ BlAmdSpiInitialise (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  Status = AmdSpiCreateInstance (3, 0x10000, &mAMDSpiInstance);
+  Status = AmdSpiCreateInstance (4, 0x10000, &mAMDSpiInstance);
   if (EFI_ERROR(Status)) {
     DEBUG((EFI_D_ERROR, "%a: Fail to create instance for AmdSpi\n",
       __FUNCTION__));
@@ -200,6 +200,8 @@ BlAmdSpiInitialise (
   //
   // Mark the memory mapped store as MMIO memory
   //
+    DEBUG((EFI_D_INFO, "%a: gDS->GetMemorySpaceDescriptor: PcdGet32(PcdFlashNvStorageVariableBase): 0x%x\n",
+      __FUNCTION__, PcdGet32(PcdFlashNvStorageVariableBase)));
   Status      = gDS->GetMemorySpaceDescriptor (PcdGet32(PcdFlashNvStorageVariableBase), &GcdDescriptor);
   if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeMemoryMappedIo) {
     DEBUG((EFI_D_INFO, "%a: No memory space descriptor for com buffer found\n",
@@ -211,10 +213,18 @@ BlAmdSpiInitialise (
     Status = gDS->AddMemorySpace (
         EfiGcdMemoryTypeMemoryMappedIo,
         PcdGet32(PcdFlashNvStorageVariableBase),
-        4 * 0x10000,
-        EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+        4 * SIZE_64KB,
+        EFI_MEMORY_UC
         );
-    ASSERT_EFI_ERROR (Status);
+    Status = gDS->AddMemorySpace (
+        EfiGcdMemoryTypeMemoryMappedIo,
+        PcdGet32(PcdSpiBarVariableBase),
+        4 * SIZE_64KB,
+        EFI_MEMORY_UC
+        );
+  } else {
+    DEBUG((EFI_D_INFO, "%a: Memory space descriptor for com buffer found. Continue with setting memory space attrs\n",
+      __FUNCTION__));
   }
 
   //
@@ -222,6 +232,12 @@ BlAmdSpiInitialise (
   //
   Status = gDS->SetMemorySpaceAttributes (
                   PcdGet32(PcdFlashNvStorageVariableBase),
+                  4 * 0x10000,
+                  EFI_MEMORY_RUNTIME
+                  );
+  ASSERT_EFI_ERROR (Status);
+  Status = gDS->SetMemorySpaceAttributes (
+                  PcdGet32(PcdSpiBarVariableBase),
                   4 * 0x10000,
                   EFI_MEMORY_RUNTIME
                   );

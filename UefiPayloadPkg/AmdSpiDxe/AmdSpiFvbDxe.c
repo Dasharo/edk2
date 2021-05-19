@@ -27,6 +27,7 @@
 
 STATIC EFI_EVENT mFvbVirtualAddrChangeEvent;
 STATIC UINTN     mFlashNvStorageVariableBase;
+STATIC UINTN     mSpiBarVariableBase;
 
 ///
 /// The Firmware Volume Block Protocol is the low-level interface
@@ -344,7 +345,8 @@ FvbGetPhysicalAddress (
   OUT       EFI_PHYSICAL_ADDRESS                 *Address
   )
 {
-  DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
+  DEBUG((EFI_D_INFO, "%a: 0x%x\n", __FUNCTION__, mFlashNvStorageVariableBase));
+
   ASSERT(Address != NULL);
 
   *Address = mFlashNvStorageVariableBase;
@@ -740,6 +742,7 @@ FvbVirtualNotifyEvent (
 {
   DEBUG((EFI_D_INFO, "%a\n", __FUNCTION__));
   EfiConvertPointer (0x0, (VOID**)&mFlashNvStorageVariableBase);
+  EfiConvertPointer (0x0, (VOID**)&mSpiBarVariableBase);
   return;
 }
 
@@ -758,6 +761,7 @@ AmdSpiFvbInitialize (
   ASSERT((Instance != NULL));
 
   mFlashNvStorageVariableBase = PcdGet32 (PcdFlashNvStorageVariableBase);
+  mSpiBarVariableBase = PcdGet32 (PcdSpiBarVariableBase);
 
   BootMode = GetBootModeHob ();
   if (BootMode == BOOT_WITH_DEFAULT_SETTINGS) {
