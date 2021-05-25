@@ -55,10 +55,14 @@ INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 INF  UefiPayloadPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
 INF  SecurityPkg/Tcg/TcgPei/TcgPei.inf
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+!endif
 !endif
 
+!if $(SATA_PASSWORD_ENABLE) == TRUE
 INF SecurityPkg/HddPassword/HddPasswordPei.inf
-
+!endif
 ################################################################################
 
 [FV.DXEFV]
@@ -299,10 +303,14 @@ INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
 INF  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+!endif
 !endif
 
-INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
+!if $(SATA_PASSWORD_ENABLE) == TRUE
 INF SecurityPkg/HddPassword/HddPasswordDxe.inf
+!endif
 
 #
 # Shell
