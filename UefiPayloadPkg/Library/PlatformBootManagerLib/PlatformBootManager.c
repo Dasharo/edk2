@@ -470,7 +470,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Map F12 to Boot Device List menu
   //
-  F12.ScanCode     = SCAN_F12;
+  F12.ScanCode     = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar  = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
@@ -523,6 +523,7 @@ PlatformBootManagerAfterConsole (
 {
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
+  CHAR16                         *BootMenuKey;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -548,7 +549,23 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  Print (L"ESC   to enter Setup\nF12   to enter Boot Manager Menu\nEnter to boot directly");
+  switch (FixedPcdGet16(PcdBootMenuKey)) {
+  case 0x000B: BootMenuKey = L"F1 "; break;
+  case 0x000C: BootMenuKey = L"F2 "; break;
+  case 0x000D: BootMenuKey = L"F3 "; break;
+  case 0x000E: BootMenuKey = L"F4 "; break;
+  case 0x000F: BootMenuKey = L"F5 "; break;
+  case 0x0010: BootMenuKey = L"F6 "; break;
+  case 0x0011: BootMenuKey = L"F7 "; break;
+  case 0x0012: BootMenuKey = L"F8 "; break;
+  case 0x0013: BootMenuKey = L"F9 "; break;
+  case 0x0014: BootMenuKey = L"F10"; break;
+  case 0x0015: BootMenuKey = L"F11"; break;
+  case 0x0016: BootMenuKey = L"F12"; break;
+  default: BootMenuKey = L"F12"; break;
+  }
+
+  Print (L"ESC   to enter Setup\n%s   to enter Boot Manager Menu\nEnter to boot directly", BootMenuKey);
 }
 
 /**

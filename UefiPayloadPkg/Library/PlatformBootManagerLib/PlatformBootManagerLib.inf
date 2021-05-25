@@ -76,3 +76,4 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits
   gUefiPayloadPkgTokenSpaceGuid.PcdTerminalTypeGuidBuffer
+  gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey
