@@ -51,6 +51,16 @@
 [Guids]
   gEfiEndOfDxeEventGroupGuid
   gEfiGlobalVariableGuid
+  gEfiPcAnsiGuid
+  gEfiVT100Guid
+  gEfiVT100PlusGuid
+  gEfiVTUTF8Guid
+  gEfiTtyTermGuid
+  gEdkiiLinuxTermGuid
+  gEdkiiXtermR6Guid
+  gEdkiiVT400Guid
+  gEdkiiSCOTermGuid
+  gEfiPcAnsiGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES
@@ -59,7 +69,8 @@
   gEfiBootLogoProtocolGuid        ## CONSUMES
   gEfiDxeSmmReadyToLockProtocolGuid
   gEfiSmmAccess2ProtocolGuid
-  gEfiPciRootBridgeIoProtocolGuid               ## CONSUMES
+  gEfiPciRootBridgeIoProtocolGuid ## CONSUMES
+  gEfiDevicePathProtocolGuid      ## CONSUMES
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
@@ -73,4 +84,5 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits
+  gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey
