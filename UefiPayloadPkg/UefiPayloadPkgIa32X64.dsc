@@ -52,7 +52,7 @@
   DEFINE UART_DEFAULT_DATA_BITS       = 8
   DEFINE UART_DEFAULT_PARITY          = 1
   DEFINE UART_DEFAULT_STOP_BITS       = 1
-  DEFINE DEFAULT_TERMINAL_TYPE        = 0
+  DEFINE DEFAULT_TERMINAL_TYPE        = 4
 
   # Enabling the serial terminal will slow down the boot menu redering!
   DEFINE SERIAL_TERMINAL              = FALSE
