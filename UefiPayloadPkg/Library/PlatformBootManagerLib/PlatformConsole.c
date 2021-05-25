@@ -38,28 +38,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
     0 \
   }
 
-#define gPciRootBridge \
-  PNPID_DEVICE_PATH_NODE(0x0A03)
-
-#define gPnp16550ComPort \
-  PNPID_DEVICE_PATH_NODE(0x0501)
-
-#define gPnpPs2Keyboard \
-  PNPID_DEVICE_PATH_NODE(0x0303)
-
-#define gUartVendor \
-  { \
-    { \
-      HARDWARE_DEVICE_PATH, \
-      HW_VENDOR_DP, \
-      { \
-        (UINT8) (sizeof (VENDOR_DEVICE_PATH)), \
-        (UINT8) ((sizeof (VENDOR_DEVICE_PATH)) >> 8) \
-      } \
-    }, \
-    EDKII_SERIAL_PORT_LIB_VENDOR_GUID \
-  }
-
 #define gUart \
   { \
     { \
@@ -90,11 +68,18 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
     DEVICE_PATH_MESSAGING_PC_ANSI \
   }
 
+#define gPciRootBridge \
+  PNPID_DEVICE_PATH_NODE(0x0A03)
+
+#define gPnp16550ComPort \
+  PNPID_DEVICE_PATH_NODE(0x0501)
+
+#define gPnpPs2Keyboard \
+  PNPID_DEVICE_PATH_NODE(0x0303)
+
 ACPI_HID_DEVICE_PATH       gPnpPs2KeyboardDeviceNode  = gPnpPs2Keyboard;
-ACPI_HID_DEVICE_PATH       gPnp16550ComPortDeviceNode = gPnp16550ComPort;
 UART_DEVICE_PATH           gUartDeviceNode            = gUart;
 VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
-VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
 
 //
 // Predefined platform root bridge
@@ -147,18 +132,6 @@ PrepareLpcBridgeDevicePath (
   //
   DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
   EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
-
-  //
-  // Register COM1
-  //
-  DevicePath = TempDevicePath;
-  DevicePath = AppendDevicePathNode ((EFI_DEVICE_PATH_PROTOCOL *)NULL, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceVendorNode);
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode);
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode);
-
-  EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
 
   return EFI_SUCCESS;
 }
