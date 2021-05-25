@@ -9,6 +9,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "PlatformBootManager.h"
 #include "PlatformConsole.h"
 #include <Guid/SerialPortLibVendor.h>
+#include <Guid/PcAnsi.h>
+#include <Guid/TtyTerm.h>
 
 #define PCI_DEVICE_PATH_NODE(Func, Dev) \
   { \
@@ -36,6 +38,19 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
     }, \
     EISA_PNP_ID((PnpId)), \
     0 \
+  }
+
+#define gUartVendor \
+  { \
+    { \
+      HARDWARE_DEVICE_PATH, \
+      HW_VENDOR_DP, \
+      { \
+        (UINT8) (sizeof (VENDOR_DEVICE_PATH)), \
+        (UINT8) ((sizeof (VENDOR_DEVICE_PATH)) >> 8) \
+      } \
+    }, \
+    EDKII_SERIAL_PORT_LIB_VENDOR_GUID \
   }
 
 #define gUart \
@@ -77,9 +92,22 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define gPnpPs2Keyboard \
   PNPID_DEVICE_PATH_NODE(0x0303)
 
+typedef enum _TYPE_OF_TERMINAL {
+  TerminalTypePcAnsi                = 0,
+  TerminalTypeVt100,
+  TerminalTypeVt100Plus,
+  TerminalTypeVtUtf8,
+  TerminalTypeTtyTerm,
+  TerminalTypeLinux,
+  TerminalTypeXtermR6,
+  TerminalTypeVt400,
+  TerminalTypeSCO
+} TYPE_OF_TERMINAL;
+
 ACPI_HID_DEVICE_PATH       gPnpPs2KeyboardDeviceNode  = gPnpPs2Keyboard;
 UART_DEVICE_PATH           gUartDeviceNode            = gUart;
 VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
+VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
 
 //
 // Predefined platform root bridge
@@ -115,6 +143,7 @@ PrepareLpcBridgeDevicePath (
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
+  EFI_GUID                  TerminalTypeGuid;
 
   DevicePath = NULL;
   Status = gBS->HandleProtocol (
@@ -132,6 +161,33 @@ PrepareLpcBridgeDevicePath (
   //
   DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
   EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+  //
+  // Register COM1
+  //
+  DevicePath = TempDevicePath;
+  DevicePath = AppendDevicePathNode ((EFI_DEVICE_PATH_PROTOCOL *)NULL, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceVendorNode);
+  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode);
+
+  switch (PcdGet8 (PcdDefaultTerminalType)) {
+  case TerminalTypePcAnsi:    TerminalTypeGuid = gEfiPcAnsiGuid;      break;
+  case TerminalTypeVt100:     TerminalTypeGuid = gEfiVT100Guid;       break;
+  case TerminalTypeVt100Plus: TerminalTypeGuid = gEfiVT100PlusGuid;   break;
+  case TerminalTypeVtUtf8:    TerminalTypeGuid = gEfiVTUTF8Guid;      break;
+  case TerminalTypeTtyTerm:   TerminalTypeGuid = gEfiTtyTermGuid;     break;
+  case TerminalTypeLinux:     TerminalTypeGuid = gEdkiiLinuxTermGuid; break;
+  case TerminalTypeXtermR6:   TerminalTypeGuid = gEdkiiXtermR6Guid;   break;
+  case TerminalTypeVt400:     TerminalTypeGuid = gEdkiiVT400Guid;     break;
+  case TerminalTypeSCO:       TerminalTypeGuid = gEdkiiSCOTermGuid;   break;
+  default:                    TerminalTypeGuid = gEfiPcAnsiGuid;      break;
+  }
+
+  CopyGuid (&gTerminalTypeDeviceNode.Guid, &TerminalTypeGuid);
+
+  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode);
+
+  EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
+  EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+  EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
 
   return EFI_SUCCESS;
 }
