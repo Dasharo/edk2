@@ -201,7 +201,12 @@
   #
   # CPU
   #
+
+!if $(BOOTLOADER) == "COREBOOT"
+  MtrrLib|UefiPayloadPkg/Library/MtrrLibNull/MtrrLibNull.inf
+!else
   MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
+!endif
   LocalApicLib|UefiCpuPkg/Library/BaseXApicX2ApicLib/BaseXApicX2ApicLib.inf
 
   #
