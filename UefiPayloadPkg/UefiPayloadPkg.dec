@@ -82,12 +82,5 @@ gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterA|0x26|UINT8|0x00000006
 # @Prompt Initial value for Register_B in RTC.
 gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterB|0x02|UINT8|0x00000002
 
-#
-# Binary representation of the GUID that determines the terminal type. The
-# size must be exactly 16 bytes. The default value corresponds to
-# EFI_VT_100_GUID.
-#
-gUefiPayloadPkgTokenSpaceGuid.PcdTerminalTypeGuidBuffer|{0x65, 0x60, 0xA6, 0xDF, 0x19, 0xB4, 0xD3, 0x11, 0x9A, 0x2D, 0x00, 0x90, 0x27, 0x3F, 0xC1, 0x4D}|VOID*|0x00000007
-
 ## Specifies the scan code of the key to enter boot menu
-gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000008
+gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
