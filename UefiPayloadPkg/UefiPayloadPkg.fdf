@@ -149,6 +149,7 @@ FILE FREEFORM = PCD(gEfiMdeModulePkgTokenSpaceGuid.PcdLogoFile) {
 # ACPI Support
 #
 INF UefiPayloadPkg/AcpiTableDxe/AcpiTableDxe.inf
+INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
 
 #
 # PCI Support
