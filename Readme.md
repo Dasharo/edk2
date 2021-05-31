@@ -22,6 +22,10 @@ To add PXE support on Intel PRO/1000 network cards run:
 To use iPXE as payload:
 `build -D NETWORK_IPXE=TRUE -D SERIAL_TERMINAL=FALSE -D SECURE_BOOT_ENABLE=TRUE -D BOOTLOADER=COREBOOT -DPS2_KEYBOARD_ENABLE -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc`
 
+Dasharo payload:
+`build -D NETWORK_IPXE=TRUE -D SERIAL_TERMINAL=TRUE -D SECURE_BOOT_ENABLE=TRUE -D BOOTLOADER=COREBOOT -DPS2_KEYBOARD_ENABLE -D SATA_PASSWORD_ENABLE=TRUE -D OPAL_PASSWORD_ENABLE=TRUE -a IA32 -a X64 -t GCC5 -b DEBUG -p UefiPayloadPkg/UefiPayloadPkgIa32X64.dsc`
+
+
 # License Details
 
 The majority of the content in the EDK II open source project uses a
