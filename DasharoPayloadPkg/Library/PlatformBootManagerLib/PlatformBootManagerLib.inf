@@ -86,3 +86,4 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey
