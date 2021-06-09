@@ -83,3 +83,6 @@ gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterB|0x02|UINT8|0x00000002
 
 ## Specifies the scan code of the key to enter boot menu
 gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
+
+## Specifies the scan code of the key to enter boot menu
+gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
