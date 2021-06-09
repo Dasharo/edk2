@@ -403,7 +403,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Map ESC to Boot Manager Menu
   //
-  Esc.ScanCode    = SCAN_ESC;
+  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);;
   Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
@@ -411,8 +411,8 @@ PlatformBootManagerBeforeConsole (
   //
   // Map F12 to Boot Device List menu
   //
-  F12.ScanCode     = FixedPcdGet16(PcdBootMenuKey);
-  F12.UnicodeChar  = CHAR_NULL;
+  F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
+  F12.UnicodeChar = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
   //
@@ -427,6 +427,37 @@ PlatformBootManagerBeforeConsole (
   EfiBootManagerDispatchDeferredImages ();
 }
 
+CHAR16*
+GetKeyStringFromScanCode (
+  UINT16    ScanCode,
+  CHAR16*   Default
+)
+{
+  switch (ScanCode) {
+  case SCAN_UP:     return L"UP";
+  case SCAN_DOWN:   return L"DOWN";
+  case SCAN_RIGHT:  return L"RIGHT";
+  case SCAN_LEFT:   return L"LEFT";
+  case SCAN_HOME:   return L"HOME";
+  case SCAN_END:    return L"END";
+  case SCAN_INSERT: return L"INS";
+  case SCAN_DELETE: return L"DEL";
+  case SCAN_F1:     return L"F1";
+  case SCAN_F2:     return L"F2";
+  case SCAN_F3:     return L"F3";
+  case SCAN_F4:     return L"F4";
+  case SCAN_F5:     return L"F5";
+  case SCAN_F6:     return L"F6";
+  case SCAN_F7:     return L"F7";
+  case SCAN_F8:     return L"F8";
+  case SCAN_F9:     return L"F9";
+  case SCAN_F10:    return L"F10";
+  case SCAN_F11:    return L"F11";
+  case SCAN_F12:    return L"F12";
+  case SCAN_ESC:    return L"ESC";
+  default:          return Default;
+  }
+}
 
 /**
   Do the platform specific action after the console is connected.
@@ -447,6 +478,7 @@ PlatformBootManagerAfterConsole (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
   CHAR16                         *BootMenuKey;
+  CHAR16                         *SetupMenuKey;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -472,23 +504,11 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
 
-  switch (FixedPcdGet16(PcdBootMenuKey)) {
-  case 0x000B: BootMenuKey = L"F1 "; break;
-  case 0x000C: BootMenuKey = L"F2 "; break;
-  case 0x000D: BootMenuKey = L"F3 "; break;
-  case 0x000E: BootMenuKey = L"F4 "; break;
-  case 0x000F: BootMenuKey = L"F5 "; break;
-  case 0x0010: BootMenuKey = L"F6 "; break;
-  case 0x0011: BootMenuKey = L"F7 "; break;
-  case 0x0012: BootMenuKey = L"F8 "; break;
-  case 0x0013: BootMenuKey = L"F9 "; break;
-  case 0x0014: BootMenuKey = L"F10"; break;
-  case 0x0015: BootMenuKey = L"F11"; break;
-  case 0x0016: BootMenuKey = L"F12"; break;
-  default: BootMenuKey = L"F12"; break;
-  }
+  BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
+  SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
 
-  Print (L"ESC   to enter Setup\n%s   to enter Boot Manager Menu\nEnter to boot directly", BootMenuKey);
+  Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
+         SetupMenuKey, BootMenuKey);
 }
 
 /**
