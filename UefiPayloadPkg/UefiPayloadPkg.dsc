@@ -124,6 +124,13 @@
   #
   DEFINE NETWORK_IPXE                   = FALSE
 
+  # Dfine the maximum size of the capsule image without a reset flag that the platform can support.
+  DEFINE MAX_SIZE_NON_POPULATE_CAPSULE = 0xa00000
+
+  # Define RTC related register.
+  DEFINE RTC_INDEX_REGISTER = 0x70
+  DEFINE RTC_TARGET_REGISTER = 0x71
+
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
 !if $(USE_CBMEM_FOR_CONSOLE) == FALSE
@@ -482,7 +489,9 @@
     gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x03
   !endif
 !endif
-
+  gEfiMdeModulePkgTokenSpaceGuid.PcdMaxSizeNonPopulateCapsule|$(MAX_SIZE_NON_POPULATE_CAPSULE)
+  gPcAtChipsetPkgTokenSpaceGuid.PcdRtcIndexRegister|$(RTC_INDEX_REGISTER)
+  gPcAtChipsetPkgTokenSpaceGuid.PcdRtcTargetRegister|$(RTC_TARGET_REGISTER)
   #
   # Network Pcds
   #
