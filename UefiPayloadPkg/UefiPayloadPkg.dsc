@@ -25,7 +25,6 @@
   FLASH_DEFINITION                    = UefiPayloadPkg/UefiPayloadPkg.fdf
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
-
   #
   # SBL:      UEFI payload for Slim Bootloader
   # COREBOOT: UEFI payload for coreboot
@@ -98,6 +97,7 @@
   DEFINE DISABLE_MTRR_PROGRAMMING       = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
+  DEFINE SD_MMC_TIMEOUT                 = 1000000
 
   #
   # Network definition
@@ -419,6 +419,7 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
