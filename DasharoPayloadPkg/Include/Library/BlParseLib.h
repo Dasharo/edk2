@@ -196,4 +196,20 @@ ParseCapsules (
   IN BL_CAPSULE_CALLBACK  CapsuleCallback
   );
 
+/**
+  Acquire boot logo from coreboot
+
+  @param  BmpAddress          Pointer to the bitmap file
+  @param  BmpSize             Size of the image
+
+  @retval RETURN_SUCCESS      Successfully find the boot logo.
+  @retval RETURN_NOT_FOUND    Failed to find the boot logo.
+**/
+RETURN_STATUS
+EFIAPI
+ParseBootLogo (
+  OUT UINT64 *BmpAddress,
+  OUT UINT32 *BmpSize
+  );
+
 #endif
