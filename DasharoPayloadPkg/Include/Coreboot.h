@@ -712,6 +712,12 @@ struct cb_vboot_workbuf_v2 {
   UINT32 kernel_key_size;
 } __attribute__((packed));
 
+#define CB_TAG_LOGO       0x00a0
+
+struct cb_bootlogo_header {
+	UINT64 size;
+} __attribute__((packed));
+
 /* Helpful macros */
 
 #define MEM_RANGE_COUNT(_rec) \
