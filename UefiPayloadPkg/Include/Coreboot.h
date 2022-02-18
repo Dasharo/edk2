@@ -184,6 +184,12 @@ struct cb_console {
   UINT16 type;
 };
 
+struct cb_cbmem_ref {
+  UINT32 tag;
+  UINT32 size;
+  UINT64 cbmem_addr;
+};
+
 #define CB_TAG_CONSOLE_SERIAL8250 0
 #define CB_TAG_CONSOLE_VGA  1 // OBSOLETE
 #define CB_TAG_CONSOLE_BTEXT      2 // OBSOLETE
@@ -248,6 +254,12 @@ struct cb_smmstorev2 {
 	UINT8 apm_cmd;	/* The command byte to write to the APM I/O port */
 	UINT8 unused[3];	/* Set to zero */
 };
+
+#define CB_TAG_LOGO       0x00a0
+
+struct cb_bootlogo_header {
+	UINT64 size;
+} __attribute__((packed));
 
 /* Helpful macros */
 
