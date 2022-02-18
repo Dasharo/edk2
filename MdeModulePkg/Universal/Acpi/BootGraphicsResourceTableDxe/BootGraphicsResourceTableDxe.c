@@ -588,15 +588,15 @@ BootGraphicsDxeEntryPoint (
   //
   // Register notify function to install BGRT on ReadyToBoot Event.
   //
-  Status = gBS->CreateEventEx (
-                  EVT_NOTIFY_SIGNAL,
-                  TPL_CALLBACK,
-                  BgrtReadyToBootEventNotify,
-                  NULL,
-                  &gEfiEventReadyToBootGuid,
-                  &mBootGraphicsReadyToBootEvent
-                  );
-  ASSERT_EFI_ERROR (Status);
+//  Status = gBS->CreateEventEx (
+//                  EVT_NOTIFY_SIGNAL,
+//                  TPL_CALLBACK,
+//                  BgrtReadyToBootEventNotify,
+//                  NULL,
+//                  &gEfiEventReadyToBootGuid,
+//                  &mBootGraphicsReadyToBootEvent
+//                  );
+//  ASSERT_EFI_ERROR (Status);
 
   return Status;
 }

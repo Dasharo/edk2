@@ -134,7 +134,6 @@ INF MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 INF UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
 INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
-INF MdeModulePkg/Logo/LogoDxe.inf
 !if $(BOOTLOADER) == "COREBOOT"
 INF UefiPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
 !endif
@@ -142,6 +141,8 @@ INF UefiPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
 FILE FREEFORM = PCD(gEfiMdeModulePkgTokenSpaceGuid.PcdLogoFile) {
   SECTION RAW = MdeModulePkg/Logo/Logo.bmp
 }
+
+INF UefiPayloadPkg/Logo/LogoDxe.inf
 
 #
 # PCI Support
@@ -184,6 +185,13 @@ INF MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
 INF MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 
 INF FatPkg/EnhancedFatDxe/Fat.inf
+
+#
+# ACPI Support
+#
+
+INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
 
 #
 # Filesystem drivers
