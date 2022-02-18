@@ -96,6 +96,7 @@
   DEFINE SYSTEM76_EC_LOGGING            = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
+  DEFINE SD_MMC_TIMEOUT                 = 1000000
 
   #
   # Network definition
@@ -422,6 +423,8 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
+
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
