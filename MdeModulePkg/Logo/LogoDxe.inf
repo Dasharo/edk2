@@ -34,6 +34,7 @@
   Logo.idf
 
 [Packages]
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
 
@@ -41,6 +42,8 @@
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   DebugLib
+  BlParseLib
+  BmpSupportLib
 
 [Protocols]
   gEfiHiiDatabaseProtocolGuid        ## CONSUMES
