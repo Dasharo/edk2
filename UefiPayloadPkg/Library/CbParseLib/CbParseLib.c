@@ -15,6 +15,9 @@
 #include <Library/PciLib.h>
 #include <Library/IoLib.h>
 #include <Library/BlParseLib.h>
+#include <Protocol/GraphicsOutput.h>
+#include <Protocol/HiiImage.h>
+#include <Protocol/HiiDatabase.h>
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/Pci22.h>
 #include <Coreboot.h>
@@ -645,6 +648,41 @@ ParseSMMSTOREInfo (
   SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
   SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
   SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
+
+  return RETURN_SUCCESS;
+}
+
+/**
+  Acquire boot logo from coreboot
+
+  @param  BmpAddress          Pointer to the bitmap file
+  @param  BmpSize             Size of the image
+
+  @retval RETURN_SUCCESS            Successfully find the boot logo.
+  @retval RETURN_NOT_FOUND          Failed to find the boot logo.
+
+**/
+
+RETURN_STATUS
+EFIAPI
+ParseBootLogo (
+  OUT UINT64 *BmpAddress,
+  OUT UINT32 *BmpSize
+  )
+{
+  struct cb_cbmem_ref *CbLogo;
+  struct cb_bootlogo_header *CbLogoHeader;
+
+  CbLogo = FindCbTag (CB_TAG_LOGO);
+  if (CbLogo == NULL) {
+    DEBUG ((DEBUG_INFO, "Did not find BootLogo tag\n"));
+    return RETURN_NOT_FOUND;
+  }
+
+  CbLogoHeader = (struct cb_bootlogo_header*)(UINTN) CbLogo->cbmem_addr;
+
+  *BmpAddress = CbLogo->cbmem_addr + sizeof(*CbLogoHeader);
+  *BmpSize = CbLogoHeader->size;
 
   return RETURN_SUCCESS;
 }
