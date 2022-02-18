@@ -36,5 +36,10 @@
   PcdLib
   PciLib
 
+[Protocols]
+  gEfiHiiImageProtocolGuid            ## SOMETIMES_CONSUMES
+  gEfiHiiDatabaseProtocolGuid         ## CONSUMES
+
 [Pcd]
   gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+

@@ -7,6 +7,9 @@
 
 **/
 #include <PiPei.h>
+#include <Uefi.h>
+#include <Protocol/HiiImage.h>
+#include <Protocol/HiiDatabase.h>
 #include <Guid/GraphicsInfoHob.h>
 #include <Guid/MemoryMapInfoGuid.h>
 #include <Guid/SerialPortInfoGuid.h>
@@ -133,4 +136,21 @@ ParseSMMSTOREInfo (
   OUT SMMSTORE_INFO       *SMMSTOREInfo
   );
 
+/**
+  Acquire boot logo from coreboot
+
+  @param  BmpAddress          Pointer to the bitmap file
+  @param  BmpSize             Size of the image
+
+  @retval RETURN_SUCCESS      Successfully find the boot logo.
+  @retval RETURN_NOT_FOUND    Failed to find the boot logo.
+
+**/
+
+RETURN_STATUS
+EFIAPI
+ParseBootLogo (
+  OUT UINT64 *BmpAddress,
+  OUT UINT32 *BmpSize
+  );
 #endif
