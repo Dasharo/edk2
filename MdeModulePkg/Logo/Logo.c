@@ -13,6 +13,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/HiiPackageList.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
+#include <Library/BlParseLib.h>
+#include <Library/BmpSupportLib.h>
 
 typedef struct {
   EFI_IMAGE_ID                             ImageId;
@@ -56,7 +58,12 @@ GetImage (
   OUT INTN                                   *OffsetY
   )
 {
-  UINT32  Current;
+  UINT32                         Current;
+  UINTN                          GopBltSize;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *Blt;
+  EFI_STATUS                     Status;
+  EFI_PHYSICAL_ADDRESS           BmpAddr;
+  UINT32                         BmpSize;
 
   if ((Instance == NULL) || (Image == NULL) ||
       (Attribute == NULL) || (OffsetX == NULL) || (OffsetY == NULL))
@@ -70,10 +77,38 @@ GetImage (
   }
 
   (*Instance)++;
-  *Attribute = mLogos[Current].Attribute;
-  *OffsetX   = mLogos[Current].OffsetX;
-  *OffsetY   = mLogos[Current].OffsetY;
-  return mHiiImageEx->GetImageEx (mHiiImageEx, mHiiHandle, mLogos[Current].ImageId, Image);
+
+  Status = ParseBootLogo (&BmpAddr, &BmpSize);
+  if (!EFI_ERROR (Status)) {
+    // Logo from CBMEM
+    *Attribute = EdkiiPlatformLogoDisplayAttributeCenter;
+    *OffsetX   = 0;
+    *OffsetY   = 0;
+    GopBltSize = 0;
+    Blt = NULL;
+
+    Status = TranslateBmpToGopBlt (
+            (void*) BmpAddr,
+            BmpSize,
+            &Blt,
+            &GopBltSize,
+            (UINTN*) &(Image->Height),
+            (UINTN*) &(Image->Width));
+
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    Image->Bitmap = Blt;
+
+    return Status;
+  } else {
+    // No logo in CBMEM, fallback to builtin
+    *Attribute = mLogos[Current].Attribute;
+    *OffsetX   = mLogos[Current].OffsetX;
+    *OffsetY   = mLogos[Current].OffsetY;
+    return mHiiImageEx->GetImageEx (mHiiImageEx, mHiiHandle, mLogos[Current].ImageId, Image);
+  }
 }
 
 EDKII_PLATFORM_LOGO_PROTOCOL  mPlatformLogo = {
