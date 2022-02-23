@@ -90,5 +90,14 @@ gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterB|0x02|UINT8|0x00000002
 ## Specifies the scan code of the key to enter boot menu
 gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
 
+
 ## Specifies the scan code of the key to enter boot menu
 gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
+
+# Above 4G Memory
+gUefiPayloadPkgTokenSpaceGuid.PcdDispatchModuleAbove4GMemory|TRUE|BOOLEAN|0x00000019
+
+## FFS filename to find the default variable initial data file.
+# @Prompt FFS Name of variable initial data file
+ gUefiPayloadPkgTokenSpaceGuid.PcdNvsDataFile |{ 0x1a, 0xf1, 0xb1, 0xae, 0x42, 0xcc, 0xcf, 0x4e, 0xac, 0x60, 0xdb, 0xab, 0xf6, 0xca, 0x69, 0xe6 }|VOID*|0x00000025
+
