@@ -26,6 +26,12 @@
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = TRUE
+  DEFINE RAM_DISK_ENABLE              = FALSE
+  DEFINE SIO_BUS_ENABLE               = FALSE
+  DEFINE UNIVERSAL_PAYLOAD            = FALSE
+  DEFINE SECURITY_STUB_ENABLE         = TRUE
+  DEFINE SMM_SUPPORT                  = FALSE
+  DEFINE ABOVE_4G_MEMORY              = TRUE
 
   #
   # SBL:      UEFI payload for Slim Bootloader
@@ -451,6 +457,8 @@
 
   # Disable MTRR programming
   gUefiCpuPkgTokenSpaceGuid.PcdCpuDisableMtrrProgramming|TRUE
+
+  gUefiPayloadPkgTokenSpaceGuid.PcdDispatchModuleAbove4GMemory|$(ABOVE_4G_MEMORY)
 
 [PcdsPatchableInModule.X64]
   gPcAtChipsetPkgTokenSpaceGuid.PcdRtcIndexRegister|$(RTC_INDEX_REGISTER)
