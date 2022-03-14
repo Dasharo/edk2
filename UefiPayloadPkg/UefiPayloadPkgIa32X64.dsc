@@ -556,6 +556,7 @@
 !endif
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
+  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   UefiPayloadPkg/Logo/Logo.inf
   UefiPayloadPkg/Logo/LogoDxe.inf
