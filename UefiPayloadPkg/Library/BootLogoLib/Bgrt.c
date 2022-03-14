@@ -228,7 +228,7 @@ static ACPI_BGRT* HandleAcpiTables(ACPI_BGRT* bgrt) {
 STATIC
 EFI_STATUS
 TryLogoFromCbmem (
-  OUT UINT64 **BgrtBmpBuffer
+  OUT UINT64 *BgrtBmpBuffer
   )
 {
   UINT64 BmpAddress;
@@ -240,13 +240,37 @@ TryLogoFromCbmem (
     return Status;
   }
 
-  *BgrtBmpBuffer = AllocateCopyPool (BmpSize, (void*) BmpAddress);
+  *BgrtBmpBuffer = (UINT64) AllocateCopyPool (BmpSize, (void*) BmpAddress);
   if (BgrtBmpBuffer == NULL) {
-    return Status;
+    return EFI_DEVICE_ERROR;
   }
 
   return EFI_SUCCESS;
 }
+
+
+STATIC
+EFI_STATUS
+TryBuiltinLogo (
+  OUT UINT64 *BgrtBmpBuffer
+  )
+{
+  UINT64 BmpAddress;
+  UINT32 BmpSize;
+  EFI_STATUS Status;
+
+  Status = LoadBmp(&BmpAddress, &BmpSize);
+  if (EFI_ERROR(Status)){
+    DEBUG ((EFI_D_INFO, "HackBGRT BMP Load ERR\n"));
+    return Status;
+  }
+
+  *BgrtBmpBuffer = BmpAddress;
+
+  return EFI_SUCCESS;
+}
+
+
 
 VOID
 AddBGRT (
@@ -256,16 +280,13 @@ AddBGRT (
   EFI_STATUS                         Status;
   ACPI_BGRT                          *bgrt;
   EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput;
+  UINT64                             BmpAddress;
   BMP_IMAGE_HEADER                   *BmpHeader;
-  UINT64                             *BgrtBmpBuffer = NULL;
-  UINT32                             BgrtBmpBufferSize;
 
   const char data[0x38] =
     "BGRT" "\x38\x00\x00\x00" "\x00" "\xd6" "INTEL " "    EDK2"
     "\x20\x17\x00\x00" "PTL " "\x02\x00\x00\x00"
     "\x01\x00" "\x00" "\x00";
-
-  BmpAddress = 0;
 
   DEBUG ((EFI_D_INFO, "HackBGRT Start\n"));
 
@@ -283,14 +304,14 @@ AddBGRT (
   }
 
   DEBUG ((EFI_D_INFO, "HackBGRT Load Bmp\n"));
-  Status = TryLogoFromCbmem(&BgrtBmpBuffer);
+  Status = TryLogoFromCbmem(&BmpAddress);
   if (EFI_ERROR(Status)) {
     // Fallback to builtin logo
 
     DEBUG ((EFI_D_INFO, "HackBGRT BMP Load from CBMEM ERR\n"));
-    Status = LoadBmp(&BgrtBmpBuffer, &BgrtBmpBufferSize);
+    Status = TryBuiltinLogo(&BmpAddress);
 
-    if (EFI_ERROR(STATUS)) {
+    if (EFI_ERROR(Status)) {
       DEBUG ((EFI_D_INFO, "HackBGRT Builtin BMP Load ERR\n"));
       return;
     }
@@ -301,8 +322,8 @@ AddBGRT (
 
   if (GraphicsOutput != NULL && GraphicsOutput->Mode != NULL && GraphicsOutput->Mode->Info != NULL)
   {
-      BmpHeader = (BMP_IMAGE_HEADER *)BgrtBmpBuffer;
-      bgrt->image_address = (UINT64)BgrtBmpBuffer;
+      BmpHeader = (BMP_IMAGE_HEADER *)BmpAddress;
+      bgrt->image_address = (UINT64)BmpAddress;
       bgrt->image_offset_x = (GraphicsOutput->Mode->Info->HorizontalResolution - BmpHeader->PixelWidth) / 2;
       bgrt->image_offset_y = ((GraphicsOutput->Mode->Info->VerticalResolution * 382) / 1000) -
                              (BmpHeader->PixelHeight / 2);
