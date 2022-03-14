@@ -557,7 +557,7 @@
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-  UefiPayloadPkg/Logo/Logo.inf
+  MdeModulePkg/Logo/Logo.inf
   UefiPayloadPkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
