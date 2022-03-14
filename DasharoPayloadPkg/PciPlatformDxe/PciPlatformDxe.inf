@@ -29,6 +29,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -40,7 +41,11 @@
   DevicePathLib
   UefiLib
   HobLib
+  PcdLib
 
 [Protocols]
   gEfiPciPlatformProtocolGuid                   ## PRODUCES
   gEfiPciIoProtocolGuid                         ## COMSUMES
+
+[Pcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
