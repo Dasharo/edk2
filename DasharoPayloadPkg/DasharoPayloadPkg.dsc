@@ -92,6 +92,7 @@
   DEFINE TPM_ENABLE                   = TRUE
   DEFINE SATA_PASSWORD_ENABLE         = FALSE
   DEFINE OPAL_PASSWORD_ENABLE         = FALSE
+  DEFINE LOAD_OPTION_ROMS             = TRUE
   #
   # Network definition
   #
@@ -392,6 +393,7 @@
   gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize|8000
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
+  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
 
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|$(PCIE_BASE)
 
