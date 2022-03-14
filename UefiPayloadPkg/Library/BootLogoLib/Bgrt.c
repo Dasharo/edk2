@@ -48,6 +48,71 @@ typedef struct {
     UINT32 image_offset_y;
 } ACPI_BGRT;
 
+EFI_STATUS
+EFIAPI
+LoadBmp(
+    OUT EFI_PHYSICAL_ADDRESS *BmpAddress,
+    OUT UINT32 *BmpSize
+)
+{
+  EFI_STATUS                    Status;
+  UINTN                         FvProtocolCount;
+  EFI_HANDLE                    *FvHandles;
+  EFI_FIRMWARE_VOLUME2_PROTOCOL  *Fv;
+  UINTN                         Index;
+  UINT32                        AuthenticationStatus;
+
+  UINT8                         *Buffer;
+  UINTN                         BmpBufferSize;
+
+  Buffer = 0;
+  FvHandles       = NULL;
+
+  Status = gBS->LocateHandleBuffer (
+    ByProtocol,
+    &gEfiFirmwareVolume2ProtocolGuid,
+    NULL,
+    &FvProtocolCount,
+    &FvHandles
+    );
+
+  if (!EFI_ERROR (Status)) {
+    for (Index = 0; Index < FvProtocolCount; Index++) {
+      Status = gBS->HandleProtocol (
+                      FvHandles[Index],
+                      &gEfiFirmwareVolume2ProtocolGuid,
+                      (VOID **) &Fv
+                      );
+      BmpBufferSize = 0;
+      Status = Fv->ReadSection (
+                     Fv,
+                     (EFI_GUID *)PcdGetPtr(PcdLogoFile),
+                     EFI_SECTION_RAW,
+                     0,
+                    (void **)&Buffer,
+                     &BmpBufferSize,
+                     &AuthenticationStatus
+                     );
+
+      if (!EFI_ERROR (Status)) {
+        *BmpAddress = (EFI_PHYSICAL_ADDRESS)(UINTN)Buffer;
+        *BmpSize = (UINT32)BmpBufferSize;
+        Status = EFI_SUCCESS;
+        break;
+      }
+    }
+  } else {
+    Status = EFI_NOT_FOUND;
+  }
+
+  if (FvHandles != NULL) {
+    gBS->FreePool (FvHandles);
+    FvHandles = NULL;
+  }
+
+  return Status;
+}
+
 UINT8 SumBytes(const UINT8* arr, UINTN size) {
   UINT8 sum = 0;
   UINTN i;
@@ -160,6 +225,29 @@ static ACPI_BGRT* HandleAcpiTables(ACPI_BGRT* bgrt) {
   return bgrt;
 }
 
+STATIC
+EFI_STATUS
+TryLogoFromCbmem (
+  OUT UINT64 **BgrtBmpBuffer
+  )
+{
+  UINT64 BmpAddress;
+  UINT32 BmpSize;
+  EFI_STATUS Status;
+
+  Status = ParseBootLogo(&BmpAddress, &BmpSize);
+  if (EFI_ERROR(Status)){
+    return Status;
+  }
+
+  *BgrtBmpBuffer = AllocateCopyPool (BmpSize, (void*) BmpAddress);
+  if (BgrtBmpBuffer == NULL) {
+    return Status;
+  }
+
+  return EFI_SUCCESS;
+}
+
 VOID
 AddBGRT (
   VOID
@@ -168,10 +256,9 @@ AddBGRT (
   EFI_STATUS                         Status;
   ACPI_BGRT                          *bgrt;
   EFI_GRAPHICS_OUTPUT_PROTOCOL       *GraphicsOutput;
-  UINT64                             BmpAddress;
-  UINT32                             BmpSize;
   BMP_IMAGE_HEADER                   *BmpHeader;
   UINT64                             *BgrtBmpBuffer = NULL;
+  UINT32                             BgrtBmpBufferSize;
 
   const char data[0x38] =
     "BGRT" "\x38\x00\x00\x00" "\x00" "\xd6" "INTEL " "    EDK2"
@@ -196,18 +283,19 @@ AddBGRT (
   }
 
   DEBUG ((EFI_D_INFO, "HackBGRT Load Bmp\n"));
-  Status = ParseBootLogo(&BmpAddress, &BmpSize);
-  if (EFI_ERROR(Status)){
-    DEBUG ((EFI_D_INFO, "HackBGRT BMP Load ERR\n"));
-    return;
+  Status = TryLogoFromCbmem(&BgrtBmpBuffer);
+  if (EFI_ERROR(Status)) {
+    // Fallback to builtin logo
+
+    DEBUG ((EFI_D_INFO, "HackBGRT BMP Load from CBMEM ERR\n"));
+    Status = LoadBmp(&BgrtBmpBuffer, &BgrtBmpBufferSize);
+
+    if (EFI_ERROR(STATUS)) {
+      DEBUG ((EFI_D_INFO, "HackBGRT Builtin BMP Load ERR\n"));
+      return;
+    }
   }
 
-  BgrtBmpBuffer = AllocateCopyPool (BmpSize, (void*) BmpAddress);
-  if (BgrtBmpBuffer == NULL) {
-    DEBUG ((EFI_D_INFO, "HackBGRT BMP Copy ERR\n"));
-    return;
-  }
-  DEBUG ((EFI_D_INFO, "HackBGRT Set Table; BMP Size: %d\n", BmpSize));
   // Clear the BGRT.
   CopyMem(bgrt, data, sizeof(data));
 
