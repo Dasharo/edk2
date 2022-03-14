@@ -26,6 +26,14 @@ typedef struct {
 
 EFI_HII_IMAGE_EX_PROTOCOL *mHiiImageEx;
 EFI_HII_HANDLE            mHiiHandle;
+LOGO_ENTRY                mLogos[] = {
+  {
+    IMAGE_TOKEN (IMG_LOGO),
+    EdkiiPlatformLogoDisplayAttributeCenter,
+    0,
+    0
+  }
+};
 
 /**
   Load a platform logo image and return its data and attributes.
@@ -62,38 +70,43 @@ GetImage (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (*Instance >= 1) {
+  if (*Instance >= 1) { // Only one logo supported at this time
     return EFI_NOT_FOUND;
   }
 
   (*Instance)++;
-  *Attribute = EdkiiPlatformLogoDisplayAttributeCenter;
-  *OffsetX   = 0;
-  *OffsetY   = 0;
 
   Status = ParseBootLogo (&BmpAddr, &BmpSize);
-  if (EFI_ERROR (Status)) {
+  if (!EFI_ERROR (Status)) {
+    // Logo from CBMEM
+    *Attribute = EdkiiPlatformLogoDisplayAttributeCenter;
+    *OffsetX   = 0;
+    *OffsetY   = 0;
+    GopBltSize = 0;
+    Blt = NULL;
+
+    Status = TranslateBmpToGopBlt (
+            (void*) BmpAddr,
+            BmpSize,
+            &Blt,
+            &GopBltSize,
+            (UINTN*) &(Image->Height),
+            (UINTN*) &(Image->Width));
+
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    Image->Bitmap = Blt;
+
     return Status;
+  } else {
+    // No logo in CBMEM, fallback to builtin
+    *Attribute = mLogos[0].Attribute;
+    *OffsetX   = mLogos[0].OffsetX;
+    *OffsetY   = mLogos[0].OffsetY;
+    return mHiiImageEx->GetImageEx (mHiiImageEx, mHiiHandle, mLogos[0].ImageId, Image);
   }
-
-  GopBltSize = 0;
-  Blt = NULL;
-
-  Status = TranslateBmpToGopBlt (
-          (void*) BmpAddr,
-          BmpSize,
-          &Blt,
-          &GopBltSize,
-          (UINTN*) &(Image->Height),
-          (UINTN*) &(Image->Width));
-
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  Image->Bitmap = Blt;
-
-  return Status;
 }
 
 EDKII_PLATFORM_LOGO_PROTOCOL mPlatformLogo = {
