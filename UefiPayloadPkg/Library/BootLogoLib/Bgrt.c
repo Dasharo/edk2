@@ -248,7 +248,6 @@ TryLogoFromCbmem (
   return EFI_SUCCESS;
 }
 
-
 STATIC
 EFI_STATUS
 TryBuiltinLogo (
@@ -269,8 +268,6 @@ TryBuiltinLogo (
 
   return EFI_SUCCESS;
 }
-
-
 
 VOID
 AddBGRT (
