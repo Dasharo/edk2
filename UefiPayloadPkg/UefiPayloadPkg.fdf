@@ -232,6 +232,11 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !if $(ARCH) == IA32
   # FIXME
 !else
+!if $(NETWORK_INTEL_PRO2500)
+  FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
+    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0104X7.EFI
+  }
+!endif
 !if $(NETWORK_INTEL_GBE)
   FILE DRIVER = D25C6DB6-0218-4BE9-802A-2841A7DA5ABE {
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0027X7.EFI
