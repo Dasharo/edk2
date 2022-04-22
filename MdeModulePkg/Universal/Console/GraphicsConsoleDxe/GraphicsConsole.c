@@ -39,8 +39,11 @@ GRAPHICS_CONSOLE_DEV    mGraphicsConsoleDevTemplate = {
   (EFI_GRAPHICS_OUTPUT_BLT_PIXEL *) NULL
 };
 
-GRAPHICS_CONSOLE_MODE_DATA mGraphicsConsoleModeData[] = {
-  {100, 31},
+GRAPHICS_CONSOLE_MODE_DATA  mGraphicsConsoleModeData[] = {
+  { 100, 31 },  //  800 x 600
+  { 128, 40 },  // 1024 x 768
+  { 160, 42 },  // 1280 x 800
+  { 240, 56 },  // 1920 x 1080
   //
   // New modes can be added here.
   // The last entry is specific for full screen mode.
