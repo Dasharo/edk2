@@ -502,7 +502,7 @@ PlatformBootManagerAfterConsole (
   // Register iPXE
   //
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"Network Boot and Utilities", LOAD_OPTION_ACTIVE);
 
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
