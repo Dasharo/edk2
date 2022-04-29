@@ -633,8 +633,11 @@ PlatformBootManagerAfterConsole (
   //
   // Register iPXE
   //
+  #ifndef IPXE_BOOT_OPTION_STRING
+    #define IPXE_BOOT_OPTION_STRING (L"Network Boot and Utilities")
+  #endif
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"Network Boot and Utilities", LOAD_OPTION_ACTIVE);
+  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), IPXE_BOOT_OPTION_STRING, LOAD_OPTION_ACTIVE);
 
   //
   // Register UEFI Shell
