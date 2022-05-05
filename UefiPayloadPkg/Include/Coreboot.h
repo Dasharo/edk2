@@ -255,7 +255,7 @@ struct cb_smmstorev2 {
 	UINT8 unused[3];	/* Set to zero */
 };
 
-#define CB_TAG_LOGO       0x0042
+#define CB_TAG_LOGO       0x00a0
 
 struct cb_bootlogo_header {
 	UINT64 size;
