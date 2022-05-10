@@ -1,0 +1,69 @@
+#!ipxe
+
+set default_netboot_url https://netboot.protectli.com/menu.ipxe
+set current_url ${default_netboot_url}
+set new_url ${default_netboot_url}
+
+# main menu
+:MENU
+menu
+item --gap -- ------------------------ Network Boot and Utilities ------------------------
+item --gap -- ------------------------ Please Select an Option ---------------------------
+item utilities      OS Selection & Utilities
+item boot           iPXE Boot
+item shell          iPXE Shell
+item ADV_MENU       Advanced
+choose --default utilties --timeout 3000 target && goto ${target}
+
+# main menu options
+:utilities
+dhcp ||
+chain ${current_url} ||
+goto MENU
+
+:boot
+autoboot
+goto MENU
+
+:shell
+echo You are now in iPXE shell. Type "exit" to go back to the main menu.
+shell ||
+goto MENU
+
+:ADV_MENU
+menu
+item --gap -- ------------------------ Network Boot and Utilities ------------------------
+item --gap -- ------------------------ Please Select an Option ---------------------------
+item URL_MENU    Change Netboot iPXE Payload URL
+item MENU        Exit
+choose target && goto ${target}
+
+:URL_MENU
+menu
+item --gap -- ------------------------ Change Netboot Payload ----------------------------
+item --gap -- ------------------------ Enter an iPXE Payload URL -------------------------
+item --gap            Current URL: ${new_url}
+item change_url       Change Netboot iPXE Payload URL
+item MENU             Discard Changes and Exit
+item save_url_exit    Save and Exit
+item reset_url        Reset to Default
+choose target && goto ${target}
+
+:change_url
+echo Change Netboot Payload
+echo Enter an iPXE Payload URL
+echo
+echo Currently set to: ${new_url}
+echo
+echo -n Enter url parameters: ${} && read new_url
+goto URL_MENU
+
+:save_url_exit
+set current_url ${new_url}
+goto MENU
+
+:reset_url
+set new_url ${default_netboot_url}
+goto URL_MENU
+
+autoboot
