@@ -477,6 +477,11 @@
 
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
+  # No need to initialize TPM again, coreboot already did that
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|0
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS
