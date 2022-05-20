@@ -234,7 +234,7 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 !else
 !if $(NETWORK_INTEL_PRO2500)
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/EFI_Intel_PRO2500_UNDI_0.9.03.efi
+    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0104X7.EFI
   }
 !endif
 !if $(NETWORK_INTEL_GBE)
