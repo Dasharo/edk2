@@ -92,6 +92,9 @@
   DEFINE LOAD_OPTION_ROMS               = TRUE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
+  DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
+  DEFINE ABOVE_4G_MEMORY                = TRUE
+
   #
   # Network definition
   #
@@ -122,10 +125,11 @@
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
-  GCC:*_UNIXGCC_*_CC_FLAGS       = -DMDEPKG_NDEBUG
+!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
   MSFT:RELEASE_*_*_CC_FLAGS      = /D MDEPKG_NDEBUG
+!endif
 
 
 ################################################################################
@@ -216,8 +220,13 @@
   #
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
+!if $(USE_CBMEM_FOR_CONSOLE) == TRUE
+  SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
+  PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
+!else
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
   PlatformHookLib|DasharoPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
+!endif
   PlatformBootManagerLib|DasharoPayloadPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
 
@@ -416,7 +425,7 @@
 !endif
 
 [PcdsPatchableInModule.common]
-!if $(TARGET) == DEBUG
+!if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE)
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|TRUE
 !else
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|FALSE
@@ -425,10 +434,18 @@
 
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x7
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
-!if $(SOURCE_DEBUG_ENABLE)
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
+  !if $(SOURCE_DEBUG_ENABLE)
+    gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
+  !else
+    gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
+  !endif
 !else
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
+  !if $(TARGET) == DEBUG
+    gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x07
+  !else
+    gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x03
+  !endif
 !endif
 
   #
