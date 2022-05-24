@@ -392,6 +392,26 @@ UpdateStatusBar (
   }
 }
 
+//
+// If screen dimension info is not ready, get it from console.
+//
+STATIC
+VOID
+FillScreenDimentions (
+  IN OUT EFI_SCREEN_DESCRIPTOR *ScreenDimensions
+  )
+{
+  if (ScreenDimensions->RightColumn == 0 || ScreenDimensions->BottomRow == 0) {
+    ZeroMem (ScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
+    gST->ConOut->QueryMode (
+                   gST->ConOut,
+                   gST->ConOut->Mode->Mode,
+                   &ScreenDimensions->RightColumn,
+                   &ScreenDimensions->BottomRow
+                   );
+  }
+}
+
 /**
   Create popup window. It will replace CreateDialog().
 
@@ -426,18 +446,7 @@ CreateDialog (
   UINTN   CurrentAttribute;
   BOOLEAN CursorVisible;
 
-  //
-  // If screen dimension info is not ready, get it from console.
-  //
-  if (gScreenDimensions.RightColumn == 0 || gScreenDimensions.BottomRow == 0) {
-    ZeroMem (&gScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
-    gST->ConOut->QueryMode (
-                   gST->ConOut,
-                   gST->ConOut->Mode->Mode,
-                   &gScreenDimensions.RightColumn,
-                   &gScreenDimensions.BottomRow
-                   );
-  }
+  FillScreenDimentions (&gScreenDimensions);
 
   DimensionsWidth   = gScreenDimensions.RightColumn - gScreenDimensions.LeftColumn;
   DimensionsHeight  = gScreenDimensions.BottomRow - gScreenDimensions.TopRow;
@@ -978,6 +987,34 @@ GetStringWidth (
   Count++;
 
   return Count * sizeof (CHAR16);
+}
+
+/**
+  Draw a pop up windows based on the dimension, number of lines and
+  strings specified.
+
+  @param RequestedWidth  The width of the pop-up.
+  @param NumberOfLines   The number of lines.
+  @param ...             A series of text strings that displayed in the pop-up.
+
+**/
+VOID
+EFIAPI
+CreateMultiStringPopUp (
+  IN  UINTN                       RequestedWidth,
+  IN  UINTN                       NumberOfLines,
+  ...
+  )
+{
+  VA_LIST Marker;
+
+  FillScreenDimentions (&gScreenDimensions);
+
+  VA_START (Marker, NumberOfLines);
+
+  CreateSharedPopUp (RequestedWidth, NumberOfLines, Marker);
+
+  VA_END (Marker);
 }
 
 /**

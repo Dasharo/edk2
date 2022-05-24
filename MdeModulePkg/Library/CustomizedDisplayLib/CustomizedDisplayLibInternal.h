@@ -288,4 +288,20 @@ ProcessExternedOpcode (
   IN FORM_DISPLAY_ENGINE_FORM       *FormData
   );
 
+/**
+  Draw a pop up windows based on the dimension, number of lines and
+  strings specified.
+
+  @param RequestedWidth  The width of the pop-up.
+  @param NumberOfLines   The number of lines.
+  @param Marker          The variable argument list for the list of string to be printed.
+
+**/
+VOID
+CreateSharedPopUp (
+  IN  UINTN                       RequestedWidth,
+  IN  UINTN                       NumberOfLines,
+  IN  VA_LIST                     Marker
+  );
+
 #endif

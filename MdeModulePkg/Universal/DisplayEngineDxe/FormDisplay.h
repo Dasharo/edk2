@@ -425,23 +425,6 @@ CompareHiiValue (
   );
 
 /**
-  Draw a pop up windows based on the dimension, number of lines and
-  strings specified.
-
-  @param RequestedWidth  The width of the pop-up.
-  @param NumberOfLines   The number of lines.
-  @param ...             A series of text strings that displayed in the pop-up.
-
-**/
-VOID
-EFIAPI
-CreateMultiStringPopUp (
-  IN  UINTN                       RequestedWidth,
-  IN  UINTN                       NumberOfLines,
-  ...
-  );
-
-/**
   Will copy LineWidth amount of a string in the OutputString buffer and return the
   number of CHAR16 characters that were copied into the OutputString buffer.
   The output string format is:
@@ -515,22 +498,6 @@ ReadString (
   IN     UI_MENU_OPTION              *MenuOption,
   IN     CHAR16                      *Prompt,
   IN OUT CHAR16                      *StringPtr
-  );
-
-/**
-  Draw a pop up windows based on the dimension, number of lines and
-  strings specified.
-
-  @param RequestedWidth  The width of the pop-up.
-  @param NumberOfLines   The number of lines.
-  @param Marker          The variable argument list for the list of string to be printed.
-
-**/
-VOID
-CreateSharedPopUp (
-  IN  UINTN                       RequestedWidth,
-  IN  UINTN                       NumberOfLines,
-  IN  VA_LIST                     Marker
   );
 
 /**
