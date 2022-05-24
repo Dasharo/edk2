@@ -45,7 +45,7 @@ item --gap -- ------------------------ Enter an iPXE Payload URL ---------------
 item --gap            Current URL: ${new_url}
 item change_url       Change Netboot iPXE Payload URL
 item MENU             Discard Changes and Exit
-item save_url_exit    Save and Exit
+item save_url_exit    Apply and Exit
 item reset_url        Reset to Default
 choose target && goto ${target}
 
