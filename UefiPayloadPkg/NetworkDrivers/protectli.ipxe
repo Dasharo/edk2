@@ -13,7 +13,7 @@ item utilities      OS Selection & Utilities
 item boot           iPXE Boot
 item shell          iPXE Shell
 item ADV_MENU       Advanced
-choose --default utilties --timeout 3000 target && goto ${target}
+choose --default utilties --timeout 5000 target && goto ${target}
 
 # main menu options
 :utilities
