@@ -50,6 +50,7 @@
   PrintLib
   PlatformHookLib
   Tcg2PhysicalPresenceLib
+  CustomizedDisplayLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
