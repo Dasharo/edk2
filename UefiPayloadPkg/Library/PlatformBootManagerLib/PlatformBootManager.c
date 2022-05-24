@@ -16,6 +16,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Guid/BoardSettingsGuid.h>
 #include <Guid/GlobalVariable.h>
+#include <Library/CustomizedDisplayLib.h>
+#include <Library/BlParseLib.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -459,6 +461,135 @@ GetKeyStringFromScanCode (
   }
 }
 
+STATIC
+VOID
+DrainInput (
+  VOID
+)
+{
+  EFI_INPUT_KEY Key;
+
+  //
+  // Drain any queued keys.
+  //
+  while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {
+    //
+    // just throw away Key
+    //
+  }
+}
+
+STATIC
+VOID
+WarnIfRecoveryBoot (
+  VOID
+)
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      TimerEvent;
+  EFI_EVENT      Events[2];
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  RETURN_STATUS  RetStatus;
+  UINT8          RecoveryCode;
+  CONST CHAR8   *RecoveryReason;
+  CHAR16         RecoveryCodeLine[81];
+  CHAR16         RecoveryMsgLine[81];
+  CHAR16         DelayLine[81];
+  BOOLEAN        CursorVisible;
+  UINTN          CurrentAttribute;
+  UINTN          SecondsLeft;
+
+  RetStatus = ParseVBootWorkbuf (&RecoveryCode, &RecoveryReason);
+
+  if (RetStatus != RETURN_SUCCESS || RecoveryCode == 0) {
+    return;
+  }
+
+  Status = gBS->CreateEvent (
+      EVT_TIMER,
+      TPL_CALLBACK,
+      NULL,
+      NULL,
+      &TimerEvent
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  UnicodeSPrint (
+      RecoveryCodeLine,
+      sizeof (RecoveryCodeLine),
+      L"Recovery reason code: 0x%02x",
+      RecoveryCode
+      );
+  UnicodeSPrint (
+      RecoveryMsgLine,
+      sizeof (RecoveryMsgLine),
+      L"Recovery reason: %a",
+      RecoveryReason
+      );
+
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
+
+  DrainInput ();
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10); 
+
+  Events[0] = gST->ConIn->WaitForKey;
+  Events[1] = TimerEvent;
+
+  SecondsLeft = 30;
+  while (SecondsLeft > 0) {
+    UnicodeSPrint (
+        DelayLine,
+        sizeof (DelayLine),
+        L"(The boot process will continue automatically in %d second%a.)",
+        SecondsLeft,
+        SecondsLeft == 1 ? "" : "s"
+        );
+
+    CreateMultiStringPopUp (
+        78,
+        12,
+        L"!!! WARNING !!!",
+        L"",
+        L"This message is displayed, because the platform booted from the recovery",
+        L"firmware partition. If you have just updated firmware, it is likely that",
+        L"the signature verification process failed. Please verify again that",
+        L"firmware was downloaded from the proper source and try updating again.",
+        L"",
+        RecoveryCodeLine,
+        RecoveryMsgLine,
+        L"",
+        L"Press ENTER key to continue.",
+        DelayLine
+        );
+
+    Status = gBS->WaitForEvent (2, Events, &Index);
+    ASSERT_EFI_ERROR (Status);
+
+    if (Index == 0) {
+      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      ASSERT_EFI_ERROR (Status);
+
+      if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+        break;
+      }
+    } else {
+      SecondsLeft--;
+    }
+  }
+
+  Status = gBS->CloseEvent (TimerEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  gST->ConOut->ClearScreen (gST->ConOut);
+}
+
 /**
   Do the platform specific action after the console is connected.
 
@@ -491,6 +622,8 @@ PlatformBootManagerAfterConsole (
 
   EfiBootManagerConnectAll ();
   EfiBootManagerRefreshAllBootOption ();
+
+  WarnIfRecoveryBoot ();
 
   //
   // Process TPM PPI request
@@ -563,7 +696,6 @@ PlatformBootManagerUnableToBoot (
   )
 {
   EFI_STATUS                   Status;
-  EFI_INPUT_KEY                Key;
   EFI_BOOT_MANAGER_LOAD_OPTION BootManagerMenu;
   UINTN                        Index;
 
@@ -595,14 +727,7 @@ PlatformBootManagerUnableToBoot (
     ASSERT_EFI_ERROR (Status);
     ASSERT (Index == 0);
 
-    //
-    // Drain any queued keys.
-    //
-    while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {
-      //
-      // just throw away Key
-      //
-    }
+    DrainInput ();
   }
 
   for (;;) {

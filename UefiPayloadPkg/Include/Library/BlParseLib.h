@@ -170,4 +170,21 @@ ParseTPMPPIInfo (
   OUT TCG_PHYSICAL_PRESENCE_INFO       *PPIInfo
   );
 
+/**
+  Acquire Vboot recovery information from coreboot
+
+  @param  RecoveryCode        Recovery reason code, zero if not in recovery mode.
+  @param  RecoveryReason      Why are we in recovery boot as a string.
+
+  @retval RETURN_SUCCESS      Successfully found VBoot data.
+  @retval RETURN_NOT_FOUND    Failed to find VBoot data.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseVBootWorkbuf (
+  OUT UINT8        *RecoveryCode,
+  OUT CONST CHAR8 **RecoveryReason
+  );
+
 #endif
