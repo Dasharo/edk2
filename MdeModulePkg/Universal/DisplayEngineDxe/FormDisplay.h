@@ -423,23 +423,6 @@ CompareHiiValue (
   );
 
 /**
-  Draw a pop up windows based on the dimension, number of lines and
-  strings specified.
-
-  @param RequestedWidth  The width of the pop-up.
-  @param NumberOfLines   The number of lines.
-  @param ...             A series of text strings that displayed in the pop-up.
-
-**/
-VOID
-EFIAPI
-CreateMultiStringPopUp (
-  IN  UINTN  RequestedWidth,
-  IN  UINTN  NumberOfLines,
-  ...
-  );
-
-/**
   Will copy LineWidth amount of a string in the OutputString buffer and return the
   number of CHAR16 characters that were copied into the OutputString buffer.
   The output string format is:
@@ -483,27 +466,6 @@ GetToken (
   );
 
 /**
-  Count the storage space of a Unicode string.
-
-  This function handles the Unicode string with NARROW_CHAR
-  and WIDE_CHAR control characters. NARROW_HCAR and WIDE_CHAR
-  does not count in the resultant output. If a WIDE_CHAR is
-  hit, then 2 Unicode character will consume an output storage
-  space with size of CHAR16 till a NARROW_CHAR is hit.
-
-  If String is NULL, then ASSERT ().
-
-  @param String          The input string to be counted.
-
-  @return Storage space for the input string.
-
-**/
-UINTN
-GetStringWidth (
-  IN CHAR16  *String
-  );
-
-/**
   This routine reads a numeric value from the user input.
 
   @param  MenuOption        Pointer to the current input menu.
@@ -533,22 +495,6 @@ ReadString (
   IN     UI_MENU_OPTION  *MenuOption,
   IN     CHAR16          *Prompt,
   IN OUT CHAR16          *StringPtr
-  );
-
-/**
-  Draw a pop up windows based on the dimension, number of lines and
-  strings specified.
-
-  @param RequestedWidth  The width of the pop-up.
-  @param NumberOfLines   The number of lines.
-  @param Marker          The variable argument list for the list of string to be printed.
-
-**/
-VOID
-CreateSharedPopUp (
-  IN  UINTN    RequestedWidth,
-  IN  UINTN    NumberOfLines,
-  IN  VA_LIST  Marker
   );
 
 /**

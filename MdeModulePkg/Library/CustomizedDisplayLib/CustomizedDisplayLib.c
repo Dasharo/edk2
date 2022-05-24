@@ -410,6 +410,26 @@ UpdateStatusBar (
   }
 }
 
+//
+// If screen dimension info is not ready, get it from console.
+//
+STATIC
+VOID
+FillScreenDimentions (
+  IN OUT EFI_SCREEN_DESCRIPTOR *ScreenDimensions
+  )
+{
+  if (ScreenDimensions->RightColumn == 0 || ScreenDimensions->BottomRow == 0) {
+    ZeroMem (ScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
+    gST->ConOut->QueryMode (
+                   gST->ConOut,
+                   gST->ConOut->Mode->Mode,
+                   &ScreenDimensions->RightColumn,
+                   &ScreenDimensions->BottomRow
+                   );
+  }
+}
+
 /**
   Create popup window. It will replace CreateDialog().
 
@@ -444,18 +464,7 @@ CreateDialog (
   UINTN          CurrentAttribute;
   BOOLEAN        CursorVisible;
 
-  //
-  // If screen dimension info is not ready, get it from console.
-  //
-  if ((gScreenDimensions.RightColumn == 0) || (gScreenDimensions.BottomRow == 0)) {
-    ZeroMem (&gScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
-    gST->ConOut->QueryMode (
-                   gST->ConOut,
-                   gST->ConOut->Mode->Mode,
-                   &gScreenDimensions.RightColumn,
-                   &gScreenDimensions.BottomRow
-                   );
-  }
+  FillScreenDimentions (&gScreenDimensions);
 
   DimensionsWidth  = gScreenDimensions.RightColumn - gScreenDimensions.LeftColumn;
   DimensionsHeight = gScreenDimensions.BottomRow - gScreenDimensions.TopRow;
@@ -922,6 +931,114 @@ ClearDisplayPage (
   gST->ConOut->SetAttribute (gST->ConOut, EFI_TEXT_ATTR (EFI_LIGHTGRAY, EFI_BLACK));
   gST->ConOut->ClearScreen (gST->ConOut);
   gLibIsFirstForm = TRUE;
+}
+
+/**
+  Count the storage space of a Unicode string.
+
+  This function handles the Unicode string with NARROW_CHAR
+  and WIDE_CHAR control characters. NARROW_HCAR and WIDE_CHAR
+  does not count in the resultant output. If a WIDE_CHAR is
+  hit, then 2 Unicode character will consume an output storage
+  space with size of CHAR16 till a NARROW_CHAR is hit.
+
+  If String is NULL, then ASSERT ().
+
+  @param String          The input string to be counted.
+
+  @return Storage space for the input string.
+
+**/
+UINTN
+EFIAPI
+GetStringWidth (
+  IN CHAR16  *String
+  )
+{
+  UINTN  Index;
+  UINTN  Count;
+  UINTN  IncrementValue;
+
+  ASSERT (String != NULL);
+  if (String == NULL) {
+    return 0;
+  }
+
+  Index          = 0;
+  Count          = 0;
+  IncrementValue = 1;
+
+  do {
+    //
+    // Advance to the null-terminator or to the first width directive
+    //
+    for ( ;
+          (String[Index] != NARROW_CHAR) && (String[Index] != WIDE_CHAR) && (String[Index] != 0);
+          Index++, Count = Count + IncrementValue
+          )
+    {
+    }
+
+    //
+    // We hit the null-terminator, we now have a count
+    //
+    if (String[Index] == 0) {
+      break;
+    }
+
+    //
+    // We encountered a narrow directive - strip it from the size calculation since it doesn't get printed
+    // and also set the flag that determines what we increment by.(if narrow, increment by 1, if wide increment by 2)
+    //
+    if (String[Index] == NARROW_CHAR) {
+      //
+      // Skip to the next character
+      //
+      Index++;
+      IncrementValue = 1;
+    } else {
+      //
+      // Skip to the next character
+      //
+      Index++;
+      IncrementValue = 2;
+    }
+  } while (String[Index] != 0);
+
+  //
+  // Increment by one to include the null-terminator in the size
+  //
+  Count++;
+
+  return Count * sizeof (CHAR16);
+}
+
+/**
+  Draw a pop up windows based on the dimension, number of lines and
+  strings specified.
+
+  @param RequestedWidth  The width of the pop-up.
+  @param NumberOfLines   The number of lines.
+  @param ...             A series of text strings that displayed in the pop-up.
+
+**/
+VOID
+EFIAPI
+CreateMultiStringPopUp (
+  IN  UINTN  RequestedWidth,
+  IN  UINTN  NumberOfLines,
+  ...
+  )
+{
+  VA_LIST Marker;
+
+  FillScreenDimentions (&gScreenDimensions);
+
+  VA_START (Marker, NumberOfLines);
+
+  CreateSharedPopUp (RequestedWidth, NumberOfLines, Marker);
+
+  VA_END (Marker);
 }
 
 /**
