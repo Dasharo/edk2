@@ -946,9 +946,9 @@ ParseVBootWorkbuf (
     DEBUG ((DEBUG_INFO, "VBootWorkbuf tag data is wrong\n"));
     return RETURN_NOT_FOUND;
   }
-  if (Workbuf->struct_version_major != VB2_SHARED_DATA_VERSION_MAJOR ||
-      Workbuf->struct_version_minor != VB2_SHARED_DATA_VERSION_MINOR) {
-    DEBUG ((DEBUG_INFO, "VBootWorkbuf tag data is of wrong version\n"));
+
+  if (Workbuf->struct_version_major != VB2_SHARED_DATA_VERSION_MAJOR) {
+    DEBUG ((DEBUG_INFO, "VBootWorkbuf tag data is of wrong major version\n"));
     return RETURN_NOT_FOUND;
   }
 
