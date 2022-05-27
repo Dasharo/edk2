@@ -578,7 +578,6 @@ enum vb2_nv_recovery {
 
 /* Current version of vb2_shared_data struct */
 #define VB2_SHARED_DATA_VERSION_MAJOR 3
-#define VB2_SHARED_DATA_VERSION_MINOR 1
 
 #define VB2_SHARED_DATA_MAGIC 0x44533256
 
