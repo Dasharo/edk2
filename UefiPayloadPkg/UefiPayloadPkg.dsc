@@ -478,6 +478,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSetupConOutColumn|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSetupConOutRow|0
+
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
   # No need to initialize TPM again, coreboot already did that
