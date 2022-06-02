@@ -1,0 +1,24 @@
+///** @file
+//
+//  String definitions for the Dasharo System Features.
+//
+//  Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause
+//
+//**/
+
+/=#
+
+#langdef   en-US "English"
+
+#string STR_EMPTY_STRING       #language en-US  ""
+#string STR_EXIT_STRING        #language en-US  "Press ESC to exit."
+
+#string STR_EDKII_MENU_TITLE   #language en-US  "Dasharo System Features"
+#string STR_EDKII_MENU_HELP    #language en-US  "This selection will take you to Dasharo System Features Manager"
+
+#string STR_DASHARO_SECURITY_OPTIONS_TITLE   #language en-US  "Dasharo Security Options"
+#string STR_DASHARO_SECURITY_OPTIONS_HELP    #language en-US  "Security-related options"
+
+#string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
+#string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
