@@ -1,0 +1,49 @@
+/** @file
+The Dasharo system features implementation
+
+Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+SPDX-License-Identifier: BSD-2-Clause
+
+**/
+
+#include "DasharoSystemFeaturesHii.h"
+
+formset
+  guid      = DASHARO_SYSTEM_FEATURES_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_EDKII_MENU_TITLE),
+  help      = STRING_TOKEN(STR_EDKII_MENU_HELP),
+  classguid = gEfiIfrFrontPageGuid,
+
+  varstore DASHARO_FEATURES_DATA,
+           varid = DASHARO_FEATURES_DATA_VARSTORE_ID,
+           name  = FeaturesData,
+           guid  = DASHARO_SYSTEM_FEATURES_FORMSET_GUID;
+
+  form formid = DASHARO_SYSTEM_FEATURES_FORM_ID,
+       title  = STRING_TOKEN(STR_EDKII_MENU_TITLE);
+
+    goto DASHARO_SECURITY_OPTIONS_FORM_ID,
+         prompt = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_TITLE),
+         help   = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_HELP);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_SECURITY_OPTIONS_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    checkbox varid  = FeaturesData.LockBios,
+             prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
+             help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
+             flags  = INTERACTIVE,
+    endcheckbox;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+endformset;
