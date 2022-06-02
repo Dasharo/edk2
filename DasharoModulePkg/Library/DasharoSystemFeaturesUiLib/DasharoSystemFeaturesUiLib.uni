@@ -1,0 +1,16 @@
+// /** @file
+// Dasharo System Features Library used by UiApp
+//
+//  Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// **/
+
+#string STR_MODULE_ABSTRACT
+#language en-US
+"Dasharo System Features Library used by UiApp"
+
+#string STR_MODULE_DESCRIPTION
+#language en-US
+"Dasharo System Features Library used by UiApp"
