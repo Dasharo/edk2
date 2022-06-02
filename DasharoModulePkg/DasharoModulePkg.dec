@@ -1,0 +1,24 @@
+## @file
+# Dasharo Module Package
+#
+# Provides libraries specific to Dasharo firmware.
+#
+# Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = DasharoModulePkg
+  PACKAGE_GUID                   = 34B742F3-EB9D-4204-8C9A-E1B47966A61F
+  PACKAGE_VERSION                = 0.1
+  PACKAGE_UNI_FILE               = DasharoModuleComponents.uni
+
+[Includes]
+
+[Guids]
+
+[Ppis]
+
+[Protocols]
