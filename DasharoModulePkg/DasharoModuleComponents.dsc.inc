@@ -8,3 +8,5 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 ##
+
+  DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
