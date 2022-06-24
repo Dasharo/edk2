@@ -2,23 +2,25 @@
 Utility functions for UI presentation.
 
 Copyright (c) 2004 - 2018, Intel Corporation. All rights reserved.<BR>
-(C) Copyright 2015 Hewlett Packard Enterprise Development LP<BR>
+(C) Copyright 2015 - 2022 Hewlett Packard Enterprise Development LP<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
 #include "Setup.h"
 
-BOOLEAN            mHiiPackageListUpdated;
-UI_MENU_SELECTION  *gCurrentSelection;
-EFI_HII_HANDLE     mCurrentHiiHandle = NULL;
-EFI_GUID           mCurrentFormSetGuid = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
-UINT16             mCurrentFormId = 0;
-EFI_EVENT          mValueChangedEvent = NULL;
-LIST_ENTRY         mRefreshEventList = INITIALIZE_LIST_HEAD_VARIABLE (mRefreshEventList);
-UINT16             mCurFakeQestId;
-FORM_DISPLAY_ENGINE_FORM gDisplayFormData;
-BOOLEAN            mFinishRetrieveCall = FALSE;
+BOOLEAN                   mHiiPackageListUpdated;
+UI_MENU_SELECTION         *gCurrentSelection;
+EFI_HII_HANDLE            mCurrentHiiHandle   = NULL;
+EFI_GUID                  mCurrentFormSetGuid = {
+  0, 0, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }
+};
+UINT16                    mCurrentFormId     = 0;
+EFI_EVENT                 mValueChangedEvent = NULL;
+LIST_ENTRY                mRefreshEventList  = INITIALIZE_LIST_HEAD_VARIABLE (mRefreshEventList);
+UINT16                    mCurFakeQestId;
+FORM_DISPLAY_ENGINE_FORM  gDisplayFormData;
+BOOLEAN                   mFinishRetrieveCall = FALSE;
 
 /**
   Check whether the ConfigAccess protocol is available.

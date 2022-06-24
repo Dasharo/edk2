@@ -2,7 +2,7 @@
 Entry and initialization module for the browser.
 
 Copyright (c) 2007 - 2018, Intel Corporation. All rights reserved.<BR>
-(C) Copyright 2020 Hewlett Packard Enterprise Development LP<BR>
+(C) Copyright 2020 - 2022 Hewlett Packard Enterprise Development LP<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -64,10 +64,10 @@ FORM_BROWSER_FORMSET  *mSystemLevelFormSet;
 CHAR16            *gEmptyString;
 CHAR16            *mUnknownString = L"!";
 
-extern EFI_GUID        mCurrentFormSetGuid;
-extern EFI_HII_HANDLE  mCurrentHiiHandle;
-extern UINT16          mCurrentFormId;
-extern FORM_DISPLAY_ENGINE_FORM gDisplayFormData;
+extern EFI_GUID                  mCurrentFormSetGuid;
+extern EFI_HII_HANDLE            mCurrentHiiHandle;
+extern UINT16                    mCurrentFormId;
+extern FORM_DISPLAY_ENGINE_FORM  gDisplayFormData;
 
 /**
   Create a menu with specified formset GUID and form ID, and add it as a child
@@ -547,7 +547,10 @@ SendForm (
       gCurrentSelection = NULL;
       mSystemLevelFormSet = NULL;
 
-      if (gFlagReconnect || gCallbackReconnect) {
+      //
+      // Check incoming formset whether is same with previous. If yes, that means action is not exiting of formset so do not reconnect controller.
+      //
+      if ((gFlagReconnect || gCallbackReconnect) && !CompareGuid (&FormSet->Guid, &Selection->FormSetGuid)) {
         RetVal = ReconnectController (FormSet->DriverHandle);
         if (!RetVal) {
           PopupErrorMessage(BROWSER_RECONNECT_FAIL, NULL, NULL, NULL);
