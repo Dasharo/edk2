@@ -531,7 +531,7 @@ WarnIfRecoveryBoot (
   gST->ConOut->EnableCursor (gST->ConOut, FALSE);
 
   DrainInput ();
-  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10); 
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
 
   Events[0] = gST->ConIn->WaitForKey;
   Events[1] = TimerEvent;
@@ -628,16 +628,16 @@ PlatformBootManagerAfterConsole (
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
 
   //
-  // Register UEFI Shell
-  //
-  DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
-
-  //
   // Register iPXE
   //
   DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+
+  //
+  // Register UEFI Shell
+  //
+  DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
+  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
 
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
