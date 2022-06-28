@@ -28,6 +28,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
 
 [Guids]
   gEfiCertPkcs7Guid
@@ -45,10 +46,14 @@
   UefiDriverEntryPoint
   DxeServicesLib
   UefiBootServicesTableLib
+  PcdLib
 
 [Protocols]
   gEfiTcgProtocolGuid ##CONSUMES
   gEfiVariableWriteArchProtocolGuid                  ## NOTIFY
+
+[Pcd]
+  gUefiPayloadPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Depex]
   TRUE
