@@ -20,6 +20,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/DxeServicesLib.h>
+#include <Library/PcdLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
@@ -539,10 +540,10 @@ InstallSecureBootHook (
     ASSERT_EFI_ERROR (Status);
   }
 
-  // FIXME: Force SecureBoot to ON. The AuthService will do this if authenticated variables
+  // FIXME: Optionally force SecureBoot to ON. The AuthService will do this if authenticated variables
   // are supported, which aren't as the SMM handler isn't able to verify them.
 
-  Settings.SecureBootEnable = SECURE_BOOT_ENABLE;
+  Settings.SecureBootEnable = PcdGetBool (PcdSecureBootDefaultEnable) ? SECURE_BOOT_ENABLE : SECURE_BOOT_DISABLE;
   Status = gRT->SetVariable (EFI_SECURE_BOOT_ENABLE_NAME, &gEfiSecureBootEnableDisableGuid,
            EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
            sizeof Settings.SecureBootEnable, &Settings.SecureBootEnable);
@@ -552,7 +553,7 @@ InstallSecureBootHook (
     ASSERT_EFI_ERROR (Status);
   }
 
-  Settings.SecureBoot = SECURE_BOOT_ENABLE;
+  Settings.SecureBoot = PcdGetBool (PcdSecureBootDefaultEnable) ? SECURE_BOOT_ENABLE : SECURE_BOOT_DISABLE;
   Status = gRT->SetVariable (EFI_SECURE_BOOT_MODE_NAME, &gEfiGlobalVariableGuid,
            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
            sizeof Settings.SecureBoot, &Settings.SecureBoot);

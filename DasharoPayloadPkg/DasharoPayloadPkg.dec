@@ -74,6 +74,7 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32
 gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
 
 gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x00000017
+gDasharoPayloadPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|TRUE|BOOLEAN|0x00000018
 
 [PcdsFixedAtBuild]
 ## Specifies the initial value for Register_A in RTC.
