@@ -90,6 +90,7 @@
   DEFINE SATA_PASSWORD_ENABLE         = FALSE
   DEFINE OPAL_PASSWORD_ENABLE         = FALSE
   DEFINE LOAD_OPTION_ROMS             = TRUE
+  DEFINE SECURE_BOOT_DEFAULT_ENABLE   = TRUE
   #
   # Network definition
   #
@@ -394,6 +395,7 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|$(SECURE_BOOT_DEFAULT_ENABLE)
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
