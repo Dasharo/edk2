@@ -28,6 +28,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [Guids]
   gEfiCertPkcs7Guid
@@ -45,10 +46,14 @@
   UefiDriverEntryPoint
   DxeServicesLib
   UefiBootServicesTableLib
+  PcdLib
 
 [Protocols]
   gEfiTcgProtocolGuid ##CONSUMES
   gEfiVariableWriteArchProtocolGuid                  ## NOTIFY
+
+[Pcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Depex]
   TRUE
