@@ -905,3 +905,34 @@ Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
 
   return TCG_PP_SUBMIT_REQUEST_TO_PREOS_SUCCESS;
 }
+
+/**
+  Return TPM2 ManagementFlags set by PP interface.
+
+  @retval    ManagementFlags    TPM2 Management Flags.
+**/
+UINT32
+EFIAPI
+Tcg2PhysicalPresenceLibGetManagementFlags (
+  VOID
+  )
+{
+  EFI_STATUS                        Status;
+  EFI_TCG2_PHYSICAL_PRESENCE_FLAGS  PpiFlags;
+  UINTN                             DataSize;
+
+  DEBUG ((EFI_D_INFO, "[TPM2] GetManagementFlags\n"));
+
+  DataSize = sizeof (EFI_TCG2_PHYSICAL_PRESENCE_FLAGS);
+  Status = gRT->GetVariable (
+                  TCG2_PHYSICAL_PRESENCE_FLAGS_VARIABLE,
+                  &gEfiTcg2PhysicalPresenceGuid,
+                  NULL,
+                  &DataSize,
+                  &PpiFlags
+                  );
+  if (EFI_ERROR (Status)) {
+    PpiFlags.PPFlags = TCG2_BIOS_TPM_MANAGEMENT_FLAG_DEFAULT | TCG2_BIOS_STORAGE_MANAGEMENT_FLAG_DEFAULT;
+  }
+  return PpiFlags.PPFlags;
+}
