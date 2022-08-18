@@ -22,6 +22,7 @@
 #include <Protocol/HiiConfigAccess.h>
 #include <Guid/MdeModuleHii.h>
 #include <Guid/OvmfPlatformConfig.h>
+#include <Guid/SystemResourceTable.h>
 
 #include "Platform.h"
 #include "PlatformConfig.h"
@@ -897,6 +898,54 @@ PlatformInit (
   // Check already installed GOPs.
   //
   Status = gBS->SignalEvent (mGopEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // Create a fake ESRT with two entries for the purpose of testing reading
+  // ESRT.
+  //
+  // Values of constants are commented to ease comparing with dumps from host.
+  //
+
+  EFI_SYSTEM_RESOURCE_TABLE *EsrtTable = AllocatePool (
+      sizeof (EFI_SYSTEM_RESOURCE_TABLE) + 2 * sizeof (EFI_SYSTEM_RESOURCE_ENTRY)
+    );
+  ASSERT (EsrtTable != NULL);
+
+  EsrtTable->FwResourceVersion  =
+      EFI_SYSTEM_RESOURCE_TABLE_FIRMWARE_RESOURCE_VERSION;
+  EsrtTable->FwResourceCount    = 2;
+  EsrtTable->FwResourceCountMax = 2;
+
+  EFI_SYSTEM_RESOURCE_ENTRY *Esre = (void *)&EsrtTable[1];
+
+  EFI_GUID FwClass = {
+    0x415f009f, 0xfb1d, 0x4cc3, {0x8a, 0x25, 0x57, 0x10, 0xa7, 0x70, 0x59, 0x18 }
+  };
+  CopyMem (&Esre[0].FwClass, &FwClass, sizeof (EFI_GUID));
+
+  Esre[0].FwType = ESRT_FW_TYPE_SYSTEMFIRMWARE; // 1
+  Esre[0].FwVersion = 5;
+  Esre[0].LowestSupportedFwVersion = 1;
+  Esre[0].CapsuleFlags = CAPSULE_FLAGS_INITIATE_RESET; // 0x00040000
+  Esre[0].LastAttemptVersion = 0;
+  Esre[0].LastAttemptStatus = LAST_ATTEMPT_STATUS_SUCCESS; // 0
+
+  EFI_GUID FwClass2 = {
+    0x79a731b2, 0x61ad, 0x415c, {0xaa, 0xfc, 0x7a, 0xf0, 0xeb, 0xa0, 0x0e, 0x4e },
+  };
+  CopyMem (&Esre[1].FwClass, &FwClass2, sizeof (EFI_GUID));
+
+  Esre[1].FwType = ESRT_FW_TYPE_DEVICEFIRMWARE; // 2
+  Esre[1].FwVersion = 4;
+  Esre[1].LowestSupportedFwVersion = 3;
+  Esre[1].CapsuleFlags = CAPSULE_FLAGS_POPULATE_SYSTEM_TABLE; // 0x00020000
+  Esre[1].LastAttemptVersion = 5;
+  Esre[1].LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_AUTH_ERROR; // 5
+
+  EFI_GUID gESRTGuid = EFI_SYSTEM_RESOURCE_TABLE_GUID;
+
+  Status = gBS->InstallConfigurationTable (&gESRTGuid, EsrtTable);
   ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
