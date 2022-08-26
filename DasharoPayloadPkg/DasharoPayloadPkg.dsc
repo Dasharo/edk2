@@ -85,12 +85,13 @@
   #
   # Security options:
   #
-  DEFINE SECURE_BOOT_ENABLE           = FALSE
-  DEFINE TPM_ENABLE                   = TRUE
-  DEFINE SATA_PASSWORD_ENABLE         = FALSE
-  DEFINE OPAL_PASSWORD_ENABLE         = FALSE
-  DEFINE LOAD_OPTION_ROMS             = TRUE
-  DEFINE SECURE_BOOT_DEFAULT_ENABLE   = TRUE
+  DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE TPM_ENABLE                     = TRUE
+  DEFINE SATA_PASSWORD_ENABLE           = FALSE
+  DEFINE OPAL_PASSWORD_ENABLE           = FALSE
+  DEFINE LOAD_OPTION_ROMS               = TRUE
+  DEFINE SECURE_BOOT_DEFAULT_ENABLE     = TRUE
+  DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   #
   # Network definition
   #
@@ -586,6 +587,8 @@
       NULL|DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+    <PcdsFixedAtBuild>
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
   MdeModulePkg/Application/VariableInfo/VariableInfo.inf
