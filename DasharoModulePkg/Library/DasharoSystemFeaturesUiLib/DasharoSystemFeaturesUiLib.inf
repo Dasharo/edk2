@@ -41,6 +41,7 @@
   UefiRuntimeServicesTableLib
   BaseMemoryLib
   DebugLib
+  PcdLib
   PrintLib
   HiiLib
   UefiHiiServicesLib
@@ -53,3 +54,6 @@
 
 [Protocols]
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES
+
+[Pcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu
