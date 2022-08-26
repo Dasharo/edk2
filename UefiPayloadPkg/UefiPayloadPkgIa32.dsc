@@ -83,8 +83,9 @@
   #
   # Security options:
   #
-  DEFINE SECURE_BOOT_ENABLE           = FALSE
-  DEFINE TPM_ENABLE                   = TRUE
+  DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE TPM_ENABLE                     = TRUE
+  DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
 
   #
   # Network definition
