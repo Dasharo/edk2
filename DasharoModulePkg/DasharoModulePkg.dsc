@@ -17,6 +17,7 @@
   SKUID_IDENTIFIER               = DEFAULT
 
 [LibraryClasses]
+  PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
 
 [Components]
   !include DasharoModulePkg/DasharoModuleComponents.dsc.inc
