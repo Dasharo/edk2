@@ -87,12 +87,13 @@
   #
   # Security options:
   #
-  DEFINE SECURE_BOOT_ENABLE           = FALSE
-  DEFINE TPM_ENABLE                   = TRUE
-  DEFINE SATA_PASSWORD_ENABLE         = FALSE
-  DEFINE OPAL_PASSWORD_ENABLE         = FALSE
-  DEFINE LOAD_OPTION_ROMS             = TRUE
-  DEFINE SECURE_BOOT_DEFAULT_ENABLE   = TRUE
+  DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE TPM_ENABLE                     = TRUE
+  DEFINE SATA_PASSWORD_ENABLE           = FALSE
+  DEFINE OPAL_PASSWORD_ENABLE           = FALSE
+  DEFINE LOAD_OPTION_ROMS               = TRUE
+  DEFINE SECURE_BOOT_DEFAULT_ENABLE     = TRUE
+  DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   #
   # Network definition
   #
@@ -714,7 +715,7 @@
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
   }
-  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf 
+  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
   SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
