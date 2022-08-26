@@ -6,6 +6,7 @@ SPDX-License-Identifier: BSD-2-Clause
 
 **/
 
+#include <Library/PcdLib.h>
 #include "DasharoSystemFeatures.h"
 
 STATIC EFI_GUID mDasharoSystemFeaturesGuid = DASHARO_SYSTEM_FEATURES_FORMSET_GUID;
@@ -49,11 +50,12 @@ STATIC HII_VENDOR_DEVICE_PATH  mDasharoSystemFeaturesHiiVendorDevicePath = {
 /**
   Install Dasharo System Features Menu driver.
 
-  @param ImageHandle     The image handle.
-  @param SystemTable     The system table.
+  @param ImageHandle          The image handle.
+  @param SystemTable          The system table.
 
-  @retval  EFI_SUCEESS  Installed Dasharo System Features.
-  @retval  Other        Error.
+  @retval  EFI_SUCEESS        Installed Dasharo System Features.
+  @retval  EFI_NOT_SUPPORTED  Dasharo System Features not supported.
+  @retval  Other              Error.
 
 **/
 EFI_STATUS
@@ -65,6 +67,9 @@ DasharoSystemFeaturesUiLibConstructor (
 {
   EFI_STATUS  Status;
   UINTN       BufferSize;
+
+  if (!PcdGetBool (PcdShowMenu))
+    return EFI_UNSUPPORTED;
 
   mDasharoSystemFeaturesPrivate.DriverHandle = NULL;
   Status = gBS->InstallMultipleProtocolInterfaces (
