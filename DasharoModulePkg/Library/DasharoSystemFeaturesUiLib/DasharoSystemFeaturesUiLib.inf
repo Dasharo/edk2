@@ -50,7 +50,7 @@
   gEfiHiiPlatformSetupFormsetGuid               ## CONSUMES ## GUID (Indicate the formset class guid to be displayed)
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID (Indicate the formset in this library need to display in which page)
-  gDasharoSystemFeaturesFormsetGuid             ## PROVIDES
+  gDasharoSystemFeaturesGuid                    ## CONSUMES
 
 [Protocols]
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES

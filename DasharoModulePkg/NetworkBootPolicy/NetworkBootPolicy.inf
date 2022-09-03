@@ -1,0 +1,44 @@
+#
+#
+# Copyright (c)  1999  - 2019, Intel Corporation. All rights reserved
+#                                                                                  
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = NetworkBootPolicy
+  FILE_GUID                      = ca90493e-1a22-4d09-9c78-3894507eb646
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = NetworkBootPolicyEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = X64
+#
+
+[Sources.common]
+  NetworkBootPolicy.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  UefiLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+
+[Guids]
+  gDasharoSystemFeaturesGuid           ### CONSUMES
+
+[Protocols]
+  gDasharoNetworkBootPolicyGuid        ### PROVIDES
+
+[Depex]
+  gEfiVariableArchProtocolGuid
