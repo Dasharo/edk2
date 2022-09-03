@@ -244,26 +244,31 @@ INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 !else
 !if $(NETWORK_INTEL_PRO2500)
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0104X7.EFI
   }
 !endif
 !if $(NETWORK_INTEL_GBE)
   FILE DRIVER = D25C6DB6-0218-4BE9-802A-2841A7DA5ABE {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0027X7.EFI
   }
 !endif
 !if $(NETWORK_INTEL_40GBE)
   FILE DRIVER = F49F4961-BE4F-4102-A07D-111E148D0974 {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E4015X5.EFI
   }
 !endif
 !if $(NETWORK_INTEL_10GBE)
   FILE DRIVER = 3E04EC12-5FDA-4BA8-88BB-5AB1467F280E {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E7512X4.EFI
   }
 !endif
 !if $(NETWORK_INTEL_PRO1000)
   FILE DRIVER = BF21AF15-235B-4387-B62B-79134BC81E22 {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E9112X3.EFI
   }
 !endif
@@ -273,10 +278,14 @@ INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 #
 # iPXE support
 #
-!if (NETWORK_IPXE)
+!if $(NETWORK_IPXE) == TRUE
   FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/ipxe.efi
   }
+!endif
+
+!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
+  INF DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
 !endif
 
 #
