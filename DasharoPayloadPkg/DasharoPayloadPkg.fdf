@@ -279,6 +279,7 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 # Typically will be done per platform needs by coreboot.
 #
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
     SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/LanRom.efi
   }
 !endif
@@ -290,6 +291,10 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
   FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
    SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/ipxe.efi
   }
+!endif
+
+!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
+  INF DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
 !endif
 
 #
