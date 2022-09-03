@@ -755,10 +755,13 @@ PlatformBootManagerAfterConsole (
   VOID
 )
 {
+  EFI_STATUS                     Status;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
+  BOOLEAN                        NetBootEnabled;
+  UINTN                          VarSize;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -778,12 +781,24 @@ PlatformBootManagerAfterConsole (
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
 
-  //
-  // Register iPXE
-  //
-  DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+  VarSize = sizeof (NetBootEnabled);
+  Status = gRT->GetVariable (
+      L"NetworkBoot",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &NetBootEnabled
+      );
 
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
+    if (NetBootEnabled) {
+      //
+      // Register iPXE
+      //
+      DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
+      PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile), L"iPXE Network boot", LOAD_OPTION_ACTIVE);
+    }
+  }
   //
   // Register UEFI Shell
   //

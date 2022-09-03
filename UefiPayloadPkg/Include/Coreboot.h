@@ -207,13 +207,6 @@ struct cb_forward {
   UINT64 forward;
 };
 
-struct cb_cbmem_ref {
-  UINT32    tag;
-  // Field contains size of this struct == 0x0010
-  UINT32    size;
-  UINT64    cbmem_addr;
-};
-
 #define CB_TAG_FRAMEBUFFER  0x0012
 struct cb_framebuffer {
   UINT32 tag;

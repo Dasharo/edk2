@@ -32,6 +32,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
   SecurityPkg/SecurityPkg.dec
 
 [LibraryClasses]
@@ -65,6 +66,7 @@
   gEdkiiVT400Guid
   gEdkiiSCOTermGuid
   gEfiPcAnsiGuid
+  gDasharoSystemFeaturesGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES
