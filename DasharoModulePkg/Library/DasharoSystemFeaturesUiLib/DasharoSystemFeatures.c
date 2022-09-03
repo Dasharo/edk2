@@ -9,12 +9,13 @@ SPDX-License-Identifier: BSD-2-Clause
 #include <Library/PcdLib.h>
 #include "DasharoSystemFeatures.h"
 
-STATIC EFI_GUID mDasharoSystemFeaturesGuid = DASHARO_SYSTEM_FEATURES_FORMSET_GUID;
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
 STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
 STATIC CHAR16 mSmmBwpEfiVar[] = L"SmmBwp";
 STATIC BOOLEAN mLockBiosDefault = TRUE;
 STATIC BOOLEAN mSmmBwpDefault = FALSE;
+STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
+STATIC BOOLEAN mNetworkBootDefault = FALSE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -37,7 +38,7 @@ STATIC HII_VENDOR_DEVICE_PATH  mDasharoSystemFeaturesHiiVendorDevicePath = {
         (UINT8) ((sizeof (VENDOR_DEVICE_PATH)) >> 8)
       }
     },
-    DASHARO_SYSTEM_FEATURES_FORMSET_GUID
+    DASHARO_SYSTEM_FEATURES_GUID
   },
   {
     END_DEVICE_PATH_TYPE,
@@ -86,7 +87,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   // Publish our HII data.
   mDasharoSystemFeaturesPrivate.HiiHandle = HiiAddPackages (
-      &mDasharoSystemFeaturesGuid,
+      &gDasharoSystemFeaturesGuid,
       mDasharoSystemFeaturesPrivate.DriverHandle,
       DasharoSystemFeaturesVfrBin,
       DasharoSystemFeaturesUiLibStrings,
@@ -97,7 +98,7 @@ DasharoSystemFeaturesUiLibConstructor (
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
   Status = gRT->GetVariable (
       mLockBiosEfiVar,
-      &mDasharoSystemFeaturesGuid,
+      &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
       &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios
@@ -106,13 +107,38 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     Status = gRT->SetVariable (
         mLockBiosEfiVar,
-        &mDasharoSystemFeaturesGuid,
+        &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mLockBiosDefault),
         &mLockBiosDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios = mLockBiosDefault;
+    if (EFI_ERROR(Status)) {
+      return Status;
+    }
   }
+
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot);
+  Status = gRT->GetVariable (
+      mNetworkBootEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+        mNetworkBootEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mNetworkBootDefault),
+        &mNetworkBootDefault
+        );
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = mNetworkBootDefault;
+  }
+
 
   if (EFI_ERROR(Status)) {
     return Status;
@@ -121,7 +147,7 @@ DasharoSystemFeaturesUiLibConstructor (
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp);
   Status = gRT->GetVariable (
       mSmmBwpEfiVar,
-      &mDasharoSystemFeaturesGuid,
+      &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
       &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp
@@ -130,7 +156,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     Status = gRT->SetVariable (
         mSmmBwpEfiVar,
-        &mDasharoSystemFeaturesGuid,
+        &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mSmmBwpDefault),
         &mSmmBwpDefault
@@ -221,7 +247,7 @@ DasharoSystemFeaturesExtractConfig (
 
   *Progress = Request;
   if (Request != NULL &&
-      !HiiIsConfigHdrMatch (Request, &mDasharoSystemFeaturesGuid, mVarStoreName)) {
+      !HiiIsConfigHdrMatch (Request, &gDasharoSystemFeaturesGuid, mVarStoreName)) {
     return EFI_NOT_FOUND;
   }
 
@@ -234,7 +260,7 @@ DasharoSystemFeaturesExtractConfig (
     // Allocate and fill a buffer large enough to hold the <ConfigHdr> template
     // followed by "&OFFSET=0&WIDTH=WWWWWWWWWWWWWWWW" followed by a Null-terminator.
     ConfigRequestHdr = HiiConstructConfigHdr (
-        &mDasharoSystemFeaturesGuid,
+        &gDasharoSystemFeaturesGuid,
         mVarStoreName,
         Private->DriverHandle
         );
@@ -311,7 +337,7 @@ DasharoSystemFeaturesRouteConfig (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (!HiiIsConfigHdrMatch (Configuration, &mDasharoSystemFeaturesGuid, mVarStoreName)) {
+  if (!HiiIsConfigHdrMatch (Configuration, &gDasharoSystemFeaturesGuid, mVarStoreName)) {
     return EFI_NOT_FOUND;
   }
 
@@ -331,7 +357,7 @@ DasharoSystemFeaturesRouteConfig (
   if (Private->DasharoFeaturesData.LockBios != DasharoFeaturesData.LockBios) {
     Status = gRT->SetVariable (
         mLockBiosEfiVar,
-        &mDasharoSystemFeaturesGuid,
+        &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.LockBios),
         &DasharoFeaturesData.LockBios
@@ -344,10 +370,23 @@ DasharoSystemFeaturesRouteConfig (
   if (Private->DasharoFeaturesData.SmmBwp != DasharoFeaturesData.SmmBwp) {
     Status = gRT->SetVariable (
         mSmmBwpEfiVar,
-        &mDasharoSystemFeaturesGuid,
+        &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SmmBwp),
         &DasharoFeaturesData.SmmBwp
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.NetworkBoot != DasharoFeaturesData.NetworkBoot) {
+    Status = gRT->SetVariable (
+        mNetworkBootEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.NetworkBoot),
+        &DasharoFeaturesData.NetworkBoot
         );
     if (EFI_ERROR (Status)) {
       return Status;
