@@ -20,8 +20,14 @@
 #string STR_DASHARO_SECURITY_OPTIONS_TITLE   #language en-US  "Dasharo Security Options"
 #string STR_DASHARO_SECURITY_OPTIONS_HELP    #language en-US  "Security-related options"
 
+#string STR_DASHARO_NETWORKING_OPTIONS_TITLE   #language en-US  "Networking Options"
+#string STR_DASHARO_NETWORKING_OPTIONS_HELP    #language en-US  "Network-related options"
+
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
 
 #string STR_SMM_BWP_PROMPT   #language en-US  "Enable SMM BIOS write protection"
 #string STR_SMM_BWP_HELP     #language en-US  "Prevents writing to the boot medium outside of SMM. Recommended to enable if using an admin password. Disable when updating firmware."
+
+#string STR_NETWORK_BOOT_ENABLE_PROMPT   #language en-US  "Enable network boot"
+#string STR_NETWORK_BOOT_ENABLE_HELP     #language en-US  "Enables/disables the iPXE network boot and all NIC drivers"
