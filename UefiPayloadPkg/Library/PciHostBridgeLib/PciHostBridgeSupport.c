@@ -644,7 +644,8 @@ ScanForRootBridges (
                     );
       ASSERT (RootBridges != NULL);
 
-      AdjustRootBridgeResource (&Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G);
+      if (0)
+        AdjustRootBridgeResource (&Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G);
 
       InitRootBridge (
         Attributes, Attributes, 0,
