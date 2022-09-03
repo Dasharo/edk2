@@ -30,7 +30,29 @@ ReserveResourceInGcd (
   IN EFI_HANDLE            ImageHandle
   )
 {
-  EFI_STATUS               Status;
+  EFI_STATUS                              Status;
+  EFI_GCD_MEMORY_SPACE_DESCRIPTOR         GcdDescriptor;
+
+  Status = gDS->GetMemorySpaceDescriptor ((EFI_PHYSICAL_ADDRESS)BaseAddress, &GcdDescriptor);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "Failed to look up memory space: 0x%lx 0x%lx\n",
+      BaseAddress,
+      Length
+      ));
+    return EFI_ACCESS_DENIED;
+  }
+
+  if (GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeNonExistent) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "Skipping to add memory space: 0x%lx 0x%lx, already exists\n",
+      BaseAddress,
+      Length
+      ));
+    return EFI_SUCCESS;
+  }
 
   if (IsMMIO) {
     Status = gDS->AddMemorySpace (
@@ -200,10 +222,10 @@ BlDxeEntryPoint (
   IN EFI_SYSTEM_TABLE        *SystemTable
   )
 {
-  EFI_STATUS Status;
-  EFI_HOB_GUID_TYPE          *GuidHob;
-  SYSTEM_TABLE_INFO          *SystemTableInfo;
-  EFI_PEI_GRAPHICS_INFO_HOB  *GfxInfo;
+  EFI_STATUS                              Status;
+  EFI_HOB_GUID_TYPE                       *GuidHob;
+  SYSTEM_TABLE_INFO                       *SystemTableInfo;
+  EFI_PEI_GRAPHICS_INFO_HOB               *GfxInfo;
 
   Status = EFI_SUCCESS;
   //
