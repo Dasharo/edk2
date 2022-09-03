@@ -7,6 +7,7 @@
 
 **/
 
+#include <Base.h>
 #include <PiDxe.h>
 #include <IndustryStandard/Pci.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
@@ -286,18 +287,7 @@ PcatPciRootBridgeParseBars (
         Base = OriginalValue & Mask;
         Length = Value & Mask;
 
-        if ((Value & (BIT1 | BIT2)) == 0) {
-          //
-          // 32bit
-          //
-          Length = ((~Length) + 1) & 0xffffffff;
-
-          if ((Value & BIT3) == BIT3) {
-            MemAperture = PMem;
-          } else {
-            MemAperture = Mem;
-          }
-        } else {
+        if ((Value & (BIT1 | BIT2)) == BIT2) {
           //
           // 64bit
           //
@@ -310,16 +300,94 @@ PcatPciRootBridgeParseBars (
 
           Base = Base | LShiftU64 ((UINT64) OriginalUpperValue, 32);
           Length = Length | LShiftU64 ((UINT64) UpperValue, 32);
+
           if (Length != 0) {
             LowBit = LowBitSet64 (Length);
             Length = LShiftU64 (1ULL, LowBit);
           }
 
-          if ((Value & BIT3) == BIT3) {
-            MemAperture = PMemAbove4G;
+          DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 64bit%s BAR@%d %x %x \n",
+              __FUNCTION__,
+              Bus,
+              Device,
+              Function,
+              (Value & BIT3) ? L" prefetchable" : L"",
+              Offset - 4,
+              Base,
+              Length));
+
+          /* Intel PCH SMBus can have length of 0x100 only which does not align
+           * with setting UC attribute */
+          if (Length != 0 && Length < 0x1000)
+            Length = 0x1000;
+
+          if (Length != 0 && Base != 0) {
+            if ((Base < SIZE_4GB)) {
+              MemAperture = Mem;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       if (((Value & BIT3) == BIT3)) {
+        //         MemAperture = PMem;
+        //       } else {
+        //         MemAperture = Mem;
+        //       }
+            } else {
+              MemAperture = MemAbove4G;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       if (((Value & BIT3) == BIT3)) {
+        //         MemAperture = PMemAbove4G;
+        //       } else {
+        //         MemAperture = MemAbove4G;
+        //       }
+            }
           } else {
-            MemAperture = MemAbove4G;
+            continue;
           }
+
+        } else if ((Value & (BIT1 | BIT2)) == 0) {
+          //
+          // 32bit
+          //
+          Length = ((~Length) + 1) & 0xffffffff;
+
+          /* Intel PCH SMBus can have length of 0x100 only which does not align
+           * with setting UC attribute */
+          if (Length != 0 && Length < 0x1000)
+            Length = 0x1000;
+
+
+          if ((Value & BIT3) == BIT3) {
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //     MemAperture = PMem;
+            DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 32bit prefetchable BAR@%d %x %x\n",
+              __FUNCTION__,
+              Bus,
+              Device,
+              Function,
+              Offset,
+              Base,
+              Length));
+          } else {
+            MemAperture = Mem;
+            DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 32bit BAR@%d %x %x\n",
+              __FUNCTION__,
+              Bus,
+              Device,
+              Function,
+              Offset,
+              Base,
+              Length));
+          }
+
+        } else {
+            DEBUG ((EFI_D_ERROR, "%a: Not adding PCI %x:%x.%x BAR@%d %x %x to aperature, unsupported BAR type\n",
+              __FUNCTION__,
+              Bus,
+              Device,
+              Function,
+              Offset,
+              Base,
+              Length));
+            continue;
         }
 
         Limit = Base + Length - 1;
@@ -518,11 +586,16 @@ ScanForRootBridges (
           Base = ((UINT32) Pci.Bridge.PrefetchableMemoryBase & 0xfff0) << 16;
           Limit = (((UINT32) Pci.Bridge.PrefetchableMemoryLimit & 0xfff0)
                    << 16) | 0xfffff;
-          MemAperture = &PMem;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //   MemAperture = &PMem;
+          MemAperture = &Mem;
           if (Value == BIT0) {
             Base |= LShiftU64 (Pci.Bridge.PrefetchableBaseUpper32, 32);
             Limit |= LShiftU64 (Pci.Bridge.PrefetchableLimitUpper32, 32);
-            MemAperture = &PMemAbove4G;
+            if (Base > SIZE_4GB)
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       MemAperture = &PMemAbove4G;
+              MemAperture = &MemAbove4G;
           }
           if ((Base > 0) && (Base < Limit)) {
             if (MemAperture->Base > Base) {
@@ -644,7 +717,8 @@ ScanForRootBridges (
                     );
       ASSERT (RootBridges != NULL);
 
-      AdjustRootBridgeResource (&Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G);
+      if (0)
+        AdjustRootBridgeResource (&Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G);
 
       InitRootBridge (
         Attributes, Attributes, 0,

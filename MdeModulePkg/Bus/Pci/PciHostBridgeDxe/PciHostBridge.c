@@ -450,6 +450,7 @@ InitializePciHostBridge (
   BOOLEAN                   ResourceAssigned;
   LIST_ENTRY                *Link;
   UINT64                    HostAddress;
+  UINT64                    MemType;
 
   RootBridges = PciHostBridgeGetRootBridges (&RootBridgeCount);
   if ((RootBridges == NULL) || (RootBridgeCount == 0)) {
@@ -534,6 +535,12 @@ InitializePciHostBridge (
 
     for (MemApertureIndex = 0; MemApertureIndex < ARRAY_SIZE (MemApertures); MemApertureIndex++) {
       if (MemApertures[MemApertureIndex]->Base <= MemApertures[MemApertureIndex]->Limit) {
+        // UC for Memory aperture and WC for Prefetchable aperture
+        if (MemApertureIndex < 1) {
+          MemType = EFI_MEMORY_UC;
+        } else {
+          MemType = EFI_MEMORY_WC;
+        }
         //
         // Base and Limit in PCI_ROOT_BRIDGE_APERTURE are device address.
         // For GCD resource manipulation, we need to use host address.
@@ -545,16 +552,17 @@ InitializePciHostBridge (
         Status = AddMemoryMappedIoSpace (
                    HostAddress,
                    MemApertures[MemApertureIndex]->Limit - MemApertures[MemApertureIndex]->Base + 1,
-                   EFI_MEMORY_UC
+                   MemType
                    );
         ASSERT_EFI_ERROR (Status);
         Status = gDS->SetMemorySpaceAttributes (
                         HostAddress,
                         MemApertures[MemApertureIndex]->Limit - MemApertures[MemApertureIndex]->Base + 1,
-                        EFI_MEMORY_UC
+                        MemType
                         );
         if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_WARN, "PciHostBridge driver failed to set EFI_MEMORY_UC to MMIO aperture - %r.\n", Status));
+          DEBUG ((DEBUG_WARN, "PciHostBridge driver failed to set EFI_MEMORY_%s to MMIO aperture %d - %r.\n",
+                              MemType == EFI_MEMORY_WC ? L"WC" : L"UC", MemApertureIndex, Status));
         }
 
         if (ResourceAssigned) {
