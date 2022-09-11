@@ -38,6 +38,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -81,3 +82,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UsbKbDxeExtra.uni
+
+[Depex]
+  gDasharoUsbDriverPolicyGuid

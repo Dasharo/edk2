@@ -40,6 +40,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdTurnOffUsbLegacySupport  ## CONSUMES
@@ -68,3 +69,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UhciDxeExtra.uni
+
+[Depex]
+  gDasharoUsbDriverPolicyGuid
