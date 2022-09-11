@@ -59,13 +59,15 @@ InitializeBootPolicies (
 
     mNetworkBootPolicy.NetworkBootEnabled = *EfiVar;
 
-    if (mNetworkBootPolicy.NetworkBootEnabled)
+    if (mNetworkBootPolicy.NetworkBootEnabled) {
       gBS->InstallMultipleProtocolInterfaces (
         &ImageHandle,
         &gDasharoNetworkBootPolicyGuid,
         &mNetworkBootPolicy,
         NULL
         );
+      DEBUG ((EFI_D_INFO, "Boot Policy: Enabling network stack\n"));
+    }
   }
 
   Status = GetVariable2 (
@@ -80,13 +82,17 @@ InitializeBootPolicies (
   else
     mUsbStackPolicy.UsbStackEnabled = TRUE; // enable USB by default
 
-    if (mUsbStackPolicy.UsbStackEnabled)
-      gBS->InstallMultipleProtocolInterfaces (
-        &ImageHandle,
-        &gDasharoUsbDriverPolicyGuid,
-        &mUsbStackPolicy,
-        NULL
-        );
+  if (mUsbStackPolicy.UsbStackEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoUsbDriverPolicyGuid,
+      &mUsbStackPolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling USB stack\n"));
+  } else {
+    DEBUG ((EFI_D_INFO, "Boot Policy: Not enabling USB stack\n"));
+  }
 
   Status = GetVariable2 (
              L"UsbMassStorage",
@@ -100,13 +106,17 @@ InitializeBootPolicies (
   else
     mUsbMassStoragePolicy.UsbMassStorageEnabled = TRUE; // enable USB boot by default
 
-    if (mUsbMassStoragePolicy.UsbMassStorageEnabled && mUsbStackPolicy.UsbStackEnabled)
-      gBS->InstallMultipleProtocolInterfaces (
-        &ImageHandle,
-        &gDasharoUsbMassStoragePolicyGuid,
-        &mUsbMassStoragePolicy,
-        NULL
-        );
+  if (mUsbMassStoragePolicy.UsbMassStorageEnabled && mUsbStackPolicy.UsbStackEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoUsbMassStoragePolicyGuid,
+      &mUsbMassStoragePolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling USB Mass Storage\n"));
+  } else {
+    DEBUG ((EFI_D_INFO, "Boot Policy: Not enabling USB Mass Storage\n"));
+  }
 
   return EFI_SUCCESS;
 }
