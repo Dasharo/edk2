@@ -709,8 +709,8 @@
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
+  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 
   #
   # ISA Support
@@ -754,7 +754,7 @@
 !endif
 
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
-  DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
+  DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 !endif
 
   #
