@@ -225,8 +225,8 @@ INF MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-INF MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
+INF MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 
 #
 # Network Support
@@ -285,7 +285,7 @@ INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 !endif
 
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
-  INF DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
+  INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 !endif
 
 #
