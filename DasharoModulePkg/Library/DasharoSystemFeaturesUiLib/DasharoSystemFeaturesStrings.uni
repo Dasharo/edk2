@@ -23,6 +23,9 @@
 #string STR_DASHARO_NETWORKING_OPTIONS_TITLE   #language en-US  "Networking Options"
 #string STR_DASHARO_NETWORKING_OPTIONS_HELP    #language en-US  "Network-related options"
 
+#string STR_DASHARO_USB_CONFIGURATION_TITLE   #language en-US  "USB Configuration"
+#string STR_DASHARO_USB_CONFIGURATION_HELP    #language en-US  "USB-related options"
+
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
 
@@ -31,3 +34,9 @@
 
 #string STR_NETWORK_BOOT_ENABLE_PROMPT   #language en-US  "Enable network boot"
 #string STR_NETWORK_BOOT_ENABLE_HELP     #language en-US  "Enables/disables the iPXE network boot and all NIC drivers"
+
+#string STR_USB_STACK_ENABLE_PROMPT      #language en-US  "Enable USB stack"
+#string STR_USB_STACK_ENABLE_HELP        #language en-US  "Enables/disables the USB drivers. Disabling it means neither USB keyboard nor storage will work"
+
+#string STR_USB_MASS_STORAGE_ENABLE_PROMPT   #language en-US  "Enable USB Mass Storage driver"
+#string STR_USB_MASS_STORAGE_ENABLE_HELP     #language en-US  "Enables/disables the USB Mass Storage driver. When disabled, booting from USB will not work, but USB keyboard still will"
