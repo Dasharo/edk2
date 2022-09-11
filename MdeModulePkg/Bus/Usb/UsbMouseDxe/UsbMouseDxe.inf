@@ -43,6 +43,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -64,3 +65,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UsbMouseDxeExtra.uni
+
+[Depex]
+  gDasharoUsbDriverPolicyGuid
