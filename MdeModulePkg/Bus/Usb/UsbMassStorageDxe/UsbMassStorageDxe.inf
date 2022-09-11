@@ -55,6 +55,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -79,3 +80,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UsbMassStorageDxeExtra.uni
+
+[Depex]
+  gDasharoUsbDriverPolicyGuid AND gDasharoUsbMassStoragePolicyGuid
