@@ -15,6 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #define DASHARO_SYSTEM_FEATURES_FORM_ID    0x1000
 #define DASHARO_SECURITY_OPTIONS_FORM_ID   0x1001
 #define DASHARO_NETWORK_OPTIONS_FORM_ID    0x1002
+#define DASHARO_USB_CONFIGURATION_FORM_ID  0x1003
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID  0x0001
 
@@ -22,10 +23,14 @@ typedef struct {
   BOOLEAN LockBios;
   BOOLEAN SmmBwp;
   BOOLEAN NetworkBoot;
+  BOOLEAN UsbStack;
+  BOOLEAN UsbMassStorage;
 } DASHARO_FEATURES_DATA;
 
 #define LOCK_BIOS_QUESTION_ID              0x8000
 #define NETWORK_BOOT_QUESTION_ID           0x8001
+#define USB_STACK_QUESTION_ID              0x8002
+#define USB_MASS_STORAGE_QUESTION_ID       0x8003
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 
