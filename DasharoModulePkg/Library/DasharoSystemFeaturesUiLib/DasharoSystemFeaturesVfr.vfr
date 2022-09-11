@@ -30,6 +30,9 @@ formset
          prompt = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_TITLE),
          help   = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_HELP);
 
+    goto DASHARO_USB_CONFIGURATION_FORM_ID,
+         prompt = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_TITLE),
+         help   = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_HELP);
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -73,4 +76,30 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
   endform;
+
+  form formid = DASHARO_USB_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    checkbox name = UsbStack,
+             varid  = FeaturesData.UsbStack,
+             prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
+             help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
+             flags  = INTERACTIVE,
+    endcheckbox;
+
+    suppressif  questionref(UsbStack) == FALSE;
+      checkbox varid  = FeaturesData.UsbMassStorage,
+               prompt = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_PROMPT),
+               help   = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_HELP),
+               flags  = INTERACTIVE,
+      endcheckbox;
+    endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
 endformset;

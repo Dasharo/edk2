@@ -761,9 +761,7 @@
   }
 !endif
 
-!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
-  DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
-!endif
+  DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
   #
   # Random Number Generator
