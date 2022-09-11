@@ -294,7 +294,7 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 !endif
 
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
-  INF DasharoModulePkg/NetworkBootPolicy/NetworkBootPolicy.inf
+  INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 !endif
 
 #
