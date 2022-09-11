@@ -8,11 +8,11 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = NetworkBootPolicy
+  BASE_NAME                      = DasharoBootPolicies
   FILE_GUID                      = ca90493e-1a22-4d09-9c78-3894507eb646
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = NetworkBootPolicyEntryPoint
+  ENTRY_POINT                    = InitializeBootPolicies
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -21,7 +21,7 @@
 #
 
 [Sources.common]
-  NetworkBootPolicy.c
+  BootPolicies.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -39,6 +39,8 @@
 
 [Protocols]
   gDasharoNetworkBootPolicyGuid        ### PROVIDES
+  gDasharoUsbDriverPolicyGuid          ### PROVIDES
+  gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
 
 [Depex]
   gEfiVariableArchProtocolGuid
