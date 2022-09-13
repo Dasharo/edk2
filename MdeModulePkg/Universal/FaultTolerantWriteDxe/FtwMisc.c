@@ -574,6 +574,7 @@ FlushSpareBlockToWorkingBlock (
   // Allocate a memory buffer
   //
   Length = FtwDevice->SpareAreaLength;
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   Buffer  = AllocatePool (Length);
   if (Buffer == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -586,6 +587,7 @@ FlushSpareBlockToWorkingBlock (
   //                            WorkingBlockValid);
   // To skip Signature and Crc: sizeof(EFI_GUID)+sizeof(UINT32).
   //
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   FtwUpdateFvState (
     FtwDevice->FtwBackupFvb,
     FtwDevice->SpareBlockSize,
@@ -597,6 +599,7 @@ FlushSpareBlockToWorkingBlock (
   // Read from spare block to memory buffer
   //
   Ptr = Buffer;
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   for (Index = 0; Index < FtwDevice->NumberOfSpareBlock; Index += 1) {
     Count = FtwDevice->SpareBlockSize;
     Status = FtwDevice->FtwBackupFvb->Read (
@@ -631,6 +634,7 @@ FlushSpareBlockToWorkingBlock (
   // So hardcode offset as sizeof(EFI_GUID)+sizeof(UINT32) to
   // skip Signature and Crc.
   //
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   Status = FtwUpdateFvState (
             FtwDevice->FtwFvBlock,
             FtwDevice->WorkBlockSize,
@@ -648,6 +652,7 @@ FlushSpareBlockToWorkingBlock (
   //
   // Erase the working block
   //
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   Status = FtwEraseBlock (FtwDevice, FtwDevice->FtwFvBlock, FtwDevice->FtwWorkBlockLba, FtwDevice->NumberOfWorkBlock);
   if (EFI_ERROR (Status)) {
     FreePool (Buffer);
@@ -657,6 +662,7 @@ FlushSpareBlockToWorkingBlock (
   // Write memory buffer to working block, using the FvBlock protocol interface
   //
   Ptr = Buffer;
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   for (Index = 0; Index < FtwDevice->NumberOfWorkBlock; Index += 1) {
     Count = FtwDevice->WorkBlockSize;
     Status = FtwDevice->FtwFvBlock->Write (
@@ -677,6 +683,7 @@ FlushSpareBlockToWorkingBlock (
   //
   // Since the memory buffer will not be used, free memory Buffer.
   //
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   FreePool (Buffer);
 
   //
@@ -685,6 +692,7 @@ FlushSpareBlockToWorkingBlock (
   // Offset = OFFSET_OF(EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER, WorkingBlockValid);
   // So hardcode offset as sizeof(EFI_GUID)+sizeof(UINT32) to skip Signature and Crc.
   //
+  DEBUG ((EFI_D_INFO, "%s: line: %d\n", __FUNCTION__,  __LINE__));
   Status = FtwUpdateFvState (
             FtwDevice->FtwFvBlock,
             FtwDevice->WorkBlockSize,
