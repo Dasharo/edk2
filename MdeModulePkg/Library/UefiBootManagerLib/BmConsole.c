@@ -84,8 +84,7 @@ BmGetVideoController (
                           sizeof (Pci) / sizeof (UINT32),
                           &Pci
                           );
-        if (!EFI_ERROR (Status) && IS_PCI_VGA (&Pci)) {
-          // TODO: use IS_PCI_DISPLAY??
+        if (!EFI_ERROR (Status) && IS_PCI_DISPLAY (&Pci)) {
           VideoController = HandleBuffer[Index];
           break;
         }
