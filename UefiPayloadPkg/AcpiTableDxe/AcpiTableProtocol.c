@@ -624,7 +624,7 @@ AddTableToList (
       //
       // Save a pointer to the table
       //
-      AcpiTableInstance->Fadt3 = (EFI_ACPI_3_0_FIXED_ACPI_DESCRIPTION_TABLE *) CurrentTableList->Table;
+      AcpiTableInstance->Fadt3 = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *) CurrentTableList->Table;
 
       //
       // Update pointers in FADT.  If tables don't exist this will put NULL pointers there.
@@ -769,7 +769,7 @@ AddTableToList (
       //
       // Save a pointer to the table
       //
-      AcpiTableInstance->Facs3 = (EFI_ACPI_3_0_FIRMWARE_ACPI_CONTROL_STRUCTURE *) CurrentTableList->Table;
+      AcpiTableInstance->Facs3 = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) CurrentTableList->Table;
 
       //
       // If FADT already exists, update table pointers.
@@ -1780,10 +1780,25 @@ AcpiTableAcpiTableConstructor (
         if (TableHeader != NULL) {
           if (TableHeader->Signature == EFI_ACPI_1_0_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE) {
             Fadt = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *) TableHeader;
-            if ((VOID *)(UINTN)Fadt->Dsdt != NULL) {
+            AcpiTableInstance->Fadt3 = Fadt;
+            if ((VOID *)(UINTN)Fadt->XDsdt != NULL &&
+                *(UINT32 *)(UINTN)Fadt->XDsdt == EFI_ACPI_1_0_DIFFERENTIATED_SYSTEM_DESCRIPTION_TABLE_SIGNATURE) {
+              AcpiTableInstance->Dsdt3 = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) Fadt->Dsdt;
+            } else if ((VOID *)(UINTN)Fadt->Dsdt != NULL &&
+                       *(UINT32 *)(UINTN)Fadt->Dsdt == EFI_ACPI_1_0_DIFFERENTIATED_SYSTEM_DESCRIPTION_TABLE_SIGNATURE) {
               AcpiTableInstance->Dsdt3 = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) Fadt->Dsdt;
             } else {
               DEBUG((DEBUG_ERROR, "DSDT not found\n"));
+              return EFI_NOT_FOUND;
+            }
+            if ((VOID *)(UINTN)Fadt->XFirmwareCtrl != NULL &&
+                *(UINT32 *)(UINTN)Fadt->XFirmwareCtrl == EFI_ACPI_1_0_FIRMWARE_ACPI_CONTROL_STRUCTURE_SIGNATURE) {
+              AcpiTableInstance->Facs3 = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) Fadt->XFirmwareCtrl;
+            } else if ((VOID *)(UINTN)Fadt->FirmwareCtrl != NULL &&
+                       *(UINT32 *)(UINTN)Fadt->XFirmwareCtrl == EFI_ACPI_1_0_FIRMWARE_ACPI_CONTROL_STRUCTURE_SIGNATURE) {
+              AcpiTableInstance->Facs3 = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) Fadt->FirmwareCtrl;
+            } else {
+              DEBUG((DEBUG_ERROR, "FACS not found\n"));
               return EFI_NOT_FOUND;
             }
           }
@@ -1791,6 +1806,8 @@ AcpiTableAcpiTableConstructor (
           if (EFI_ERROR (Status)) {
             DEBUG((DEBUG_ERROR, "Failed to install ACPI table at %p\n", TableHeader));
             return Status;
+          } else {
+            DEBUG((DEBUG_INFO, "Installed ACPI table 0x%x\n", TableHeader->Signature));
           }
         } else {
           AcpiTableInstance->NumberOfTableEntries3 = Idx;
@@ -1805,12 +1822,12 @@ AcpiTableAcpiTableConstructor (
   }
 
   for (Address = (VOID *)0xe0000; Address < (VOID *)0xfffff; Address += 16) {
-		Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *) Address;
-		if (Rsdp->Signature == EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER_SIGNATURE) {
+    Rsdp = (EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER *) Address;
+    if (Rsdp->Signature == EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER_SIGNATURE) {
       ZeroMem((VOID *) Rsdp, Rsdp->Length);
-			break;
+      break;
     }
-	}
+  }
 
   Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, AcpiTableInstance->Rsdp3);
 
