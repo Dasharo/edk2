@@ -152,79 +152,6 @@ PlatformRegisterFvBootOption (
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
 
-STATIC
-EFI_STATUS
-VisitAllInstancesOfProtocol (
-  IN EFI_GUID                    *Id,
-  IN PROTOCOL_INSTANCE_CALLBACK  CallBackFunction,
-  IN VOID                        *Context
-  )
-{
-  EFI_STATUS                Status;
-  UINTN                     HandleCount;
-  EFI_HANDLE                *HandleBuffer;
-  UINTN                     Index;
-  VOID                      *Instance;
-
-  //
-  // Start to check all the PciIo to find all possible device
-  //
-  HandleCount = 0;
-  HandleBuffer = NULL;
-  Status = gBS->LocateHandleBuffer (
-                  ByProtocol,
-                  Id,
-                  NULL,
-                  &HandleCount,
-                  &HandleBuffer
-                  );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  for (Index = 0; Index < HandleCount; Index++) {
-    Status = gBS->HandleProtocol (HandleBuffer[Index], Id, &Instance);
-    if (EFI_ERROR (Status)) {
-      continue;
-    }
-
-    Status = (*CallBackFunction) (
-               HandleBuffer[Index],
-               Instance,
-               Context
-               );
-  }
-
-  gBS->FreePool (HandleBuffer);
-
-  return EFI_SUCCESS;
-}
-
-STATIC
-EFI_STATUS
-EFIAPI
-ConnectRootBridge (
-  IN EFI_HANDLE  RootBridgeHandle,
-  IN VOID        *Instance,
-  IN VOID        *Context
-  )
-{
-  EFI_STATUS Status;
-
-  //
-  // Make the PCI bus driver connect the root bridge, non-recursively. This
-  // will produce a number of child handles with PciIo on them.
-  //
-  Status = gBS->ConnectController (
-                  RootBridgeHandle, // ControllerHandle
-                  NULL,             // DriverImageHandle
-                  NULL,             // RemainingDevicePath -- produce all
-                                    //   children
-                  FALSE             // Recursive
-                  );
-  return Status;
-}
-
 EFI_DEVICE_PATH *
 FvFilePath (
   EFI_GUID                     *FileGuid
@@ -367,6 +294,207 @@ GetBootManagerMenuAppOption (
   return OptionNumber;
 }
 
+
+/**
+  Check if the handle satisfies a particular condition.
+
+  @param[in] Handle      The handle to check.
+  @param[in] ReportText  A caller-allocated string passed in for reporting
+                         purposes. It must never be NULL.
+
+  @retval TRUE   The condition is satisfied.
+  @retval FALSE  Otherwise. This includes the case when the condition could not
+                 be fully evaluated due to an error.
+**/
+typedef
+BOOLEAN
+(EFIAPI *FILTER_FUNCTION) (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  );
+
+
+/**
+  Process a handle.
+
+  @param[in] Handle      The handle to process.
+  @param[in] ReportText  A caller-allocated string passed in for reporting
+                         purposes. It must never be NULL.
+**/
+typedef
+VOID
+(EFIAPI *CALLBACK_FUNCTION)  (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  );
+
+/**
+  Locate all handles that carry the specified protocol, filter them with a
+  callback function, and pass each handle that passes the filter to another
+  callback.
+
+  @param[in] ProtocolGuid  The protocol to look for.
+
+  @param[in] Filter        The filter function to pass each handle to. If this
+                           parameter is NULL, then all handles are processed.
+
+  @param[in] Process       The callback function to pass each handle to that
+                           clears the filter.
+**/
+STATIC
+VOID
+FilterAndProcess (
+  IN EFI_GUID          *ProtocolGuid,
+  IN FILTER_FUNCTION   Filter         OPTIONAL,
+  IN CALLBACK_FUNCTION Process
+  )
+{
+  EFI_STATUS Status;
+  EFI_HANDLE *Handles;
+  UINTN      NoHandles;
+  UINTN      Idx;
+
+  Status = gBS->LocateHandleBuffer (ByProtocol, ProtocolGuid,
+                  NULL /* SearchKey */, &NoHandles, &Handles);
+  if (EFI_ERROR (Status)) {
+    //
+    // This is not an error, just an informative condition.
+    //
+    DEBUG ((EFI_D_VERBOSE, "%a: %g: %r\n", __FUNCTION__, ProtocolGuid,
+      Status));
+    return;
+  }
+
+  ASSERT (NoHandles > 0);
+  for (Idx = 0; Idx < NoHandles; ++Idx) {
+    CHAR16        *DevicePathText;
+    STATIC CHAR16 Fallback[] = L"<device path unavailable>";
+
+    //
+    // The ConvertDevicePathToText() function handles NULL input transparently.
+    //
+    DevicePathText = ConvertDevicePathToText (
+                       DevicePathFromHandle (Handles[Idx]),
+                       FALSE, // DisplayOnly
+                       FALSE  // AllowShortcuts
+                       );
+    if (DevicePathText == NULL) {
+      DevicePathText = Fallback;
+    }
+
+    if (Filter == NULL || Filter (Handles[Idx], DevicePathText)) {
+      Process (Handles[Idx], DevicePathText);
+    }
+
+    if (DevicePathText != Fallback) {
+      FreePool (DevicePathText);
+    }
+  }
+  gBS->FreePool (Handles);
+}
+
+
+/**
+  This FILTER_FUNCTION checks if a handle corresponds to a PCI display device.
+**/
+STATIC
+BOOLEAN
+EFIAPI
+IsPciDisplay (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  )
+{
+  EFI_STATUS          Status;
+  EFI_PCI_IO_PROTOCOL *PciIo;
+  PCI_TYPE00          Pci;
+
+  Status = gBS->HandleProtocol (Handle, &gEfiPciIoProtocolGuid,
+                  (VOID**)&PciIo);
+  if (EFI_ERROR (Status)) {
+    //
+    // This is not an error worth reporting.
+    //
+    return FALSE;
+  }
+
+  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint32, 0 /* Offset */,
+                        sizeof Pci / sizeof (UINT32), &Pci);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: %s: %r\n", __FUNCTION__, ReportText, Status));
+    return FALSE;
+  }
+
+  return IS_PCI_DISPLAY (&Pci);
+}
+
+
+/**
+  This CALLBACK_FUNCTION attempts to connect a handle non-recursively, asking
+  the matching driver to produce all first-level child handles.
+**/
+STATIC
+VOID
+EFIAPI
+Connect (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gBS->ConnectController (
+                  Handle, // ControllerHandle
+                  NULL,   // DriverImageHandle
+                  NULL,   // RemainingDevicePath -- produce all children
+                  FALSE   // Recursive
+                  );
+  DEBUG ((EFI_ERROR (Status) ? EFI_D_ERROR : EFI_D_VERBOSE, "%a: %s: %r\n",
+    __FUNCTION__, ReportText, Status));
+}
+
+
+/**
+  This CALLBACK_FUNCTION retrieves the EFI_DEVICE_PATH_PROTOCOL from the
+  handle, and adds it to ConOut and ErrOut.
+**/
+STATIC
+VOID
+EFIAPI
+AddOutput (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  )
+{
+  EFI_STATUS               Status;
+  EFI_DEVICE_PATH_PROTOCOL *DevicePath;
+
+  DevicePath = DevicePathFromHandle (Handle);
+  if (DevicePath == NULL) {
+    DEBUG ((EFI_D_ERROR, "%a: %s: handle %p: device path not found\n",
+      __FUNCTION__, ReportText, Handle));
+    return;
+  }
+
+  Status = EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: %s: adding to ConOut: %r\n", __FUNCTION__,
+      ReportText, Status));
+    return;
+  }
+
+  Status = EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: %s: adding to ErrOut: %r\n", __FUNCTION__,
+      ReportText, Status));
+    return;
+  }
+
+  DEBUG ((EFI_D_VERBOSE, "%a: %s: added to ConOut and ErrOut\n", __FUNCTION__,
+    ReportText));
+}
+
+
 /**
   Do the platform specific action before the console is connected.
 
@@ -386,11 +514,6 @@ PlatformBootManagerBeforeConsole (
   EFI_INPUT_KEY                  F12;
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
   UINTN                          OptionNumber;
-
-  VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
-    ConnectRootBridge, NULL);
-
-  PlatformConsoleInit ();
 
   //
   // Register ENTER as CONTINUE key
@@ -424,6 +547,32 @@ PlatformBootManagerBeforeConsole (
   // Dispatch deferred images after EndOfDxe event and ReadyToLock installation.
   //
   EfiBootManagerDispatchDeferredImages ();
+
+  //
+  // Locate the PCI root bridges and make the PCI bus driver connect each,
+  // non-recursively. This will produce a number of child handles with PciIo on
+  // them.
+  //
+  FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
+
+  //
+  // PCI initialization from above should be sufficient for the discovery and
+  // processing of consoles.
+  //
+  PlatformConsoleInit ();
+
+  //
+  // Find all display class PCI devices (using the handles from the previous
+  // step), and connect them non-recursively. This should produce a number of
+  // child handles with GOPs on them.
+  //
+  FilterAndProcess (&gEfiPciIoProtocolGuid, IsPciDisplay, Connect);
+
+  //
+  // Now add the device path of all handles with GOP on them to ConOut and
+  // ErrOut.
+  //
+  FilterAndProcess (&gEfiGraphicsOutputProtocolGuid, NULL, AddOutput);
 }
 
 CHAR16*
@@ -674,6 +823,12 @@ PlatformBootManagerWaitCallback (
     (Timeout - TimeoutRemain) * 100 / Timeout,
     0
     );
+
+  if (TimeoutRemain == 0) {
+    gBS->Stall (100 * 1000);
+    gST->ConOut->ClearScreen (gST->ConOut);
+    BootLogoEnableLogo ();
+  }
 }
 
 /**
