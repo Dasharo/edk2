@@ -394,8 +394,6 @@ PlatformBootManagerBeforeConsole (
   VisitAllInstancesOfProtocol (&gEfiPciRootBridgeIoProtocolGuid,
     ConnectRootBridge, NULL);
 
-  PlatformConsoleInit ();
-
   //
   // Register ENTER as CONTINUE key
   //
@@ -427,6 +425,8 @@ PlatformBootManagerBeforeConsole (
   // Dispatch deferred images after EndOfDxe event and ReadyToLock installation.
   //
   EfiBootManagerDispatchDeferredImages ();
+
+  PlatformConsoleInit ();
 }
 
 CHAR16*
