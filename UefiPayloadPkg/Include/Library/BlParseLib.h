@@ -186,7 +186,7 @@ ParseVBootWorkbuf (
   );
 
 /**
-  Parse the coreboto timestamps
+  Parse the coreboot timestamps
 
   @retval RETURN_SUCCESS     Successfully find the timestamps information.
   @retval RETURN_NOT_FOUND   Failed to find the tiemstamps information .
