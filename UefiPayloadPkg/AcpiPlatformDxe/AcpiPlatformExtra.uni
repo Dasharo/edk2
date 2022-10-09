@@ -1,5 +1,5 @@
 // /** @file
-// AcpiTableDxe Localized Strings and Content
+// AcpiPlatform Localized Strings and Content
 //
 // Copyright (c) 2013 - 2018, Intel Corporation. All rights reserved.<BR>
 //
@@ -9,6 +9,6 @@
 
 #string STR_PROPERTIES_MODULE_NAME
 #language en-US
-"ACPI Table DXE Driver"
+"ACPI Platform Sample DXE Driver"
 
 
