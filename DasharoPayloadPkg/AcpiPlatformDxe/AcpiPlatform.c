@@ -33,12 +33,13 @@ EFI_STATUS
 EFIAPI
 InstallTablesFromXsdt (
   IN  EFI_ACPI_DESCRIPTION_HEADER   *Xsdt,
-  IN  UINTN                         *TableHandle,
-  OUT EFI_ACPI_DESCRIPTION_HEADER   *DsdtTable
+  IN  UINTN                         *TableHandle
   )
 {
   EFI_STATUS                                      Status;
   EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE       *FadtTable;
+  EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE    *FacsTable;
+  EFI_ACPI_DESCRIPTION_HEADER                     *DsdtTable;
   VOID                                            *CurrentTableEntry;
   UINTN                                           CurrentTablePointer;
   EFI_ACPI_DESCRIPTION_HEADER                     *CurrentTable;
@@ -67,6 +68,48 @@ InstallTablesFromXsdt (
     CurrentTable = (EFI_ACPI_DESCRIPTION_HEADER *) CurrentTablePointer;
 
     //
+    // Get the FACS and DSDT table address from the table FADT
+    //
+    if (!AsciiStrnCmp ((CHAR8 *) &CurrentTable->Signature, "FACP", 4)) {
+      FadtTable = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *)
+                    (UINTN) CurrentTablePointer;
+      DsdtTable  = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) FadtTable->XDsdt;
+      FacsTable = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) FadtTable->XFirmwareCtrl;
+
+      if (!AsciiStrnCmp ((CHAR8 *) &DsdtTable->Signature, "DSDT", 4)) {
+        //
+        // Install DSDT table.
+        //
+        Status = mAcpiProtocol->InstallAcpiTable (
+                     mAcpiProtocol,
+                     DsdtTable,
+                     DsdtTable->Length,
+                     TableHandle
+                     );
+        ASSERT_EFI_ERROR (Status);
+      } else {
+        DEBUG((DEBUG_ERROR, "DSDT not found\n"));
+        ASSERT_EFI_ERROR (Status);
+      }
+
+      if (!AsciiStrnCmp ((CHAR8 *) &FacsTable->Signature, "FACS", 4)) {
+        //
+        // Install the FACS tables
+        //
+        Status = mAcpiProtocol->InstallAcpiTable (
+                   mAcpiProtocol,
+                   FacsTable,
+                   FacsTable->Length,
+                   TableHandle
+                   );
+        ASSERT_EFI_ERROR (Status);
+      } else {
+        DEBUG((DEBUG_ERROR, "FACS not found\n"));
+        ASSERT_EFI_ERROR (Status);
+      }
+    }
+
+    //
     // Install the XSDT tables
     //
     Status = mAcpiProtocol->InstallAcpiTable (
@@ -79,15 +122,6 @@ InstallTablesFromXsdt (
     if (EFI_ERROR (Status)) {
       return Status;
     }
-
-    //
-    // Get the FACS and DSDT table address from the table FADT
-    //
-    if (!AsciiStrnCmp ((CHAR8 *) &CurrentTable->Signature, "FACP", 4)) {
-      FadtTable = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *)
-                    (UINTN) CurrentTablePointer;
-      DsdtTable  = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) FadtTable->XDsdt;
-    }
   }
 
   return Status;
@@ -98,12 +132,13 @@ EFI_STATUS
 EFIAPI
 InstallTablesFromRsdt (
   IN  EFI_ACPI_DESCRIPTION_HEADER   *Rsdt,
-  IN  UINTN                         *TableHandle,
-  OUT EFI_ACPI_DESCRIPTION_HEADER   *DsdtTable
+  IN  UINTN                         *TableHandle
   )
 {
   EFI_STATUS                                      Status;
   EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE       *FadtTable;
+  EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE    *FacsTable;
+  EFI_ACPI_DESCRIPTION_HEADER                     *DsdtTable;
   VOID                                            *CurrentTableEntry;
   UINTN                                           CurrentTablePointer;
   EFI_ACPI_DESCRIPTION_HEADER                     *CurrentTable;
@@ -132,6 +167,47 @@ InstallTablesFromRsdt (
     CurrentTable = (EFI_ACPI_DESCRIPTION_HEADER *) CurrentTablePointer;
 
     //
+    // Get the FACS and DSDT table address from the table FADT
+    //
+    if (!AsciiStrnCmp ((CHAR8 *) &CurrentTable->Signature, "FACP", 4)) {
+      FadtTable = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *)
+                    (UINTN) CurrentTablePointer;
+      DsdtTable  = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) FadtTable->Dsdt;
+      FacsTable = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) FadtTable->FirmwareCtrl;
+
+      if (!AsciiStrnCmp ((CHAR8 *) &DsdtTable->Signature, "DSDT", 4)) {
+        //
+        // Install DSDT table.
+        //
+        Status = mAcpiProtocol->InstallAcpiTable (
+                     mAcpiProtocol,
+                     DsdtTable,
+                     DsdtTable->Length,
+                     TableHandle
+                     );
+        ASSERT_EFI_ERROR (Status);
+      } else {
+        DEBUG((DEBUG_ERROR, "DSDT not found\n"));
+        ASSERT_EFI_ERROR (Status);
+      }
+
+      if (!AsciiStrnCmp ((CHAR8 *) &FacsTable->Signature, "FACS", 4)) {
+        //
+        // Install the FACS tables
+        //
+        Status = mAcpiProtocol->InstallAcpiTable (
+                   mAcpiProtocol,
+                   FacsTable,
+                   FacsTable->Length,
+                   TableHandle
+                   );
+        ASSERT_EFI_ERROR (Status);
+      } else {
+        DEBUG((DEBUG_ERROR, "FACS not found\n"));
+        ASSERT_EFI_ERROR (Status);
+      }
+    }
+    //
     // Install the RSDT tables
     //
     Status = mAcpiProtocol->InstallAcpiTable (
@@ -143,15 +219,6 @@ InstallTablesFromRsdt (
 
     if (EFI_ERROR (Status)) {
       return Status;
-    }
-
-    //
-    // Get the FACS and DSDT table address from the table FADT
-    //
-    if (!AsciiStrnCmp ((CHAR8 *) &CurrentTable->Signature, "FACP", 4)) {
-      FadtTable = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *)
-                    (UINTN) CurrentTablePointer;
-      DsdtTable  = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) FadtTable->Dsdt;
     }
   }
 
@@ -389,7 +456,6 @@ AcpiPlatformEntryPoint (
   EFI_HOB_GUID_TYPE                               *GuidHob;
   EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER    *Rsdp;
   SYSTEM_TABLE_INFO                               *SystemTableInfo;
-  EFI_ACPI_DESCRIPTION_HEADER                     *DsdtTable;
   UINTN                                           TableHandle;
   EFI_EVENT                                       EndOfDxeEvent;
 
@@ -424,7 +490,7 @@ AcpiPlatformEntryPoint (
   //
   if (Rsdp->XsdtAddress) {
     Status = InstallTablesFromXsdt ((EFI_ACPI_DESCRIPTION_HEADER *)(UINTN)Rsdp->XsdtAddress,
-                                    &TableHandle, DsdtTable);
+                                    &TableHandle);
     if (EFI_ERROR (Status)) {
       DEBUG((DEBUG_ERROR, "Failed to install ACPI tables from XSDT\n"));
       return Status;
@@ -433,7 +499,7 @@ AcpiPlatformEntryPoint (
     DEBUG((DEBUG_ERROR, "XSDT not found, trying RSDT\n"));
     if (Rsdp->RsdtAddress) {
       Status = InstallTablesFromRsdt ((EFI_ACPI_DESCRIPTION_HEADER *)(UINTN)Rsdp->RsdtAddress,
-                                      &TableHandle, DsdtTable);
+                                      &TableHandle);
       if (EFI_ERROR (Status)) {
         DEBUG((DEBUG_ERROR, "Failed to install ACPI tables from RSDT\n"));
         return Status;
@@ -442,25 +508,6 @@ AcpiPlatformEntryPoint (
       DEBUG((DEBUG_ERROR, "RSDT not found. Failed to install ACPI tables\n"));
       ASSERT_EFI_ERROR (Status);
     }
-  }
-
-  if (!AsciiStrnCmp ((CHAR8 *) &DsdtTable->Signature, "DSDT", 4)) {
-    //
-    // Install DSDT table.
-    //
-    Status = mAcpiProtocol->InstallAcpiTable (
-                 mAcpiProtocol,
-                 DsdtTable,
-                 DsdtTable->Length,
-                 &TableHandle
-                 );
-
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  } else {
-    DEBUG((DEBUG_ERROR, "DSDT not found\n"));
-    ASSERT_EFI_ERROR (Status);
   }
 
   //
