@@ -385,7 +385,7 @@ FilterAndProcess (
     if (DevicePathText == NULL) {
       DevicePathText = Fallback;
     }
-
+    DEBUG ((EFI_D_VERBOSE, "%a: Processing %s: %r\n", __FUNCTION__, DevicePathText));
     if (Filter == NULL || Filter (Handles[Idx], DevicePathText)) {
       Process (Handles[Idx], DevicePathText);
     }
@@ -453,7 +453,7 @@ Connect (
                   NULL,   // RemainingDevicePath -- produce all children
                   FALSE   // Recursive
                   );
-  DEBUG ((EFI_ERROR (Status) ? EFI_D_ERROR : EFI_D_VERBOSE, "%a: %s: %r\n",
+  DEBUG ((EFI_ERROR (Status) ? EFI_D_ERROR : EFI_D_INFO, "%a: %s: %r\n",
     __FUNCTION__, ReportText, Status));
 }
 
@@ -472,6 +472,10 @@ AddOutput (
 {
   EFI_STATUS               Status;
   EFI_DEVICE_PATH_PROTOCOL *DevicePath;
+
+  if (ReportText != NULL) {
+        DEBUG ((EFI_D_VERBOSE, "%a: Adding output %s: %r\n", __FUNCTION__, ReportText));
+  }
 
   DevicePath = DevicePathFromHandle (Handle);
   if (DevicePath == NULL) {
@@ -759,13 +763,12 @@ PlatformBootManagerAfterConsole (
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
 
+  EfiBootManagerConnectAll ();
   gST->ConOut->ClearScreen (gST->ConOut);
   BootLogoEnableLogo ();
 
   // FIXME: USB devices are not being detected unless we wait a bit.
   gBS->Stall (100 * 1000);
-
-  EfiBootManagerConnectAll ();
   EfiBootManagerRefreshAllBootOption ();
 
   WarnIfRecoveryBoot ();
