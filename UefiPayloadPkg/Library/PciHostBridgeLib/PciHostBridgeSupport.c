@@ -7,6 +7,7 @@
 
 **/
 
+#include <Base.h>
 #include <PiDxe.h>
 #include <IndustryStandard/Pci.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
@@ -316,7 +317,7 @@ PcatPciRootBridgeParseBars (
           }
 
           if (Length != 0 && Base != 0) {
-            if ((Base + Length - 1 < 0x100000000ULL)) {
+            if ((Base < SIZE_4GB)) {
               if (((Value & BIT3) == BIT3)) {
                 MemAperture = PMem;
               } else {
@@ -573,7 +574,8 @@ ScanForRootBridges (
           if (Value == BIT0) {
             Base |= LShiftU64 (Pci.Bridge.PrefetchableBaseUpper32, 32);
             Limit |= LShiftU64 (Pci.Bridge.PrefetchableLimitUpper32, 32);
-            MemAperture = &PMemAbove4G;
+            if (Base > SIZE_4GB)
+              MemAperture = &PMemAbove4G;
           }
           if ((Base > 0) && (Base < Limit)) {
             if (MemAperture->Base > Base) {
