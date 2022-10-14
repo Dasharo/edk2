@@ -94,6 +94,7 @@
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
+  DEFINE DISABLE_MTRR_PROGRAMMING       = TRUE
 
   #
   # Network definition
@@ -212,7 +213,7 @@
   # CPU
   #
 
-!if $(BOOTLOADER) == "COREBOOT"
+!if $(BOOTLOADER) == "COREBOOT" && $(DISABLE_MTRR_PROGRAMMING) == TRUE
   MtrrLib|UefiPayloadPkg/Library/MtrrLibNull/MtrrLibNull.inf
 !else
   MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
