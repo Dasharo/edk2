@@ -266,7 +266,7 @@ BlSMMSTOREInitialise (
   // Finally mark the SMM communication buffer provided by CB or SBL as runtime memory
   //
   Status      = gDS->GetMemorySpaceDescriptor (SMMStoreInfoHob->ComBuffer, &GcdDescriptor);
-  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeReserved) {
+  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType == EfiGcdMemoryTypeNonExistent) {
     DEBUG((EFI_D_INFO, "%a: No memory space descriptor for com buffer found\n",
       __FUNCTION__));
 
@@ -278,7 +278,9 @@ BlSMMSTOREInitialise (
         SMMStoreInfoHob->ComBuffer, SMMStoreInfoHob->ComBufferSize,
         EFI_MEMORY_WB | EFI_MEMORY_RUNTIME
         );
-    ASSERT_EFI_ERROR (Status);
+    if (EFI_ERROR (Status))
+      DEBUG((EFI_D_ERROR, "%a: Failed to add  memory space for com buffer (%r)\n",
+             __FUNCTION__, Status));
   }
 
   //
@@ -289,7 +291,9 @@ BlSMMSTOREInitialise (
                   SMMStoreInfoHob->ComBufferSize,
                   EFI_MEMORY_RUNTIME
                   );
-  ASSERT_EFI_ERROR (Status);
+  if (EFI_ERROR (Status))
+    DEBUG((EFI_D_ERROR, "%a: Failed to mark com buffer as Runtime Service memory (%r)\n",
+           __FUNCTION__, Status));
 
   if (!SMMStoreInfoHob->MmioAddress)
     return Status;
@@ -298,8 +302,8 @@ BlSMMSTOREInitialise (
   // Mark the memory mapped store as MMIO memory
   //
   Status      = gDS->GetMemorySpaceDescriptor (SMMStoreInfoHob->MmioAddress, &GcdDescriptor);
-  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType != EfiGcdMemoryTypeMemoryMappedIo) {
-    DEBUG((EFI_D_INFO, "%a: No memory space descriptor for com buffer found\n",
+  if (EFI_ERROR (Status) || GcdDescriptor.GcdMemoryType == EfiGcdMemoryTypeNonExistent) {
+    DEBUG((EFI_D_INFO, "%a: No memory space descriptor for MMIO found\n",
       __FUNCTION__));
 
     //
@@ -311,7 +315,9 @@ BlSMMSTOREInitialise (
         SMMStoreInfoHob->NumBlocks * SMMStoreInfoHob->BlockSize,
         EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
         );
-    ASSERT_EFI_ERROR (Status);
+    if (EFI_ERROR (Status))
+      DEBUG((EFI_D_ERROR, "%a: Failed to add  memory space for MMIO (%r)\n",
+             __FUNCTION__, Status));
   }
 
   //
@@ -322,7 +328,10 @@ BlSMMSTOREInitialise (
                   SMMStoreInfoHob->NumBlocks * SMMStoreInfoHob->BlockSize,
                   EFI_MEMORY_RUNTIME
                   );
-  ASSERT_EFI_ERROR (Status);
+  if (EFI_ERROR (Status))
+    DEBUG((EFI_D_ERROR, "%a: Failed to mark MMIO as Runtime Service memory (%r)\n",
+           __FUNCTION__, Status));
+
 
   return Status;
 }
