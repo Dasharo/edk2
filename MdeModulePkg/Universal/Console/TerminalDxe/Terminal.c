@@ -115,8 +115,8 @@ TERMINAL_DEV  mTerminalDevTemplate = {
 };
 
 TERMINAL_CONSOLE_MODE_DATA mTerminalConsoleModeData[] = {
-  {80,  25},
-  {80,  50},
+//  {80,  25},
+//  {80,  50},
   {100, 31},
   //
   // New modes can be added here.
