@@ -814,6 +814,7 @@
     SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
+  IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 
   #------------------------------
   #  Build the shell
