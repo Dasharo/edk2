@@ -349,6 +349,7 @@ INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
 INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
+INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 
 #
 # Shell
