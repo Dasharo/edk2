@@ -12,8 +12,7 @@ sed 's|//#define\s*IMAGE_TRUST_CMD.*|#define IMAGE_TRUST_CMD|' config/general.h 
 sed 's|//#define\s*PING_CMD.*|#define PING_CMD|' config/general.h > config/general.h.tmp
 mv config/general.h.tmp config/general.h
 
-cp dasharo.ipxe ipxe/src
-cd ipxe/src
+cp ../../dasharo.ipxe .
 make bin-x86_64-efi/ipxe.efi EMBED=dasharo.ipxe
 cd -
 cp ipxe/src/bin-x86_64-efi/ipxe.efi .
