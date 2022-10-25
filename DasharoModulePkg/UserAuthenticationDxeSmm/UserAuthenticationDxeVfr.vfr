@@ -13,7 +13,7 @@ formset
   guid      = USER_AUTHENTICATION_FORMSET_GUID,
   title     = STRING_TOKEN(STR_FORM_SET_TITLE),
   help      = STRING_TOKEN(STR_FORM_SET_TITLE_HELP),
-  classguid = EFI_HII_PLATFORM_SETUP_FORMSET_GUID,
+  classguid = gEfiIfrFrontPageGuid,
 
   form formid = 1,
       title  = STRING_TOKEN(STR_FORM_TITLE);
