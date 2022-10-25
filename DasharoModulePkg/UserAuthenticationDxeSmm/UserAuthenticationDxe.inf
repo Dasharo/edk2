@@ -24,11 +24,14 @@
   UserAuthenticationDxeFormset.h
   UserAuthenticationDxeVfr.vfr
   UserAuthenticationDxeStrings.uni
+  KeyService.c
+  KeyService.h
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  UserAuthFeaturePkg/UserAuthFeaturePkg.dec
+  CryptoPkg/CryptoPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -38,6 +41,7 @@
   BaseMemoryLib
   DebugLib
   UefiLib
+  BaseCryptLib
   HiiLib
   DevicePathLib
   MemoryAllocationLib
@@ -47,16 +51,14 @@
 [Guids]
   gUserAuthenticationGuid                       ## CONSUMES  ## GUID
   gEfiEventExitBootServicesGuid                 ## CONSUMES  ## Event
-  gEdkiiPiSmmCommunicationRegionTableGuid       ## CONSUMES  ## SystemTable
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID (Indicate the formset in this library need to display in which page)
 
 [Protocols]
   gEfiRscHandlerProtocolGuid                    ## CONSUMES
   gEfiDevicePathProtocolGuid                    ## PRODUCES
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
-  gEfiSmmCommunicationProtocolGuid              ## CONSUMES
 
 [Depex]
   gEfiSimpleTextOutProtocolGuid      AND
-  gEfiSmmCommunicationProtocolGuid   AND
   gEfiVariableArchProtocolGuid       AND
   gEfiVariableWriteArchProtocolGuid
