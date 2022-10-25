@@ -14,28 +14,14 @@
 
 ################################################################################
 #
-# Defines Section - statements that will be processed to create a Makefile.
-#
-################################################################################
-[Defines]
-  !ifndef $(PEI_ARCH)
-    !error "PEI_ARCH must be specified to build this feature!"
-  !endif
-  !ifndef $(DXE_ARCH)
-    !error "DXE_ARCH must be specified to build this feature!"
-  !endif
-
-################################################################################
-#
 # Library Class section - list of all Library Classes needed by this feature.
 #
 ################################################################################
 
-!include MdePkg/MdeLibs.dsc.inc
+#!include MdePkg/MdeLibs.dsc.inc
 
 [LibraryClasses]
-  PlatformPasswordLib|UserAuthFeaturePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
-  UserPasswordLib|UserAuthFeaturePkg/Library/UserPasswordLib/UserPasswordLib.inf
+  PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
 
 ###################################################################################################
 #
@@ -59,19 +45,9 @@
 #
 # Feature DXE Components
 #
-
-# @todo: Change below line to [Components.$(DXE_ARCH)] after https://bugzilla.tianocore.org/show_bug.cgi?id=2308
-#        is completed.
 [Components.X64]
   #####################################
   # User Authentication Feature Package
   #####################################
-
-  # Add library instances here that are not included in package components and should be tested
-  # in the package build.
-  UserAuthFeaturePkg/Library/UserPasswordUiLib/UserPasswordUiLib.inf
-
   # Add components here that should be included in the package build.
-  UserAuthFeaturePkg/UserAuthenticationDxeSmm/UserAuthenticationDxe.inf
-  UserAuthFeaturePkg/UserAuthenticationDxeSmm/UserAuthentication2Dxe.inf
-  UserAuthFeaturePkg/UserAuthenticationDxeSmm/UserAuthenticationSmm.inf
+  DasharoModulePkg/UserAuthenticationDxeSmm/UserAuthenticationDxe.inf

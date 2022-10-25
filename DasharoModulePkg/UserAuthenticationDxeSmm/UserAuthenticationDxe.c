@@ -12,7 +12,6 @@
 EFI_EVENT                           mExitBootServicesEvent  = NULL;
 EFI_RSC_HANDLER_PROTOCOL           *mRscHandlerProtocol     = NULL;
 USER_AUTHENTICATION_PRIVATE_DATA   *mUserAuthenticationData = NULL;
-EFI_SMM_COMMUNICATION_PROTOCOL     *mSmmCommunication       = NULL;
 
 EFI_GUID mUserAuthenticationVendorGuid = USER_AUTHENTICATION_FORMSET_GUID;
 HII_VENDOR_DEVICE_PATH mHiiVendorDevicePath = {
@@ -225,7 +224,7 @@ RequireUserPassword (
   EFI_STATUS                                    Status;
   CHAR16                                        UserInputPw[PASSWORD_MAX_SIZE];
   CHAR16                                        *PopUpString;
-  SMM_PASSWORD_COMMUNICATE_VERIFY_POLICY        VerifyPolicy;
+  PASSWORD_COMMUNICATE_VERIFY_POLICY        VerifyPolicy;
 
   Status = EFI_SUCCESS;
   ZeroMem(UserInputPw, sizeof(UserInputPw));
@@ -724,12 +723,6 @@ UserAuthenticationEntry (
                   &gEfiEventExitBootServicesGuid,
                   &mExitBootServicesEvent
                   );
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Locates SMM Communication protocol.
-  //
-  Status = gBS->LocateProtocol (&gEfiSmmCommunicationProtocolGuid, NULL, (VOID **) &mSmmCommunication);
   ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;

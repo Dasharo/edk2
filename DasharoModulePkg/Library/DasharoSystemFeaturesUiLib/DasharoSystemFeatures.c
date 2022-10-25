@@ -11,7 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause
 
 STATIC EFI_GUID mDasharoSystemFeaturesGuid = DASHARO_SYSTEM_FEATURES_FORMSET_GUID;
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
-STATIC CHAR16 mLockBitsEfiVar[] = L"LockBios";
+STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
 STATIC BOOLEAN mLockBiosDefault = TRUE;
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -93,7 +93,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
   Status = gRT->GetVariable (
-      mLockBitsEfiVar,
+      mLockBiosEfiVar,
       &mDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -102,7 +102,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   if (Status == EFI_NOT_FOUND) {
     Status = gRT->SetVariable (
-        mLockBitsEfiVar,
+        mLockBiosEfiVar,
         &mDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mLockBiosDefault),
@@ -303,7 +303,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.LockBios != DasharoFeaturesData.LockBios) {
     Status = gRT->SetVariable (
-        mLockBitsEfiVar,
+        mLockBiosEfiVar,
         &mDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.LockBios),

@@ -12,11 +12,9 @@
 
 #include <Protocol/ReportStatusCodeHandler.h>
 #include <Protocol/HiiConfigAccess.h>
-#include <Protocol/SmmCommunication.h>
 
 #include <Guid/MdeModuleHii.h>
 #include <Guid/HiiPlatformSetupFormset.h>
-#include <Guid/PiSmmCommunicationRegionTable.h>
 #include <Guid/UserAuthentication.h>
 
 #include <Library/PrintLib.h>
@@ -33,10 +31,10 @@
 #include <Library/PlatformPasswordLib.h>
 
 #include "UserAuthenticationDxeFormset.h"
+#include "KeyService.h"
 
 extern UINT8  UserAuthenticationDxeVfrBin[];
 extern UINT8  UserAuthenticationDxeStrings[];
-extern EFI_SMM_COMMUNICATION_PROTOCOL *mSmmCommunication;
 
 typedef struct {
   EFI_HII_CONFIG_ACCESS_PROTOCOL       ConfigAccess;
@@ -121,7 +119,7 @@ IsPasswordInstalled (
 **/
 EFI_STATUS
 GetPasswordVerificationPolicy (
-  OUT SMM_PASSWORD_COMMUNICATE_VERIFY_POLICY    *VerifyPolicy
+  OUT PASSWORD_COMMUNICATE_VERIFY_POLICY    *VerifyPolicy
   );
 
 /**
