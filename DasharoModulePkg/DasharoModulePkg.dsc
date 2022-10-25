@@ -23,4 +23,7 @@
   !include DasharoModulePkg/DasharoModuleComponents.dsc.inc
 
 [BuildOptions]
-  *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES
+  *_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES -Wno-error
+
+[Packages]
+  !include DasharoModulePkg/Include/UserAuthFeature.dsc
