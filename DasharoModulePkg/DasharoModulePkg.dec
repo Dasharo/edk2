@@ -16,10 +16,18 @@
   PACKAGE_UNI_FILE               = DasharoModuleComponents.uni
 
 [Includes]
+  Include
+
+[LibraryClasses]
+  ##  @libraryclass  Provides a platform-specific method to return the password policy.
+  PlatformPasswordLib|Include/Library/PlatformPasswordLib.h
 
 [Guids]
   gDasharoSystemFeaturesFormsetGuid = { 0xd15b327e, 0xff2d, 0x4fc1, {0xab, 0xf6, 0xc1, 0x2b, 0xd0, 0x8c, 0x13, 0x59 } }
   gDasharoSystemFeaturesTokenSpaceGuid = {0xc7d52e10, 0xadec, 0x4d49, { 0x9e, 0xc5, 0xb8, 0xcf, 0xcd, 0x4b, 0x9d, 0xb9 }}
+  gUserAuthFeaturePkgTokenSpaceGuid  =  {0xa2793a6e, 0x6af1, 0x45c4, {0x88, 0x4d, 0x3d, 0x0c, 0x7a, 0xfe, 0x91, 0xc6}}
+  ## Include Include/Guid/UserAuthentication.h
+  gUserAuthenticationGuid = { 0xee24a7f7, 0x606b, 0x4724, { 0xb3, 0xc9, 0xf5, 0xae, 0x4a, 0x3b, 0x81, 0x65}}
 
 [Ppis]
 
@@ -27,3 +35,10 @@
 
 [PcdsFixedAtBuild]
 gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|FALSE|BOOLEAN|0x00000001
+
+[PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
+  ## Indicate whether the password is cleared.
+  # When it is configured to Dynamic or DynamicEx, it can be set through detection using
+  # a platform-specific method (e.g. Board Jumper set) in a actual platform in early boot phase.<BR><BR>
+  # @Prompt The password clear status
+  gUserAuthFeaturePkgTokenSpaceGuid.PcdPasswordCleared|FALSE|BOOLEAN|0xF0000001
