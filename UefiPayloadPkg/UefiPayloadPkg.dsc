@@ -710,8 +710,6 @@
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
-  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 
   #
   # ISA Support
@@ -720,7 +718,6 @@
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
   OvmfPkg/SioBusDxe/SioBusDxe.inf
   MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
-  MdeModulePkg/Bus/Isa/Ps2MouseDxe/Ps2MouseDxe.inf
 !endif
 
   #

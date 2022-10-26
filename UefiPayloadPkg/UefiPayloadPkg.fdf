@@ -164,7 +164,6 @@ INF MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
 INF OvmfPkg/SioBusDxe/SioBusDxe.inf
 INF MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
-INF MdeModulePkg/Bus/Isa/Ps2MouseDxe/Ps2MouseDxe.inf
 !endif
 
 #
@@ -225,8 +224,6 @@ INF MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
-INF MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
 
 #
 # Network Support
