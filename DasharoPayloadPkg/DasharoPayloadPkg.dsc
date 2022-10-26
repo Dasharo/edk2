@@ -91,6 +91,7 @@
   DEFINE OPAL_PASSWORD_ENABLE           = FALSE
   DEFINE LOAD_OPTION_ROMS               = TRUE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
+  DEFINE SETUP_PASSWORD_ENABLE          = FALSE
   #
   # Network definition
   #
@@ -576,6 +577,15 @@
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+!endif
+
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
+!include DasharoModulePkg/DasharoModuleComponents.dsc.inc
+!include DasharoModulePkg/Include/UserAuthFeature.dsc
+  DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
+    <LibraryClasses>
+      PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
+  }
 !endif
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
