@@ -6,6 +6,7 @@ git clone https://github.com/Dasharo/ipxe.git -b skinit_lz-next
 cd ipxe/src
 sed -i 's|.*DOWNLOAD_PROTO_HTTPS|#define DOWNLOAD_PROTO_HTTPS|g' config/general.h
 sed -i 's|//#define\s*IMAGE_MULTIBOOT2.*|#define IMAGE_MULTIBOOT2|' config/general.h
+# Not valid use case as per: https://github.com/ipxe/ipxe/issues/782
 # sed -i 's|//#define\s*IMAGE_BZIMAGE.*|#define IMAGE_BZIMAGE|' config/general.h
 sed -i 's|//#define\s*IMAGE_GZIP.*|#define IMAGE_GZIP|' config/general.h
 sed -i 's|//#define\s*NSLOOKUP_CMD.*|#define NSLOOKUP_CMD|' config/general.h
