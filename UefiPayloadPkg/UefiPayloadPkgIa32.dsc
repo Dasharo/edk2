@@ -505,6 +505,15 @@
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
 !endif
 
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
+!include DasharoModulePkg/DasharoModuleComponents.dsc.inc
+!include DasharoModulePkg/Include/UserAuthFeature.dsc
+  DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
+    <LibraryClasses>
+      PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
+  }
+!endif
+
   UefiCpuPkg/CpuDxe/CpuDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   UefiPayloadPkg/Logo/Logo.inf
