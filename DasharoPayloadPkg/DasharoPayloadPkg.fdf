@@ -293,6 +293,10 @@ INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf
 INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
+INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
+!endif
+
 #
 # Shell
 #
