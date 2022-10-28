@@ -19,6 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause
 
 typedef struct {
   BOOLEAN LockBios;
+  BOOLEAN SmmBwp;
 } DASHARO_FEATURES_DATA;
 
 #define LOCK_BIOS_QUESTION_ID              0x8000
