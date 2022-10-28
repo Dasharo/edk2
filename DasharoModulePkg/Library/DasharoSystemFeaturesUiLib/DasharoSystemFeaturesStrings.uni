@@ -22,3 +22,6 @@
 
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
+
+#string STR_SMM_BWP_PROMPT   #language en-US  "Enable SMM BIOS write protection"
+#string STR_SMM_BWP_HELP     #language en-US  "Prevents writing to the boot medium outside of SMM. Recommended to enable if using an admin password. Disable when updating firmware."
