@@ -7,4 +7,4 @@
 #
 ##
 
-INF UserAuthFeaturePkg/UserAuthenticationDxeSmm/UserAuthenticationDxe.inf
+INF UserAuthFeaturePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
