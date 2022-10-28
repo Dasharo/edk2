@@ -10,4 +10,4 @@
 ##
 
   DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
-  DasharoModulePkg/UserAuthenticationDxeSmm/UserAuthenticationDxe.inf
+  DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
