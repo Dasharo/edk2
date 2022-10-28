@@ -215,33 +215,33 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 !if $(SECURE_BOOT_ENABLE) == TRUE
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
-  INF  DasharoPayloadPkg/SecureBootEnrollDefaultKeys/SecureBootSetup.inf
+  INF  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
+  INF  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 
-  FILE FREEFORM = A23665E3-ACA6-4F6D-80CC-341E7D7B8CC6 {
-    SECTION RAW = DasharoPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek.crt
-    SECTION UI = "SecureBootKekCert"
+  # gDefaultKEKFileGuid
+  FILE FREEFORM = 6F64916E-9F7A-4C35-B952-CD041EFB05A3 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorKEKCA2011_2011-06-24.crt
+    SECTION UI = "DefaultKekCert"
   }
 
-  FILE FREEFORM = F8104268-A364-45F5-8E00-ABA3FDEA12BE {
-    SECTION RAW = DasharoPayloadPkg/SecureBootEnrollDefaultKeys/keys/pk.crt
-    SECTION UI = "SecureBootPkCert"
+  # gDefaultPKFileGuid
+  FILE FREEFORM = 85254EA7-4759-4FC4-82D4-5EED5FB0A4A0 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/pk.crt
+    SECTION UI = "DefaultPkCert"
   }
 
-  FILE FREEFORM = 26A517B0-E3FD-46C2-8932-E926BF98941F {
-    SECTION RAW = DasharoPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-1.crt
-    SECTION UI = "SecureBootDb1Cert"
+  # gDefaultdbFileGuid
+  FILE FREEFORM = C491D352-7623-4843-ACCC-2791A7574421 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicWinProPCA2011_2011-10-19.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorUEFCA2011_2011-06-27.crt
+    SECTION UI = "DefaultDbCert"
   }
 
-  FILE FREEFORM = 91D2E32B-0134-4306-BA90-54EDCBF349CA {
-    SECTION RAW = DasharoPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-2.crt
-    SECTION UI = "SecureBootDb2Cert"
+  # gDefaultdbxFileGuid
+  FILE FREEFORM = 5740766A-718E-4DC0-9935-C36F7D3F884F {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin
+    SECTION UI = "DefaultDbxCert"
   }
-
-  FILE FREEFORM = 74BB6E72-2A56-4D0E-A5B3-5D39FC2EE346 {
-    SECTION RAW = DasharoPayloadPkg/SecureBootEnrollDefaultKeys/keys/crl.bin
-    SECTION UI = "SecureBootDbxCert"
-  }
-
 !endif
 
 #
