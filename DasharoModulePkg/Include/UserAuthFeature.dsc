@@ -50,4 +50,4 @@
   # User Authentication Feature Package
   #####################################
   # Add components here that should be included in the package build.
-  DasharoModulePkg/UserAuthenticationDxeSmm/UserAuthenticationDxe.inf
+  DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
