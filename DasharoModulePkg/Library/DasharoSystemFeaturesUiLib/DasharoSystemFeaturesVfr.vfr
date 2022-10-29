@@ -34,6 +34,10 @@ formset
          prompt = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_TITLE),
          help   = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_HELP);
 
+    goto DASHARO_INTEL_ME_OPTIONS_FORM_ID,
+         prompt = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_TITLE),
+         help   = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_HELP);
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -96,6 +100,26 @@ formset
                flags  = INTERACTIVE,
       endcheckbox;
     endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_INTEL_ME_OPTIONS_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    oneof varid  = FeaturesData.MeMode,
+             prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
+             help   = STRING_TOKEN(STR_ME_MODE_HELP),
+             flags  = INTERACTIVE,
+
+            option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
+            option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
+            option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
+    endoneof;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
