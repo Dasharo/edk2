@@ -40,3 +40,17 @@
 
 #string STR_USB_MASS_STORAGE_ENABLE_PROMPT   #language en-US  "Enable USB Mass Storage driver"
 #string STR_USB_MASS_STORAGE_ENABLE_HELP     #language en-US  "Enables/disables the USB Mass Storage driver. When disabled, booting from USB will not work, but USB keyboard still will"
+
+#string STR_DASHARO_INTEL_ME_OPTIONS_TITLE   #language en-US  "Intel Management Engine Options"
+#string STR_DASHARO_INTEL_ME_OPTIONS_HELP    #language en-US  "Configuration for Intel Management Engine"
+
+#string STR_ME_MODE_PROMPT   #language en-US  "Intel ME mode"
+#string STR_ME_MODE_HELP     #language en-US  "Operation mode of the Intel Management Engine. The ME can be enabled, or disabled using various methods.\n\n"
+											  "Enabled: Enable the Intel Management Engine.\n\n"
+											  "Disabled (Soft): Disable using a HECI message.\n\n"
+											  "Disabled (HAP): Disable using the High Assurance Platform bit in the flash descriptor.\n\n"
+											  "Note that with ME disabled, the firmware TPM will no longer be functional."
+
+#string STR_ME_MODE_ENABLE			#language en-US  "Enabled"
+#string STR_ME_MODE_DISABLE_HECI	#language en-US  "Disabled (Soft)"
+#string STR_ME_MODE_DISABLE_HAP		#language en-US  "Disabled (HAP)"
