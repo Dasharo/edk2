@@ -12,6 +12,7 @@ SPDX-License-Identifier: BSD-2-Clause
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
 STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
 STATIC CHAR16 mSmmBwpEfiVar[] = L"SmmBwp";
+STATIC CHAR16 mMeModeEfiVar[] = L"MeMode";
 STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
 STATIC CHAR16 mUsbStackEfiVar[] = L"UsbDriverStack";
 STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
@@ -20,6 +21,7 @@ STATIC BOOLEAN mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN mLockBiosDefault = TRUE;
 STATIC BOOLEAN mSmmBwpDefault = FALSE;
 STATIC BOOLEAN mNetworkBootDefault = FALSE;
+STATIC UINT8   mMeModeDefault   = ME_MODE_ENABLE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -122,7 +124,6 @@ DasharoSystemFeaturesUiLibConstructor (
     }
   }
 
-
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot);
   Status = gRT->GetVariable (
       mNetworkBootEfiVar,
@@ -205,6 +206,30 @@ DasharoSystemFeaturesUiLibConstructor (
         &mSmmBwpDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp = mSmmBwpDefault;
+  }
+
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode);
+  Status = gRT->GetVariable (
+      mMeModeEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+        mMeModeEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mMeModeDefault),
+        &mMeModeDefault
+        );
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
   }
 
   if (EFI_ERROR(Status)) {
@@ -456,6 +481,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.UsbMassStorage),
         &DasharoFeaturesData.UsbMassStorage
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.MeMode != DasharoFeaturesData.MeMode) {
+    Status = gRT->SetVariable (
+        mMeModeEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.MeMode),
+        &DasharoFeaturesData.MeMode
         );
     if (EFI_ERROR (Status)) {
       return Status;
