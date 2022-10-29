@@ -601,8 +601,6 @@
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
-!include DasharoModulePkg/DasharoModuleComponents.dsc.inc
-!include DasharoModulePkg/Include/UserAuthFeature.dsc
   DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
     <LibraryClasses>
       PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
