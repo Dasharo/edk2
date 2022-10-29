@@ -419,7 +419,6 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
-  gUefiPayloadPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|$(SECURE_BOOT_DEFAULT_ENABLE)
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
