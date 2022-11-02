@@ -301,6 +301,11 @@ PcatPciRootBridgeParseBars (
           Base = Base | LShiftU64 ((UINT64) OriginalUpperValue, 32);
           Length = Length | LShiftU64 ((UINT64) UpperValue, 32);
 
+          if (Length != 0) {
+            LowBit = LowBitSet64 (Length);
+            Length = LShiftU64 (1ULL, LowBit);
+          }
+
           DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 64bit%s BAR@%d %x %x \n",
               __FUNCTION__,
               Bus,
@@ -311,10 +316,10 @@ PcatPciRootBridgeParseBars (
               Base,
               Length));
 
-          if (Length != 0) {
-            LowBit = LowBitSet64 (Length);
-            Length = LShiftU64 (1ULL, LowBit);
-          }
+          /* Intel PCH SMBus can have length of 0x100 only which does not align
+           * with setting UC attribute */
+          if (Length != 0 && Length < 0x1000)
+            Length = 0x1000;
 
           if (Length != 0 && Base != 0) {
             if ((Base < SIZE_4GB)) {
@@ -340,6 +345,12 @@ PcatPciRootBridgeParseBars (
           //
           Length = ((~Length) + 1) & 0xffffffff;
 
+          /* Intel PCH SMBus can have length of 0x100 only which does not align
+           * with setting UC attribute */
+          if (Length != 0 && Length < 0x1000)
+            Length = 0x1000;
+
+
           if ((Value & BIT3) == BIT3) {
             MemAperture = PMem;
             DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 32bit prefetchable BAR@%d %x %x\n",
@@ -347,7 +358,7 @@ PcatPciRootBridgeParseBars (
               Bus,
               Device,
               Function,
-              Offset - 4,
+              Offset,
               Base,
               Length));
           } else {
@@ -357,7 +368,7 @@ PcatPciRootBridgeParseBars (
               Bus,
               Device,
               Function,
-              Offset - 4,
+              Offset,
               Base,
               Length));
           }
