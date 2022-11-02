@@ -476,10 +476,10 @@ InitializePciHostBridge (
     for (MemApertureIndex = 0; MemApertureIndex < ARRAY_SIZE (MemApertures); MemApertureIndex++) {
       if (MemApertures[MemApertureIndex]->Base <= MemApertures[MemApertureIndex]->Limit) {
         // UC for Memory aperture and WC for Prefetchable aperture
-        if (MemApertureIndex > 1) {
-          MemType = EFI_MEMORY_WC;
-        } else {
+        if (MemApertureIndex < 1) {
           MemType = EFI_MEMORY_UC;
+        } else {
+          MemType = EFI_MEMORY_WC;
         }
         //
         // Base and Limit in PCI_ROOT_BRIDGE_APERTURE are device address.
