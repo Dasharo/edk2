@@ -227,10 +227,6 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 # Network modules (only available on X64)
 #
-!if $(NETWORK_ENABLE) == TRUE
-!if $(ARCH) == IA32
-  !error "Network drivers not supported for IA32 build"
-!else
 !if $(NETWORK_LAN_ROM) == TRUE
 #
 # Build system must place the LanRom.efi before buildnig the UEFI Payload.
@@ -239,8 +235,6 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
     SECTION PE32 = UefiPayloadPkg/NetworkDrivers/LanRom.efi
   }
-!endif
-!endif
 !endif
 
 #
