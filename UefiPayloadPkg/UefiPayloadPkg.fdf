@@ -226,35 +226,18 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
 #
 # Network modules (only available on X64)
-# Available at https://downloadcenter.intel.com/download/29137?v=t
 #
-!if $(NETWORK_ENABLE)
+!if $(NETWORK_ENABLE) == TRUE
 !if $(ARCH) == IA32
-  # FIXME
+  !error "Network drivers not supported for IA32 build"
 !else
-!if $(NETWORK_INTEL_PRO2500)
+!if $(NETWORK_LAN_ROM) == TRUE
+#
+# Build system must place the LanRom.efi before buildnig the UEFI Payload.
+# Typically will be done per platform needs by coreboot.
+#
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0104X7.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_GBE)
-  FILE DRIVER = D25C6DB6-0218-4BE9-802A-2841A7DA5ABE {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E0027X7.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_40GBE)
-  FILE DRIVER = F49F4961-BE4F-4102-A07D-111E148D0974 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E4015X5.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_10GBE)
-  FILE DRIVER = 3E04EC12-5FDA-4BA8-88BB-5AB1467F280E {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E7512X4.EFI
-  }
-!endif
-!if $(NETWORK_INTEL_PRO1000)
-  FILE DRIVER = BF21AF15-235B-4387-B62B-79134BC81E22 {
-    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/E9112X3.EFI
+    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/LanRom.efi
   }
 !endif
 !endif
@@ -263,7 +246,7 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 # iPXE support
 #
-!if (NETWORK_IPXE)
+!if $(NETWORK_IPXE) == TRUE
   FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
    SECTION PE32 = UefiPayloadPkg/NetworkDrivers/ipxe.efi
   }
