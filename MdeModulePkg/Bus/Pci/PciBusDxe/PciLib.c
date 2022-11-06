@@ -1031,10 +1031,14 @@ PciScanBus (
                 Func
                 );
 
+      if (StartBusNumber < 15)
+          DEBUG ((EFI_D_INFO, "PCI device %02x:%02x.%d status %r\n", StartBusNumber, Device, Func, Status));
+
       if (EFI_ERROR (Status) && Func == 0) {
         //
         // go to next device if there is no Function 0
         //
+        DEBUG ((EFI_D_INFO, "No PCI device at %02x:%02x.%d\n", StartBusNumber, Device, Func, Status));
         break;
       }
 
@@ -1055,6 +1059,7 @@ PciScanBus (
                 );
 
       if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_INFO, "PCI device search %02x:%02x.%d status %r\n", StartBusNumber, Device, Func, Status));
         continue;
       }
 
@@ -1166,6 +1171,7 @@ PciScanBus (
         }
 
         Status = PciAllocateBusNumber (Bridge, *SubBusNumber, 1, SubBusNumber);
+	DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d PciAllocateBusNumber status %r\n", StartBusNumber, Device, Func, Status));
         if (EFI_ERROR (Status)) {
           return Status;
         }
@@ -1192,6 +1198,7 @@ PciScanBus (
           // Temporarily initialize SubBusNumber to maximum bus number to ensure the
           // PCI configuration transaction to go through any PPB
           //
+          DEBUG ((EFI_D_INFO, "PPB %02x:%02x.%d PciGetMaxBusNumber\n", StartBusNumber, Device, Func));
           Register  = PciGetMaxBusNumber (Bridge);
           Address   = EFI_PCI_ADDRESS (StartBusNumber, Device, Func, PCI_BRIDGE_SUBORDINATE_BUS_REGISTER_OFFSET);
           Status = PciRootBridgeIo->Pci.Write (
@@ -1212,7 +1219,7 @@ PciScanBus (
             PciDevice->FunctionNumber,
             EfiPciBeforeChildBusEnumeration
             );
-
+          DEBUG ((EFI_D_INFO, "PCI Scan Bus Sec: %02x Sub: %02x\n", SecondBus, SubBusNumber));
           Status = PciScanBus (
                     PciDevice,
                     SecondBus,
@@ -1220,6 +1227,7 @@ PciScanBus (
                     PaddedBusRange
                     );
           if (EFI_ERROR (Status)) {
+            DEBUG ((EFI_D_ERROR, "Error: PCI Scan Bus Sec: %02x Sub: %02x\n", SecondBus, SubBusNumber));
             return Status;
           }
         }
@@ -1286,6 +1294,8 @@ PciScanBus (
         //
 
         Func = PCI_MAX_FUNC;
+        if (StartBusNumber == 0)
+          DEBUG ((EFI_D_INFO, "PCI device %02x.%d not a multi function device\n", Device, Func));
       }
     }
   }

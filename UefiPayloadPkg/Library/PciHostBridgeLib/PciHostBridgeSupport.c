@@ -450,6 +450,7 @@ ScanForRootBridges (
   UINTN      Address;
   PCI_TYPE01 Pci;
   UINT64     Attributes;
+  UINT64     AllocAttributes;
   UINT64     Base;
   UINT64     Limit;
   UINT64     Value;
@@ -715,13 +716,15 @@ ScanForRootBridges (
       if (0)
         AdjustRootBridgeResource (&Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G);
 
+      AllocAttributes = EFI_PCI_HOST_BRIDGE_MEM64_DECODE | EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM;
+
       InitRootBridge (
-        Attributes, Attributes, 0,
+        Attributes, Attributes, AllocAttributes,
         (UINT8) PrimaryBus, (UINT8) SubBus,
         &Io, &Mem, &MemAbove4G, &PMem, &PMemAbove4G,
         &RootBridges[*NumberOfRootBridges]
       );
-      RootBridges[*NumberOfRootBridges].ResourceAssigned = TRUE;
+      RootBridges[*NumberOfRootBridges].ResourceAssigned = FALSE;
       //
       // Increment the index for the next PCI Root Bridge
       //

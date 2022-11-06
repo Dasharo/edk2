@@ -16,9 +16,12 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
+#include <Library/DxeServicesTableLib.h>
+#include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PciHostBridgeLib.h>
 #include <Library/PciLib.h>
+#include <Library/PcdLib.h>
 
 #include "PciHostBridge.h"
 
@@ -48,6 +51,80 @@ CB_PCI_ROOT_BRIDGE_DEVICE_PATH mRootBridgeDevicePathTemplate = {
   }
 };
 
+
+EFI_STATUS
+GetTopOfMemory (UINT64 *TopOfMemory)
+{
+  UINTN                           NumberOfDescriptors;
+  EFI_GCD_MEMORY_SPACE_DESCRIPTOR *MemorySpaceMap;
+  UINTN                           Index;
+  UINT64                          TopOfRam = 0;
+
+  if (!TopOfMemory)
+    return EFI_INVALID_PARAMETER;
+
+  gDS->GetMemorySpaceMap (&NumberOfDescriptors, &MemorySpaceMap);
+
+  for (Index = 0; Index < NumberOfDescriptors; Index++) {
+   DEBUG ((EFI_D_INFO, "MemEntry: Base %llx Length %llx Type %x\n",
+           MemorySpaceMap[Index].BaseAddress, MemorySpaceMap[Index].Length,
+          MemorySpaceMap[Index].GcdMemoryType));
+    if ((MemorySpaceMap[Index].GcdMemoryType == EfiGcdMemoryTypeSystemMemory)) {
+      if (MemorySpaceMap[Index].BaseAddress >= 0x100000000ULL &&
+          MemorySpaceMap[Index].Length != 0) {
+        if (MemorySpaceMap[Index].BaseAddress + MemorySpaceMap[Index].Length > TopOfRam)
+          TopOfRam = MemorySpaceMap[Index].BaseAddress + MemorySpaceMap[Index].Length;
+      }
+    }
+  }
+
+  *TopOfMemory = TopOfRam;
+  DEBUG ((EFI_D_INFO, "TopOfRam: %llx \n", TopOfRam));
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Get physical address bits.
+
+  @return Physical address bits.
+
+**/
+UINT8
+GetPhysicalAddressBits (
+  VOID
+  )
+{
+  UINT32                        RegEax;
+  UINT8                         PhysicalAddressBits;
+  VOID                          *Hob;
+
+  //
+  // Get physical address bits supported.
+  //
+  Hob = GetFirstHob (EFI_HOB_TYPE_CPU);
+  if (Hob != NULL) {
+    PhysicalAddressBits = ((EFI_HOB_CPU *) Hob)->SizeOfMemorySpace;
+  } else {
+    AsmCpuid (0x80000000, &RegEax, NULL, NULL, NULL);
+    if (RegEax >= 0x80000008) {
+      AsmCpuid (0x80000008, &RegEax, NULL, NULL, NULL);
+      PhysicalAddressBits = (UINT8) RegEax;
+    } else {
+      PhysicalAddressBits = 36;
+    }
+  }
+
+  //
+  // IA-32e paging translates 48-bit linear addresses to 52-bit physical addresses.
+  //
+  ASSERT (PhysicalAddressBits <= 52);
+  if (PhysicalAddressBits > 48) {
+    PhysicalAddressBits = 48;
+  }
+
+  return PhysicalAddressBits;
+}
 
 /**
   Initialize a PCI_ROOT_BRIDGE structure.
@@ -106,6 +183,14 @@ InitRootBridge (
 )
 {
   CB_PCI_ROOT_BRIDGE_DEVICE_PATH *DevicePath;
+  UINT64                         TopOfMemory;
+  EFI_STATUS                     Status;
+
+  TopOfMemory = 0;
+
+  Status = GetTopOfMemory(&TopOfMemory);
+  if (EFI_ERROR(Status))
+    TopOfMemory = 0;
 
   //
   // Be safe if other fields are added to PCI_ROOT_BRIDGE later.
@@ -117,11 +202,20 @@ InitRootBridge (
   RootBus->Supports   = Supports;
   RootBus->Attributes = Attributes;
 
-  RootBus->DmaAbove4G = FALSE;
+  RootBus->DmaAbove4G = TRUE;
 
   RootBus->AllocationAttributes = AllocAttributes;
   RootBus->Bus.Base  = RootBusNumber;
-  RootBus->Bus.Limit = MaxSubBusNumber;
+  RootBus->Bus.Limit = (PcdGet64(PcdPciExpressBaseSize) / SIZE_1MB) - 1ULL;
+  Mem->Limit = PcdGet64(PcdPciExpressBaseAddress) - 1ULL;
+  if (TopOfMemory > SIZE_4GB) {
+    MemAbove4G->Base = TopOfMemory;
+    MemAbove4G->Limit = LShiftU64(1ULL, GetPhysicalAddressBits()) - 1ULL;
+  }
+
+  Io->Base = 0x2000;
+  Io->Limit = 0xFFFF;
+
   CopyMem (&RootBus->Io, Io, sizeof (*Io));
   CopyMem (&RootBus->Mem, Mem, sizeof (*Mem));
   CopyMem (&RootBus->MemAbove4G, MemAbove4G, sizeof (*MemAbove4G));

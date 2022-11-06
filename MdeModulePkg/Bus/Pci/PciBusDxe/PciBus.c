@@ -305,6 +305,7 @@ PciBusDriverBindingStart (
     gFullEnumeration = FALSE;
   } else {
     gFullEnumeration = (BOOLEAN) ((SearchHostBridgeHandle (Controller) ? FALSE : TRUE));
+    DEBUG ((EFI_D_INFO, "PCI Full Enumeration %d\n", gFullEnumeration));
   }
 
   //
@@ -349,12 +350,16 @@ PciBusDriverBindingStart (
                     );
 
     if (!EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_INFO, "PCI Enumeration start\n"));
       Status = PciEnumerator (Controller, PciRootBridgeIo->ParentHandle);
+    } else {
+      DEBUG ((EFI_D_ERROR, "RootBridge I/O not found on Controller Handle\n"));
     }
   } else {
     //
     // If PCI bus has already done the full enumeration, never do it again
     //
+    DEBUG ((EFI_D_INFO, "PCI Light Enumeration start\n"));
     Status = PciEnumeratorLight (Controller);
   }
 

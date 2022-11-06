@@ -464,7 +464,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialFifoControl|$(SERIAL_FIFO_CONTROL)
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialExtendedTxFifoSize|$(SERIAL_EXTENDED_TX_FIFO_SIZE)
 
-  gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|TRUE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|$(UART_DEFAULT_BAUD_RATE)
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits|$(UART_DEFAULT_DATA_BITS)
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity|$(UART_DEFAULT_PARITY)
@@ -727,7 +727,7 @@
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 !endif
   UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
-  UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
+#  UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
 
   #
   # SMMSTORE

@@ -93,10 +93,12 @@ PciIoVerifyBarAccess (
   // BarIndex 0-5 is legal
   //
   if (BarIndex >= PCI_MAX_BAR) {
+    DEBUG ((EFI_D_ERROR, "Illegal BarIndex\n"));
     return EFI_INVALID_PARAMETER;
   }
 
   if (!CheckBarType (PciIoDevice, BarIndex, Type)) {
+    DEBUG ((EFI_D_ERROR, "Invalid BarType for access\n"));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -111,6 +113,9 @@ PciIoVerifyBarAccess (
   Width = (EFI_PCI_IO_PROTOCOL_WIDTH) (Width & 0x03);
 
   if ((*Offset + Count * (UINTN)(1 << Width)) - 1 >= PciIoDevice->PciBar[BarIndex].Length) {
+    DEBUG ((EFI_D_ERROR, "Access off %x, cnt %x, width %x (%x) exceeds Bar length %llx (%llx)\n",
+            *Offset, Count, Width, (*Offset + Count * (UINTN)(1 << Width)) - 1,
+            PciIoDevice->PciBar[BarIndex].BaseAddress, PciIoDevice->PciBar[BarIndex].Length));
     return EFI_INVALID_PARAMETER;
   }
 

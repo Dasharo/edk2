@@ -121,6 +121,9 @@ PciPciDeviceInfoCollector (
                  (UINT8) Func
                  );
 
+      if (StartBusNumber == 0)
+          DEBUG ((EFI_D_INFO, "PCI device %02x.%d status %r\n", Device, Func, Status));
+
       if (EFI_ERROR (Status) && Func == 0) {
         //
         // go to next device if there is no Function 0
@@ -193,6 +196,8 @@ PciPciDeviceInfoCollector (
           // Skip sub functions, this is not a multi function device
           //
           Func = PCI_MAX_FUNC;
+          if (StartBusNumber == 0)
+            DEBUG ((EFI_D_INFO, "PCI device %02x.%d not a multi function device\n", Device, Func));
         }
       }
 
@@ -284,11 +289,13 @@ PciSearchDevice (
     // Special initialization for PPB including making the PPB quiet
     //
     if ((PciIoDevice != NULL) && gFullEnumeration) {
+      DEBUG ((EFI_D_INFO, "Initialize PPB %02x:%02x.%d\n", Bus, Device, Func));
       InitializePpb (PciIoDevice);
     }
   }
 
   if (PciIoDevice == NULL) {
+    DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d out of resources\n", Bus, Device, Func));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -298,6 +305,7 @@ PciSearchDevice (
   UpdatePciInfo (PciIoDevice);
 
   if (PciIoDevice->DevicePath == NULL) {
+    DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d DevPath out of resources\n", Bus, Device, Func));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -307,11 +315,11 @@ PciSearchDevice (
   if (gFullEnumeration) {
 
     if (!IS_CARDBUS_BRIDGE (Pci)) {
-
+      DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d GetOpRomInfo\n", Bus, Device, Func));
       GetOpRomInfo (PciIoDevice);
 
     }
-
+    DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d ResetPowerManagementFeature\n", Bus, Device, Func));
     ResetPowerManagementFeature (PciIoDevice);
 
   }
@@ -319,6 +327,7 @@ PciSearchDevice (
   //
   // Insert it into a global tree for future reference
   //
+  DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d InsertPciDevice\n", Bus, Device, Func));
   InsertPciDevice (Bridge, PciIoDevice);
 
   //
@@ -327,6 +336,7 @@ PciSearchDevice (
 
   if (PciDevice != NULL) {
     *PciDevice = PciIoDevice;
+    DEBUG ((EFI_D_INFO, "PCI %02x:%02x.%d PciDevice not NULL\n", Bus, Device, Func));
   }
 
   return EFI_SUCCESS;
