@@ -323,17 +323,21 @@ PcatPciRootBridgeParseBars (
 
           if (Length != 0 && Base != 0) {
             if ((Base < SIZE_4GB)) {
-              if (((Value & BIT3) == BIT3)) {
-                MemAperture = PMem;
-              } else {
-                MemAperture = Mem;
-              }
+              MemAperture = Mem;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       if (((Value & BIT3) == BIT3)) {
+        //         MemAperture = PMem;
+        //       } else {
+        //         MemAperture = Mem;
+        //       }
             } else {
-              if (((Value & BIT3) == BIT3)) {
-                MemAperture = PMemAbove4G;
-              } else {
-                MemAperture = MemAbove4G;
-              }
+              MemAperture = MemAbove4G;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       if (((Value & BIT3) == BIT3)) {
+        //         MemAperture = PMemAbove4G;
+        //       } else {
+        //         MemAperture = MemAbove4G;
+        //       }
             }
           } else {
             continue;
