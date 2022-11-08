@@ -65,6 +65,8 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x
 
 ### FFS filename to find the ipxe application.
 gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEFile|{ 0xC7, 0x53, 0x86, 0xb6, 0xA1, 0xEE, 0x35, 0x44, 0xA1, 0x99, 0xA4, 0x4F, 0x59, 0xE4, 0x47, 0x6C }|VOID*|0x10000006
+gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEOptionName|L"iPXE"|VOID*|0x10000007
+
 
 ## Used to help reduce fragmentation in the EFI memory map
 gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012

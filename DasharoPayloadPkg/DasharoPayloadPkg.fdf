@@ -288,6 +288,9 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 # iPXE support
 #
 !if $(NETWORK_IPXE) == TRUE
+  #
+  # coreboot build system should put the ipxe.efi file here before EDK2 build
+  #
   FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
    SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/ipxe.efi
   }
