@@ -737,10 +737,12 @@ Uhci2ControlTransfer (
 
   Uhc->PciIo->Flush (Uhc->PciIo);
 
-  *TransferResult = QhResult.Result;
+  if (!EFI_ERROR (Status)) {
+    *TransferResult = QhResult.Result;
 
-  if (DataLength != NULL) {
-    *DataLength = QhResult.Complete;
+    if (DataLength != NULL) {
+      *DataLength = QhResult.Complete;
+    }
   }
 
   UhciDestoryTds (Uhc, TDs);
@@ -892,9 +894,11 @@ Uhci2BulkTransfer (
 
   Uhc->PciIo->Flush (Uhc->PciIo);
 
-  *TransferResult = QhResult.Result;
-  *DataToggle     = QhResult.NextToggle;
-  *DataLength     = QhResult.Complete;
+  if (!EFI_ERROR (Status)) {
+    *TransferResult = QhResult.Result;
+    *DataToggle     = QhResult.NextToggle;
+    *DataLength     = QhResult.Complete;
+  }
 
   UhciDestoryTds (Uhc, TDs);
   Uhc->PciIo->Unmap (Uhc->PciIo, DataMap);
@@ -1221,9 +1225,11 @@ Uhci2SyncInterruptTransfer (
   UhciUnlinkTdFromQh (Uhc->SyncIntQh, TDs);
   Uhc->PciIo->Flush (Uhc->PciIo);
 
-  *TransferResult = QhResult.Result;
-  *DataToggle     = QhResult.NextToggle;
-  *DataLength     = QhResult.Complete;
+  if (!EFI_ERROR (Status)) {
+    *TransferResult = QhResult.Result;
+    *DataToggle     = QhResult.NextToggle;
+    *DataLength     = QhResult.Complete;
+  }
 
   UhciDestoryTds (Uhc, TDs);
   Uhc->PciIo->Unmap (Uhc->PciIo, DataMap);

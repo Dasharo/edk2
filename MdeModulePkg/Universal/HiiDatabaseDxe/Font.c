@@ -1687,6 +1687,7 @@ HiiStringToImage (
   Attributes = (UINT8 *) AllocateZeroPool (StrLength * sizeof (UINT8));
   ASSERT (Attributes != NULL);
 
+  FontInfo      = NULL;
   RowInfo       = NULL;
   Status        = EFI_SUCCESS;
   StringIn2     = NULL;
@@ -1730,12 +1731,15 @@ HiiStringToImage (
       Background  = ((EFI_FONT_DISPLAY_INFO *) StringInfo)->BackgroundColor;
 
     } else if (Status == EFI_SUCCESS) {
-      FontInfo   = &StringInfoOut->FontInfo;
-      IsFontInfoExisted (Private, FontInfo, NULL, NULL, &GlobalFont);
-      Height     = GlobalFont->FontPackage->Height;
-      BaseLine   = GlobalFont->FontPackage->BaseLine;
-      Foreground = StringInfoOut->ForegroundColor;
-      Background = StringInfoOut->BackgroundColor;
+      FontInfo = &StringInfoOut->FontInfo;
+      if (IsFontInfoExisted (Private, FontInfo, NULL, NULL, &GlobalFont)) {
+        Height     = GlobalFont->FontPackage->Height;
+        BaseLine   = GlobalFont->FontPackage->BaseLine;
+        Foreground = StringInfoOut->ForegroundColor;
+        Background = StringInfoOut->BackgroundColor;
+      } else {
+        goto Exit;
+      }
     } else {
       goto Exit;
     }
