@@ -84,6 +84,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand
   gDasharoPayloadPkgTokenSpaceGuid.PcdShellFile
   gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEFile
+  gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEOptionName
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity
