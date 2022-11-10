@@ -65,6 +65,7 @@
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection             ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck          ## SOMETIMES_CONSUMES
 
 #
 # [Event]
