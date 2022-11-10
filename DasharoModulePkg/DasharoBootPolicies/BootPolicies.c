@@ -19,6 +19,7 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 NETWORK_BOOT_POLICY_PROTOCOL  mNetworkBootPolicy;
 USB_STACK_POLICY_PROTOCOL mUsbStackPolicy;
 USB_MASS_STORAGE_POLICY_PROTOCOL mUsbMassStoragePolicy;
+PS2_CONTROLLER_POLICY_PROTOCOL mPs2ControllerPolicy;
 
 /**
   Entry point for the Boot Policies Driver.
@@ -47,6 +48,8 @@ InitializeBootPolicies (
   mUsbStackPolicy.UsbStackEnabled		= TRUE;
   mUsbMassStoragePolicy.Revision		= USB_MASS_STORAGE_POLICY_PROTOCOL_REVISION_01;
   mUsbMassStoragePolicy.UsbMassStorageEnabled	= TRUE;
+  mPs2ControllerPolicy.Revision			= PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
+  mPs2ControllerPolicy.Ps2ControllerEnabled	= FALSE; // disable by default
 
   Status = GetVariable2 (
              L"NetworkBoot",
@@ -116,6 +119,28 @@ InitializeBootPolicies (
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling USB Mass Storage\n"));
   } else {
     DEBUG ((EFI_D_INFO, "Boot Policy: Not enabling USB Mass Storage\n"));
+  }
+
+  Status = GetVariable2 (
+             L"Ps2Controller",
+             &gDasharoSystemFeaturesGuid,
+             (VOID **) &EfiVar,
+             &VarSize
+             );
+
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))) {
+
+    mPs2ControllerPolicy.Ps2ControllerEnabled = *EfiVar;
+
+    if (mPs2ControllerPolicy.Ps2ControllerEnabled) {
+      gBS->InstallMultipleProtocolInterfaces (
+        &ImageHandle,
+        &gDasharoPs2ControllerPolicyGuid,
+        &mPs2ControllerPolicy,
+        NULL
+        );
+      DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
+    }
   }
 
   return EFI_SUCCESS;

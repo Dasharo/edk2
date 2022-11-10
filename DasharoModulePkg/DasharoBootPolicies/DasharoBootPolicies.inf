@@ -41,6 +41,7 @@
   gDasharoNetworkBootPolicyGuid        ### PROVIDES
   gDasharoUsbDriverPolicyGuid          ### PROVIDES
   gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
+  gDasharoPs2ControllerPolicyGuid      ### PROVIDES
 
 [Depex]
   gEfiVariableArchProtocolGuid
