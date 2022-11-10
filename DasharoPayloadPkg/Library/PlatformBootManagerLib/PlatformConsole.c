@@ -92,6 +92,20 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define gPnpPs2Keyboard \
   PNPID_DEVICE_PATH_NODE(0x0303)
 
+#define KEYBOARD_8042_DATA_REGISTER     0x60
+#define KEYBOARD_8042_STATUS_REGISTER   0x64
+
+#define KBC_INPBUF_VIA60_KBECHO         0xEE
+#define KEYBOARD_CMDECHO_ACK            0xFA
+#define KEYBOARD_CMD_RESEND             0xFE
+
+#define KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA     BIT0
+#define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      BIT1
+#define KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT     BIT6
+
+#define KEYBOARD_TIMEOUT                65536   // 0.07s
+#define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
+
 typedef enum _TYPE_OF_TERMINAL {
   TerminalTypePcAnsi                = 0,
   TerminalTypeVt100,
@@ -110,6 +124,110 @@ VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
 VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
 
 BOOLEAN  mDetectDisplayOnly;
+/**
+  Check if PS2 keyboard is connected, by sending ECHO command.
+  @param                        none
+  @retval TRUE                  connected
+  @retvar FALSE                 unconnected
+**/
+BOOLEAN
+DetectPs2Keyboard (
+  VOID
+  )
+{
+  UINT32                TimeOut;
+  UINT32                RegEmptied;
+  UINT8                 Data;
+  UINT8                 Status;
+  UINT32                SumTimeOut;
+  UINT32                GotIt;
+
+  TimeOut     = 0;
+  RegEmptied  = 0;
+
+  //
+  // Wait for input buffer empty
+  //
+  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
+      RegEmptied = 1;
+      break;
+    }
+    MicroSecondDelay (30);
+  }
+
+  if (RegEmptied == 0) {
+    DEBUG ((EFI_D_INFO, "PS2 reg not emptied\n"));
+    return FALSE;
+  }
+
+  //
+  // Write it
+  //
+  IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
+
+  //
+  // wait for 1s
+  //
+  GotIt       = 0;
+  TimeOut     = 0;
+  SumTimeOut  = 0;
+  Data        = 0;
+  Status      = 0;
+
+  //
+  // Read from 8042 (multiple times if needed)
+  // until the expected value appears
+  // use SumTimeOut to control the iteration
+  //
+  while (1) {
+
+    //
+    // Perform a read
+    //
+    for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+      Status = IoRead8 (KEYBOARD_8042_STATUS_REGISTER);
+      Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
+      MicroSecondDelay (30);
+    }
+
+    SumTimeOut += TimeOut;
+
+    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
+      if(Data == KEYBOARD_CMDECHO_ACK) {
+        GotIt = 1;
+        break;
+      }
+    }
+
+    // If keyboard not connected, the timeout will occur
+    if (Status & KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT || Data == KEYBOARD_CMD_RESEND) {
+      DEBUG ((EFI_D_INFO, "PS/2 receive timeout, keyboard not connected\n"));
+      GotIt = 0;
+      break;
+    }
+
+    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+      // Some PS/2 controllers may not respond to echo command.
+      // Assume keyboard connected if no timeout has been detected
+      DEBUG ((EFI_D_INFO, "PS/2 detect timeout\n"));
+      if (Data == KBC_INPBUF_VIA60_KBECHO) {
+        GotIt = 1;
+        break;
+      }
+      break;
+    }
+  }
+
+  //
+  // Check results
+  //
+  if (GotIt == 1) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
 
 /**
   Add IsaKeyboard to ConIn; add IsaSerial to ConOut, ConIn, ErrOut.
@@ -131,6 +249,8 @@ PrepareLpcBridgeDevicePath (
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
   EFI_GUID                  TerminalTypeGuid;
+  BOOLEAN                   Ps2Enabled;
+  UINTN                     VarSize;
 
   DevicePath = NULL;
   Status = gBS->HandleProtocol (
@@ -142,12 +262,46 @@ PrepareLpcBridgeDevicePath (
     return Status;
   }
   TempDevicePath = DevicePath;
-
-  //
-  // Register Keyboard
-  //
   DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
-  EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+
+  VarSize = sizeof (Ps2Enabled);
+  Status = gRT->GetVariable (
+      L"Ps2Controller",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &Ps2Enabled
+      );
+
+  if ((Status == EFI_SUCCESS) && (VarSize == sizeof(Ps2Enabled))) {
+    if (Ps2Enabled) {
+      DEBUG ((DEBUG_INFO, "PS/2 controller enabled\n"));
+      if (DetectPs2Keyboard()) {
+        //
+        // Register Keyboard
+        //
+        DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
+        EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+      } else {
+        // Remove PS/2 Keyboard from ConIn
+        DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
+        EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+      }
+    } else {
+      DEBUG ((DEBUG_INFO, "PS/2 controller disabled\n"));
+      // Remove PS/2 Keyboard from ConIn
+      EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "PS/2 controller variable status %r\n", Status));
+    if (DetectPs2Keyboard()) {
+      //
+      // Register Keyboard
+      //
+      DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
+      EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+    }
+  }
   //
   // Register COM1
   //
