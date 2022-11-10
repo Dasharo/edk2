@@ -236,7 +236,8 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 !if $(NETWORK_LAN_ROM) == TRUE
 #
-# Build system must place the LanRom.efi before buildnig the UEFI Payload.
+# Build system must place the LanRom.efi before building the UEFI Payload.
+
 # Typically will be done per platform needs by coreboot.
 #
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
