@@ -26,6 +26,9 @@
 #string STR_DASHARO_USB_CONFIGURATION_TITLE   #language en-US  "USB Configuration"
 #string STR_DASHARO_USB_CONFIGURATION_HELP    #language en-US  "USB-related options"
 
+#string STR_DASHARO_CHIPSET_CONFIGURATION_TITLE   #language en-US  "Chipset Configuration"
+#string STR_DASHARO_CHIPSET_CONFIGURATION_HELP    #language en-US  "Chipset-related options"
+
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
 
@@ -54,3 +57,7 @@
 #string STR_ME_MODE_ENABLE			#language en-US  "Enabled"
 #string STR_ME_MODE_DISABLE_HECI	#language en-US  "Disabled (Soft)"
 #string STR_ME_MODE_DISABLE_HAP		#language en-US  "Disabled (HAP)"
+
+#string STR_PS2_CONTROLLER_ENABLE_PROMPT   #language en-US  "Enable PS2 Controller"
+#string STR_PS2_CONTROLLER_ENABLE_HELP     #language en-US  "Enables/disables the PS/2 Controller. When enabled, PS/2 keyboards and mice will be detected in the firmware and operating system."
+
