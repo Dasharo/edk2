@@ -16,12 +16,14 @@ STATIC CHAR16 mMeModeEfiVar[] = L"MeMode";
 STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
 STATIC CHAR16 mUsbStackEfiVar[] = L"UsbDriverStack";
 STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
+STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC BOOLEAN mUsbStackDefault = TRUE;
 STATIC BOOLEAN mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN mLockBiosDefault = TRUE;
 STATIC BOOLEAN mSmmBwpDefault = FALSE;
 STATIC BOOLEAN mNetworkBootDefault = FALSE;
 STATIC UINT8   mMeModeDefault   = ME_MODE_ENABLE;
+STATIC BOOLEAN mPs2ControllerDefault = FALSE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -230,6 +232,30 @@ DasharoSystemFeaturesUiLibConstructor (
         &mMeModeDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
+  }
+
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller);
+  Status = gRT->GetVariable (
+      mPs2ControllerEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+        mPs2ControllerEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mPs2ControllerDefault),
+        &mPs2ControllerDefault
+        );
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
   }
 
   if (EFI_ERROR(Status)) {
@@ -494,6 +520,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.MeMode),
         &DasharoFeaturesData.MeMode
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.Ps2Controller != DasharoFeaturesData.Ps2Controller) {
+    Status = gRT->SetVariable (
+        mPs2ControllerEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.Ps2Controller),
+        &DasharoFeaturesData.Ps2Controller
         );
     if (EFI_ERROR (Status)) {
       return Status;
