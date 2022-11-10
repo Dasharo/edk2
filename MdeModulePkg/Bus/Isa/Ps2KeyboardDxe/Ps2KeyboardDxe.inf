@@ -37,6 +37,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -76,3 +77,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   Ps2KeyboardDxeExtra.uni
+
+[Depex]
+  gDasharoPs2ControllerPolicyGuid
