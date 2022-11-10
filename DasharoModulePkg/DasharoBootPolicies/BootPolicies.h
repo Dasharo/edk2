@@ -20,9 +20,13 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 #define DASHARO_USB_MASS_STORAGE_POLICY_PROTOCOL_GUID \
   { 0xd7d1a290, 0x651a, 0x4c90, 0xbf, 0x09, 0x1b, 0x7c, 0x56, 0x7c, 0xd5, 0x9c }
 
+#define DASHARO_PS2_CONTROLLER_POLICY_PROTOCOL_GUID \
+  { 0x4885b96d, 0xbdf1, 0x496d, 0xbc, 0x3d, 0x3e, 0x79, 0x57, 0x74, 0xcd, 0x40 }
+
 #define NETWORK_BOOT_POLICY_PROTOCOL_REVISION_01	0x01
 #define USB_STACK_POLICY_PROTOCOL_REVISION_01		0x01
 #define USB_MASS_STORAGE_POLICY_PROTOCOL_REVISION_01	0x01
+#define PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01	0x01
 
 typedef struct _NETWORK_BOOT_POLICY_PROTOCOL {
   UINT32           Revision;
@@ -39,11 +43,17 @@ typedef struct _USB_MASS_STORAGE_POLICY_PROTOCOL {
   BOOLEAN          UsbMassStorageEnabled;
 } USB_MASS_STORAGE_POLICY_PROTOCOL;
 
+typedef struct _PS2_CONTROLLER_POLICY_PROTOCOL {
+  UINT32           Revision;
+  BOOLEAN          Ps2ControllerEnabled;
+} PS2_CONTROLLER_POLICY_PROTOCOL;
+
 //
 // Extern the GUID for protocol users.
 //
-extern EFI_GUID  gDasharoNetworkBootPolicyGuid;
-extern EFI_GUID  gDasharoUsbDriverPolicyGuid;
-extern EFI_GUID  gDasharoUsbMassStoragePolicyGuid;
+extern EFI_GUID gDasharoNetworkBootPolicyGuid;
+extern EFI_GUID gDasharoUsbDriverPolicyGuid;
+extern EFI_GUID gDasharoUsbMassStoragePolicyGuid;
+extern EFI_GUID gDasharoPs2ControllerPolicyGuid;
 
 #endif
