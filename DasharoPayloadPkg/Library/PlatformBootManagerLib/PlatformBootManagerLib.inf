@@ -47,7 +47,9 @@
   MemoryAllocationLib
   DevicePathLib
   HiiLib
+  IoLib
   PrintLib
+  TimerLib
   PlatformHookLib
   Tcg2PhysicalPresenceLib
   CustomizedDisplayLib
@@ -93,3 +95,5 @@
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType
   gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey
   gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck

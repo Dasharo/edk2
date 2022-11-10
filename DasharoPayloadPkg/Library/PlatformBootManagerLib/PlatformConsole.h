@@ -15,7 +15,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseLib.h>
+#include <Library/IoLib.h>
 #include <Library/PcdLib.h>
+#include <Library/TimerLib.h>
 #include <Library/UefiLib.h>
 #include <Library/DevicePathLib.h>
 #include <Protocol/PciIo.h>
