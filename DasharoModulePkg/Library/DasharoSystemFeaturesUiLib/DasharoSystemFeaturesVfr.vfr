@@ -38,6 +38,10 @@ formset
          prompt = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_TITLE),
          help   = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_HELP);
 
+    goto DASHARO_CHIPSET_CONFIGURATION_FORM_ID,
+         prompt = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_TITLE),
+         help   = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_HELP);
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -120,6 +124,22 @@ formset
             option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
             option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
     endoneof;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_CHIPSET_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    checkbox varid  = FeaturesData.Ps2Controller,
+             prompt = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
+             help   = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
+             flags  = INTERACTIVE,
+    endcheckbox;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
