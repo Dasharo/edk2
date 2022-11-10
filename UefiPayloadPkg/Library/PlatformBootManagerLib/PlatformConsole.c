@@ -131,6 +131,8 @@ PrepareLpcBridgeDevicePath (
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
   EFI_GUID                  TerminalTypeGuid;
+  BOOLEAN                   Ps2Enabled;
+  UINTN                     VarSize;
 
   DevicePath = NULL;
   Status = gBS->HandleProtocol (
@@ -143,11 +145,24 @@ PrepareLpcBridgeDevicePath (
   }
   TempDevicePath = DevicePath;
 
-  //
-  // Register Keyboard
-  //
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
-  EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+  VarSize = sizeof (Ps2Enabled);
+  Status = gRT->GetVariable (
+      L"Ps2Controller",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &Ps2Enabled
+      );
+
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(Ps2Enabled))) {
+    if (Ps2Enabled) {
+      //
+      // Register Keyboard
+      //
+      DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
+      EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+    }
+  }
   //
   // Register COM1
   //
