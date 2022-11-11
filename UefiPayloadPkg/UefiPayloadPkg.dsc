@@ -400,6 +400,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableCollectStatistics|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwarePerformanceDataTableS3Support|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdInstallAcpiSdtProtocol|TRUE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdPs2KbdExtendedVerification|FALSE
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
