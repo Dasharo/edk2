@@ -890,7 +890,7 @@ KeyboardWrite (
   // wait for input buffer empty
   //
   for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((KeyReadStatusRegister (ConsoleIn) & 0x02) == 0) {
+    if ((KeyReadStatusRegister (ConsoleIn) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
       RegEmptied = 1;
       break;
     }
@@ -935,7 +935,7 @@ KeyboardCommand (
   // Wait For Input Buffer Empty
   //
   for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((KeyReadStatusRegister (ConsoleIn) & 0x02) == 0) {
+    if ((KeyReadStatusRegister (ConsoleIn) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
       RegEmptied = 1;
       break;
     }
@@ -956,7 +956,7 @@ KeyboardCommand (
   //
   RegEmptied = 0;
   for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((KeyReadStatusRegister (ConsoleIn) & 0x02) == 0) {
+    if ((KeyReadStatusRegister (ConsoleIn) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
       RegEmptied = 1;
       break;
     }
@@ -1015,7 +1015,7 @@ KeyboardWaitForValue (
     // Perform a read
     //
     for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-      if (KeyReadStatusRegister (ConsoleIn) & 0x01) {
+      if (KeyReadStatusRegister (ConsoleIn) & KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA) {
         Data = KeyReadDataRegister (ConsoleIn);
         break;
       }
@@ -1807,16 +1807,107 @@ Done:
 
 }
 
+/**
+  Check if PS2 keyboard is conntected, by sending ECHO command.
+  @param                        none
+  @retval TRUE                  connected
+  @retvar FALSE                 unconnected
+**/
+BOOLEAN
+DetectPs2Keyboard (
+  IN KEYBOARD_CONSOLE_IN_DEV *ConsoleIn
+  )
+{
+  UINT32                TimeOut;
+  UINT32                RegEmptied;
+  UINT8                 Data;
+  UINT32                SumTimeOut;
+  UINT32                GotIt;
+
+  TimeOut     = 0;
+  RegEmptied  = 0;
+
+  //
+  // Wait for input buffer empty
+  //
+  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+    if ((KeyReadStatusRegister (ConsoleIn) & 0x02) == 0) {
+      RegEmptied = 1;
+      break;
+    }
+    MicroSecondDelay (30);
+  }
+
+  if (RegEmptied == 0) {
+    return FALSE;
+  }
+
+  //
+  // Write it
+  //
+  KeyWriteDataRegister (ConsoleIn, KBC_INPBUF_VIA60_KBECHO);
+
+  //
+  // wait for 1s
+  //
+  GotIt       = 0;
+  TimeOut     = 0;
+  SumTimeOut  = 0;
+  Data = 0;
+
+  //
+  // Read from 8042 (multiple times if needed)
+  // until the expected value appears
+  // use SumTimeOut to control the iteration
+  //
+  while (1) {
+
+    //
+    // Perform a read
+    //
+    for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+      if (KeyReadStatusRegister (ConsoleIn) & 0x01) {
+        Data = KeyReadDataRegister (ConsoleIn);
+        break;
+      }
+      MicroSecondDelay (30);
+    }
+
+    SumTimeOut += TimeOut;
+
+    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
+      if(Data == KEYBOARD_CMDECHO_ACK) {
+        GotIt = 1;
+        break;
+      }
+    }
+
+    if (Data == KBC_INPBUF_VIA60_KBECHO) {
+      GotIt = 1;
+      break;
+    }
+
+    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+      break;
+    }
+  }
+
+  //
+  // Check results
+  //
+  if (GotIt == 1) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
 
 /**
-  Check whether there is Ps/2 Keyboard device in system by 0xF4 Keyboard Command
-  If Keyboard receives 0xF4, it will respond with 'ACK'. If it doesn't respond, the device
-  should not be in system.
-
-  @param[in]  ConsoleIn             Keyboard Private Data Structure
-
-  @retval     TRUE                  Keyboard in System.
-  @retval     FALSE                 Keyboard not in System.
+  Check if PS2 keyboard is conntected. If the result of first time is
+  error, it will retry again.
+  @param                        none
+  @retval TRUE                  connected
+  @retvar FALSE                 unconnected
 **/
 BOOLEAN
 EFIAPI
@@ -1824,40 +1915,16 @@ CheckKeyboardConnect (
   IN KEYBOARD_CONSOLE_IN_DEV *ConsoleIn
   )
 {
-  EFI_STATUS     Status;
-  UINTN          WaitForValueTimeOutBcakup;
+  BOOLEAN Result;
 
-  //
-  // enable keyboard itself and wait for its ack
-  // If can't receive ack, Keyboard should not be connected.
-  //
-  if (!PcdGetBool (PcdFastPS2Detection)) {
-    Status = KeyboardWrite (
-               ConsoleIn,
-               KEYBOARD_KBEN
-               );
+  Result = DetectPs2Keyboard (ConsoleIn);
 
-    if (EFI_ERROR (Status)) {
-      return FALSE;
-    }
+  if (Result == FALSE) {
     //
-    // wait for 1s
+    // If there is no ps2 keyboard detected for the 1st time, retry again.
     //
-    WaitForValueTimeOutBcakup = mWaitForValueTimeOut;
-    mWaitForValueTimeOut = KEYBOARD_WAITFORVALUE_TIMEOUT;
-    Status = KeyboardWaitForValue (
-               ConsoleIn,
-               KEYBOARD_CMDECHO_ACK
-               );
-    mWaitForValueTimeOut = WaitForValueTimeOutBcakup;
-
-    if (EFI_ERROR (Status)) {
-      return FALSE;
-    }
-
-    return TRUE;
-  } else {
-    return TRUE;
+    Result = DetectPs2Keyboard (ConsoleIn);
   }
-}
 
+  return Result;
+}
