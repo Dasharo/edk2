@@ -150,6 +150,7 @@ InstallPs2KeyboardDriver (
 #define KEYBOARD_8042_STATUS_REGISTER   0x64
 #define KEYBOARD_8042_COMMAND_REGISTER  0x64
 
+#define KBC_INPBUF_VIA60_KBECHO         0xEE
 #define KEYBOARD_KBEN                   0xF4
 #define KEYBOARD_CMDECHO_ACK            0xFA
 
