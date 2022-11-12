@@ -49,7 +49,7 @@ InitializeBootPolicies (
   mUsbMassStoragePolicy.Revision		= USB_MASS_STORAGE_POLICY_PROTOCOL_REVISION_01;
   mUsbMassStoragePolicy.UsbMassStorageEnabled	= TRUE;
   mPs2ControllerPolicy.Revision			= PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
-  mPs2ControllerPolicy.Ps2ControllerEnabled	= FALSE; // disable by default
+  mPs2ControllerPolicy.Ps2ControllerEnabled	= TRUE;
 
   Status = GetVariable2 (
              L"NetworkBoot",
@@ -128,19 +128,19 @@ InitializeBootPolicies (
              &VarSize
              );
 
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))) {
-
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar)))
     mPs2ControllerPolicy.Ps2ControllerEnabled = *EfiVar;
+  else
+    mPs2ControllerPolicy.Ps2ControllerEnabled = TRUE; // enable PS2 by default
 
-    if (mPs2ControllerPolicy.Ps2ControllerEnabled) {
-      gBS->InstallMultipleProtocolInterfaces (
-        &ImageHandle,
-        &gDasharoPs2ControllerPolicyGuid,
-        &mPs2ControllerPolicy,
-        NULL
-        );
-      DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
-    }
+  if (mPs2ControllerPolicy.Ps2ControllerEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoPs2ControllerPolicyGuid,
+      &mPs2ControllerPolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
   }
 
   return EFI_SUCCESS;
