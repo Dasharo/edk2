@@ -356,7 +356,8 @@ PcatPciRootBridgeParseBars (
 
 
           if ((Value & BIT3) == BIT3) {
-            MemAperture = PMem;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //     MemAperture = PMem;
             DEBUG ((EFI_D_INFO, "%a: PCI %x:%x.%x 32bit prefetchable BAR@%d %x %x\n",
               __FUNCTION__,
               Bus,
@@ -585,12 +586,16 @@ ScanForRootBridges (
           Base = ((UINT32) Pci.Bridge.PrefetchableMemoryBase & 0xfff0) << 16;
           Limit = (((UINT32) Pci.Bridge.PrefetchableMemoryLimit & 0xfff0)
                    << 16) | 0xfffff;
-          MemAperture = &PMem;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //   MemAperture = &PMem;
+          MemAperture = &Mem;
           if (Value == BIT0) {
             Base |= LShiftU64 (Pci.Bridge.PrefetchableBaseUpper32, 32);
             Limit |= LShiftU64 (Pci.Bridge.PrefetchableLimitUpper32, 32);
             if (Base > SIZE_4GB)
-              MemAperture = &PMemAbove4G;
+        // FIXME: interleaved Pmem and Mem is not supported 
+        //       MemAperture = &PMemAbove4G;
+              MemAperture = &MemAbove4G;
           }
           if ((Base > 0) && (Base < Limit)) {
             if (MemAperture->Base > Base) {
