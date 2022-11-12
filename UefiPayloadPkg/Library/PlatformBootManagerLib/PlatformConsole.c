@@ -92,6 +92,15 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define gPnpPs2Keyboard \
   PNPID_DEVICE_PATH_NODE(0x0303)
 
+#define KEYBOARD_8042_DATA_REGISTER     0x60
+#define KEYBOARD_8042_STATUS_REGISTER   0x64
+
+#define KBC_INPBUF_VIA60_KBECHO         0xEE
+#define KEYBOARD_CMDECHO_ACK            0xFA
+
+#define KEYBOARD_TIMEOUT                65536   // 0.07s
+#define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
+
 typedef enum _TYPE_OF_TERMINAL {
   TerminalTypePcAnsi                = 0,
   TerminalTypeVt100,
@@ -110,6 +119,128 @@ VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
 VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
 
 BOOLEAN  mDetectDisplayOnly;
+/**
+  Check if PS2 keyboard is conntected, by sending ECHO command.
+  @param                        none
+  @retval TRUE                  connected
+  @retvar FALSE                 unconnected
+**/
+BOOLEAN
+DetectPs2Keyboard (
+  VOID
+  )
+{
+  UINT32                TimeOut;
+  UINT32                RegEmptied;
+  UINT8                 Data;
+  UINT32                SumTimeOut;
+  UINT32                GotIt;
+
+  TimeOut     = 0;
+  RegEmptied  = 0;
+
+  //
+  // Wait for input buffer empty
+  //
+  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & 0x02) == 0) {
+      RegEmptied = 1;
+      break;
+    }
+    MicroSecondDelay (30);
+  }
+
+  if (RegEmptied == 0) {
+    return FALSE;
+  }
+
+  //
+  // Write it
+  //
+  IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
+
+  //
+  // wait for 1s
+  //
+  GotIt       = 0;
+  TimeOut     = 0;
+  SumTimeOut  = 0;
+  Data = 0;
+
+  //
+  // Read from 8042 (multiple times if needed)
+  // until the expected value appears
+  // use SumTimeOut to control the iteration
+  //
+  while (1) {
+
+    //
+    // Perform a read
+    //
+    for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
+      if (IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & 0x01) {
+        Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
+        break;
+      }
+      MicroSecondDelay (30);
+    }
+
+    SumTimeOut += TimeOut;
+
+    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
+      if(Data == KEYBOARD_CMDECHO_ACK) {
+        GotIt = 1;
+        break;
+      }
+    }
+
+    if (Data == KBC_INPBUF_VIA60_KBECHO) {
+      GotIt = 1;
+      break;
+    }
+
+    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+      break;
+    }
+  }
+
+  //
+  // Check results
+  //
+  if (GotIt == 1) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+/**
+  Check if PS2 keyboard is conntected. If the result of first time is
+  error, it will retry again.
+  @param                        none
+  @retval TRUE                  connected
+  @retvar FALSE                 unconnected
+**/
+BOOLEAN
+EFIAPI
+CheckKeyboardConnect (
+  VOID
+  )
+{
+  BOOLEAN Result;
+
+  Result = DetectPs2Keyboard ();
+
+  if (Result == FALSE) {
+    //
+    // If there is no ps2 keyboard detected for the 1st time, retry again.
+    //
+    Result = DetectPs2Keyboard ();
+  }
+
+  return Result;
+}
+
 
 /**
   Add IsaKeyboard to ConIn; add IsaSerial to ConOut, ConIn, ErrOut.
@@ -155,7 +286,7 @@ PrepareLpcBridgeDevicePath (
       );
 
   if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(Ps2Enabled))) {
-    if (Ps2Enabled) {
+    if (Ps2Enabled && CheckKeyboardConnect()) {
       //
       // Register Keyboard
       //
