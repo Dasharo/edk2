@@ -1819,10 +1819,11 @@ DetectPs2Keyboard (
   )
 {
   UINT32                TimeOut;
-  UINT32                RegEmptied;
+  UINT8                 RegEmptied;
   UINT8                 Data;
   UINT32                SumTimeOut;
-  UINT32                GotIt;
+  UINT8                 GotIt;
+  UINT8                 Status;
 
   TimeOut     = 0;
   RegEmptied  = 0;
@@ -1831,7 +1832,7 @@ DetectPs2Keyboard (
   // Wait for input buffer empty
   //
   for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((KeyReadStatusRegister (ConsoleIn) & 0x02) == 0) {
+    if ((KeyReadStatusRegister (ConsoleIn) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
       RegEmptied = 1;
       break;
     }
@@ -1853,7 +1854,8 @@ DetectPs2Keyboard (
   GotIt       = 0;
   TimeOut     = 0;
   SumTimeOut  = 0;
-  Data = 0;
+  Data        = 0;
+  Status      = 0;
 
   //
   // Read from 8042 (multiple times if needed)
@@ -1866,10 +1868,8 @@ DetectPs2Keyboard (
     // Perform a read
     //
     for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-      if (KeyReadStatusRegister (ConsoleIn) & 0x01) {
-        Data = KeyReadDataRegister (ConsoleIn);
-        break;
-      }
+      Status = KeyReadStatusRegister (ConsoleIn);
+      Data = KeyReadDataRegister (ConsoleIn);;
       MicroSecondDelay (30);
     }
 
@@ -1882,12 +1882,19 @@ DetectPs2Keyboard (
       }
     }
 
-    if (Data == KBC_INPBUF_VIA60_KBECHO) {
-      GotIt = 1;
+    // If keyboard not connected, the timeout will occurr
+    if (Status & KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT || Data == KEYBOARD_CMD_RESEND) {
+      DEBUG ((EFI_D_INFO, "PS/2 receive timeout, keyboard not connected\n"));
+      GotIt = 0;
       break;
     }
 
     if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+      // Some PS/2 controllers may not respond to echo command.
+      // Assume keybaord connected if no timeout has been detected
+      DEBUG ((EFI_D_INFO, "PS/2 detect timeout, assuming connected\n"));
+      if (Data == KBC_INPBUF_VIA60_KBECHO)
+        GotIt = 1;
       break;
     }
   }

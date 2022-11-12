@@ -153,6 +153,7 @@ InstallPs2KeyboardDriver (
 #define KBC_INPBUF_VIA60_KBECHO         0xEE
 #define KEYBOARD_KBEN                   0xF4
 #define KEYBOARD_CMDECHO_ACK            0xFA
+#define KEYBOARD_CMD_RESEND             0xFE
 
 #define KEYBOARD_MAX_TRY                256     // 256
 #define KEYBOARD_TIMEOUT                65536   // 0.07s

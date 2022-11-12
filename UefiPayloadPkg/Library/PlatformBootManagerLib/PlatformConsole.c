@@ -94,12 +94,14 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define KEYBOARD_8042_DATA_REGISTER     0x60
 #define KEYBOARD_8042_STATUS_REGISTER   0x64
-#define KEYBOARD_8042_COMMAND_REGISTER  0x64
 
-#define KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA     0x1
-#define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      0x2
+#define KBC_INPBUF_VIA60_KBECHO         0xEE
+#define KEYBOARD_CMDECHO_ACK            0xFA
+#define KEYBOARD_CMD_RESEND             0xFE
 
-#define KEYBOARD_CMD_KBD_TEST           0xAB
+#define KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA     BIT0
+#define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      BIT1
+#define KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT     BIT6
 
 #define KEYBOARD_TIMEOUT                65536   // 0.07s
 #define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
@@ -136,6 +138,7 @@ DetectPs2Keyboard (
   UINT32                TimeOut;
   UINT32                RegEmptied;
   UINT8                 Data;
+  UINT8                 Status;
   UINT32                SumTimeOut;
   UINT32                GotIt;
 
@@ -161,7 +164,7 @@ DetectPs2Keyboard (
   //
   // Write it
   //
-  IoWrite8 (KEYBOARD_8042_COMMAND_REGISTER, KEYBOARD_CMD_KBD_TEST);
+  IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
 
   //
   // wait for 1s
@@ -169,7 +172,8 @@ DetectPs2Keyboard (
   GotIt       = 0;
   TimeOut     = 0;
   SumTimeOut  = 0;
-  Data = 0xFF;
+  Data        = 0;
+  Status      = 0;
 
   //
   // Read from 8042 (multiple times if needed)
@@ -182,22 +186,35 @@ DetectPs2Keyboard (
     // Perform a read
     //
     for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-      if (IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA) {
-        Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
-        DEBUG ((EFI_D_INFO, "PS2 got %02x\n", Data));
-        break;
-      }
+      Status = IoRead8 (KEYBOARD_8042_STATUS_REGISTER);
+      Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
       MicroSecondDelay (30);
     }
 
     SumTimeOut += TimeOut;
 
-    if (Data == 0x00) {
-      GotIt = 1;
+    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
+      if(Data == KEYBOARD_CMDECHO_ACK) {
+        GotIt = 1;
+        break;
+      }
+    }
+
+    // If keyboard not connected, the timeout will occurr
+    if (Status & KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT || Data == KEYBOARD_CMD_RESEND) {
+      DEBUG ((EFI_D_INFO, "PS/2 receive timeout, keyboard not connected\n"));
+      GotIt = 0;
       break;
     }
 
-    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT) {
+    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+      // Some PS/2 controllers may not respond to echo command.
+      // Assume keybaord connected if no timeout has been detected
+      DEBUG ((EFI_D_INFO, "PS/2 detect timeout, assuming connected\n"));
+      if (Data == KBC_INPBUF_VIA60_KBECHO) {
+        GotIt = 1;
+        break;
+      }
       break;
     }
   }
@@ -211,34 +228,6 @@ DetectPs2Keyboard (
     return FALSE;
   }
 }
-
-/**
-  Check if PS2 keyboard is conntected. If the result of first time is
-  error, it will retry again.
-  @param                        none
-  @retval TRUE                  connected
-  @retvar FALSE                 unconnected
-**/
-BOOLEAN
-EFIAPI
-CheckKeyboardConnect (
-  VOID
-  )
-{
-  BOOLEAN Result;
-
-  Result = DetectPs2Keyboard ();
-
-  if (Result == FALSE) {
-    //
-    // If there is no ps2 keyboard detected for the 1st time, retry again.
-    //
-    Result = DetectPs2Keyboard ();
-  }
-
-  return Result;
-}
-
 
 /**
   Add IsaKeyboard to ConIn; add IsaSerial to ConOut, ConIn, ErrOut.
@@ -287,7 +276,7 @@ PrepareLpcBridgeDevicePath (
   if ((Status == EFI_SUCCESS) && (VarSize == sizeof(Ps2Enabled))) {
     if (Ps2Enabled) {
       DEBUG ((DEBUG_INFO, "PS/2 controller enabled\n"));
-      if (CheckKeyboardConnect()) {
+      if (DetectPs2Keyboard()) {
         //
         // Register Keyboard
         //
@@ -305,7 +294,7 @@ PrepareLpcBridgeDevicePath (
     }
   } else {
     DEBUG ((DEBUG_INFO, "PS/2 controller variable status %r\n", Status));
-    if (CheckKeyboardConnect()) {
+    if (DetectPs2Keyboard()) {
       //
       // Register Keyboard
       //
