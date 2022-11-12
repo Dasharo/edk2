@@ -869,7 +869,6 @@ WarnIfRecoveryBoot (
   gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
 
   gST->ConOut->ClearScreen (gST->ConOut);
-  BootLogoEnableLogo ();
 }
 
 /**
@@ -1054,6 +1053,8 @@ PlatformBootManagerAfterConsole (
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
 
   gST->ConOut->ClearScreen (gST->ConOut);
+  WarnIfRecoveryBoot ();
+
   BootLogoEnableLogo ();
 
   // FIXME: USB devices are not being detected unless we wait a bit.
@@ -1061,8 +1062,6 @@ PlatformBootManagerAfterConsole (
 
   EfiBootManagerConnectAll ();
   EfiBootManagerRefreshAllBootOption ();
-
-  WarnIfRecoveryBoot ();
 
   //
   // Process TPM PPI request
