@@ -94,9 +94,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define KEYBOARD_8042_DATA_REGISTER     0x60
 #define KEYBOARD_8042_STATUS_REGISTER   0x64
+#define KEYBOARD_8042_COMMAND_REGISTER  0x64
 
-#define KBC_INPBUF_VIA60_KBECHO         0xEE
-#define KEYBOARD_CMDECHO_ACK            0xFA
+#define KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA     0x1
+#define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      0x2
+
+#define KEYBOARD_CMD_KBD_TEST           0xAB
 
 #define KEYBOARD_TIMEOUT                65536   // 0.07s
 #define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
@@ -143,7 +146,7 @@ DetectPs2Keyboard (
   // Wait for input buffer empty
   //
   for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & 0x02) == 0) {
+    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
       RegEmptied = 1;
       break;
     }
@@ -151,13 +154,14 @@ DetectPs2Keyboard (
   }
 
   if (RegEmptied == 0) {
+    DEBUG ((EFI_D_INFO, "PS2 reg not emptied\n"));
     return FALSE;
   }
 
   //
   // Write it
   //
-  IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
+  IoWrite8 (KEYBOARD_8042_COMMAND_REGISTER, KEYBOARD_CMD_KBD_TEST);
 
   //
   // wait for 1s
@@ -165,7 +169,7 @@ DetectPs2Keyboard (
   GotIt       = 0;
   TimeOut     = 0;
   SumTimeOut  = 0;
-  Data = 0;
+  Data = 0xFF;
 
   //
   // Read from 8042 (multiple times if needed)
@@ -178,8 +182,9 @@ DetectPs2Keyboard (
     // Perform a read
     //
     for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-      if (IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & 0x01) {
+      if (IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA) {
         Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
+        DEBUG ((EFI_D_INFO, "PS2 got %02x\n", Data));
         break;
       }
       MicroSecondDelay (30);
@@ -187,19 +192,12 @@ DetectPs2Keyboard (
 
     SumTimeOut += TimeOut;
 
-    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
-      if(Data == KEYBOARD_CMDECHO_ACK) {
-        GotIt = 1;
-        break;
-      }
-    }
-
-    if (Data == KBC_INPBUF_VIA60_KBECHO) {
+    if (Data == 0x00) {
       GotIt = 1;
       break;
     }
 
-    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
+    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT) {
       break;
     }
   }
@@ -275,6 +273,7 @@ PrepareLpcBridgeDevicePath (
     return Status;
   }
   TempDevicePath = DevicePath;
+  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
 
   VarSize = sizeof (Ps2Enabled);
   Status = gRT->GetVariable (
@@ -285,12 +284,32 @@ PrepareLpcBridgeDevicePath (
       &Ps2Enabled
       );
 
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(Ps2Enabled))) {
-    if (Ps2Enabled && CheckKeyboardConnect()) {
+  if ((Status == EFI_SUCCESS) && (VarSize == sizeof(Ps2Enabled))) {
+    if (Ps2Enabled) {
+      DEBUG ((DEBUG_INFO, "PS/2 controller enabled\n"));
+      if (CheckKeyboardConnect()) {
+        //
+        // Register Keyboard
+        //
+        DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
+        EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+      } else {
+        // Remove PS/2 Keyboard from ConIn
+        DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
+        EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+      }
+    } else {
+      DEBUG ((DEBUG_INFO, "PS/2 controller disabled\n"));
+      // Remove PS/2 Keyboard from ConIn
+      EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "PS/2 controller variable status %r\n", Status));
+    if (CheckKeyboardConnect()) {
       //
       // Register Keyboard
       //
-      DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
+      DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
       EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
     }
   }
