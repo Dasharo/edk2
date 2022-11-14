@@ -12,8 +12,12 @@ SPDX-License-Identifier: BSD-2-Clause
 #include <Guid/MdeModuleHii.h>
 #include <Guid/HiiPlatformSetupFormset.h>
 
+#include <Protocol/AcpiSystemDescriptionTable.h>
 #include <Protocol/HiiConfigAccess.h>
 
+#include <IndustryStandard/Acpi.h>
+
+#include <Library/PcdLib.h>
 #include <Library/PrintLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -21,6 +25,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseLib.h>
+#include <Library/IoLib.h>
 #include <Library/HiiLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/UefiHiiServicesLib.h>

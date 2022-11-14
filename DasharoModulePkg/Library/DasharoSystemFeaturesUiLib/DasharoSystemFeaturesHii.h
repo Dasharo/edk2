@@ -21,14 +21,24 @@ SPDX-License-Identifier: BSD-2-Clause
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
+#pragma pack(push,1) 
 typedef struct {
-  BOOLEAN LockBios;
-  BOOLEAN SmmBwp;
-  BOOLEAN NetworkBoot;
-  BOOLEAN UsbStack;
-  BOOLEAN UsbMassStorage;
-  UINT8   MeMode;
-  BOOLEAN Ps2Controller;
+  BOOLEAN WatchdogEnable;
+  UINT16  WatchdogTimeout;
+} WATCHDOG_CONFIG;
+
+#pragma pack(pop)
+
+typedef struct {
+  BOOLEAN            LockBios;
+  BOOLEAN            SmmBwp;
+  BOOLEAN            NetworkBoot;
+  BOOLEAN            UsbStack;
+  BOOLEAN            UsbMassStorage;
+  UINT8              MeMode;
+  BOOLEAN            Ps2Controller;
+  WATCHDOG_CONFIG    WatchdogConfig;
+  BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0

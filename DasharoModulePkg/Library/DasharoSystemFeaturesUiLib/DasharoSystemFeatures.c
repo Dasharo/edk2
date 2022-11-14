@@ -6,8 +6,11 @@ SPDX-License-Identifier: BSD-2-Clause
 
 **/
 
-#include <Library/PcdLib.h>
 #include "DasharoSystemFeatures.h"
+
+#define PCH_OC_WDT_CTL				0x54
+#define   PCH_OC_WDT_CTL_EN			BIT14
+#define   PCH_OC_WDT_CTL_TOV_MASK		0x3FF
 
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
 STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
@@ -17,6 +20,8 @@ STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
 STATIC CHAR16 mUsbStackEfiVar[] = L"UsbDriverStack";
 STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
 STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
+STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
+STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC BOOLEAN mUsbStackDefault = TRUE;
 STATIC BOOLEAN mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN mLockBiosDefault = TRUE;
@@ -57,6 +62,123 @@ STATIC HII_VENDOR_DEVICE_PATH  mDasharoSystemFeaturesHiiVendorDevicePath = {
     }
   }
 };
+
+/**
+  This function uses the ACPI SDT protocol to locate an ACPI table.
+  It is really only useful for finding tables that only have a single instance,
+  e.g. FADT, FACS, MADT, etc.  It is not good for locating SSDT, etc.
+  Matches are determined by finding the table with ACPI table that has
+  a matching signature.
+
+  @param[in] Signature           - Pointer to an ASCII string containing the OEM Table ID from the ACPI table header
+  @param[in, out] Table          - Updated with a pointer to the table
+  @param[in, out] Handle         - AcpiSupport protocol table handle for the table found
+  @param[in, out] Version        - The version of the table desired
+
+  @retval EFI_SUCCESS            - The function completed successfully.
+  @retval EFI_NOT_FOUND          - Failed to locate AcpiTable.
+  @retval EFI_NOT_READY          - Not ready to locate AcpiTable.
+**/
+EFI_STATUS
+EFIAPI
+LocateAcpiTableBySignature (
+  IN      UINT32                        Signature,
+  IN OUT  EFI_ACPI_DESCRIPTION_HEADER   **Table
+  )
+{
+  EFI_STATUS                  Status;
+  INTN                        Index;
+  EFI_ACPI_TABLE_VERSION      Version;
+  EFI_ACPI_DESCRIPTION_HEADER *OrgTable;
+  EFI_ACPI_SDT_PROTOCOL       *SdtProtocol;
+  UINTN                       Handle;
+
+  Status = gBS->LocateProtocol (&gEfiAcpiSdtProtocolGuid, NULL, (VOID **)&SdtProtocol);
+  if (EFI_ERROR (Status))
+    return Status;
+
+  ///
+  /// Locate table with matching ID
+  ///
+  Version = 0;
+  Index = 0;
+  Handle = 0;
+  do {
+    Status = SdtProtocol->GetAcpiTable (
+                            Index,
+                            (EFI_ACPI_SDT_HEADER **)&OrgTable,
+                            &Version,
+                            &Handle
+                            );
+    if (Status == EFI_NOT_FOUND) {
+      break;
+    }
+    ASSERT_EFI_ERROR (Status);
+    Index++;
+  } while (OrgTable->Signature != Signature);
+
+  if (Status != EFI_NOT_FOUND) {
+    *Table = AllocateCopyPool (OrgTable->Length, OrgTable);
+    if (*Table == NULL)
+      return EFI_OUT_OF_RESOURCES;
+  }
+
+  ///
+  /// If we found the table, there will be no error.
+  ///
+  return Status;
+}
+
+/**
+  This function will be called only if the Watchdog variable is not present.
+  It will populate the initial state based on what coreboot has programmed.
+  If watchdog was not enabled on first boot, it means it was not enabled,
+  and watchdog options should be hidden (WatchdogState == FALSE);
+**/
+VOID
+EFIAPI
+GetDefaultWatchdogConfig (
+  IN OUT  DASHARO_FEATURES_DATA       *FeaturesData
+  )
+{
+  EFI_STATUS                                      Status;
+  EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE       *FadtTable;
+  UINTN                                           AcpiBase;
+  UINT32                                          WatchdogCtl;
+
+  Status = LocateAcpiTableBySignature (
+              EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE,
+              (EFI_ACPI_DESCRIPTION_HEADER **) &FadtTable
+              );
+  if (EFI_ERROR (Status) || (FadtTable == NULL)) {
+    FeaturesData->WatchdogState = FALSE;
+    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
+    return;
+  }
+
+  /* On Intel platforms PM1A Event Block is the ACPI Base */
+  AcpiBase = FadtTable->Pm1aEvtBlk;
+
+  /* ACPI size is 0x100 bytes, check for invalid base */
+  if (AcpiBase > 0xFF00) {
+    FeaturesData->WatchdogState = FALSE;
+    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
+    return;
+  }
+
+  WatchdogCtl = IoRead32(AcpiBase + 0x54);
+
+  if (WatchdogCtl & PCH_OC_WDT_CTL_EN) {
+    FeaturesData->WatchdogState = TRUE;
+    FeaturesData->WatchdogConfig.WatchdogEnable = TRUE;
+    /* OC WDT timeout is 0 based (0 means 1 second) so increment to match the VFR */
+    FeaturesData->WatchdogConfig.WatchdogTimeout = (WatchdogCtl & PCH_OC_WDT_CTL_TOV_MASK) + 1;
+  } else {
+    FeaturesData->WatchdogState = FALSE;
+    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
+  }
+}
+
 
 /**
   Install Dasharo System Features Menu driver.
@@ -248,6 +370,57 @@ DasharoSystemFeaturesUiLibConstructor (
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
     ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState);
+  Status = gRT->GetVariable (
+      mWatchdogStateEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    GetDefaultWatchdogConfig(&mDasharoSystemFeaturesPrivate.DasharoFeaturesData);
+
+    Status = gRT->SetVariable (
+        mWatchdogEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig
+        );
+    ASSERT_EFI_ERROR (Status);
+
+    Status = gRT->SetVariable (
+        mWatchdogStateEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState
+        );
+    ASSERT_EFI_ERROR (Status);
+  } else {
+    BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig);
+    Status = gRT->GetVariable (
+        mWatchdogEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        NULL,
+        &BufferSize,
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig
+        );
+
+    if (Status == EFI_NOT_FOUND) {
+      Status = gRT->SetVariable (
+          mWatchdogEfiVar,
+          &gDasharoSystemFeaturesGuid,
+          EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+          sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig),
+          &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig
+          );
+      ASSERT_EFI_ERROR (Status);
+    }
   }
 
   return EFI_SUCCESS;
@@ -521,6 +694,22 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.Ps2Controller),
         &DasharoFeaturesData.Ps2Controller
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.WatchdogConfig.WatchdogEnable !=
+        DasharoFeaturesData.WatchdogConfig.WatchdogEnable ||
+      Private->DasharoFeaturesData.WatchdogConfig.WatchdogTimeout !=
+        DasharoFeaturesData.WatchdogConfig.WatchdogTimeout) {
+    Status = gRT->SetVariable (
+        mWatchdogEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.WatchdogConfig),
+        &DasharoFeaturesData.WatchdogConfig
         );
     if (EFI_ERROR (Status)) {
       return Status;
