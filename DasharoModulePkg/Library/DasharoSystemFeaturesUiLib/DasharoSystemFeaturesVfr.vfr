@@ -141,6 +141,27 @@ formset
              flags  = INTERACTIVE,
     endcheckbox;
 
+    suppressif ideqval FeaturesData.WatchdogState == 0;
+      checkbox varid  = FeaturesData.WatchdogConfig.WatchdogEnable,
+               prompt = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
+               help   = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
+               flags  = INTERACTIVE,
+      endcheckbox;
+
+      suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
+        numeric varid   = FeaturesData.WatchdogConfig.WatchdogTimeout,
+                prompt  = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_PROMPT),
+                help    = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_HELP),
+                flags   = INTERACTIVE,
+                minimum = 60,
+                maximum = 1024,
+                step    = 0,        // Stepping of 0 equates to a manual entering
+                                    // of a value, otherwise it will be adjusted by "+"/"-"
+                default = 90,
+        endnumeric;
+      endif;
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
