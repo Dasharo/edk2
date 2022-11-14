@@ -79,7 +79,7 @@ DasharoSystemFeaturesUiLibConstructor (
   UINTN       BufferSize;
 
   if (!PcdGetBool (PcdShowMenu))
-    return EFI_UNSUPPORTED;
+    return EFI_SUCCESS;
 
   mDasharoSystemFeaturesPrivate.DriverHandle = NULL;
   Status = gBS->InstallMultipleProtocolInterfaces (
@@ -120,9 +120,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mLockBiosDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios = mLockBiosDefault;
-    if (EFI_ERROR(Status)) {
-      return Status;
-    }
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot);
@@ -143,6 +141,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mNetworkBootDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = mNetworkBootDefault;
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack);
@@ -163,6 +162,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mUsbStackDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack = mUsbStackDefault;
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage);
@@ -183,10 +183,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mUsbMassStorageDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage = mUsbMassStorageDefault;
-  }
-
-  if (EFI_ERROR(Status)) {
-    return Status;
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp);
@@ -207,10 +204,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mSmmBwpDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp = mSmmBwpDefault;
-  }
-
-  if (EFI_ERROR(Status)) {
-    return Status;
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode);
@@ -231,10 +225,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mMeModeDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
-  }
-
-  if (EFI_ERROR(Status)) {
-    return Status;
+    ASSERT_EFI_ERROR (Status);
   }
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller);
@@ -255,10 +246,7 @@ DasharoSystemFeaturesUiLibConstructor (
         &mPs2ControllerDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
-  }
-
-  if (EFI_ERROR(Status)) {
-    return Status;
+    ASSERT_EFI_ERROR (Status);
   }
 
   return EFI_SUCCESS;
