@@ -61,3 +61,8 @@
 #string STR_PS2_CONTROLLER_ENABLE_PROMPT   #language en-US  "Enable PS2 Controller"
 #string STR_PS2_CONTROLLER_ENABLE_HELP     #language en-US  "Enables/disables the PS/2 Controller. When enabled, PS/2 keyboards and mice will be detected in the firmware and operating system."
 
+#string STR_WATCHDOG_ENABLE_PROMPT   #language en-US  "Enable watchdog"
+#string STR_WATCHDOG_ENABLE_HELP     #language en-US  "Enables/disables OC Watchdog Timer during POST. If the timers expires, for example due to an unexpected hang or lockup, the platform will be reset after specified timeout."
+
+#string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
+#string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 60s, maximum 1024s."
