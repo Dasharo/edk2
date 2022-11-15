@@ -1910,7 +1910,8 @@ DetectPs2Keyboard (
 }
 
 /**
-  Check if PS2 keyboard is conntected. If the result of first time is
+  Check if PS2 keyboard is connected. If the result of first time is
+
   error, it will retry again.
   @param                        none
   @retval TRUE                  connected
