@@ -25,6 +25,13 @@
   FLASH_DEFINITION                    = UefiPayloadPkg/UefiPayloadPkg.fdf
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
+  DEFINE PS2_KEYBOARD_ENABLE          = TRUE
+  DEFINE RAM_DISK_ENABLE              = FALSE
+  DEFINE SIO_BUS_ENABLE               = FALSE
+  DEFINE UNIVERSAL_PAYLOAD            = FALSE
+  DEFINE SECURITY_STUB_ENABLE         = TRUE
+  DEFINE SMM_SUPPORT                  = FALSE
+  DEFINE ABOVE_4G_MEMORY              = TRUE
 
   #
   # SBL:      UEFI payload for Slim Bootloader
@@ -123,6 +130,13 @@
   # IPXE support
   #
   DEFINE NETWORK_IPXE                   = FALSE
+
+  # Dfine the maximum size of the capsule image without a reset flag that the platform can support.
+  DEFINE MAX_SIZE_NON_POPULATE_CAPSULE = 0xa00000
+
+  # Define RTC related register.
+  DEFINE RTC_INDEX_REGISTER = 0x70
+  DEFINE RTC_TARGET_REGISTER = 0x71
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
@@ -419,6 +433,51 @@
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
 !endif
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmStackSize|0x4000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdEdkiiFpdtStringRecordEnableOnly| TRUE
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  gEfiMdePkgTokenSpaceGuid.PcdPerformanceLibraryPropertyMask       | 0x1
+!endif
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+
+  gUefiPayloadPkgTokenSpaceGuid.PcdDispatchModuleAbove4GMemory|$(ABOVE_4G_MEMORY)
+
+  gEfiMdePkgTokenSpaceGuid.PcdMaximumUnicodeStringLength|1800000
+
+!if $(CRYPTO_PROTOCOL_SUPPORT) == TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.HmacSha256.Family                        | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Md5.Family                               | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Pkcs.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Dh.Family                                | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Random.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Rsa.Family                               | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Sha1.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Sha256.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Sha384.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Sha512.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.X509.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Tdes.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Aes.Services.GetContextSize              | TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Aes.Services.Init                        | TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Aes.Services.CbcEncrypt                  | TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Aes.Services.CbcDecrypt                  | TRUE
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Arc4.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Sm3.Family                               | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Hkdf.Family                              | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.Tls.Family                               | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.TlsSet.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+  gEfiCryptoPkgTokenSpaceGuid.PcdCryptoServiceFamilyEnable.TlsGet.Family                            | PCD_CRYPTO_SERVICE_ENABLE_FAMILY
+!endif
+
+  # Disable MTRR programming
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuDisableMtrrProgramming|TRUE
+
+[PcdsPatchableInModule.X64]
+  gPcAtChipsetPkgTokenSpaceGuid.PcdRtcIndexRegister|$(RTC_INDEX_REGISTER)
+  gPcAtChipsetPkgTokenSpaceGuid.PcdRtcTargetRegister|$(RTC_TARGET_REGISTER)
+!if $(NETWORK_DRIVER_ENABLE) == TRUE
+  gEfiNetworkPkgTokenSpaceGuid.PcdAllowHttpConnections|TRUE
+!endif
 
 [PcdsPatchableInModule.common]
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x7
@@ -436,7 +495,7 @@
     gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x03
   !endif
 !endif
-
+  gEfiMdeModulePkgTokenSpaceGuid.PcdMaxSizeNonPopulateCapsule|$(MAX_SIZE_NON_POPULATE_CAPSULE)
   #
   # Network Pcds
   #
@@ -722,8 +781,17 @@
 !if $(SERIAL_TERMINAL) == TRUE
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
 !endif
+
+!if $(USE_PLATFORM_GOP) == TRUE
+  UefiPayloadPkg/PlatformGopPolicy/PlatformGopPolicy.inf
+!else
   UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
   UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
+!endif
+
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
+!endif
 
   #
   # SMMSTORE
