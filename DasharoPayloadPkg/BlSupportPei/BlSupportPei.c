@@ -371,21 +371,7 @@ MemInfoCallback (
         }
       }
     } else if (Type == EFI_RESOURCE_MEMORY_MAPPED_IO) {
-      BuildResourceDescriptorHob (
-          EFI_RESOURCE_MEMORY_RESERVED,
-          (EFI_RESOURCE_ATTRIBUTE_PRESENT    |
-          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_TESTED),
-          (EFI_PHYSICAL_ADDRESS)Base,
-          Size
-          );
-
-      BuildMemoryAllocationHob (
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size,
-        EfiMemoryMappedIO
-        );
+      BuildMemoryMappedIoRangeHob((EFI_PHYSICAL_ADDRESS)Base, Size);
     } else if (Type == EFI_RESOURCE_FIRMWARE_DEVICE) {
       BuildResourceDescriptorHob (
           EFI_RESOURCE_FIRMWARE_DEVICE,
