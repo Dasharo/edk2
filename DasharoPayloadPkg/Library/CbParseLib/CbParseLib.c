@@ -14,6 +14,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/PcdLib.h>
+#include <Library/PciLib.h>
 #include <Library/IoLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
@@ -384,6 +385,9 @@ ParseMemoryInfo (
   struct cb_memory_range   *Range;
   UINTN                    Index;
   MEMROY_MAP_ENTRY         MemoryMap;
+  UINT32                   Tolud;
+
+  Tolud = PciRead32(PCI_LIB_ADDRESS(0,0,0,0xbc)) & 0xFFF00000;
 
   //
   // Get the coreboot memory table
@@ -406,8 +410,17 @@ ParseMemoryInfo (
         break;
       /* Only MMIO is marked reserved */
       case CB_MEM_RESERVED:
-        MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
-        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        /*
+         * Reserved memory Below TOLUD can't be MMIO except legacy VGA which
+         * is reported elsewhere as reserved.
+         */
+        if (MemoryMap.Base < Tolud) {
+          MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        } else {
+          MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        }
         break;
       case CB_MEM_UNUSABLE:
         MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
