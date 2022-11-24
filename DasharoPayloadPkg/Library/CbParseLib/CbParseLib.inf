@@ -35,6 +35,7 @@
   IoLib
   DebugLib
   PcdLib
+  PciLib
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
