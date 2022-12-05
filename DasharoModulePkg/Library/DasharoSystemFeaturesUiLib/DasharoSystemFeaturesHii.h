@@ -21,7 +21,7 @@ SPDX-License-Identifier: BSD-2-Clause
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
-#pragma pack(push,1) 
+#pragma pack(push,1)
 typedef struct {
   BOOLEAN WatchdogEnable;
   UINT16  WatchdogTimeout;
@@ -30,6 +30,13 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct {
+  // Feature visibility
+  BOOLEAN            ShowSecurityMenu;
+  BOOLEAN            ShowIntelMeMenu;
+  BOOLEAN            ShowUsbMenu;
+  BOOLEAN            ShowNetworkMenu;
+  BOOLEAN            ShowChipsetMenu;
+  // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
   BOOLEAN            NetworkBoot;

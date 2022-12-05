@@ -38,6 +38,11 @@
   gDasharoPs2ControllerPolicyGuid = { 0x4885b96d, 0xbdf1, 0x496d, {0xbc, 0x3d, 0x3e, 0x79, 0x57, 0x74, 0xcd, 0x40 }}
 [PcdsFixedAtBuild]
 gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|FALSE|BOOLEAN|0x00000001
+gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|FALSE|BOOLEAN|0x00000002
+gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|FALSE|BOOLEAN|0x00000003
+gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|FALSE|BOOLEAN|0x00000004
+gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|FALSE|BOOLEAN|0x00000005
+gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|FALSE|BOOLEAN|0x00000006
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.

@@ -59,3 +59,8 @@
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
