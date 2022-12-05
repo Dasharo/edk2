@@ -12,7 +12,9 @@ SPDX-License-Identifier: BSD-2-Clause
 #define   PCH_OC_WDT_CTL_EN			BIT14
 #define   PCH_OC_WDT_CTL_TOV_MASK		0x3FF
 
+// Feature state
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
+
 STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
 STATIC CHAR16 mSmmBwpEfiVar[] = L"SmmBwp";
 STATIC CHAR16 mMeModeEfiVar[] = L"MeMode";
@@ -22,6 +24,7 @@ STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
 STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
+
 STATIC BOOLEAN mUsbStackDefault = TRUE;
 STATIC BOOLEAN mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN mLockBiosDefault = TRUE;
@@ -225,6 +228,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
   ASSERT (mDasharoSystemFeaturesPrivate.HiiHandle != NULL);
 
+  // Set feature visibility
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu = PcdGetBool (PcdShowSecurityMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowIntelMeMenu = PcdGetBool (PcdShowIntelMeMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowUsbMenu = PcdGetBool (PcdShowUsbMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowNetworkMenu = PcdGetBool (PcdShowNetworkMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowChipsetMenu);
+
+  // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
   Status = gRT->GetVariable (
       mLockBiosEfiVar,
