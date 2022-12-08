@@ -44,6 +44,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|FALSE|BOOLEAN|0x00000004
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|FALSE|BOOLEAN|0x00000005
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|FALSE|BOOLEAN|0x00000006
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000007
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
