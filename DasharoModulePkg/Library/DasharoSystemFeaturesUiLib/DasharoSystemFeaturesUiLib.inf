@@ -64,3 +64,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
