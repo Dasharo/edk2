@@ -29,7 +29,6 @@ STATIC BOOLEAN mUsbStackDefault = TRUE;
 STATIC BOOLEAN mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN mLockBiosDefault = TRUE;
 STATIC BOOLEAN mSmmBwpDefault = FALSE;
-STATIC BOOLEAN mNetworkBootDefault = FALSE;
 STATIC UINT8   mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN mPs2ControllerDefault = TRUE;
 
@@ -267,7 +266,7 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = mNetworkBootDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = PcdGetBool (PcdDefaultNetworkBootEnable);
     Status = gRT->SetVariable (
         mNetworkBootEfiVar,
         &gDasharoSystemFeaturesGuid,
