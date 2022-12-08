@@ -246,14 +246,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios = mLockBiosDefault;
     Status = gRT->SetVariable (
         mLockBiosEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mLockBiosDefault),
-        &mLockBiosDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios = mLockBiosDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -267,14 +267,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = mNetworkBootDefault;
     Status = gRT->SetVariable (
         mNetworkBootEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mNetworkBootDefault),
-        &mNetworkBootDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = mNetworkBootDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -288,14 +288,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack = mUsbStackDefault;
     Status = gRT->SetVariable (
         mUsbStackEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mUsbStackDefault),
-        &mUsbStackDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack = mUsbStackDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -309,14 +309,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage = mUsbMassStorageDefault;
     Status = gRT->SetVariable (
         mUsbMassStorageEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mUsbMassStorageDefault),
-        &mUsbMassStorageDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage = mUsbMassStorageDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -330,14 +330,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp = mSmmBwpDefault;
     Status = gRT->SetVariable (
         mSmmBwpEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mSmmBwpDefault),
-        &mSmmBwpDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp = mSmmBwpDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -351,14 +351,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
     Status = gRT->SetVariable (
         mMeModeEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mMeModeDefault),
-        &mMeModeDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -372,14 +372,14 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
     Status = gRT->SetVariable (
         mPs2ControllerEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mPs2ControllerDefault),
-        &mPs2ControllerDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
