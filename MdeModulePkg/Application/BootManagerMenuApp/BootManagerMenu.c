@@ -424,7 +424,6 @@ BootMenuSelectItem (
       PrintCharAt (PrintCol, PrintRow, BLOCKELEMENT_FULL_BLOCK);
     }
 
-
     //
     // Clear selectable items first
     //
@@ -436,7 +435,8 @@ BootMenuSelectItem (
       String[Index] = 0x20;
     }
     for (Index = 0; Index < ItemCountPerScreen; Index++) {
-      PrintStringAt (PrintCol, PrintRow + Index, String);
+      PrintStringAt (PrintCol, PrintRow, L"  ");
+      PrintStringAt (PrintCol + 2, PrintRow + Index, String);
     }
     FreePool (String);
     //
@@ -444,7 +444,8 @@ BootMenuSelectItem (
     //
     for (Index = 0; Index < ItemCountPerScreen; Index++, PrintRow++) {
       String = HiiGetString (gStringPackHandle, BootMenuData->PtrTokens[Index + FirstItem], NULL);
-      PrintStringAt (PrintCol, PrintRow, String);
+      PrintStringAt (PrintCol, PrintRow, L"  ");
+      PrintStringAt (PrintCol + 2, PrintRow, String);
       FreePool (String);
     }
     RePaintItems = TRUE;
@@ -454,10 +455,12 @@ BootMenuSelectItem (
   // Print want to select item
   //
   FirstItem = BootMenuData->ScrollBarControl.FirstItem;
-  gST->ConOut->SetAttribute (gST->ConOut, EFI_WHITE | EFI_BACKGROUND_BLACK);
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_YELLOW | EFI_BRIGHT | EFI_BACKGROUND_BLUE);
   String = HiiGetString (gStringPackHandle, BootMenuData->PtrTokens[WantSelectItem], NULL);
   PrintCol = StartCol  + 1;
   PrintRow = StartRow + TITLE_TOKEN_COUNT + 2 + WantSelectItem - FirstItem;
+  PrintStringAt (PrintCol, PrintRow, L"→");
+  PrintCol = PrintCol + 2;
   PrintStringAt (PrintCol, PrintRow, String);
   FreePool (String);
 
@@ -470,7 +473,8 @@ BootMenuSelectItem (
     String = HiiGetString (gStringPackHandle, BootMenuData->PtrTokens[BootMenuData->SelectItem], NULL);
     PrintCol = StartCol  + 1;
     PrintRow = StartRow + 3 + BootMenuData->SelectItem - FirstItem;
-    PrintStringAt (PrintCol, PrintRow, String);
+    PrintStringAt (PrintCol, PrintRow, L"  ");
+    PrintStringAt (PrintCol + 2, PrintRow, String);
     FreePool (String);
   }
 
@@ -601,7 +605,8 @@ DrawBootPopupMenu (
   PrintRow = StartRow + TITLE_TOKEN_COUNT + 2;
   for (Index = 0; Index < ItemCountPerScreen; Index++, PrintRow++) {
     String = HiiGetString (gStringPackHandle, BootMenuData->PtrTokens[Index], NULL);
-    PrintStringAt (PrintCol, PrintRow, String);
+    PrintStringAt (PrintCol, PrintRow, L"  ");
+    PrintStringAt (PrintCol + 2, PrintRow, String);
     FreePool (String);
   }
 
