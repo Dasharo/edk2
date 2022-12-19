@@ -94,6 +94,7 @@
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
   DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
+  DEFINE IOMMU_ENABLE                   = FALSE
 
   #
   # Network definition
@@ -814,7 +815,9 @@
     SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
+!if $(IOMMU_ENABLE) == TRUE
   IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
+!endif
 
   #------------------------------
   #  Build the shell
