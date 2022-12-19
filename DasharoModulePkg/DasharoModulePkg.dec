@@ -36,14 +36,15 @@
   gDasharoUsbDriverPolicyGuid = { 0x808330b5, 0xbe46, 0x4a41, { 0x97, 0x79, 0x84, 0xa3, 0xd1, 0x31, 0xbb, 0xb4 }}
   gDasharoUsbMassStoragePolicyGuid = { 0xd7d1a290, 0x651a, 0x4c90, { 0xbf, 0x09, 0x1b, 0x7c, 0x56, 0x7c, 0xd5, 0x9c }}
   gDasharoPs2ControllerPolicyGuid = { 0x4885b96d, 0xbdf1, 0x496d, {0xbc, 0x3d, 0x3e, 0x79, 0x57, 0x74, 0xcd, 0x40 }}
+
 [PcdsFixedAtBuild]
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|FALSE|BOOLEAN|0x00000001
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|FALSE|BOOLEAN|0x00000002
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|FALSE|BOOLEAN|0x00000003
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|FALSE|BOOLEAN|0x00000004
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|FALSE|BOOLEAN|0x00000005
-gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|FALSE|BOOLEAN|0x00000006
-gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000007
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|FALSE|BOOLEAN|0x00000001
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|FALSE|BOOLEAN|0x00000002
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|FALSE|BOOLEAN|0x00000003
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|FALSE|BOOLEAN|0x00000004
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|FALSE|BOOLEAN|0x00000005
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|FALSE|BOOLEAN|0x00000006
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000007
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
