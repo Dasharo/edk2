@@ -326,7 +326,11 @@ INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
 
 INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
+
+!if $(IOMMU_ENABLE) == TRUE
 INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
+!endif
+
 
 #
 # Shell
