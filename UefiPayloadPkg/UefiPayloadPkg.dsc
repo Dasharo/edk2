@@ -96,6 +96,7 @@
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE DISABLE_MTRR_PROGRAMMING       = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
+  DEFINE SETUP_PASSWORD_ENABLE          = FALSE
 
   #
   # Network definition
@@ -598,10 +599,13 @@
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
   DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
     <LibraryClasses>
       PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
   }
+!endif
+
   UefiCpuPkg/CpuDxe/CpuDxe.inf
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
