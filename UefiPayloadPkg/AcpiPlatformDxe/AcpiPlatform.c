@@ -15,16 +15,19 @@
 #include <Protocol/PciIo.h>
 
 #include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/HobLib.h>
 #include <Library/PcdLib.h>
+#include <Library/UefiLib.h>
 
 #include <IndustryStandard/Acpi.h>
 
 EFI_ACPI_TABLE_PROTOCOL       *mAcpiProtocol;
 EFI_ACPI_SDT_PROTOCOL         *mSdtProtocol;
+EFI_EVENT                     mEfiExitBootServicesEvent;
 
 EFI_STATUS
 EFIAPI
@@ -389,6 +392,47 @@ AcpiEndOfDxeEvent (
   IsHardwareChange ();
 }
 
+/** On exiting boot services we must make sure the new RSDP is in the legacy
+    segment where coreboot expects it.
+**/
+STATIC
+VOID
+EFIAPI
+AcpiExitBootServicesEventNotify (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  UINTN                                           Ptr;
+  EFI_STATUS                                      Status;
+  EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER    *cbRsdp;
+  EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER    *Rsdp; 
+
+  cbRsdp = NULL;
+  Rsdp = NULL;
+
+  /* Find coreboot RSDP. */
+  for (Ptr = 0xe0000; Ptr < 0xfffff; Ptr += 16) {
+    if (!AsciiStrnCmp ((CHAR8 *)Ptr, "RSD PTR ", 8)) {
+      cbRsdp = (EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER *)Ptr;
+      break;
+    }
+  }
+
+  if (cbRsdp == NULL) {
+    DEBUG ((EFI_D_ERROR, "No coreboot RSDP found, wake up from S3 not possible.\n"));
+    return;
+  }
+
+  Status = EfiGetSystemConfigurationTable (&gEfiAcpiTableGuid, (VOID **) &Rsdp);
+  if (EFI_ERROR (Status) || (Rsdp == NULL)) {
+    DEBUG ((EFI_D_ERROR, "No RSDP found, wake up from S3 not possible.\n"));
+    return;
+  }
+
+  CopyMem((VOID *)cbRsdp, (CONST VOID *)Rsdp, sizeof(*Rsdp));
+  DEBUG ((EFI_D_INFO, "coreboot RSDP updated\n"));
+}
 
 /**
   Entrypoint of Acpi Platform driver.
@@ -413,7 +457,7 @@ AcpiPlatformEntryPoint (
   EFI_ACPI_6_3_ROOT_SYSTEM_DESCRIPTION_POINTER    *Rsdp;
   SYSTEM_TABLE_INFO                               *SystemTableInfo;
   UINTN                                           TableHandle;
-  EFI_EVENT                     EndOfDxeEvent;
+  EFI_EVENT                                       EndOfDxeEvent;
 
   TableHandle  = 0;
 
@@ -479,9 +523,16 @@ AcpiPlatformEntryPoint (
                   );
   ASSERT_EFI_ERROR (Status);
 
-  //
-  // The driver does not require to be kept loaded.
-  //
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_NOTIFY,
+                  AcpiExitBootServicesEventNotify,
+                  NULL,
+                  &gEfiEventExitBootServicesGuid,
+                  &mEfiExitBootServicesEvent
+                  );
+  ASSERT_EFI_ERROR (Status);
+
   return Status;
 }
 
