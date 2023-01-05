@@ -46,6 +46,8 @@
 [Guids]
   gUefiSystemTableInfoGuid                      ## CONSUMES
   gEfiEndOfDxeEventGroupGuid                    ## CONSUMES
+  gEfiEventExitBootServicesGuid                 ## CONSUMES
+  gEfiAcpiTableGuid                             ## CONSUMES
 
 [Depex]
   gEfiAcpiTableProtocolGuid           AND
