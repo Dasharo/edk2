@@ -87,6 +87,7 @@ SMMStoreCreateInstance (
 
   Instance = AllocateRuntimeCopyPool (sizeof(SMMSTORE_INSTANCE),&mSMMStoreInstanceTemplate);
   if (Instance == NULL) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to allocate pool for SMMStore instance\n", __FUNCTION__));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -99,6 +100,7 @@ SMMStoreCreateInstance (
 
   Status = SMMStoreFvbInitialize (Instance);
   if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "%a: SMMStoreFvbInitialize failed\n", __FUNCTION__));
     FreePool (Instance);
     return Status;
   }
@@ -110,6 +112,7 @@ SMMStoreCreateInstance (
                 NULL
                 );
   if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to install FVB protocol\n", __FUNCTION__));
     FreePool (Instance);
     return Status;
   }
