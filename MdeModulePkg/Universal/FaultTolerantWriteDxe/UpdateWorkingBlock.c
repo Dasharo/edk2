@@ -378,14 +378,12 @@ FtwReclaimWorkSpace (
   // Read all original data from working block to a memory buffer
   //
   TempBufferSize = FtwDevice->NumberOfWorkBlock * FtwDevice->WorkBlockSize;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   TempBuffer     = AllocateZeroPool (TempBufferSize);
   if (TempBuffer == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
   Ptr = TempBuffer;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   for (Index = 0; Index < FtwDevice->NumberOfWorkBlock; Index += 1) {
     Length = FtwDevice->WorkBlockSize;
     Status = FtwDevice->FtwFvBlock->Read (
@@ -412,13 +410,11 @@ FtwReclaimWorkSpace (
   //
   // Clear the content of buffer that will save the new work space data
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   SetMem (Ptr, FtwDevice->FtwWorkSpaceSize, FTW_ERASED_BYTE);
 
   //
   // Copy EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER to buffer
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   CopyMem (
     Ptr,
     FtwDevice->FtwWorkSpaceHeader,
@@ -428,7 +424,6 @@ FtwReclaimWorkSpace (
     //
     // Get the last record following the header,
     //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
     Status = FtwGetLastWriteHeader (
                FtwDevice->FtwWorkSpaceHeader,
                FtwDevice->FtwWorkSpaceSize,
@@ -436,7 +431,6 @@ FtwReclaimWorkSpace (
                );
     Header = FtwDevice->FtwLastWriteHeader;
     if (!EFI_ERROR (Status) && (Header != NULL) && (Header->Complete != FTW_VALID_STATE) && (Header->HeaderAllocated == FTW_VALID_STATE)) {
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
       CopyMem (
         Ptr + sizeof (EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER),
         FtwDevice->FtwLastWriteHeader,
@@ -445,21 +439,18 @@ FtwReclaimWorkSpace (
     }
   }
 
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   CopyMem (
     FtwDevice->FtwWorkSpace,
     Ptr,
     FtwDevice->FtwWorkSpaceSize
     );
 
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   FtwGetLastWriteHeader (
     FtwDevice->FtwWorkSpaceHeader,
     FtwDevice->FtwWorkSpaceSize,
     &FtwDevice->FtwLastWriteHeader
     );
 
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   FtwGetLastWriteRecord (
     FtwDevice->FtwLastWriteHeader,
     &FtwDevice->FtwLastWriteRecord
@@ -479,7 +470,6 @@ FtwReclaimWorkSpace (
   // Save spare block into a spare backup memory buffer (Sparebuffer)
   //
   SpareBufferSize = FtwDevice->SpareAreaLength;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   SpareBuffer     = AllocatePool (SpareBufferSize);
   if (SpareBuffer == NULL) {
     FreePool (TempBuffer);
@@ -487,7 +477,6 @@ FtwReclaimWorkSpace (
   }
 
   Ptr = SpareBuffer;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   for (Index = 0; Index < FtwDevice->NumberOfSpareBlock; Index += 1) {
     Length = FtwDevice->SpareBlockSize;
     Status = FtwDevice->FtwBackupFvb->Read (
@@ -508,7 +497,6 @@ FtwReclaimWorkSpace (
   //
   // Write the memory buffer to spare block
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   Status  = FtwEraseSpareBlock (FtwDevice);
   if (EFI_ERROR (Status)) {
     FreePool (TempBuffer);
@@ -516,7 +504,6 @@ FtwReclaimWorkSpace (
     return EFI_ABORTED;
   }
   Ptr     = TempBuffer;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   for (Index = 0; TempBufferSize > 0; Index += 1) {
     if (TempBufferSize > FtwDevice->SpareBlockSize) {
       Length = FtwDevice->SpareBlockSize;
@@ -542,13 +529,11 @@ FtwReclaimWorkSpace (
   //
   // Free TempBuffer
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   FreePool (TempBuffer);
 
   //
   // Set the WorkingBlockValid in spare block
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   Status = FtwUpdateFvState (
             FtwDevice->FtwBackupFvb,
             FtwDevice->SpareBlockSize,
@@ -566,7 +551,6 @@ FtwReclaimWorkSpace (
   // Offset = OFFSET_OF(EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER,
   //                          WorkingBlockInvalid);
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   Status = FtwUpdateFvState (
             FtwDevice->FtwFvBlock,
             FtwDevice->WorkBlockSize,
@@ -584,24 +568,20 @@ FtwReclaimWorkSpace (
   //
   // Write the spare block to working block
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   Status = FlushSpareBlockToWorkingBlock (FtwDevice);
   if (EFI_ERROR (Status)) {
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
     FreePool (SpareBuffer);
     return Status;
   }
   //
   // Restore spare backup buffer into spare block , if no failure happened during FtwWrite.
   //
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   Status  = FtwEraseSpareBlock (FtwDevice);
   if (EFI_ERROR (Status)) {
     FreePool (SpareBuffer);
     return EFI_ABORTED;
   }
   Ptr     = SpareBuffer;
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   for (Index = 0; Index < FtwDevice->NumberOfSpareBlock; Index += 1) {
     Length = FtwDevice->SpareBlockSize;
     Status = FtwDevice->FtwBackupFvb->Write (
@@ -619,7 +599,6 @@ FtwReclaimWorkSpace (
     Ptr += Length;
   }
 
-  DEBUG ((EFI_D_INFO, "Ftw: line: %d\n", __LINE__));
   FreePool (SpareBuffer);
 
   DEBUG ((EFI_D_INFO, "Ftw: reclaim work space successfully\n"));
