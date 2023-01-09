@@ -116,6 +116,61 @@ InitializeFvAndVariableStoreHeaders (
 }
 
 /**
+
+  This function dump raw data.
+
+  @param  Data  raw data
+  @param  Size  raw data size
+
+**/
+VOID
+InternalDumpData (
+  IN UINT8  *Data,
+  IN UINTN  Size
+  )
+{
+  UINTN  Index;
+  for (Index = 0; Index < Size; Index++) {
+    DEBUG ((EFI_D_INFO, "%02x", (UINTN)Data[Index]));
+  }
+}
+
+/**
+
+  This function dump raw data with colume format.
+
+  @param  Data  raw data
+  @param  Size  raw data size
+
+**/
+VOID
+InternalDumpHex (
+  IN UINT8  *Data,
+  IN UINTN  Size
+  )
+{
+  UINTN   Index;
+  UINTN   Count;
+  UINTN   Left;
+
+#define COLUME_SIZE  (16 * 2)
+
+  Count = Size / COLUME_SIZE;
+  Left  = Size % COLUME_SIZE;
+  for (Index = 0; Index < Count; Index++) {
+    DEBUG ((EFI_D_INFO, "%04x: ", Index * COLUME_SIZE));
+    InternalDumpData (Data + Index * COLUME_SIZE, COLUME_SIZE);
+    DEBUG ((EFI_D_INFO, "\n"));
+  }
+
+  if (Left != 0) {
+    DEBUG ((EFI_D_INFO, "%04x: ", Index * COLUME_SIZE));
+    InternalDumpData (Data + Index * COLUME_SIZE, Left);
+    DEBUG ((EFI_D_INFO, "\n"));
+  }
+}
+
+/**
   Check the integrity of firmware volume header.
 
   @param[in] FwVolHeader - A pointer to a firmware volume header
@@ -141,14 +196,18 @@ ValidateFvHeader (
   BufferSizeReqested = sizeof(EFI_FIRMWARE_VOLUME_HEADER);
   FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
   if (!FwVolHeader) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to allocate pool for FVB header\n", __FUNCTION__));
     return EFI_OUT_OF_RESOURCES;
   }
   BufferSize = BufferSizeReqested;
   TempStatus = SMMStoreRead (0, 0, &BufferSize, (UINT8 *)FwVolHeader);
   if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to read current FVB header\n", __FUNCTION__));
     FreePool (FwVolHeader);
     return EFI_DEVICE_ERROR;
   }
+  DEBUG((DEBUG_INFO, "%a: FVB header:\n", __FUNCTION__));
+  InternalDumpHex ((UINT8 *)FwVolHeader, BufferSizeReqested);
 
   FvLength = PcdGet32(PcdFlashNvStorageVariableSize) + PcdGet32(PcdFlashNvStorageFtwWorkingSize) +
       PcdGet32(PcdFlashNvStorageFtwSpareSize);
@@ -177,19 +236,6 @@ ValidateFvHeader (
     return EFI_NOT_FOUND;
   }
 
-  BufferSizeReqested = FwVolHeader->HeaderLength;
-  FreePool (FwVolHeader);
-  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER*)AllocatePool(BufferSizeReqested);
-  if (!FwVolHeader) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-  BufferSize = BufferSizeReqested;
-  TempStatus = SMMStoreRead (0, 0, &BufferSize, (UINT8 *)FwVolHeader);
-  if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
-    FreePool (FwVolHeader);
-    return EFI_DEVICE_ERROR;
-  }
-
   // Verify the header checksum
   Checksum = CalculateSum16((UINT16*)FwVolHeader, FwVolHeader->HeaderLength);
   if (Checksum != 0) {
@@ -202,15 +248,20 @@ ValidateFvHeader (
   BufferSizeReqested = sizeof(VARIABLE_STORE_HEADER);
   VariableStoreHeader = (VARIABLE_STORE_HEADER*)AllocatePool(BufferSizeReqested);
   if (!VariableStoreHeader) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to allocate pool for varstore header\n", __FUNCTION__));
     return EFI_OUT_OF_RESOURCES;
   }
   BufferSize = BufferSizeReqested;
   TempStatus = SMMStoreRead (0, FwVolHeader->HeaderLength, &BufferSize, (UINT8 *)VariableStoreHeader);
   if (EFI_ERROR (TempStatus) || BufferSizeReqested != BufferSize) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to read current varstore header\n", __FUNCTION__));
     FreePool (VariableStoreHeader);
     FreePool (FwVolHeader);
     return EFI_DEVICE_ERROR;
   }
+
+  DEBUG((DEBUG_INFO, "%a: Varstore header:\n", __FUNCTION__));
+  InternalDumpHex ((UINT8 *)VariableStoreHeader, BufferSizeReqested);
 
   // Check the Variable Store Guid
   if (!CompareGuid (&VariableStoreHeader->Signature, &gEfiVariableGuid) &&
@@ -772,12 +823,14 @@ SMMStoreFvbInitialize (
 
     Status = FvbEraseBlocks (&Instance->FvbProtocol, (EFI_LBA)0, FvbNumLba, EFI_LBA_LIST_TERMINATOR);
     if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "%a: Failed to erase blocks for FVB header\n", __FUNCTION__));
       return Status;
     }
 
     // Install all appropriate headers
     Status = InitializeFvAndVariableStoreHeaders (Instance);
     if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "%a: Failed to install FVB headers\n", __FUNCTION__));
       return Status;
     }
   } else {
