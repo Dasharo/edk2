@@ -31,6 +31,7 @@
   BaseLib
   DebugLib
   HobLib
+  PcdLib
   SmmStoreLib
   UefiLib
   TimerLib
@@ -61,6 +62,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable
+  gUefiPayloadPkgTokenSpaceGuid.SmmStoreDelayWorkaround
 
 [Depex]
   gEfiCpuArchProtocolGuid
