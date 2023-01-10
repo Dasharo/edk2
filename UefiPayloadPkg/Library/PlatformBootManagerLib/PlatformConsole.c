@@ -210,7 +210,7 @@ DetectPs2Keyboard (
     if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
       // Some PS/2 controllers may not respond to echo command.
       // Assume keybaord connected if no timeout has been detected
-      DEBUG ((EFI_D_INFO, "PS/2 detect timeout, assuming connected\n"));
+      DEBUG ((EFI_D_INFO, "PS/2 detect timeout\n"));
       if (Data == KBC_INPBUF_VIA60_KBECHO) {
         GotIt = 1;
         break;
