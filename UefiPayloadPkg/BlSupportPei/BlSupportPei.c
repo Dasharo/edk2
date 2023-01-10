@@ -592,7 +592,7 @@ BlPeiEntryPoint (
   //
   Status = ParseSMMSTOREInfo (&SMMSTOREInfo);
   if (!EFI_ERROR (Status)) {
-    NewSMMSTOREInfo = BuildGuidHob (&gEfiSMMSTOREInfoHobGuid, sizeof (SMMSTOREInfo));
+    NewSMMSTOREInfo = BuildGuidHob (&gEfiSmmStoreInfoHobGuid, sizeof (SMMSTOREInfo));
     ASSERT (NewSMMSTOREInfo != NULL);
     CopyMem (NewSMMSTOREInfo, &SMMSTOREInfo, sizeof (SMMSTOREInfo));
     DEBUG ((DEBUG_INFO, "Created SMMSTORE info hob\n"));
