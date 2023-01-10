@@ -1,7 +1,7 @@
 ## @file
-#  SMMStore library for coreboot
+#  SmmStore library for coreboot
 #
-#  Copyright (c) 2020 9elements Agency GmbH.<BR>
+#  Copyright (c) 2022 9elements GmbH.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -9,18 +9,31 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = CbSmmStoreLib
+  BASE_NAME                      = SmmStoreLib
   FILE_GUID                      = 40A2CBC6-CFB8-447b-A90E-298E88FD345E
-  MODULE_TYPE                    = BASE
+  MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = SmmStoreLib
 
 [Sources]
-  CorebootSMMStore.c
+  SmmStore.c
+  SmmStore.h
+
+[Sources.X64]
+  X64/SmmStore.nasm
 
 [LibraryClasses]
   BaseMemoryLib
   DebugLib
+  DxeServicesTableLib
+  HobLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiRuntimeLib
+
+[Guids]
+  gEfiSmmStoreInfoHobGuid           ## CONSUMES
+  gEfiEventVirtualAddressChangeGuid ## CONSUMES
 
 [Packages]
   MdePkg/MdePkg.dec
