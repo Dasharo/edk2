@@ -460,8 +460,7 @@ BootMenuSelectItem (
   PrintCol = StartCol  + 1;
   PrintRow = StartRow + TITLE_TOKEN_COUNT + 2 + WantSelectItem - FirstItem;
   PrintStringAt (PrintCol, PrintRow, L"→");
-  PrintCol = PrintCol + 2;
-  PrintStringAt (PrintCol, PrintRow, String);
+  PrintStringAt (PrintCol + 2, PrintRow, String);
   FreePool (String);
 
   //
