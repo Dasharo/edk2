@@ -390,7 +390,6 @@ ParseMemoryInfo (
   MEMROY_MAP_ENTRY         MemoryMap;
   UINT32                   Tolud;
 
-
   Tolud = PciRead32(PCI_LIB_ADDRESS(0,0,0,0xbc)) & 0xFFF00000;
 
   //
