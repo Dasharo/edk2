@@ -752,9 +752,7 @@
   }
 !endif
 
-!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
   DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
-!endif
 
   #
   # Random Number Generator

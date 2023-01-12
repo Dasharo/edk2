@@ -253,9 +253,7 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   }
 !endif
 
-!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
-  INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
-!endif
+INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
 #
 # Random Number Generator
