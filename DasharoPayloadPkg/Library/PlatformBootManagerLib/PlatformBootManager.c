@@ -851,21 +851,31 @@ PlatformBootManagerAfterConsole (
       &NetBootEnabled
       );
 
+  //
+  // Register iPXE
+  //
   if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
     if (NetBootEnabled) {
-      //
-      // Register iPXE
-      //
-      DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
+      DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
       PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                     (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                     LOAD_OPTION_ACTIVE);
     } else {
-      DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+      DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
       PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                       (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                       LOAD_OPTION_ACTIVE);
     }
+  } else if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
+    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                  LOAD_OPTION_ACTIVE);
+  } else {
+    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE);
   }
   //
   // Register UEFI Shell
