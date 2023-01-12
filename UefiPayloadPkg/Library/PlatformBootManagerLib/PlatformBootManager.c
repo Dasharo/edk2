@@ -862,10 +862,17 @@ PlatformBootManagerAfterConsole (
                                     (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                     LOAD_OPTION_ACTIVE);
     } else {
-      DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
-      PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+      if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
+        DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
+        PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                       (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                       LOAD_OPTION_ACTIVE);
+      } else {
+        DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+        PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                        (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                        LOAD_OPTION_ACTIVE);
+      }
     }
   }
   //
