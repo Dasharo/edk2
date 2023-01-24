@@ -29,6 +29,9 @@
 #string STR_DASHARO_CHIPSET_CONFIGURATION_TITLE   #language en-US  "Chipset Configuration"
 #string STR_DASHARO_CHIPSET_CONFIGURATION_HELP    #language en-US  "Chipset-related options"
 
+#string STR_DASHARO_POWER_CONFIGURATION_TITLE   #language en-US  "Power Management Options"
+#string STR_DASHARO_POWER_CONFIGURATION_HELP    #language en-US  "Power management-related options"
+
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
 
@@ -66,3 +69,11 @@
 
 #string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
 #string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 60s, maximum 1024s."
+
+#string STR_FAN_CURVE_PROMPT		#language en-US "Fan profile"
+#string STR_FAN_CURVE_HELP			#language en-US "Sets the preferred fan operation mode.\n\n"
+													"Silent: The fan will operate at lower speeds to reduce noise.\n\n"
+													"Performance: The fans will work at higher speeds to reduce temperature and increase performance."
+
+#string STR_FAN_CURVE_SILENT		#language en-US "Silent"
+#string STR_FAN_CURVE_PERFORMANCE	#language en-US "Performance"
