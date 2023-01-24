@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #define DASHARO_USB_CONFIGURATION_FORM_ID      0x1003
 #define DASHARO_INTEL_ME_OPTIONS_FORM_ID       0x1004
 #define DASHARO_CHIPSET_CONFIGURATION_FORM_ID  0x1005
+#define DASHARO_POWER_CONFIGURATION_FORM_ID    0x1006
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
@@ -27,6 +28,8 @@ typedef struct {
   UINT16  WatchdogTimeout;
 } WATCHDOG_CONFIG;
 
+#define FAN_CURVE_OPTION_SILENT 0
+#define FAN_CURVE_OPTION_PERFORMANCE 1
 #pragma pack(pop)
 
 typedef struct {
@@ -36,6 +39,7 @@ typedef struct {
   BOOLEAN            ShowUsbMenu;
   BOOLEAN            ShowNetworkMenu;
   BOOLEAN            ShowChipsetMenu;
+  BOOLEAN            ShowPowerMenu;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -46,6 +50,7 @@ typedef struct {
   BOOLEAN            Ps2Controller;
   WATCHDOG_CONFIG    WatchdogConfig;
   BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
+  UINT8              FanCurveOption;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
