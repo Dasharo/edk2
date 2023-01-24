@@ -52,6 +52,12 @@ formset
               help   = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_HELP);
     endif;
 
+    suppressif ideqval FeaturesData.ShowPowerMenu == 0;
+         goto DASHARO_POWER_CONFIGURATION_FORM_ID,
+              prompt = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_TITLE),
+              help   = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_HELP);
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -130,9 +136,9 @@ formset
              help   = STRING_TOKEN(STR_ME_MODE_HELP),
              flags  = INTERACTIVE,
 
-            option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
-            option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
-            option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
+             option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
+             option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
+             option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
     endoneof;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -177,4 +183,22 @@ formset
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
   endform;
 
+  form formid = DASHARO_POWER_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    oneof varid  = FeaturesData.FanCurveOption,
+             prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
+             help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
+             flags  = INTERACTIVE,
+
+             option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = 0;
+             option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
+    endoneof;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
 endformset;
