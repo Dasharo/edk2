@@ -188,14 +188,16 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    oneof varid  = FeaturesData.FanCurveOption,
-             prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
-             help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
-             flags  = INTERACTIVE,
+    suppressif ideqval FeaturesData.PowerMenuShowFanCurve == 0;
+         oneof varid  = FeaturesData.FanCurveOption,
+                  prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
+                  help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
+                  flags  = INTERACTIVE,
 
-             option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = 0;
-             option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
-    endoneof;
+                  option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = 0;
+                  option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
+         endoneof;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
