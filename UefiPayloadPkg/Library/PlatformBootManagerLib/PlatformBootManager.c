@@ -852,6 +852,8 @@ PlatformBootManagerAfterConsole (
       &NetBootEnabled
       );
 
+  DEBUG ((EFI_D_INFO, "Network boot variable status: %r, %s, size %d\n",
+            Status, NetBootEnabled ? L"enabled" : L"disabled", VarSize));
   if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
     if (NetBootEnabled) {
       //
