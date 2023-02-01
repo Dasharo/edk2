@@ -52,14 +52,14 @@
 
 #string STR_ME_MODE_PROMPT   #language en-US  "Intel ME mode"
 #string STR_ME_MODE_HELP     #language en-US  "Operation mode of the Intel Management Engine. The ME can be enabled, or disabled using various methods.\n\n"
-											  "Enabled: Enable the Intel Management Engine.\n\n"
-											  "Disabled (Soft): Disable using a HECI message.\n\n"
-											  "Disabled (HAP): Disable using the High Assurance Platform bit in the flash descriptor.\n\n"
-											  "Note that with ME disabled, the firmware TPM will no longer be functional."
+                                                "Enabled: Enable the Intel Management Engine.\n\n"
+                                                "Disabled (Soft): Disable using a HECI message.\n\n"
+                                                "Disabled (HAP): Disable using the High Assurance Platform bit in the flash descriptor.\n\n"
+                                                "Note that with ME disabled, the firmware TPM will no longer be functional."
 
-#string STR_ME_MODE_ENABLE			#language en-US  "Enabled"
-#string STR_ME_MODE_DISABLE_HECI	#language en-US  "Disabled (Soft)"
-#string STR_ME_MODE_DISABLE_HAP		#language en-US  "Disabled (HAP)"
+#string STR_ME_MODE_ENABLE         #language en-US  "Enabled"
+#string STR_ME_MODE_DISABLE_HECI   #language en-US  "Disabled (Soft)"
+#string STR_ME_MODE_DISABLE_HAP    #language en-US  "Disabled (HAP)"
 
 #string STR_PS2_CONTROLLER_ENABLE_PROMPT   #language en-US  "Enable PS2 Controller"
 #string STR_PS2_CONTROLLER_ENABLE_HELP     #language en-US  "Enables/disables the PS/2 Controller. When enabled, PS/2 keyboards and mice will be detected in the firmware and operating system."
@@ -70,10 +70,10 @@
 #string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
 #string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 60s, maximum 1024s."
 
-#string STR_FAN_CURVE_PROMPT		#language en-US "Fan profile"
-#string STR_FAN_CURVE_HELP			#language en-US "Sets the preferred fan operation mode.\n\n"
-													"Silent: The fan will operate at lower speeds to reduce noise.\n\n"
-													"Performance: The fans will work at higher speeds to reduce temperature and increase performance."
+#string STR_FAN_CURVE_PROMPT   #language en-US "Fan profile"
+#string STR_FAN_CURVE_HELP     #language en-US "Sets the preferred fan operation mode.\n\n"
+                                                 "Silent: The fan will operate at lower speeds to reduce noise.\n\n"
+                                                 "Performance: The fans will work at higher speeds to reduce temperature and increase performance."
 
-#string STR_FAN_CURVE_SILENT		#language en-US "Silent"
-#string STR_FAN_CURVE_PERFORMANCE	#language en-US "Performance"
+#string STR_FAN_CURVE_SILENT        #language en-US "Silent"
+#string STR_FAN_CURVE_PERFORMANCE   #language en-US "Performance"
