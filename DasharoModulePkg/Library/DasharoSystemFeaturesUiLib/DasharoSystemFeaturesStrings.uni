@@ -77,3 +77,6 @@
 
 #string STR_FAN_CURVE_SILENT        #language en-US "Silent"
 #string STR_FAN_CURVE_PERFORMANCE   #language en-US "Performance"
+
+#string STR_DMA_BOOT_ENABLE_PROMPT      #language en-US "DMA Protection"
+#string STR_DMA_BOOT_ENABLE_HELP        #language en-US "Enables DMA protection"
