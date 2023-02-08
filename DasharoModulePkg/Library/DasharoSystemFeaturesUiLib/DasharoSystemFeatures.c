@@ -25,6 +25,7 @@ STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
+STATIC CHAR16 mDmaProtectionEfiVar[] = L"DmaProtection";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -33,6 +34,7 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
+STATIC BOOLEAN mDmaProtectionDefault = TRUE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -457,6 +459,27 @@ DasharoSystemFeaturesUiLibConstructor (
         );
     ASSERT_EFI_ERROR (Status);
   }
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DmaProtection);
+  Status = gRT->GetVariable (
+      mDmaProtectionEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DmaProtection
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+        mDmaProtectionEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDmaProtectionDefault),
+        &mDmaProtectionDefault
+        );
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DmaProtection = mDmaProtectionDefault;
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -757,6 +780,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.WatchdogConfig),
         &DasharoFeaturesData.WatchdogConfig
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.DmaProtection != DasharoFeaturesData.DmaProtection) {
+    Status = gRT->SetVariable (
+        mDmaProtectionEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.DmaProtection),
+        &DasharoFeaturesData.DmaProtection
         );
     if (EFI_ERROR (Status)) {
       return Status;
