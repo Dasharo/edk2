@@ -25,6 +25,7 @@ STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
+STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -33,6 +34,8 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
+STATIC UINT8     mIommuEnableDefault = FALSE;
+STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
   NULL,
@@ -456,6 +459,29 @@ DasharoSystemFeaturesUiLibConstructor (
         );
     ASSERT_EFI_ERROR (Status);
   }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig);
+  Status = gRT->GetVariable (
+      mIommuConfigEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuEnable = mIommuEnableDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuHandoff = mIommuHandoffDefault;
+    Status = gRT->SetVariable (
+        mIommuConfigEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -756,6 +782,20 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.WatchdogConfig),
         &DasharoFeaturesData.WatchdogConfig
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.IommuConfig.IommuEnable != DasharoFeaturesData.IommuConfig.IommuEnable ||
+      Private->DasharoFeaturesData.IommuConfig.IommuHandoff != DasharoFeaturesData.IommuConfig.IommuHandoff) {
+    Status = gRT->SetVariable (
+        mIommuConfigEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.IommuConfig),
+        &DasharoFeaturesData.IommuConfig
         );
     if (EFI_ERROR (Status)) {
       return Status;
