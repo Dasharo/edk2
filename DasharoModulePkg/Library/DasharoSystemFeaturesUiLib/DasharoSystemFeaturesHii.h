@@ -52,6 +52,7 @@ typedef struct {
   WATCHDOG_CONFIG    WatchdogConfig;
   BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
   UINT8              FanCurveOption;
+  BOOLEAN            DmaProtection;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
