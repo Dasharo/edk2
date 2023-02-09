@@ -80,3 +80,6 @@
 
 #string STR_DMA_BOOT_ENABLE_PROMPT      #language en-US "DMA Protection"
 #string STR_DMA_BOOT_ENABLE_HELP        #language en-US "Enables DMA protection"
+
+#string STR_IOMMU_HANDOFF_ENABLE_PROMPT      #language en-US "IOMMU handoff at ExitBootServices"
+#string STR_IOMMU_HANDOFF_ENABLE_HELP        #language en-US "Enable IOMMU when transfering control to OS (ExitBootService in normal boot), otherwise IOMMU will be enabled at the start of boot device selection."
