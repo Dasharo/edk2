@@ -86,6 +86,12 @@ formset
              flags  = INTERACTIVE,
     endcheckbox;
 
+    checkbox varid  = FeaturesData.IommuHandoff,
+             prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_ENABLE_PROMPT),
+             help   = STRING_TOKEN(STR_IOMMU_HANDOFF_ENABLE_HELP),
+             flags  = INTERACTIVE,
+    endcheckbox;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);

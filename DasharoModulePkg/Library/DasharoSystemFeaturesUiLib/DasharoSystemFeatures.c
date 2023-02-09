@@ -26,6 +26,7 @@ STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
 STATIC CHAR16 mDmaProtectionEfiVar[] = L"DmaProtection";
+STATIC CHAR16 mIommuHandoffEfiVar[] = L"IommuHandoff";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -34,7 +35,8 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
-STATIC BOOLEAN mDmaProtectionDefault = TRUE;
+STATIC BOOLEAN   mDmaProtectionDefault = TRUE;
+STATIC BOOLEAN   mIommuHandoffDefault = TRUE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -459,6 +461,7 @@ DasharoSystemFeaturesUiLibConstructor (
         );
     ASSERT_EFI_ERROR (Status);
   }
+
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DmaProtection);
   Status = gRT->GetVariable (
       mDmaProtectionEfiVar,
@@ -477,6 +480,27 @@ DasharoSystemFeaturesUiLibConstructor (
         &mDmaProtectionDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DmaProtection = mDmaProtectionDefault;
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuHandoff);
+  Status = gRT->GetVariable (
+      mIommuHandoffEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuHandoff
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+        mIommuHandoffEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mIommuHandoffDefault),
+        &mIommuHandoffDefault
+        );
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuHandoff = mIommuHandoffDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -793,6 +817,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.DmaProtection),
         &DasharoFeaturesData.DmaProtection
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.IommuHandoff != DasharoFeaturesData.IommuHandoff) {
+    Status = gRT->SetVariable (
+        mIommuHandoffEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.IommuHandoff),
+        &DasharoFeaturesData.IommuHandoff
         );
     if (EFI_ERROR (Status)) {
       return Status;
