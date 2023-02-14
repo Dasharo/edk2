@@ -8,6 +8,7 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 /** @file
 **/
 
+#include <Library/PcdLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/UefiLib.h>
@@ -38,6 +39,7 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
+  UINT8 PcdVal = 0;
 
   gBS = SystemTable->BootServices;
   gRT = SystemTable->RuntimeServices;
@@ -142,6 +144,24 @@ InitializeBootPolicies (
       NULL
       );
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
+  }
+
+  Status = GetVariable2 (
+           L"IommuHandoff",
+           &gDasharoSystemFeaturesGuid,
+           (VOID **) &EfiVar,
+           &VarSize
+           );
+
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))){
+    PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
+    if (EfiVar){
+      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal | 0x02);
+      DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
+    }
+    else{
+      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal & (~0x02));
+    }
   }
 
   return EFI_SUCCESS;
