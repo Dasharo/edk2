@@ -26,12 +26,14 @@
 [Packages]
   MdePkg/MdePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
+  IntelSiliconPkg/IntelSiliconPkg.dec
 
 [LibraryClasses]
   BaseLib
   DebugLib
   PcdLib
   UefiLib
+  PcdLib
   UefiDriverEntryPoint
   UefiRuntimeServicesTableLib
 
@@ -49,3 +51,6 @@
 
 [Depex]
   gEfiVariableArchProtocolGuid
+
+[Pcd]
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
