@@ -519,6 +519,9 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|0
+!if $(IOMMU_ENABLE) == TRUE
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
+!endif
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
