@@ -94,6 +94,12 @@ formset
       endcheckbox;
     endif;
 
+     checkbox varid  = FeaturesData.BootManagerEnabled,
+             prompt = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
+             help   = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
+             flags  = INTERACTIVE,
+    endcheckbox;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
