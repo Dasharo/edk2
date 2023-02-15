@@ -21,6 +21,7 @@ STATIC CHAR16 mMeModeEfiVar[] = L"MeMode";
 STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
 STATIC CHAR16 mUsbStackEfiVar[] = L"UsbDriverStack";
 STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
+STATIC CHAR16 mBootManagerEnabledEfiVar[] = L"BootManagerEnabled";
 STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
@@ -36,6 +37,8 @@ STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
 STATIC UINT8     mIommuEnableDefault = FALSE;
 STATIC UINT8     mIommuHandoffDefault = FALSE;
+STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
+
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
   NULL,
@@ -439,6 +442,27 @@ DasharoSystemFeaturesUiLibConstructor (
     }
   }
 
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled);
+  Status = gRT->GetVariable(
+      mBootManagerEnabledEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+	    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled
+      );
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled = mBootManagerEnabledDefault;
+    Status = gRT->SetVariable(
+	    mBootManagerEnabledEfiVar,
+      &gDasharoSystemFeaturesGuid,
+	    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+	    sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled),
+	    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled
+      );
+
+    ASSERT_EFI_ERROR(Status);
+  }
+
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption);
   Status = gRT->GetVariable (
       mFanCurveOptionEfiVar,
@@ -766,6 +790,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.FanCurveOption),
         &DasharoFeaturesData.FanCurveOption
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.BootManagerEnabled != DasharoFeaturesData.BootManagerEnabled) {
+    Status = gRT->SetVariable (
+        mBootManagerEnabledEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.BootManagerEnabled),
+        &DasharoFeaturesData.BootManagerEnabled
         );
     if (EFI_ERROR (Status)) {
       return Status;

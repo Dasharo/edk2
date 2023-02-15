@@ -58,6 +58,7 @@ typedef struct {
   BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
   UINT8              FanCurveOption;
   IOMMU_CONFIG       IommuConfig;
+  BOOLEAN            BootManagerEnabled;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
