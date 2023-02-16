@@ -28,6 +28,11 @@ typedef struct {
   UINT16  WatchdogTimeout;
 } WATCHDOG_CONFIG;
 
+typedef struct {
+  BOOLEAN DmaProtectionEnable;
+  BOOLEAN   IommuHandoff;
+} IOMMU_CONFIG;
+
 #define FAN_CURVE_OPTION_SILENT 0
 #define FAN_CURVE_OPTION_PERFORMANCE 1
 #pragma pack(pop)
@@ -52,8 +57,7 @@ typedef struct {
   WATCHDOG_CONFIG    WatchdogConfig;
   BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
   UINT8              FanCurveOption;
-  BOOLEAN            DmaProtection;
-  BOOLEAN            IommuHandoff;
+  IOMMU_CONFIG       IommuConfig;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
