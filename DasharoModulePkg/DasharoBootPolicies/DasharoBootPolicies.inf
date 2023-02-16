@@ -30,6 +30,7 @@
 [LibraryClasses]
   BaseLib
   DebugLib
+  PcdLib
   UefiLib
   UefiDriverEntryPoint
   UefiRuntimeServicesTableLib
@@ -42,6 +43,9 @@
   gDasharoUsbDriverPolicyGuid          ### PROVIDES
   gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
   gDasharoPs2ControllerPolicyGuid      ### PROVIDES
+
+[Pcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
 
 [Depex]
   gEfiVariableArchProtocolGuid
