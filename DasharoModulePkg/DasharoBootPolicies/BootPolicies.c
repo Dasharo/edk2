@@ -58,19 +58,20 @@ InitializeBootPolicies (
              &VarSize
              );
 
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))) {
 
+  if (Status == EFI_NOT_FOUND)
+    mNetworkBootPolicy.NetworkBootEnabled = FixedPcdGetBool(PcdDefaultNetworkBootEnable);
+  else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar)))
     mNetworkBootPolicy.NetworkBootEnabled = *EfiVar;
 
-    if (mNetworkBootPolicy.NetworkBootEnabled) {
-      gBS->InstallMultipleProtocolInterfaces (
-        &ImageHandle,
-        &gDasharoNetworkBootPolicyGuid,
-        &mNetworkBootPolicy,
-        NULL
-        );
-      DEBUG ((EFI_D_INFO, "Boot Policy: Enabling network stack\n"));
-    }
+  if (mNetworkBootPolicy.NetworkBootEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoNetworkBootPolicyGuid,
+      &mNetworkBootPolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling network stack\n"));
   }
 
   Status = GetVariable2 (
