@@ -298,7 +298,7 @@ if (BootMenuEnable){
    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
 }
 else {
-  +  BootOptions = EfiBootManagerGetLoadOptions (
+    BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount, LoadOptionTypeBoot
                   );
 
