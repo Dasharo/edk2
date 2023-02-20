@@ -266,6 +266,11 @@ RegisterBootManagerMenuAppBootOption (
   EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
+  UINTN                            BootOptionCount;
+  BOOLEAN                          BootMenuEnable;
+  UINTN                            VarSize;
+  INTN                             OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION     *BootOptions;
 
   DevicePath = FvFilePath (FileGuid);
   Status = EfiBootManagerInitializeLoadOption (
@@ -280,6 +285,32 @@ RegisterBootManagerMenuAppBootOption (
              );
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
+
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable(
+      L"BootManagerEnabled",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &BootMenuEnable
+      );
+if (BootMenuEnable){
+   Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+}
+else {
+  +  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount, LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption, BootOptions, BootOptionCount
+                  );
+
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
+  }
+}
 
   Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
   ASSERT_EFI_ERROR (Status);
