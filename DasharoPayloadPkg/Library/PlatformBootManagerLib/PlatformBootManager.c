@@ -253,6 +253,11 @@ RegisterBootManagerMenuAppBootOption (
   EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
+  UINTN                            BootOptionCount;
+  BOOLEAN                          BootMenuEnable;
+  UINTN                            VarSize;
+  INTN                             OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION     *BootOptions;
 
   DevicePath = FvFilePath (&mBootMenuFile);
   // Use LOAD_OPTION_HIDDEN to not display Boot Manager Menu App in
@@ -270,7 +275,39 @@ RegisterBootManagerMenuAppBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
-  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable(
+      L"BootManagerEnabled",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &BootMenuEnable
+      );
+
+  if (EFI_ERROR(Status) || VarSize != sizeof (BootMenuEnable)) {
+    DEBUG((EFI_D_ERROR, "Boot Manager option failure: %r, Size: %x, Enabled: %d\n",
+                         Status, VarSize, BootMenuEnable));
+    BootMenuEnable = TRUE;
+  }
+
+  if (BootMenuEnable){
+    DEBUG((EFI_D_INFO, "Registering Boot Manager app option\n"));
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+  } else {
+    DEBUG((EFI_D_INFO, "Unregistering Boot Manager app option\n"));
+    BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount, LoadOptionTypeBoot
+                  );
+
+    OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption, BootOptions, BootOptionCount
+                  );
+
+    if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+      Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                       BootOptions[OptionIndex].OptionType);
+    }
+  }
   ASSERT_EFI_ERROR (Status);
 
   OptionNumber = NewOption.OptionNumber;
@@ -570,6 +607,11 @@ PlatformBootManagerBeforeConsole (
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
   UINTN                          OptionNumber;
 
+  // For Boot Menu Enabled functionality
+  EFI_STATUS                     Status;
+  BOOLEAN                        BootMenuEnable;
+  UINTN                          VarSize;
+
   //
   // Register ENTER as CONTINUE key
   //
@@ -579,7 +621,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Map ESC to Boot Manager Menu
   //
-  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);;
+  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);
   Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
@@ -590,7 +632,21 @@ PlatformBootManagerBeforeConsole (
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
+    DEBUG((EFI_D_INFO, "Registering Boot Manager key option\n"));
+    EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+  } else {
+    EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
+  }
 
   //
   // Install ready to lock.
@@ -814,6 +870,7 @@ PlatformBootManagerAfterConsole (
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
   BOOLEAN                        NetBootEnabled;
+  BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
@@ -879,8 +936,20 @@ PlatformBootManagerAfterConsole (
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
 
-  Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
-         SetupMenuKey, BootMenuKey);
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+  Print (L"%-5s to enter Setup\n", SetupMenuKey);
+
+  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
+    Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
+
+  Print (L"ENTER to boot directly\n");
 }
 
 /**
