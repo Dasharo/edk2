@@ -13,7 +13,7 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 #include <Library/DebugLib.h>
 #include <Library/UefiLib.h>
 #include "BootPolicies.h"
-#include "DasharoSystemFeaturesHii.h"
+#include "Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesHii.h"
 
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -40,7 +40,6 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
-  IOMMU_CONFIG *IommuConfigEfiVar;
   UINT8 PcdVal = 0;
 
   gBS = SystemTable->BootServices;
@@ -148,17 +147,16 @@ InitializeBootPolicies (
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
   }
 
-  VarSize = sizeof(IOMMU_CONFIG);
   Status = GetVariable2 (
            L"IommuConfig",
            &gDasharoSystemFeaturesGuid,
-           (VOID **) &IommuConfigEfiVar,
+           (VOID **) &EfiVar,
            &VarSize
            );
 
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*IommuConfigEfiVar))){
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))){
     PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
-    if (IommuConfigEfiVar->IommuHandoff){
+    if (*EfiVar == DMA_MODE_ENABLE_EBS){
       PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal | 0x02);
       DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
     }
