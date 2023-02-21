@@ -28,11 +28,6 @@ typedef struct {
   UINT16  WatchdogTimeout;
 } WATCHDOG_CONFIG;
 
-typedef struct {
-  BOOLEAN DmaProtectionEnable;
-  BOOLEAN   IommuHandoff;
-} IOMMU_CONFIG;
-
 #define FAN_CURVE_OPTION_SILENT 0
 #define FAN_CURVE_OPTION_PERFORMANCE 1
 #pragma pack(pop)
@@ -57,12 +52,16 @@ typedef struct {
   WATCHDOG_CONFIG    WatchdogConfig;
   BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
   UINT8              FanCurveOption;
-  IOMMU_CONFIG       IommuConfig;
+  UINT8              IommuConfig;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
 #define ME_MODE_DISABLE_HECI  1
 #define ME_MODE_DISABLE_HAP   2
+
+#define DMA_MODE_DISABLE      0
+#define DMA_MODE_ENABLE_RTB   1 // Iommu handoff at ReadyToBoot
+#define DMA_MODE_ENABLE_EBS   2 // Iommu handoff at ExitBootServices
 
 #define LOCK_BIOS_QUESTION_ID              0x8000
 #define NETWORK_BOOT_QUESTION_ID           0x8001

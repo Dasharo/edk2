@@ -78,8 +78,11 @@
 #string STR_FAN_CURVE_SILENT        #language en-US "Silent"
 #string STR_FAN_CURVE_PERFORMANCE   #language en-US "Performance"
 
-#string STR_DMA_BOOT_ENABLE_PROMPT      #language en-US "DMA Protection"
-#string STR_DMA_BOOT_ENABLE_HELP        #language en-US "Enables DMA protection"
+#string STR_DMA_MODE_PROMPT      #language en-US "DMA Protection"
+#string STR_DMA_MODE_HELP        #language en-US "DMA protection can be disabled or enabled in two modes:\n\n"
+                                                   "Enabled (EBS): Enable IOMMU when transfering control to OS (ExitBootService in normal boot)\n\n"
+                                                   "Enabled (RTB): Enable IOMMU at the start of boot device selection (ReadyToBoot)."
 
-#string STR_IOMMU_HANDOFF_ENABLE_PROMPT      #language en-US "IOMMU handoff at ExitBootServices"
-#string STR_IOMMU_HANDOFF_ENABLE_HELP        #language en-US "Enable IOMMU when transfering control to OS (ExitBootService in normal boot), otherwise IOMMU will be enabled at the start of boot device selection."
+#string STR_DMA_MODE_DISABLE        #language en-US "Disabled"
+#string STR_DMA_MODE_ENABLE_EBS     #language en-US "Enabled (EBS)"
+#string STR_DMA_MODE_ENABLE_RTB     #language en-US "Enabled (RTB)"

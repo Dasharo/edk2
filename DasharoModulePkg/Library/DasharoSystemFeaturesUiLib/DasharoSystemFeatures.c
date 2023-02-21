@@ -34,7 +34,7 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
-STATIC BOOLEAN   mIommuConfigDefault = {TRUE, TRUE};
+STATIC UINT8     mIommuConfigDefault = DMA_MODE_ENABLE_EBS;
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
   NULL,
@@ -473,7 +473,7 @@ DasharoSystemFeaturesUiLibConstructor (
         mIommuConfigEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDmaProtectionDefault),
+        sizeof (mIommuConfigDefault),
         &mIommuConfigDefault
         );
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig = mIommuConfigDefault;
