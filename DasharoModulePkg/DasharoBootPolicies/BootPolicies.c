@@ -164,6 +164,7 @@ InitializeBootPolicies (
     }
     else{
       PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal & (~0x02));
+      DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ReadyToBoot\n"));
     }
   }
 
