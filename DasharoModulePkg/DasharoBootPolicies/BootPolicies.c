@@ -156,13 +156,21 @@ InitializeBootPolicies (
 
   if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))){
     PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
-    if (*EfiVar == DMA_MODE_ENABLE_EBS){
-      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal | 0x02);
-      DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
-    }
-    else{
-      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal & (~0x02));
-      DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ReadyToBoot\n"));
+    if (*EfiVar){
+      PcdVal |= 0x01;
+      if (*EfiVar == DMA_MODE_ENABLE_EBS){
+        PcdVal |= 0x02;
+        
+        DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
+      }
+      else{
+        PcdVal &= (~0x02);
+        DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ReadyToBoot\n"));
+      }
+      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal);
+    } else {
+      PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal & (~0x03));
+      DEBUG ((EFI_D_INFO, "Boot Policy: DMA protection disabled\n"));
     }
   }
 
