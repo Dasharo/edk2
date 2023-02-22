@@ -80,15 +80,19 @@ formset
              flags  = INTERACTIVE,
     endcheckbox;
 
-    oneof varid  = FeaturesData.IommuConfig,
-             prompt = STRING_TOKEN(STR_DMA_MODE_PROMPT),
-             help   = STRING_TOKEN(STR_DMA_MODE_HELP),
+    checkbox varid  = FeaturesData.IommuConfig.IommuEnable,
+             prompt = STRING_TOKEN(STR_DMA_PROTECTION_PROMPT),
+             help   = STRING_TOKEN(STR_DMA_PROTECTION_HELP),
              flags  = INTERACTIVE,
+    endcheckbox;
 
-             option text = STRING_TOKEN(STR_DMA_MODE_DISABLE), value = DMA_MODE_DISABLE, flags = 0;
-             option text = STRING_TOKEN(STR_DMA_MODE_ENABLE_RTB), value = DMA_MODE_ENABLE_RTB, flags = 0;
-             option text = STRING_TOKEN(STR_DMA_MODE_ENABLE_EBS), value = DMA_MODE_ENABLE_EBS, flags = 0;
-    endoneof;
+    suppressif ideqval FeaturesData.IommuConfig.IommuEnable == 0;
+      checkbox varid  = FeaturesData.IommuConfig.IommuHandoff,
+               prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_PROMPT),
+               help   = STRING_TOKEN(STR_IOMMU_HANDOFF_HELP),
+               flags  = INTERACTIVE,
+      endcheckbox;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
