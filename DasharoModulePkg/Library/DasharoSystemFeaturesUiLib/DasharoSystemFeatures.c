@@ -34,7 +34,8 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
-STATIC UINT8     mIommuConfigDefault = DMA_MODE_ENABLE_EBS;
+STATIC UINT8     mIommuEnableDefault = TRUE;
+STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
   NULL,
@@ -469,14 +470,15 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuEnable = mIommuEnableDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuHandoff = mIommuHandoffDefault;
     Status = gRT->SetVariable (
         mIommuConfigEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mIommuConfigDefault),
-        &mIommuConfigDefault
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig
         );
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig = mIommuConfigDefault;
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -786,7 +788,8 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
-  if (Private->DasharoFeaturesData.IommuConfig != DasharoFeaturesData.IommuConfig) {
+  if (Private->DasharoFeaturesData.IommuConfig.IommuEnable != DasharoFeaturesData.IommuConfig.IommuEnable ||
+      Private->DasharoFeaturesData.IommuConfig.IommuHandoff != DasharoFeaturesData.IommuConfig.IommuHandoff) {
     Status = gRT->SetVariable (
         mIommuConfigEfiVar,
         &gDasharoSystemFeaturesGuid,
