@@ -294,15 +294,16 @@ RegisterBootManagerMenuAppBootOption (
       &VarSize,
       &BootMenuEnable
       );
-if (BootMenuEnable){
-   Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
-}
-else {
+  if (BootMenuEnable){
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+  }
+  else {
     BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount, LoadOptionTypeBoot
                   );
 
-  OptionIndex = EfiBootManagerFindLoadOption (
+    OptionIndex = EfiBootManagerFindLoadOption (
                   &NewOption, BootOptions, BootOptionCount
                   );
 
@@ -616,6 +617,13 @@ PlatformBootManagerBeforeConsole (
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
   UINTN                          OptionNumber;
 
+  // For Boot Menu Enabled functionality
+  EFI_STATUS                     Status;
+  BOOLEAN                        BootMenuEnable;
+  UINTN                          VarSize;
+    
+  EFI_BOOT_MANAGER_KEY_OPTION    BootManagerMenuOption_delete;
+
   //
   // Register ENTER as CONTINUE key
   //
@@ -625,7 +633,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Map ESC to Boot Manager Menu
   //
-  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);;
+  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);
   Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
@@ -636,7 +644,22 @@ PlatformBootManagerBeforeConsole (
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+  EfiBootManagerAddKeyOptionVariable (&BootManagerMenuOption_delete, (UINT16)OptionNumber, 0, &F12, NULL);
+  
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(BootMenuEnable))) {
+    if (!BootMenuEnable) {
+      EfiBootManagerDeleteKeyOptionVariable(&BootManagerMenuOption_delete, (UINT16)OptionNumber, 0, &F12);
+    }
+  }
+
   //
   // Install ready to lock.
   // This needs to be done before option rom dispatched.
@@ -854,6 +877,7 @@ PlatformBootManagerAfterConsole (
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
   BOOLEAN                        NetBootEnabled;
+  BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
@@ -915,8 +939,26 @@ PlatformBootManagerAfterConsole (
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
 
-  Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
-         SetupMenuKey, BootMenuKey);
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(BootMenuEnable))) {
+    if (BootMenuEnable) {
+      // Register boot menu key, in case of proper option in setup menu
+      
+      Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
+            SetupMenuKey, BootMenuKey);
+    }
+    else {
+      Print (L"%-5s to enter Setup\nENTER to boot directly",
+            SetupMenuKey);
+    }
+  }
 }
 
 /**
