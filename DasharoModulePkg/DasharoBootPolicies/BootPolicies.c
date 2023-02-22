@@ -154,13 +154,17 @@ InitializeBootPolicies (
            &VarSize
            );
 
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar))){
+  if (Status == EFI_NOT_FOUND){
+    DEBUG ((EFI_D_ERROR, "Boot Policy: IommuConfig read uncorrectly, using default value\n"));
+    PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
+    PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal | 0x03);
+  }
+  else if ((Status == EFI_SUCESS) && (VarSize == sizeof(*EfiVar))){
     PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
     if (*EfiVar){
       PcdVal |= 0x01;
       if (*EfiVar == DMA_MODE_ENABLE_EBS){
         PcdVal |= 0x02;
-        
         DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
       }
       else{
