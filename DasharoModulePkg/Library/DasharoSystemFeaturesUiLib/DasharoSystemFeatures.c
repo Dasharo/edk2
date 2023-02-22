@@ -34,7 +34,7 @@ STATIC BOOLEAN   mSmmBwpDefault = FALSE;
 STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
-STATIC UINT8     mIommuEnableDefault = TRUE;
+STATIC UINT8     mIommuEnableDefault = FALSE;
 STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
