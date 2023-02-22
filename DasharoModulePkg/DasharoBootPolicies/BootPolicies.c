@@ -40,6 +40,7 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
+  UINT8 *IommuConfig;
   UINT8 PcdVal = 0;
 
   gBS = SystemTable->BootServices;
@@ -147,10 +148,11 @@ InitializeBootPolicies (
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling PS2 Controller\n"));
   }
 
+  VarSize = sizeof(UINT8);
   Status = GetVariable2 (
            L"IommuConfig",
            &gDasharoSystemFeaturesGuid,
-           (VOID **) &EfiVar,
+           (VOID **) &IommuConfig,
            &VarSize
            );
 
@@ -159,11 +161,11 @@ InitializeBootPolicies (
     PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
     PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal | 0x03);
   }
-  else if ((Status == EFI_SUCESS) && (VarSize == sizeof(*EfiVar))){
+  else if ((Status == EFI_SUCCESS) && (VarSize == sizeof(*IommuConfig))){
     PcdVal = PcdGet8(PcdVTdPolicyPropertyMask);
-    if (*EfiVar){
+    if (*IommuConfig){
       PcdVal |= 0x01;
-      if (*EfiVar == DMA_MODE_ENABLE_EBS){
+      if (*IommuConfig == DMA_MODE_ENABLE_EBS){
         PcdVal |= 0x02;
         DEBUG ((EFI_D_INFO, "Boot Policy: IOMMU handoff at ExitBootServices\n"));
       }
