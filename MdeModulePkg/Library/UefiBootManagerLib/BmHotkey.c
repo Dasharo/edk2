@@ -1078,7 +1078,8 @@ EfiBootManagerDeleteKeyOptionVariable (
   if (EFI_ERROR (Status)) {
     return Status;
   }
-
+  
+  DEBUG((DEBUG_INFO, "KZM_EfiBootManagerDeleteKeyOptionVariable:  before EfiAcquireLock\n"));
   EfiAcquireLock (&mBmHotkeyLock);
   //
   // Delete the key option from active hot key list
@@ -1121,6 +1122,25 @@ EfiBootManagerDeleteKeyOptionVariable (
   Status     = EFI_NOT_FOUND;
   KeyOptions = BmGetKeyOptions (&KeyOptionCount);
   for (Index = 0; Index < KeyOptionCount; Index++) {
+    DEBUG((DEBUG_INFO, "KZM_EfiBootManagerDeleteKeyOptionVariable: in loop KeyOption Count, index %d\n", Index));
+    
+    // Just for debugging purposes
+    if (KeyOptions[Index].KeyData.PackedValue == KeyOption.KeyData.PackedValue){
+      DEBUG((DEBUG_INFO, " KZM_EfiBootManagerDeleteKeyOptionVariable: in loop: (1) condition true\n"));
+    }
+    else {
+      DEBUG((DEBUG_INFO, " KZM_EfiBootManagerDeleteKeyOptionVariable: in loop: (1) condition false\n"));
+    }
+
+    if ((CompareMem (
+           KeyOptions[Index].Keys, KeyOption.Keys,
+           KeyOption.KeyData.Options.InputKeyCount * sizeof (EFI_INPUT_KEY)) == 0)){
+      DEBUG((DEBUG_INFO, " KZM_EfiBootManagerDeleteKeyOptionVariable: in loop: (2) condition true\n"));
+    }
+    else {
+      DEBUG((DEBUG_INFO, " KZM_EfiBootManagerDeleteKeyOptionVariable: in loop: (2) condition true\n"));
+    }
+
     if ((KeyOptions[Index].KeyData.PackedValue == KeyOption.KeyData.PackedValue) &&
         (CompareMem (
            KeyOptions[Index].Keys, KeyOption.Keys,
@@ -1138,6 +1158,7 @@ EfiBootManagerDeleteKeyOptionVariable (
       // Return the deleted key option in case needed by caller
       //
       if (DeletedOption != NULL) {
+        DEBUG((DEBUG_INFO, "KZM_EfiBootManagerDeleteKeyOptionVariable: in loop KeyOption Count, index %d\n", Index));
         CopyMem (DeletedOption, &KeyOptions[Index], sizeof (EFI_BOOT_MANAGER_KEY_OPTION));
       }
       break;
