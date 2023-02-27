@@ -966,6 +966,7 @@ EfiBootManagerAddKeyOptionVariable (
     mBmLoadOptionName[LoadOptionTypeBoot], BootOptionNumber
     );
   GetEfiGlobalVariable2 (BootOptionName, &BootOption, &BootOptionSize);
+  DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: boot option number: %s\n", BootOptionName));
 
   if (BootOption == NULL) {
     DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: BootOption == NULL, out of function\n"));
@@ -994,8 +995,10 @@ EfiBootManagerAddKeyOptionVariable (
   for (Index = 0; Index < KeyOptionCount; Index++) {
     if ((KeyOptions[Index].KeyData.PackedValue == KeyOption.KeyData.PackedValue) &&
       (CompareMem (KeyOptions[Index].Keys, KeyOption.Keys, KeyOption.KeyData.Options.InputKeyCount * sizeof (EFI_INPUT_KEY)) == 0)) {
+        DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: cond 1 && cond 2 => false\n"));
       break;
     }
+    DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: cond 1 && cond 2 => true, follow the subroutine\n"));
 
     if ((KeyOptionNumber == LoadOptionNumberUnassigned) &&
         (KeyOptions[Index].OptionNumber > Index)
