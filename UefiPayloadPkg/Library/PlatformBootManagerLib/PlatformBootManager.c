@@ -641,11 +641,13 @@ PlatformBootManagerBeforeConsole (
   //
   // Map F12 to Boot Device List menu
   //
+  DEBUG((DEBUG_INFO, "KZM_PlatformBootManagerBeforeConsole: before start\n"));
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
   EfiBootManagerAddKeyOptionVariable (&BootManagerMenuOption_delete, (UINT16)OptionNumber, 0, &F12, NULL);
-  
+  DEBUG((DEBUG_INFO, "KZM_PlatformBootManagerBeforeConsole: after execution\n"));
+
   VarSize = sizeof (BootMenuEnable);
   Status = gRT->GetVariable (
           L"BootManagerEnabled",
