@@ -960,6 +960,7 @@ EfiBootManagerAddKeyOptionVariable (
   UINTN                          KeyOptionNumber;
   CHAR16                         KeyOptionName[sizeof ("Key####")];
 
+  DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: start of function\n"));
   UnicodeSPrint (
     BootOptionName, sizeof (BootOptionName), L"%s%04x",
     mBmLoadOptionName[LoadOptionTypeBoot], BootOptionNumber
@@ -967,10 +968,12 @@ EfiBootManagerAddKeyOptionVariable (
   GetEfiGlobalVariable2 (BootOptionName, &BootOption, &BootOptionSize);
 
   if (BootOption == NULL) {
+    DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: BootOption == NULL, out of function\n"));
     return EFI_NOT_FOUND;
   }
 
   ZeroMem (&KeyOption, sizeof (EFI_BOOT_MANAGER_KEY_OPTION));
+  DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: boot option number: %d\n", BootOptionNumber));
   KeyOption.BootOption = BootOptionNumber;
   Status = gBS->CalculateCrc32 (BootOption, BootOptionSize, &KeyOption.BootOptionCrc);
   ASSERT_EFI_ERROR (Status);
@@ -1024,6 +1027,8 @@ EfiBootManagerAddKeyOptionVariable (
     // Return the Key Option in case needed by caller
     //
     if (AddedOption != NULL) {
+      //DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: Added, index %d\n", Index));
+      DEBUG((DEBUG_INFO, "KZM_EfiBootManagerAddKeyOptionVariable: AddedOption inside subroutine\n"));
       CopyMem (AddedOption, &KeyOption, sizeof (EFI_BOOT_MANAGER_KEY_OPTION));
     }
 
