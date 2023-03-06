@@ -296,9 +296,7 @@ RegisterBootManagerMenuAppBootOption (
       );
   if (BootMenuEnable){
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
-    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
-  }
-  else {
+  } else {
     BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount, LoadOptionTypeBoot
                   );
@@ -307,13 +305,11 @@ RegisterBootManagerMenuAppBootOption (
                   &NewOption, BootOptions, BootOptionCount
                   );
 
-  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
-    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
-                                                     BootOptions[OptionIndex].OptionType);
+    if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+      Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                       BootOptions[OptionIndex].OptionType);
+    }
   }
-}
-
-  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
   ASSERT_EFI_ERROR (Status);
 
   OptionNumber = NewOption.OptionNumber;
@@ -621,8 +617,6 @@ PlatformBootManagerBeforeConsole (
   EFI_STATUS                     Status;
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
-    
-  EFI_BOOT_MANAGER_KEY_OPTION    BootManagerMenuOption_delete;
 
   //
   // Register ENTER as CONTINUE key
@@ -641,12 +635,9 @@ PlatformBootManagerBeforeConsole (
   //
   // Map F12 to Boot Device List menu
   //
-  DEBUG((DEBUG_INFO, "KZM_PlatformBootManagerBeforeConsole: before start\n"));
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
   OptionNumber    = GetBootManagerMenuAppOption ();
-  EfiBootManagerAddKeyOptionVariable (&BootManagerMenuOption_delete, (UINT16)OptionNumber, 0, &F12, NULL);
-  DEBUG((DEBUG_INFO, "KZM_PlatformBootManagerBeforeConsole: after execution\n"));
 
   VarSize = sizeof (BootMenuEnable);
   Status = gRT->GetVariable (
@@ -656,10 +647,12 @@ PlatformBootManagerBeforeConsole (
           &VarSize,
           &BootMenuEnable
         );
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(BootMenuEnable))) {
-    if (!BootMenuEnable) {
-      EfiBootManagerDeleteKeyOptionVariable(&BootManagerMenuOption_delete, (UINT16)OptionNumber, 0, &F12);
-    }
+  if (Status == EFI_NOT_FOUND || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
+    DEBUG((DEBUG_INFO, "---> Adding BootManager Key Option\n"));
+    EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+  } else {
+    DEBUG((DEBUG_INFO, "---> Deleting BootManager Key Option\n"));
+    EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
   }
 
   //
@@ -888,7 +881,7 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerConnectAll ();
   gST->ConOut->ClearScreen (gST->ConOut);
   WarnIfRecoveryBoot ();
-  
+
   BootLogoEnableLogo ();
 
   // FIXME: USB devices are not being detected unless we wait a bit.
@@ -949,18 +942,12 @@ PlatformBootManagerAfterConsole (
           &VarSize,
           &BootMenuEnable
         );
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(BootMenuEnable))) {
-    if (BootMenuEnable) {
-      // Register boot menu key, in case of proper option in setup menu
-      
-      Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
-            SetupMenuKey, BootMenuKey);
-    }
-    else {
-      Print (L"%-5s to enter Setup\nENTER to boot directly",
-            SetupMenuKey);
-    }
-  }
+  Print (L"%-5s to enter Setup\n", SetupMenuKey);
+
+  if (Status == EFI_NOT_FOUND || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
+    Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
+
+  Print (L"ENTER to boot directly\n");
 }
 
 /**
