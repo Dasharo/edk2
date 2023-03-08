@@ -67,3 +67,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise
