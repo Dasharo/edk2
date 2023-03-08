@@ -46,6 +46,7 @@ typedef struct {
   BOOLEAN            ShowChipsetMenu;
   BOOLEAN            ShowPowerMenu;
   BOOLEAN            PowerMenuShowFanCurve;
+  BOOLEAN            DasharoEnterprise;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -59,11 +60,15 @@ typedef struct {
   UINT8              FanCurveOption;
   IOMMU_CONFIG       IommuConfig;
   BOOLEAN            BootManagerEnabled;
+  UINT8              SleepType;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
 #define ME_MODE_DISABLE_HECI  1
 #define ME_MODE_DISABLE_HAP   2
+
+#define SLEEP_TYPE_S0IX  0
+#define SLEEP_TYPE_S3    1
 
 #define LOCK_BIOS_QUESTION_ID              0x8000
 #define NETWORK_BOOT_QUESTION_ID           0x8001
