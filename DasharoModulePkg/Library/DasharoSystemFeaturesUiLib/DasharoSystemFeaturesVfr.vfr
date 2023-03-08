@@ -94,11 +94,14 @@ formset
       endcheckbox;
     endif;
 
-     checkbox varid  = FeaturesData.BootManagerEnabled,
-             prompt = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
-             help   = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
-             flags  = INTERACTIVE,
-    endcheckbox;
+    suppressif ideqval FeaturesData.DasharoEnterprise == 0;
+      checkbox varid   = FeaturesData.BootManagerEnabled,
+               prompt  = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
+               help    = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
+               flags   = INTERACTIVE,
+               default = 1,
+      endcheckbox;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -218,6 +221,15 @@ formset
                   option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
          endoneof;
     endif;
+
+    oneof varid = FeaturesData.SleepType,
+             prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
+             help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
+             flags  = INTERACTIVE,
+
+             option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
+             option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
+    endoneof;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);

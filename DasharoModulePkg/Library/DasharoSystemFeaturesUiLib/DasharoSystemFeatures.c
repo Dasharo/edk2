@@ -27,6 +27,7 @@ STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
 STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
 STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
+STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -38,6 +39,7 @@ STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
 STATIC UINT8     mIommuEnableDefault = FALSE;
 STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
+STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -242,6 +244,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowChipsetMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu = PcdGetBool (PcdShowPowerMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowFanCurve = PcdGetBool (PcdPowerMenuShowFanCurve);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
@@ -502,6 +505,27 @@ DasharoSystemFeaturesUiLibConstructor (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType);
+  Status = gRT->GetVariable (
+      mSleepTypeEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType = mSleepTypeDefault;
+    Status = gRT->SetVariable (
+        mSleepTypeEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -833,6 +857,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.IommuConfig),
         &DasharoFeaturesData.IommuConfig
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.SleepType != DasharoFeaturesData.SleepType) {
+    Status = gRT->SetVariable (
+        mSleepTypeEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.SleepType),
+        &DasharoFeaturesData.SleepType
         );
     if (EFI_ERROR (Status)) {
       return Status;
