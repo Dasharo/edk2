@@ -47,6 +47,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|FALSE|BOOLEAN|0x00000007
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|FALSE|BOOLEAN|0x00000008
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000009
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|FALSE|BOOLEAN|0x0000000A
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
@@ -54,3 +55,4 @@
   # a platform-specific method (e.g. Board Jumper set) in a actual platform in early boot phase.<BR><BR>
   # @Prompt The password clear status
   gUserAuthFeaturePkgTokenSpaceGuid.PcdPasswordCleared|FALSE|BOOLEAN|0xF0000001
+
