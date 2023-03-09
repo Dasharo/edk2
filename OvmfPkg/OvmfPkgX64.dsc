@@ -29,8 +29,8 @@
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE
   #
-  DEFINE SECURE_BOOT_ENABLE      = FALSE
-  DEFINE SMM_REQUIRE             = FALSE
+  DEFINE SECURE_BOOT_ENABLE      = TRUE
+  DEFINE SMM_REQUIRE             = TRUE
   DEFINE SOURCE_DEBUG_ENABLE     = FALSE
   DEFINE CC_MEASUREMENT_ENABLE   = FALSE
 
@@ -40,6 +40,11 @@
   # Shell can be useful for debugging but should not be enabled for production
   #
   DEFINE BUILD_SHELL             = TRUE
+
+  DEFINE SATA_PASSWORD_ENABLE    = TRUE
+  DEFINE OPAL_PASSWORD_ENABLE    = TRUE
+  DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = TRUE
+  DEFINE SETUP_PASSWORD_ENABLE   = TRUE
 
   #
   # Network definition
@@ -210,6 +215,7 @@
   LockBoxLib|OvmfPkg/Library/LockBoxLib/LockBoxBaseLib.inf
   CcProbeLib|OvmfPkg/Library/CcProbeLib/DxeCcProbeLib.inf
 !else
+  LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
   CcProbeLib|MdePkg/Library/CcProbeLibNull/CcProbeLibNull.inf
 !endif
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
@@ -227,6 +233,12 @@
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
 
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+  TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
+  TcgStorageOpalLib|SecurityPkg/Library/TcgStorageOpalLib/TcgStorageOpalLib.inf
+!endif
+
 !if $(NETWORK_TLS_ENABLE) == TRUE
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
 !else
@@ -343,6 +355,10 @@
 
   MemEncryptSevLib|OvmfPkg/Library/BaseMemEncryptSevLib/PeiMemEncryptSevLib.inf
   CcProbeLib|OvmfPkg/Library/CcProbeLib/SecPeiCcProbeLib.inf
+
+!if $(TPM2_ENABLE) == TRUE
+  Tcg2PhysicalPresenceLib|SecurityPkg/Library/PeiTcg2PhysicalPresenceLib/PeiTcg2PhysicalPresenceLib.inf
+!endif
 
 [LibraryClasses.common.DXE_CORE]
   HobLib|MdePkg/Library/DxeCoreHobLib/DxeCoreHobLib.inf
@@ -618,6 +634,18 @@
   #
   gUefiCpuPkgTokenSpaceGuid.PcdFirstTimeWakeUpAPsBySipi|FALSE
 
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
+
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -650,7 +678,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Base|0x0
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size|0x800000000
 
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|0
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|2
 
   # Set video resolution for text setup.
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution|640
@@ -697,6 +725,8 @@
   gEfiMdePkgTokenSpaceGuid.PcdConfidentialComputingGuestAttr|0
 
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
+
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 
 [PcdsDynamicHii]
 !include OvmfPkg/Include/Dsc/OvmfTpmPcdsHii.dsc.inc
@@ -778,6 +808,10 @@
 
 !include OvmfPkg/Include/Dsc/OvmfTpmComponentsPei.dsc.inc
 
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+  SecurityPkg/HddPassword/HddPasswordPei.inf
+!endif
+
   #
   # DXE Phase modules
   #
@@ -803,6 +837,13 @@
 !endif
 !include OvmfPkg/Include/Dsc/OvmfTpmSecurityStub.dsc.inc
   }
+
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
+  DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
+    <LibraryClasses>
+      PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
+  }
+!endif
 
   MdeModulePkg/Universal/EbcDxe/EbcDxe.inf
   UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
@@ -855,13 +896,19 @@
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
+      NULL|DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+    <PcdsFixedAtBuild>
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
   }
   OvmfPkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.inf {
     <LibraryClasses>
       NULL|OvmfPkg/Library/BlobVerifierLibNull/BlobVerifierLibNull.inf
   }
+
+  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
+
   OvmfPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
   OvmfPkg/Virtio10Dxe/Virtio10.inf
   OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
@@ -923,6 +970,7 @@
   #
   # SMBIOS Support
   #
+  MdeModulePkg/Universal/SmbiosMeasurementDxe/SmbiosMeasurementDxe.inf
   MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf {
     <LibraryClasses>
       NULL|OvmfPkg/Library/SmbiosVersionLib/DetectSmbiosVersionLib.inf
@@ -945,6 +993,31 @@
 !include OvmfPkg/Include/Dsc/NetworkComponents.dsc.inc
 
   OvmfPkg/VirtioNetDxe/VirtioNet.inf
+
+
+!if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
+  DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
+!endif
+
+  #
+  # Hash2
+  #
+  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf {
+    <LibraryClasses>
+    BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+  }
+
+  #
+  # PKCS7 Verification
+  #
+  SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
+
+  #
+  # SD/eMMC Support
+  #
+  MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+  MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+  MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
 
   #
   # Usb Support
@@ -1001,6 +1074,8 @@
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
+  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
+  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
 !endif
 
@@ -1092,3 +1167,7 @@
   # TPM support
   #
 !include OvmfPkg/Include/Dsc/OvmfTpmComponentsDxe.dsc.inc
+
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+    SecurityPkg/HddPassword/HddPasswordDxe.inf
+!endif
