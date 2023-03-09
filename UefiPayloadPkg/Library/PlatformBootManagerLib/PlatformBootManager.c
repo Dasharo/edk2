@@ -294,9 +294,18 @@ RegisterBootManagerMenuAppBootOption (
       &VarSize,
       &BootMenuEnable
       );
+
+  if (EFI_ERROR(Status) || VarSize != sizeof (BootMenuEnable)) {
+    DEBUG((EFI_D_ERROR, "Boot Manager option failure: %r, Size: %x, Enabled: %d\n",
+                         Status, VarSize, BootMenuEnable));
+    BootMenuEnable = TRUE;
+  }
+
   if (BootMenuEnable){
+    DEBUG((EFI_D_INFO, "Registering Boot Manager app option\n"));
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
   } else {
+    DEBUG((EFI_D_INFO, "Unregistering Boot Manager app option\n"));
     BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount, LoadOptionTypeBoot
                   );
@@ -647,7 +656,8 @@ PlatformBootManagerBeforeConsole (
           &VarSize,
           &BootMenuEnable
         );
-  if (Status == EFI_NOT_FOUND || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
+  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
+    DEBUG((EFI_D_INFO, "Registering Boot Manager key option\n"));
     EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
   } else {
     EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
@@ -945,7 +955,7 @@ PlatformBootManagerAfterConsole (
         );
   Print (L"%-5s to enter Setup\n", SetupMenuKey);
 
-  if (Status == EFI_NOT_FOUND || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
+  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
     Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
 
   Print (L"ENTER to boot directly\n");
