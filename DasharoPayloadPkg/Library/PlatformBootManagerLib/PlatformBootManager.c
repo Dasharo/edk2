@@ -380,7 +380,10 @@ GetBootManagerMenuAppOption (
     //
     // If not found the BootManagerMenuApp, create it.
     //
+    DEBUG((EFI_D_INFO, "Creating Boot Manager option\n"));
     OptionNumber = (UINT16) RegisterBootManagerMenuAppBootOption ();
+  } else {
+    DEBUG((EFI_D_INFO, "Boot Manager option number %d\n", OptionNumber));
   }
 
   return OptionNumber;
@@ -641,10 +644,15 @@ PlatformBootManagerBeforeConsole (
           &VarSize,
           &BootMenuEnable
         );
+
+  DEBUG((EFI_D_ERROR, "Boot Manager option: %r, Size: %x, Enabled: %d\n",
+                      Status, VarSize, BootMenuEnable));
+
   if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
     DEBUG((EFI_D_INFO, "Registering Boot Manager key option\n"));
     EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
   } else {
+    DEBUG((EFI_D_INFO, "Unregistering Boot Manager key option\n"));
     EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
   }
 
