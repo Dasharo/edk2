@@ -262,9 +262,53 @@ RegisterBootManagerMenuAppBootOption (
   EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
+
+  DevicePath = FvFilePath (FileGuid);
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  DEBUG((EFI_D_INFO, "Registering Boot Manager app option\n"));
+  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+  ASSERT_EFI_ERROR (Status);
+
+  OptionNumber = NewOption.OptionNumber;
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+
+  return OptionNumber;
+}
+
+/**
+  Delete one boot option for BootManagerMenuApp.
+
+  @param  FileGuid          Input file guid for the BootManagerMenuApp.
+  @param  Description       Description of the BootManagerMenuApp boot option.
+  @param  IsBootCategory    Whether this is a boot category.
+
+  @retval OptionNumber      Return the option number info.
+
+**/
+EFI_STATUS
+UnregisterBootManagerMenuAppBootOption (
+  EFI_GUID                         *FileGuid,
+  CHAR16                           *Description,
+  BOOLEAN                          IsBootCategory
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
+  EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            BootOptionCount;
-  BOOLEAN                          BootMenuEnable;
-  UINTN                            VarSize;
   INTN                             OptionIndex;
   EFI_BOOT_MANAGER_LOAD_OPTION     *BootOptions;
 
@@ -282,46 +326,21 @@ RegisterBootManagerMenuAppBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
-  VarSize = sizeof (BootMenuEnable);
-  Status = gRT->GetVariable(
-      L"BootManagerEnabled",
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &VarSize,
-      &BootMenuEnable
-      );
+  DEBUG((EFI_D_INFO, "Unregistering Boot Manager app option\n"));
+  BootOptions = EfiBootManagerGetLoadOptions (
+                &BootOptionCount, LoadOptionTypeBoot
+                );
 
-  if (EFI_ERROR(Status) || VarSize != sizeof (BootMenuEnable)) {
-    DEBUG((EFI_D_ERROR, "Boot Manager option failure: %r, Size: %x, Enabled: %d\n",
-                         Status, VarSize, BootMenuEnable));
-    BootMenuEnable = TRUE;
+  OptionIndex = EfiBootManagerFindLoadOption (
+                &NewOption, BootOptions, BootOptionCount
+                );
+
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
   }
 
-  if (BootMenuEnable){
-    DEBUG((EFI_D_INFO, "Registering Boot Manager app option\n"));
-    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
-  } else {
-    DEBUG((EFI_D_INFO, "Unregistering Boot Manager app option\n"));
-    BootOptions = EfiBootManagerGetLoadOptions (
-                  &BootOptionCount, LoadOptionTypeBoot
-                  );
-
-    OptionIndex = EfiBootManagerFindLoadOption (
-                  &NewOption, BootOptions, BootOptionCount
-                  );
-
-    if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
-      Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
-                                                       BootOptions[OptionIndex].OptionType);
-    }
-  }
-  ASSERT_EFI_ERROR (Status);
-
-  OptionNumber = NewOption.OptionNumber;
-
-  EfiBootManagerFreeLoadOption (&NewOption);
-
-  return OptionNumber;
+  return Status;
 }
 
 /**
@@ -641,7 +660,6 @@ PlatformBootManagerBeforeConsole (
   //
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
-  OptionNumber    = GetBootManagerMenuAppOption ();
 
   VarSize = sizeof (BootMenuEnable);
   Status = gRT->GetVariable (
@@ -657,10 +675,12 @@ PlatformBootManagerBeforeConsole (
 
   if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable) {
     DEBUG((EFI_D_INFO, "Registering Boot Manager key option\n"));
+    OptionNumber = GetBootManagerMenuAppOption ();
     EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
   } else {
     DEBUG((EFI_D_INFO, "Unregistering Boot Manager key option\n"));
     EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
+    UnregisterBootManagerMenuAppBootOption(&mBootMenuFile, L"UEFI BootManagerMenuApp", FALSE);
   }
 
   //
