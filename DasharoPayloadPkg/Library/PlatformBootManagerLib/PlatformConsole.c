@@ -145,6 +145,9 @@ DetectPs2Keyboard (
   TimeOut     = 0;
   RegEmptied  = 0;
 
+  if (PcdGetBool (PcdSkipPs2Detect))
+    return TRUE;
+
   //
   // Wait for input buffer empty
   //
