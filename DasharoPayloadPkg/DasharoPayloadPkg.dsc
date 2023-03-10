@@ -482,6 +482,8 @@
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
 
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
+
 
 ################################################################################
 #

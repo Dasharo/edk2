@@ -97,4 +97,5 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
   gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
