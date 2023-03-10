@@ -471,6 +471,7 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
+  gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
 
 
 ################################################################################

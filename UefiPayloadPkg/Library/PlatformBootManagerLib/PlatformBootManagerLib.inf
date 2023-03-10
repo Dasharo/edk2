@@ -98,4 +98,5 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
   gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck
+  gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
