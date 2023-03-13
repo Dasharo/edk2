@@ -93,6 +93,7 @@
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
   DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
+  DEFINE SYSTEM76_EC_LOGGING            = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
 
@@ -224,6 +225,9 @@
 !if $(USE_CBMEM_FOR_CONSOLE) == TRUE
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
+!elseif $(SYSTEM76_EC_LOGGING) == TRUE
+  SerialPortLib|DasharoPayloadPkg/Library/System76EcLib/System76EcLib.inf
+  PlatformHookLib|DasharoPayloadPkg/Library/System76EcLib/System76EcLib.inf
 !else
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
   PlatformHookLib|DasharoPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
