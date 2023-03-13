@@ -93,6 +93,7 @@
   DEFINE LOAD_OPTION_ROMS               = TRUE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
+  DEFINE SYSTEM76_EC_LOGGING            = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE DISABLE_MTRR_PROGRAMMING       = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
@@ -128,7 +129,7 @@
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
-!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
+!if ($(USE_CBMEM_FOR_CONSOLE) == FALSE && $(SYSTEM76_EC_LOGGING) == FALSE)
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
   MSFT:RELEASE_*_*_CC_FLAGS      = /D MDEPKG_NDEBUG
@@ -226,6 +227,9 @@
 !if $(USE_CBMEM_FOR_CONSOLE) == TRUE
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
+!elseif $(SYSTEM76_EC_LOGGING) == TRUE
+  SerialPortLib|UefiPayloadPkg/Library/System76EcLib/System76EcLib.inf
+  PlatformHookLib|UefiPayloadPkg/Library/System76EcLib/System76EcLib.inf
 !else
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
   PlatformHookLib|UefiPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
@@ -388,7 +392,7 @@
 ################################################################################
 [PcdsFeatureFlag]
 
-!if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE)
+!if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE || $(SYSTEM76_EC_LOGGING) == TRUE)
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|TRUE
 !else
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|FALSE
@@ -423,7 +427,7 @@
 [PcdsPatchableInModule.common]
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x7
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
-!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
+!if ($(USE_CBMEM_FOR_CONSOLE) == FALSE && $(SYSTEM76_EC_LOGGING) == FALSE)
   !if $(SOURCE_DEBUG_ENABLE)
     gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
   !else
