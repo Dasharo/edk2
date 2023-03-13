@@ -1,0 +1,28 @@
+## @file
+#  System76 EC logging.
+#
+#  Copyright (c) 2020, System76, Inc.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = System76EcLib
+  MODULE_UNI_FILE                = System76EcLib.uni
+  FILE_GUID                      = 76ECF0DD-148B-4E48-8589-FC998823F8C2
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 0.1
+  LIBRARY_CLASS                  = System76EcLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+
+[LibraryClasses]
+  IoLib
+
+[Sources]
+  System76EcLib.c
+
+[Pcd]
