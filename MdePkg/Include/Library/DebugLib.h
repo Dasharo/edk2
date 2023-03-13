@@ -360,6 +360,7 @@ DebugPrintLevelEnabled (
     do {                           \
       if (DebugPrintEnabled ()) {  \
         _DEBUG (Expression);       \
+        _DEBUG (Expression);       \
       }                            \
     } while (FALSE)
 #else
