@@ -101,6 +101,7 @@ SmmStoreInitInstance (
 
   Status = FvbInitialize (Instance);
   if (EFI_ERROR (Status)) {
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return Status;
   }
 
@@ -113,6 +114,7 @@ SmmStoreInitInstance (
                   NULL
                   );
   if (EFI_ERROR (Status)) {
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return Status;
   }
 
@@ -261,6 +263,7 @@ SmmStoreInitialize (
       )
       );
     FreePool (mSmmStoreInstance);
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     SmmStoreLibDeinitialize ();
     return Status;
   }

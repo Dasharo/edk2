@@ -15,6 +15,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiRuntimeLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/PcdLib.h>
 #include <Library/SmmStoreLib.h>
 #include "SmmStore.h"
 
@@ -64,6 +65,8 @@ CallSmm (
     return EFI_SUCCESS;
   } else if (Result == SMMSTORE_RET_UNSUPPORTED) {
     return EFI_UNSUPPORTED;
+  } else {
+    DEBUG ((DEBUG_ERROR, "Unhandled SMMSTORE result: %x\n", Result));
   }
 
   return EFI_DEVICE_ERROR;
@@ -302,6 +305,7 @@ SmmStoreLibInitialize (
   GuidHob = GetFirstGuidHob (&gEfiSmmStoreInfoHobGuid);
   if (GuidHob == NULL) {
     DEBUG ((DEBUG_WARN, "SmmStore not supported! Skipping driver init.\n"));
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return EFI_UNSUPPORTED;
   }
 
@@ -310,6 +314,7 @@ SmmStoreLibInitialize (
   //
   mSmmStoreInfo = AllocateRuntimePool (GET_GUID_HOB_DATA_SIZE (GuidHob));
   if (mSmmStoreInfo == NULL) {
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -416,7 +421,7 @@ SmmStoreLibInitialize (
     DEBUG (
       (
        DEBUG_INFO,
-       "%a: No memory space descriptor for com buffer found\n",
+       "%a: No memory space descriptor for smmstore mmio address found\n",
        __FUNCTION__
       )
       );
