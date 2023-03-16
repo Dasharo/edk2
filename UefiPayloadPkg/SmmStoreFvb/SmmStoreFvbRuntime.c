@@ -189,7 +189,7 @@ SmmStoreInitialize (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to initialize SmmStoreLib\n", __FUNCTION__));
     PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
-    return Status;
+    return EFI_SUCCESS;
   }
 
   Status = SmmStoreLibGetMmioAddress (&MmioAddress);

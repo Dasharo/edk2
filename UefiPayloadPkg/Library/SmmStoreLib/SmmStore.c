@@ -15,7 +15,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiRuntimeLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/PcdLib.h>
 #include <Library/SmmStoreLib.h>
 #include "SmmStore.h"
 
@@ -303,7 +302,6 @@ SmmStoreLibInitialize (
   GuidHob = GetFirstGuidHob (&gEfiSmmStoreInfoHobGuid);
   if (GuidHob == NULL) {
     DEBUG ((DEBUG_WARN, "SmmStore not supported! Skipping driver init.\n"));
-    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return EFI_UNSUPPORTED;
   }
 
@@ -312,7 +310,6 @@ SmmStoreLibInitialize (
   //
   mSmmStoreInfo = AllocateRuntimePool (GET_GUID_HOB_DATA_SIZE (GuidHob));
   if (mSmmStoreInfo == NULL) {
-    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return EFI_OUT_OF_RESOURCES;
   }
 
