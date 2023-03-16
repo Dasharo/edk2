@@ -301,6 +301,7 @@ InitNonVolatileVariableStore (
   } else {
     Status = InitRealNonVolatileVariableStore (&VariableStoreBase);
     if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "InitRealNonVolatileVariableStore Failed!\n"));
       return Status;
     }
     mVariableModuleGlobal->VariableGlobal.EmuNvMode = FALSE;
