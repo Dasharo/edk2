@@ -304,6 +304,7 @@ InitNonVolatileVariableStore (
       return Status;
     }
     mVariableModuleGlobal->VariableGlobal.EmuNvMode = FALSE;
+    DEBUG ((DEBUG_INFO, "Variable driver will work at NON-emulated non-volatile variable mode!\n"));
   }
 
   mVariableModuleGlobal->VariableGlobal.NonVolatileVariableBase = VariableStoreBase;

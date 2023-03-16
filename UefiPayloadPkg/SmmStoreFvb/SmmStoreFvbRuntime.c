@@ -180,16 +180,11 @@ SmmStoreInitialize (
   UINT32                FtwWorkingSize;
   UINT32                FtwSpareSize;
 
-  if (PcdGetBool (PcdEmuVariableNvModeEnable)) {
-    DEBUG ((DEBUG_WARN, "Variable emulation is active! Skipping driver init.\n"));
-    return EFI_SUCCESS;
-  }
-
   Status = SmmStoreLibInitialize ();
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to initialize SmmStoreLib\n", __FUNCTION__));
     PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
-    return EFI_SUCCESS;
+    return Status;
   }
 
   Status = SmmStoreLibGetMmioAddress (&MmioAddress);

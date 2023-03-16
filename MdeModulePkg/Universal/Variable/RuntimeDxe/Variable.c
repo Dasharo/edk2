@@ -3564,6 +3564,7 @@ VariableCommonInitialize (
   UINTN                           ScratchSize;
   EFI_GUID                        *VariableGuid;
 
+  DEBUG ((EFI_D_INFO, "VariableCommonInitialize Entered!\n"));
   //
   // Allocate runtime memory for variable driver global structure.
   //
@@ -3572,6 +3573,7 @@ VariableCommonInitialize (
     return EFI_OUT_OF_RESOURCES;
   }
 
+  DEBUG ((EFI_D_INFO, "VariableCommonInitialize: Runtime memory allocated!\n"));
   InitializeLock (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock, TPL_NOTIFY);
 
   //
@@ -3582,6 +3584,7 @@ VariableCommonInitialize (
     FreePool (mVariableModuleGlobal);
     return Status;
   }
+  DEBUG ((EFI_D_INFO, "VariableCommonInitialize: NV VarStore Initialized!\n"));
 
   //
   // mVariableModuleGlobal->VariableGlobal.AuthFormat
