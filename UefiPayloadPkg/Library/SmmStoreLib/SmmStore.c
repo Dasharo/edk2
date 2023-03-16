@@ -65,8 +65,6 @@ CallSmm (
     return EFI_SUCCESS;
   } else if (Result == SMMSTORE_RET_UNSUPPORTED) {
     return EFI_UNSUPPORTED;
-  } else {
-    DEBUG ((DEBUG_ERROR, "Unhandled SMMSTORE result: %x\n", Result));
   }
 
   return EFI_DEVICE_ERROR;
@@ -421,7 +419,7 @@ SmmStoreLibInitialize (
     DEBUG (
       (
        DEBUG_INFO,
-       "%a: No memory space descriptor for smmstore mmio address found\n",
+       "%a: No memory space descriptor for com buffer found\n",
        __FUNCTION__
       )
       );

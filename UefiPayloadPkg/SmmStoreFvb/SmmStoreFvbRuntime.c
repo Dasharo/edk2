@@ -180,15 +180,22 @@ SmmStoreInitialize (
   UINT32                FtwWorkingSize;
   UINT32                FtwSpareSize;
 
+  if (PcdGetBool (PcdEmuVariableNvModeEnable)) {
+    DEBUG ((DEBUG_WARN, "Variable emulation is active! Skipping driver init.\n"));
+    return EFI_SUCCESS;
+  }
+
   Status = SmmStoreLibInitialize ();
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to initialize SmmStoreLib\n", __FUNCTION__));
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     return Status;
   }
 
   Status = SmmStoreLibGetMmioAddress (&MmioAddress);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to get SmmStore MMIO address\n", __FUNCTION__));
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     SmmStoreLibDeinitialize ();
     return Status;
   }
@@ -196,6 +203,7 @@ SmmStoreInitialize (
   Status = SmmStoreLibGetNumBlocks (&BlockCount);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to get SmmStore No. blocks\n", __FUNCTION__));
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     SmmStoreLibDeinitialize ();
     return Status;
   }
@@ -203,6 +211,7 @@ SmmStoreInitialize (
   Status = SmmStoreLibGetBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to get SmmStore block size\n", __FUNCTION__));
+    PcdSetBoolS (PcdEmuVariableNvModeEnable, TRUE);
     SmmStoreLibDeinitialize ();
     return Status;
   }

@@ -189,7 +189,6 @@ ValidateFvHeader (
   BufferSizeReqested = sizeof (EFI_FIRMWARE_VOLUME_HEADER);
   FwVolHeader        = (EFI_FIRMWARE_VOLUME_HEADER *)AllocatePool (BufferSizeReqested);
   if (!FwVolHeader) {
-    DEBUG ((DEBUG_INFO, "%a: Failed to allocate memory for FV header", __FUNCTION__));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -197,7 +196,6 @@ ValidateFvHeader (
   TempStatus = SmmStoreLibRead (0, 0, &BufferSize, (UINT8 *)FwVolHeader);
   if (EFI_ERROR (TempStatus) || (BufferSizeReqested != BufferSize)) {
     FreePool (FwVolHeader);
-    DEBUG ((DEBUG_INFO, "%a: SmmStoreLibRead failed - Status %x, buffer size %x (expected %x)\n", __FUNCTION__, TempStatus, BufferSize, BufferSizeReqested));
     return EFI_DEVICE_ERROR;
   }
 
@@ -610,11 +608,10 @@ FvbWrite (
 {
   UINTN              BlockSize;
   SMMSTORE_INSTANCE  *Instance;
-  EFI_STATUS         Ret;
 
   Instance = INSTANCE_FROM_FVB_THIS (This);
 
-  DEBUG ((DEBUG_ERROR, "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n", Lba, Offset, *NumBytes, Buffer));
+  DEBUG ((DEBUG_BLKIO, "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n", Lba, Offset, *NumBytes, Buffer));
 
   // Cache the block size to avoid de-referencing pointers all the time
   BlockSize = Instance->BlockSize;
@@ -634,9 +631,7 @@ FvbWrite (
     return EFI_BAD_BUFFER_SIZE;
   }
 
-  Ret = SmmStoreLibWrite (Lba, Offset, NumBytes, Buffer);
-  DEBUG ((DEBUG_INFO, "%a: SmmStoreLibRead Ret = %x - Lba %x, Offset %x, NumBytes %x\n", __FUNCTION__, Ret, Lba, Offset, NumBytes));
-  return Ret;
+  return SmmStoreLibWrite (Lba, Offset, NumBytes, Buffer);
 }
 
 /**
@@ -817,14 +812,12 @@ FvbInitialize (
 
     Status = FvbEraseBlocks (&Instance->FvbProtocol, (EFI_LBA)0, FvbNumLba, EFI_LBA_LIST_TERMINATOR);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_INFO, "%a: Failed to erase mem for var store\n", __FUNCTION__));
       return Status;
     }
 
     // Install all appropriate headers
     Status = InitializeFvAndVariableStoreHeaders (Instance);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_INFO, "%a: Failed to install appropriate headers\n", __FUNCTION__));
       return Status;
     }
   } else {
