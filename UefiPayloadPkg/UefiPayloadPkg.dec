@@ -98,3 +98,4 @@ gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
 gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
 
 gUefiPayloadPkgTokenSpaceGuid.SmmStoreDelayWorkaround|TRUE|BOOLEAN|0x00000009
+gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A

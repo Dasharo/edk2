@@ -887,6 +887,159 @@ WarnIfRecoveryBoot (
 }
 
 /**
+
+  Acquire the string associated with the Index from smbios structure and return it.
+  The caller is responsible for free the string buffer.
+
+  @param    OptionalStrStart  The start position to search the string
+  @param    Index             The index of the string to extract
+  @param    String            The string that is extracted
+
+  @retval   EFI_SUCCESS       The function returns EFI_SUCCESS always.
+
+**/
+EFI_STATUS
+GetOptionalStringByIndex (
+  IN      CHAR8                   *OptionalStrStart,
+  IN      UINT8                   Index,
+  OUT     CHAR16                  **String
+  )
+{
+  UINTN          StrSize;
+
+  if (Index == 0) {
+    *String = AllocateZeroPool (sizeof (CHAR16));
+    return EFI_SUCCESS;
+  }
+
+  StrSize = 0;
+  do {
+    Index--;
+    OptionalStrStart += StrSize;
+    StrSize           = AsciiStrSize (OptionalStrStart);
+  } while (OptionalStrStart[StrSize] != 0 && Index != 0);
+
+  if ((Index != 0) || (StrSize == 1)) {
+    //
+    // Meet the end of strings set but Index is non-zero, or
+    // Find an empty string
+    //
+    *String = NULL;
+    return EFI_NOT_FOUND;
+  } else {
+    *String = AllocatePool (StrSize * sizeof (CHAR16));
+    AsciiStrToUnicodeStrS (OptionalStrStart, *String, StrSize);
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+VOID
+PrintSolStrings (
+  VOID
+)
+{
+  UINT8                             StrIndex;
+  CHAR16                            *FirmwareVersionString;
+  CHAR16                            *EcVersionString;
+  CHAR16                            *EcVariantString;
+  EFI_STATUS                        Status;
+  EFI_SMBIOS_HANDLE                 SmbiosHandle;
+  EFI_SMBIOS_PROTOCOL               *Smbios;
+  SMBIOS_TABLE_TYPE0                *Type0Record;
+  SMBIOS_TABLE_TYPE11               *Type11Record;
+  EFI_SMBIOS_TABLE_HEADER           *Record;
+  BOOLEAN                           GotType0;
+  BOOLEAN                           GotType11;
+  UINTN                             CurrentAttribute;
+
+  GotType0 = FALSE;
+  GotType11 = FALSE;
+
+  Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **) &Smbios);
+
+  if (EFI_ERROR(Status))
+    return;
+
+  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+  Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  while (!EFI_ERROR(Status)) {
+    if (Record->Type == SMBIOS_TYPE_BIOS_INFORMATION) {
+      Type0Record = (SMBIOS_TABLE_TYPE0 *) Record;
+      StrIndex = Type0Record->BiosVersion;
+      Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type0Record + Type0Record->Hdr.Length), StrIndex, &FirmwareVersionString);
+
+      if (!EFI_ERROR(Status) && (*FirmwareVersionString != 0x0000)) {
+        Print (L"Firmware version: %s\n", FirmwareVersionString);
+      } else {
+        Print (L"Firmware version: ");
+        CurrentAttribute = gST->ConOut->Mode->Attribute;
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+        Print (L"UNKNOWN\n");
+        gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+      }
+      GotType0 = TRUE;
+    }
+
+    if (Record->Type == SMBIOS_TYPE_OEM_STRINGS) {
+      Type11Record = (SMBIOS_TABLE_TYPE11 *) Record;
+      if (Type11Record->StringCount < 2) {
+        DEBUG((EFI_D_ERROR, "Missing some EC strings\n"));
+        Print (L"EC firmware version: ");
+        CurrentAttribute = gST->ConOut->Mode->Attribute;
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+        Print (L"UNKNOWN\n");
+        Print (L"Unable to detect EC firmware version!\n");
+        Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+        gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+      } else {
+        // First string should be the EC variant
+        Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type11Record + Type11Record->Hdr.Length), 1, &EcVariantString);
+        // If string is not found or not open EC, print error straight away
+        if (EFI_ERROR(Status) || StrStr(EcVariantString, L"EC: unknown")) {
+          DEBUG((EFI_D_ERROR, "Missing EC variant string or EC variant reported as unknown\n"));
+          Print (L"EC firmware version: ");
+          CurrentAttribute = gST->ConOut->Mode->Attribute;
+          gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+          Print (L"UNKNOWN\n");
+          Print (L"Unable to detect EC firmware version!\n");
+          Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+          gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+        } else {
+          // Second string should be the EC firmware version.
+          // Print it without any error if found, because it has to be open EC now
+          Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type11Record + Type11Record->Hdr.Length), 2, &EcVersionString);
+          if (EFI_ERROR(Status) || StrStr(EcVersionString, L"EC firmware version: unknown")) {
+            DEBUG((EFI_D_ERROR, "Missing EC version string or EC version reported as unknown\n"));
+            CurrentAttribute = gST->ConOut->Mode->Attribute;
+            gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+            Print (L"UNKNOWN\n");
+            Print (L"Unable to detect EC firmware version!\n");
+            Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+            gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+          } else {
+            Print (L"%s\n", EcVersionString);
+            if (StrStr(EcVariantString, L"EC: proprietary")) {
+              CurrentAttribute = gST->ConOut->Mode->Attribute;
+              gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+              Print (L"Proprietary EC firmware detected!\n");
+              Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+              gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+            }
+          }
+        }
+      }
+    }
+
+    if (GotType0 && GotType11)
+      break;
+
+    Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  }
+}
+
+/**
   Do the platform specific action after the console is connected.
 
   Such as:
@@ -981,6 +1134,10 @@ PlatformBootManagerAfterConsole (
           &VarSize,
           &BootMenuEnable
         );
+
+  if (PcdGetBool (PcdPrintSolStrings))
+    PrintSolStrings();
+
   Print (L"%-5s to enter Setup\n", SetupMenuKey);
 
   if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
