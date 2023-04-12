@@ -640,6 +640,7 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|$(IOMMU_ENABLE)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
