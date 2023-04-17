@@ -399,7 +399,6 @@ INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
 INF  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf
 INF  SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf
 INF  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
-INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 !if $(TPM_CONFIG_ENABLE) == TRUE
 INF  SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 !if $(OPAL_PASSWORD_ENABLE) == TRUE
