@@ -543,7 +543,6 @@ InitializeUsbMouseDevice (
   )
 {
   EFI_USB_IO_PROTOCOL       *UsbIo;
-  UINT8                     Protocol;
   EFI_STATUS                Status;
   EFI_USB_HID_DESCRIPTOR    *MouseHidDesc;
   UINT8                     *ReportDesc;
@@ -553,6 +552,7 @@ InitializeUsbMouseDevice (
   UINT16                    Total;
   USB_DESC_HEAD             *Head;
   BOOLEAN                   Start;
+  UINT8                     Index;
 
   UsbIo = UsbMouseAbsolutePointerDev->UsbIo;
 
@@ -633,12 +633,17 @@ InitializeUsbMouseDevice (
   ReportDesc = AllocateZeroPool (MouseHidDesc->HidClassDesc[0].DescriptorLength);
   ASSERT (ReportDesc != NULL);
 
-  Status = UsbGetReportDescriptor (
-             UsbIo,
-             UsbMouseAbsolutePointerDev->InterfaceDescriptor.InterfaceNumber,
-             MouseHidDesc->HidClassDesc[0].DescriptorLength,
-             ReportDesc
-             );
+  for (Index = 0; Index < 3; Index++) {
+    Status = UsbGetReportDescriptor (
+               UsbIo,
+               UsbMouseAbsolutePointerDev->InterfaceDescriptor.InterfaceNumber,
+               MouseHidDesc->HidClassDesc[0].DescriptorLength,
+               ReportDesc
+               );
+    if (!EFI_ERROR (Status)) {
+        break;
+    }
+  }
 
   if (EFI_ERROR (Status)) {
     FreePool (Buf);
@@ -681,23 +686,25 @@ InitializeUsbMouseDevice (
   // Set boot protocol for the USB mouse.
   // This driver only supports boot protocol.
   //
-  UsbGetProtocolRequest (
-    UsbIo,
-    UsbMouseAbsolutePointerDev->InterfaceDescriptor.InterfaceNumber,
-    &Protocol
-    );
-  if (Protocol != BOOT_PROTOCOL) {
-    Status = UsbSetProtocolRequest (
-               UsbIo,
-               UsbMouseAbsolutePointerDev->InterfaceDescriptor.InterfaceNumber,
-               BOOT_PROTOCOL
-               );
+  Status = UsbSetProtocolRequest (
+             UsbIo,
+             UsbMouseAbsolutePointerDev->InterfaceDescriptor.InterfaceNumber,
+             BOOT_PROTOCOL
+             );
 
-    if (EFI_ERROR (Status)) {
-      FreePool (Buf);
-      FreePool (ReportDesc);
-      return Status;
-    }
+  if (EFI_ERROR (Status)) {
+    // If protocol could not be set here, it means
+    // the mouse interface has some errors and could
+    // not be initialized
+    REPORT_STATUS_CODE_WITH_DEVICE_PATH (
+      EFI_ERROR_CODE | EFI_ERROR_MINOR,
+      (EFI_PERIPHERAL_MOUSE | EFI_P_EC_INTERFACE_ERROR),
+      UsbMouseAbsolutePointerDev->DevicePath
+       );
+
+    FreePool (Buf);
+    FreePool (ReportDesc);
+    return Status;
   }
 
   FreePool (Buf);
