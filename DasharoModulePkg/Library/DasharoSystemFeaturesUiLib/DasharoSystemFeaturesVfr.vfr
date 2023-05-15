@@ -72,6 +72,7 @@ formset
              prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
              help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
              flags  = INTERACTIVE,
+             default= 1,
     endcheckbox;
 
     checkbox varid  = FeaturesData.SmmBwp,
@@ -137,6 +138,7 @@ formset
              prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
              help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
              flags  = INTERACTIVE,
+             default= 1,
     endcheckbox;
 
     suppressif  questionref(UsbStack) == FALSE;
@@ -144,6 +146,7 @@ formset
                prompt = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_PROMPT),
                help   = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_HELP),
                flags  = INTERACTIVE,
+               default= 1,
       endcheckbox;
     endif;
 
@@ -181,6 +184,7 @@ formset
              prompt = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
              help   = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
              flags  = INTERACTIVE,
+             default= 1,
     endcheckbox;
 
     suppressif ideqval FeaturesData.WatchdogState == 0;
@@ -188,6 +192,7 @@ formset
                prompt = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
                help   = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
                flags  = INTERACTIVE,
+               default= 1,
       endcheckbox;
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
@@ -199,7 +204,7 @@ formset
                 maximum = 1024,
                 step    = 0,        // Stepping of 0 equates to a manual entering
                                     // of a value, otherwise it will be adjusted by "+"/"-"
-                default = 90,
+                default = 120,
         endnumeric;
       endif;
     endif;
