@@ -908,5 +908,33 @@ DasharoSystemFeaturesCallback (
   OUT EFI_BROWSER_ACTION_REQUEST             *ActionRequest
   )
 {
-  return EFI_UNSUPPORTED;
+  EFI_STATUS                                 Status;
+
+  Status = EFI_SUCCESS;
+
+  switch (Action) {
+  case EFI_BROWSER_ACTION_DEFAULT_STANDARD:
+  case EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING:
+    {
+      switch (QuestionId) {
+      case 0x1101:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->b = PcdGetBool (PcdDefaultNetworkBootEnable);
+          break;
+        }
+      default:
+        Status = EFI_UNSUPPORTED;
+        break;
+      }
+      break;
+    }
+  default:
+    Status = EFI_UNSUPPORTED;
+    break;
+  }
+
+  return Status;
 }
