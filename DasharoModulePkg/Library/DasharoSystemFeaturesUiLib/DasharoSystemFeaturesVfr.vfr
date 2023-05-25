@@ -71,22 +71,21 @@ formset
     checkbox varid  = FeaturesData.LockBios,
              prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
              help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
-             flags  = INTERACTIVE,
-             default= 1,
+             flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
     endcheckbox;
 
     checkbox varid  = FeaturesData.SmmBwp,
              prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
              help   = STRING_TOKEN(STR_SMM_BWP_HELP),
-             flags  = INTERACTIVE,
+             flags  = RESET_REQUIRED,
     endcheckbox;
 
     suppressif ideqval FeaturesData.SecurityMenuShowIommu == 0;
-      checkbox name = IommuEnable,
+      checkbox name   = IommuEnable,
                varid  = FeaturesData.IommuConfig.IommuEnable,
                prompt = STRING_TOKEN(STR_DMA_PROTECTION_PROMPT),
                help   = STRING_TOKEN(STR_DMA_PROTECTION_HELP),
-               flags  = INTERACTIVE,
+               flags  = RESET_REQUIRED,
       endcheckbox;
     endif;
 
@@ -94,16 +93,15 @@ formset
       checkbox varid  = FeaturesData.IommuConfig.IommuHandoff,
                prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_PROMPT),
                help   = STRING_TOKEN(STR_IOMMU_HANDOFF_HELP),
-               flags  = INTERACTIVE,
+               flags  = RESET_REQUIRED,
       endcheckbox;
     endif;
 
     suppressif ideqval FeaturesData.DasharoEnterprise == 0;
-      checkbox varid   = FeaturesData.BootManagerEnabled,
-               prompt  = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
-               help    = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
-               flags   = INTERACTIVE,
-               default = 1,
+      checkbox varid  = FeaturesData.BootManagerEnabled,
+               prompt = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
+               help   = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
+               flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
       endcheckbox;
     endif;
 
@@ -118,9 +116,10 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     checkbox varid  = FeaturesData.NetworkBoot,
+             questionid = 0x1101,
              prompt = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_PROMPT),
              help   = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_HELP),
-             flags  = INTERACTIVE,
+             flags  = INTERACTIVE | RESET_REQUIRED,
     endcheckbox;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -133,20 +132,18 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox name = UsbStack,
+    checkbox name   = UsbStack,
              varid  = FeaturesData.UsbStack,
              prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
              help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
-             flags  = INTERACTIVE,
-             default= 1,
+             flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
     endcheckbox;
 
     suppressif  questionref(UsbStack) == FALSE;
       checkbox varid  = FeaturesData.UsbMassStorage,
                prompt = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_PROMPT),
                help   = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_HELP),
-               flags  = INTERACTIVE,
-               default= 1,
+               flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
       endcheckbox;
     endif;
 
@@ -163,9 +160,9 @@ formset
     oneof varid  = FeaturesData.MeMode,
              prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
              help   = STRING_TOKEN(STR_ME_MODE_HELP),
-             flags  = INTERACTIVE,
+             flags  = RESET_REQUIRED,
 
-             option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
+             option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = DEFAULT;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
     endoneof;
@@ -180,31 +177,29 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox varid  = FeaturesData.Ps2Controller,
-             prompt = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
-             help   = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
-             flags  = INTERACTIVE,
-             default= 1,
+    checkbox varid   = FeaturesData.Ps2Controller,
+             prompt  = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
+             help    = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
+             flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
     endcheckbox;
 
     suppressif ideqval FeaturesData.WatchdogState == 0;
-      checkbox varid  = FeaturesData.WatchdogConfig.WatchdogEnable,
-               prompt = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
-               help   = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
-               flags  = INTERACTIVE,
-               default= 1,
+      checkbox varid   = FeaturesData.WatchdogConfig.WatchdogEnable,
+               prompt  = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
+               help    = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
+               flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
       endcheckbox;
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
         numeric varid   = FeaturesData.WatchdogConfig.WatchdogTimeout,
                 prompt  = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_PROMPT),
                 help    = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_HELP),
-                flags   = INTERACTIVE,
-                minimum = 60,
+                flags   = RESET_REQUIRED,
+                minimum = 300,
                 maximum = 1024,
                 step    = 0,        // Stepping of 0 equates to a manual entering
                                     // of a value, otherwise it will be adjusted by "+"/"-"
-                default = 120,
+                default = 300,
         endnumeric;
       endif;
     endif;
@@ -223,9 +218,9 @@ formset
          oneof varid  = FeaturesData.FanCurveOption,
                   prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
                   help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
-                  flags  = INTERACTIVE,
+                  flags  = RESET_REQUIRED,
 
-                  option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = 0;
+                  option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = DEFAULT;
                   option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
          endoneof;
     endif;
@@ -233,7 +228,7 @@ formset
     oneof varid = FeaturesData.SleepType,
              prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
              help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
-             flags  = INTERACTIVE,
+             flags  = RESET_REQUIRED,
 
              option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
              option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
