@@ -584,7 +584,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|TRUE
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
 
@@ -657,6 +657,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|1
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|1
 !endif
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE && $(TPM_CONFIG_ENABLE) == TRUE
