@@ -173,10 +173,6 @@
   LoadLinuxLib|OvmfPkg/Library/LoadLinuxLib/LoadLinuxLib.inf
   MemEncryptSevLib|OvmfPkg/Library/BaseMemEncryptSevLib/BaseMemEncryptSevLib.inf
 
-# 
-#SMM for OVMF
-#
-
 !if $(SMM_REQUIRE) == FALSE
   LockBoxLib|OvmfPkg/Library/LockBoxLib/LockBoxBaseLib.inf 
 !else
@@ -184,12 +180,6 @@
 !endif
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FrameBufferBltLib|MdeModulePkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
-
-#
-#Misc
-#
-
-  LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
 
 !if $(SOURCE_DEBUG_ENABLE) == TRUE
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
@@ -204,9 +194,6 @@
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
 
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
-#
-#OPAL_PASSWORD
-#
 
 !if $(OPAL_PASSWORD_ENABLE) == TRUE
   TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
@@ -619,7 +606,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size|0x800000000
 !endif
 
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|0
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|2
 
   # Set video resolution for text setup.
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution|640
@@ -725,8 +712,6 @@
 !endif
 !endif
 
-### SATA_PASSWORD
-
 !if $(SATA_PASSWORD_ENABLE) == TRUE
   SecurityPkg/HddPassword/HddPasswordPei.inf
 !endif
@@ -760,8 +745,6 @@
 !endif
   }
 
-### SETUP_PASSWORD
-
 !if $(SETUP_PASSWORD_ENABLE) == TRUE
   DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
     <LibraryClasses>
@@ -791,6 +774,10 @@
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf {
     <LibraryClasses>
+!ifdef $(CSM_ENABLE)
+      NULL|OvmfPkg/Csm/CsmSupportLib/CsmSupportLib.inf
+      NULL|OvmfPkg/Csm/LegacyBootManagerLib/LegacyBootManagerLib.inf
+!endif
   }
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
@@ -799,6 +786,10 @@
       NULL|DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+!ifdef $(CSM_ENABLE)
+      NULL|OvmfPkg/Csm/LegacyBootManagerLib/LegacyBootManagerLib.inf
+      NULL|OvmfPkg/Csm/LegacyBootMaintUiLib/LegacyBootMaintUiLib.inf
+!endif
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
   }
@@ -902,7 +893,7 @@
   DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 !endif
 
-
+  #
   # Hash2
   #
   SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf {
@@ -1043,9 +1034,6 @@
   }
 !endif
 
-  #
-  # TPM support
-  #
 !if $(TPM_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf {
     <LibraryClasses>
@@ -1060,13 +1048,12 @@
   }
 !if $(TPM_CONFIG_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
-!endif
-  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
+  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf {
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
   }
 !endif
-  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf {
+  SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
   }
@@ -1076,7 +1063,7 @@
     Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
   }
 !endif
-
+!endif
 
 !if $(SATA_PASSWORD_ENABLE) == TRUE
     SecurityPkg/HddPassword/HddPasswordDxe.inf
