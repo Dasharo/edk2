@@ -35,7 +35,6 @@
   DEFINE TPM_CONFIG_ENABLE       = TRUE
   DEFINE SATA_PASSWORD_ENABLE    = TRUE
   DEFINE OPAL_PASSWORD_ENABLE    = TRUE
-  DEFINE LOAD_OPTION_ROMS        = FLASE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = TRUE
   DEFINE USE_CBMEM_FOR_CONSOLE   = FALSE
   DEFINE ABOVE_4G_MEMORY         = FALSE
@@ -482,7 +481,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdInstallAcpiSdtProtocol|TRUE
 !ifdef $(CSM_ENABLE)
-  gUefiOvmfPkgTokenSpaceGuid.PcdCsmEnable|FALSE
+  gUefiOvmfPkgTokenSpaceGuid.PcdCsmEnable|TRUE
 !endif
 !if $(SMM_REQUIRE) == TRUE
   gUefiOvmfPkgTokenSpaceGuid.PcdSmmSmramRequire|TRUE
@@ -652,10 +651,6 @@
 
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-  ### TPM Initialization.
-  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|1
-  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|1
-  gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|1
 !endif
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 
@@ -861,12 +856,6 @@
 !endif
   OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf
   OvmfPkg/VirtioGpuDxe/VirtioGpu.inf
-  
-  #
-  # SMBIOS Support
-  #
-  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
-  MdeModulePkg/Universal/SmbiosMeasurementDxe/SmbiosMeasurementDxe.inf
 
   #
   # ISA Support
