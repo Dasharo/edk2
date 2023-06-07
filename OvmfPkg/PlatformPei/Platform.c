@@ -30,6 +30,8 @@
 #include <Library/QemuFwCfgS3Lib.h>
 #include <Library/QemuFwCfgSimpleParserLib.h>
 #include <Library/ResourcePublicationLib.h>
+#include <Guid/CapsuleVendor.h>
+#include <Ppi/Capsule.h>
 #include <Ppi/MasterBootMode.h>
 #include <IndustryStandard/I440FxPiix4.h>
 #include <IndustryStandard/Microvm.h>
@@ -500,16 +502,34 @@ MiscInitialization (
 
 VOID
 BootModeInitialization (
-  VOID
+  IN EFI_PEI_SERVICES     **PeiServices
   )
 {
   EFI_STATUS  Status;
+  PEI_CAPSULE_PPI     *Capsule;
+
+  DEBUG ((EFI_D_INFO, "Boot mode init\n"));
 
   if (CmosRead8 (0xF) == 0xFE) {
+    DEBUG ((EFI_D_INFO, "Boot mode S3 resume\n"));
     mBootMode = BOOT_ON_S3_RESUME;
   }
 
   CmosWrite8 (0xF, 0x00);
+
+  Status = PeiServicesLocatePpi (
+             &gPeiCapsulePpiGuid,
+             0,
+             NULL,
+             (VOID **)&Capsule
+             );
+  if (Status == EFI_SUCCESS) {
+    Status = Capsule->CheckCapsuleUpdate (PeiServices);
+    if (Status == EFI_SUCCESS) {
+      DEBUG ((EFI_D_INFO, "Boot mode Flash Update\n"));
+      mBootMode = BOOT_ON_FLASH_UPDATE;
+    }
+  }
 
   Status = PeiServicesSetBootMode (mBootMode);
   ASSERT_EFI_ERROR (Status);
@@ -820,7 +840,7 @@ InitializePlatform (
   }
 
   S3Verification ();
-  BootModeInitialization ();
+  BootModeInitialization ((EFI_PEI_SERVICES**)PeiServices);
   AddressWidthInitialization ();
 
   //
@@ -836,7 +856,7 @@ InitializePlatform (
     Q35SmramAtDefaultSmbaseInitialization ();
   }
 
-  PublishPeiMemory ();
+  PublishPeiMemory ((EFI_PEI_SERVICES**)PeiServices);
 
   QemuUc32BaseInitialization ();
 

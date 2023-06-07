@@ -201,7 +201,7 @@ case $PROCESSOR in
 esac
 
 if [ -z "$PLATFORMFILE" ]; then
-  PLATFORMFILE=$WORKSPACE/OvmfPkg/OvmfPkg$Processor.dsc
+  PLATFORMFILE=$WORKSPACE/OvmfPkg/OvmfPkg${Processor}CAP.dsc
 fi
 
 if [[ "$RUN_QEMU" == "yes" ]]; then

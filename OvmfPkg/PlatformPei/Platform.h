@@ -59,7 +59,7 @@ Q35SmramAtDefaultSmbaseInitialization (
 
 EFI_STATUS
 PublishPeiMemory (
-  VOID
+  IN EFI_PEI_SERVICES     **PeiServices
   );
 
 UINT32

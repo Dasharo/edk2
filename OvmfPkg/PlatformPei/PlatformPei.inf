@@ -135,7 +135,8 @@
   gEfiPeiMasterBootModePpiGuid
   gEfiPeiMpServicesPpiGuid
   gEfiPeiReadOnlyVariable2PpiGuid
+  gPeiCapsulePpiGuid
 
 [Depex]
-  TRUE
+  gPeiCapsulePpiGuid
 

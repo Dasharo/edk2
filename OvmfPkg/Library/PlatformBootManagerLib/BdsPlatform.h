@@ -44,6 +44,7 @@ Abstract:
 #include <Library/QemuFwCfgLib.h>
 #include <Library/QemuFwCfgS3Lib.h>
 #include <Library/QemuBootOrderLib.h>
+#include <Library/CapsuleLib.h>
 
 #include <Protocol/Decompress.h>
 #include <Protocol/PciIo.h>
@@ -53,6 +54,7 @@ Abstract:
 #include <Protocol/S3SaveState.h>
 #include <Protocol/DxeSmmReadyToLock.h>
 #include <Protocol/LoadedImage.h>
+#include <Protocol/EsrtManagement.h>
 
 #include <Guid/Acpi.h>
 #include <Guid/SmBios.h>

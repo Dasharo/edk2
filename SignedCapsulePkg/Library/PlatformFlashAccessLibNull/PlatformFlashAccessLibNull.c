@@ -10,6 +10,8 @@
 
 #include <Library/BaseMemoryLib.h>
 #include <Library/PlatformFlashAccessLib.h>
+#include <Library/DebugLib.h>
+#include <Library/TimerLib.h>       // MicroSecondDelay()
 
 UINT64  mInternalFdAddress;
 
@@ -60,6 +62,9 @@ PerformFlashWriteWithProgress (
     FlashAddress = FlashAddress + mInternalFdAddress;
   }
 
+  DEBUG ((DEBUG_INFO, "XXX %a %lx <- %lx (%lx)\n", __func__, FlashAddress, Buffer, Length));
+  // Simulate flashing by adding a 2s delay
+  MicroSecondDelay (2000000ULL);
   CopyMem ((VOID *)(UINTN)(FlashAddress), Buffer, Length);
   return EFI_SUCCESS;
 }

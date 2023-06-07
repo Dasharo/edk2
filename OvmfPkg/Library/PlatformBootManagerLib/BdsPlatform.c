@@ -386,6 +386,7 @@ PlatformBootManagerBeforeConsole (
   EFI_STATUS     Status;
   UINT16         FrontPageTimeout;
   RETURN_STATUS  PcdStatus;
+  EFI_BOOT_MODE  BootMode;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerBeforeConsole\n"));
   InstallDevicePathCallback ();
@@ -395,6 +396,14 @@ PlatformBootManagerBeforeConsole (
     ConnectRootBridge,
     NULL
     );
+
+  PlatformInitializeConsole (gPlatformConsole);
+  BootMode = GetBootModeHob();
+  if (BootMode == BOOT_ON_FLASH_UPDATE) {
+    DEBUG((DEBUG_INFO, "ProcessCapsules Before EndOfDxe ......\n"));
+    Status = ProcessCapsules ();
+    DEBUG((DEBUG_INFO, "ProcessCapsules %r\n", Status));
+  }
 
   //
   // Signal the ACPI platform driver that it can download QEMU ACPI tables.
@@ -1677,6 +1686,33 @@ PlatformBootManagerAfterConsole (
   //
   BootMode = GetBootModeHob ();
   DEBUG ((DEBUG_INFO, "Boot Mode:%x\n", BootMode));
+
+  if (BootMode == BOOT_ON_FLASH_UPDATE) {
+//    if (FeaturePcdGet(PcdSupportUpdateCapsuleReset)) {
+      EFI_STATUS                     Status;
+      ESRT_MANAGEMENT_PROTOCOL       *EsrtManagement;
+
+      Status = gBS->LocateProtocol(&gEsrtManagementProtocolGuid, NULL, (VOID **)&EsrtManagement);
+      if (EFI_ERROR(Status)) {
+        EsrtManagement = NULL;
+      }
+
+      EfiBootManagerConnectAll ();
+      EfiBootManagerRefreshAllBootOption ();
+
+      //
+      // Always sync ESRT Cache from FMP Instances after connect all and before capsule process
+      //
+      if (EsrtManagement != NULL) {
+        EsrtManagement->SyncEsrtFmp();
+      }
+
+      DEBUG((DEBUG_INFO, "ProcessCapsules After EndOfDxe ......\n"));
+      Status = ProcessCapsules ();
+      DEBUG((DEBUG_INFO, "ProcessCapsules %r\n", Status));
+      // TODO: Reboot? Remove assert below?
+//    }
+  }
 
   //
   // Go the different platform policy with different boot mode

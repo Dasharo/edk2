@@ -31,11 +31,14 @@ Module Name:
 #include <Library/MemEncryptSevLib.h>
 #include <Library/PcdLib.h>
 #include <Library/PciLib.h>
+#include <Library/PeiServicesLib.h>
 #include <Library/PeimEntryPoint.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Library/MtrrLib.h>
 #include <Library/QemuFwCfgLib.h>
 #include <Library/QemuFwCfgSimpleParserLib.h>
+
+#include <Ppi/Capsule.h>
 
 #include "Platform.h"
 #include "Cmos.h"
@@ -655,12 +658,15 @@ GetPeiMemoryCap (
 **/
 EFI_STATUS
 PublishPeiMemory (
-  VOID
+  IN EFI_PEI_SERVICES     **PeiServices
   )
 {
   EFI_STATUS            Status;
   EFI_PHYSICAL_ADDRESS  MemoryBase;
   UINT64                MemorySize;
+  PEI_CAPSULE_PPI       *Capsule;
+  EFI_PHYSICAL_ADDRESS  CapsuleMemoryBase = 0;
+  UINTN                 CapsuleMemorySize = 0;
   UINT32                LowerMemorySize;
   UINT32                PeiMemoryCap;
 
@@ -713,8 +719,14 @@ PublishPeiMemory (
                  PcdGet32 (PcdOvmfDxeMemFvBase) + PcdGet32 (PcdOvmfDxeMemFvSize);
     MemorySize = LowerMemorySize - MemoryBase;
     if (MemorySize > PeiMemoryCap) {
-      MemoryBase = LowerMemorySize - PeiMemoryCap;
+      // FIXME: capsules probably don't need 64MB, and these two ranges are more
+      // than default 128M RAM that QEMU gives.
+      MemoryBase = LowerMemorySize - 2*PeiMemoryCap;
       MemorySize = PeiMemoryCap;
+      CapsuleMemoryBase = MemoryBase + PeiMemoryCap;
+      CapsuleMemorySize = PeiMemoryCap;
+      DEBUG ((DEBUG_INFO, "MemBase: %lx Size: %lx, CapMemBase: %lx Size %lx\n",
+              MemoryBase, MemorySize, CapsuleMemoryBase, CapsuleMemorySize));
     }
   }
 
@@ -732,6 +744,39 @@ PublishPeiMemory (
   //
   Status = PublishSystemMemory (MemoryBase, MemorySize);
   ASSERT_EFI_ERROR (Status);
+
+  ASSERT (CapsuleMemoryBase != 0 && CapsuleMemorySize != 0);
+
+  if (mBootMode == BOOT_ON_FLASH_UPDATE) {
+    Capsule             = NULL;
+    Status = PeiServicesLocatePpi (
+               &gPeiCapsulePpiGuid,  // GUID
+               0,                    // INSTANCE
+               NULL,                 // EFI_PEI_PPI_DESCRIPTOR
+               (VOID **)&Capsule     // PPI
+               );
+    ASSERT_EFI_ERROR (Status);
+
+    if (Status == EFI_SUCCESS) {
+      //
+      // Call the Capsule PPI Coalesce function to coalesce the capsule data.
+      //
+      Status = Capsule->Coalesce (
+                          PeiServices,
+                          (VOID **) &CapsuleMemoryBase,
+                          &CapsuleMemorySize
+                          );
+
+      //
+      // If we found the capsule PPI (and we didn't have errors), then
+      // call the capsule PEIM to allocate memory for the capsule.
+      //
+      if (Status == EFI_SUCCESS) {
+        Status = Capsule->CreateState (PeiServices, (VOID *)(UINTN)CapsuleMemoryBase, CapsuleMemorySize);
+      }
+      ASSERT_EFI_ERROR (Status);
+    }
+  }
 
   return Status;
 }
