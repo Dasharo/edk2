@@ -1025,6 +1025,26 @@ PrintSolStrings (
 }
 
 /**
+  Refresh the logo on ReadyToBoot event. It will clear the screen from strings
+
+  and progress bar when timeout is reached or continue key is pressed.
+
+  @param    Event          Event pointer.
+  @param    Context        Context pass to this function.
+**/
+VOID
+EFIAPI
+RefreshLogo (
+  IN EFI_EVENT    Event,
+  IN VOID         *Context
+  )
+{
+  gBS->CloseEvent (Event);
+  gST->ConOut->ClearScreen (gST->ConOut);
+  BootLogoEnableLogo ();
+}
+
+/**
   Do the platform specific action after the console is connected.
 
   Such as:
@@ -1048,6 +1068,7 @@ PlatformBootManagerAfterConsole (
   BOOLEAN                        NetBootEnabled;
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
+  EFI_EVENT                      Event;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -1130,6 +1151,13 @@ PlatformBootManagerAfterConsole (
     Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
 
   Print (L"ENTER to boot directly\n");
+
+  EfiCreateEventReadyToBootEx (
+             TPL_CALLBACK,
+             RefreshLogo,
+             NULL,
+             &Event
+             );
 }
 
 /**
@@ -1160,12 +1188,6 @@ PlatformBootManagerWaitCallback (
     (Timeout - TimeoutRemain) * 100 / Timeout,
     0
     );
-
-  if (TimeoutRemain == 0) {
-    gBS->Stall (100 * 1000);
-    gST->ConOut->ClearScreen (gST->ConOut);
-    BootLogoEnableLogo ();
-  }
 }
 
 /**
