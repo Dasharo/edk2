@@ -709,6 +709,7 @@ PlatformBootManagerBeforeConsole (
   //
   FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
 
+  PlatformConsoleInit ();
   //
   // Find all display class PCI devices (using the handles from the previous
   // step), and connect them non-recursively. This should produce a number of
@@ -721,8 +722,6 @@ PlatformBootManagerBeforeConsole (
   // ErrOut.
   //
   FilterAndProcess (&gEfiGraphicsOutputProtocolGuid, NULL, AddOutput);
-
-  PlatformConsoleInit ();
 }
 
 CHAR16*
