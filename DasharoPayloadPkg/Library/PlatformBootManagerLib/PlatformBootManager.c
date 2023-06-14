@@ -630,7 +630,6 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                  Enter;
   EFI_INPUT_KEY                  Esc;
   EFI_INPUT_KEY                  F12;
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
@@ -641,12 +640,6 @@ PlatformBootManagerBeforeConsole (
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
 
-  //
-  // Register ENTER as CONTINUE key
-  //
-  Enter.ScanCode    = SCAN_NULL;
-  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
-  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
   //
   // Map ESC to Boot Manager Menu
   //
@@ -1081,6 +1074,7 @@ PlatformBootManagerAfterConsole (
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
   EFI_EVENT                      Event;
+  EFI_INPUT_KEY                  Enter;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -1091,6 +1085,13 @@ PlatformBootManagerAfterConsole (
   WarnIfRecoveryBoot ();
 
   BootLogoEnableLogo ();
+
+  //
+  // Register ENTER as CONTINUE key
+  //
+  Enter.ScanCode    = SCAN_NULL;
+  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
+  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
   // FIXME: USB devices are not being detected unless we wait a bit.
   gBS->Stall (100 * 1000);
