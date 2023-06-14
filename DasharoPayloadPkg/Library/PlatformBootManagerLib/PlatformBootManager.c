@@ -869,6 +869,7 @@ WarnIfRecoveryBoot (
   gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
 
   gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
 }
 
 /**
