@@ -1033,7 +1033,8 @@ PrintSolStrings (
 }
 
 /**
-  Refresh the logo on ReadyToBoto event. It will clear the screen from strings
+  Refresh the logo on ReadyToBoot event. It will clear the screen from strings
+
   and progress bar when timeout is reached or continue key is pressed.
 
   @param    Event          Event pointer.
