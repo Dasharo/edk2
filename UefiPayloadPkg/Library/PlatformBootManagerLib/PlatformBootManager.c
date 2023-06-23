@@ -1048,7 +1048,6 @@ RefreshLogo (
   )
 {
   gBS->CloseEvent (Event);
-  gBS->Stall (100 * 1000);
   gST->ConOut->ClearScreen (gST->ConOut);
   BootLogoEnableLogo ();
 }
