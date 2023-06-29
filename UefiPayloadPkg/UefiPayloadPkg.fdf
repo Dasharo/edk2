@@ -425,31 +425,54 @@ INF MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   INF  UefiPayloadPkg/SecureBootEnrollDefaultKeys/SecureBootSetup.inf
 
-  FILE FREEFORM = A23665E3-ACA6-4F6D-80CC-341E7D7B8CC6 {
-    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek-system76.crt
-    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek.crt
-    SECTION UI = "SecureBootKekCert"
-  }
-
-  FILE FREEFORM = F8104268-A364-45F5-8E00-ABA3FDEA12BE {
+  FILE FREEFORM = 76939896-813a-48ac-ad94-47c2cbe1fdad {
     SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/pk.crt
-    SECTION UI = "SecureBootPkCert"
+    SECTION UI = "System76 PK"
   }
 
-  FILE FREEFORM = 26A517B0-E3FD-46C2-8932-E926BF98941F {
-    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-1.crt
-    SECTION UI = "SecureBootDb1Cert"
+  FILE FREEFORM = 54fbf0d1-687c-4ede-aca4-865ee57b415a {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek-microsoft-2011.crt
+    SECTION UI = "Microsoft Corporation KEK CA 2011"
   }
 
-  FILE FREEFORM = 91D2E32B-0134-4306-BA90-54EDCBF349CA {
+  FILE FREEFORM = 392a8937-a832-476d-aee9-8557908c3847 {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek-microsoft-2023.crt
+    SECTION UI = "Microsoft Corporation KEK 2K CA 2023"
+  }
+
+  FILE FREEFORM = f9fd279e-5222-46d7-81f3-6ad8d5ddfb62 {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/kek-system76.crt
+    SECTION UI = "System76 KEK"
+  }
+
+  FILE FREEFORM = 9c823f53-7cc4-4fa9-82b5-0deb68e855a5 {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-windows-pca-2011.crt
+    SECTION UI = "Windows Production PCA 2011"
+  }
+
+  FILE FREEFORM = 90fc49dd-13e0-43a9-bf31-35e308b4e07d {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-windows-uefi-2023.crt
+    SECTION UI = "Windows UEFI CA 2023"
+  }
+
+  FILE FREEFORM = b4bf62a6-0f18-48de-bddd-baa5ea50be1a {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-microsoft-uefi-2011.crt
+    SECTION UI = "Microsoft Corporation UEFI CA 2011"
+  }
+
+  FILE FREEFORM = 10779d38-00cb-4c02-ba08-a4e4c4c99837 {
+    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-microsoft-uefi-2023.crt
+    SECTION UI = "Microsoft UEFI CA 2023"
+  }
+
+  FILE FREEFORM = f953eb13-e915-46d8-afcd-a9d752819ae6 {
     SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-system76.crt
-    SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/db-2.crt
-    SECTION UI = "SecureBootDb2Cert"
+    SECTION UI = "System76 CA"
   }
 
-  FILE FREEFORM = 74BB6E72-2A56-4D0E-A5B3-5D39FC2EE346 {
+  FILE FREEFORM = a226f3fb-0ba3-481c-9d1a-6f2146944e2a {
     SECTION RAW = UefiPayloadPkg/SecureBootEnrollDefaultKeys/keys/crl.bin
-    SECTION UI = "SecureBootDbxCert"
+    SECTION UI = "UEFI Revocation List"
   }
 
 !endif

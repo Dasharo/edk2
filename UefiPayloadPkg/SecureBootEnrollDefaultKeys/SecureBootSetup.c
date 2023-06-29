@@ -23,30 +23,34 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
-#define EFI_MICROSOFT_KEK_CERT_GUID \
-  { 0xA23665E3, 0xACA6, 0x4F6D, {0x80, 0xCC, 0x34, 0x1E, 0x7D, 0x7B, 0x8C, 0xC6} }
+// PK file
+#define EFI_PK_SYSTEM76_GUID {0x76939896, 0x813a, 0x48ac, {0xad, 0x94, 0x47, 0xc2, 0xcb, 0xe1, 0xfd, 0xad}}
+// KEK files
+#define EFI_KEK_MICROSOFT_2011_GUID {0x54fbf0d1, 0x687c, 0x4ede, {0xac, 0xa4, 0x86, 0x5e, 0xe5, 0x7b, 0x41, 0x5a}}
+#define EFI_KEK_MICROSOFT_2023_GUID {0x392a8937, 0xa832, 0x476d, {0xae, 0xe9, 0x85, 0x57, 0x90, 0x8c, 0x38, 0x47}}
+#define EFI_KEK_SYSTEM76_GUID {0xf9fd279e, 0x5222, 0x46d7, {0x81, 0xf3, 0x6a, 0xd8, 0xd5, 0xdd, 0xfb, 0x62}}
+// DB files
+#define EFI_CA_WINDOWS_2011_GUID {0x9c823f53, 0x7cc4, 0x4fa9, {0x82, 0xb5, 0x0d, 0xeb, 0x68, 0xe8, 0x55, 0xa5}}
+#define EFI_CA_WINDOWS_2023_GUID {0x90fc49dd, 0x13e0, 0x43a9, {0xbf, 0x31, 0x35, 0xe3, 0x08, 0xb4, 0xe0, 0x7d}}
+#define EFI_CA_MICROSOFT_2011_GUID {0xb4bf62a6, 0x0f18, 0x48de, {0xbd, 0xdd, 0xba, 0xa5, 0xea, 0x50, 0xbe, 0x1a}}
+#define EFI_CA_MICROSOFT_2023_GUID {0x10779d38, 0x00cb, 0x4c02, {0xba, 0x08, 0xa4, 0xe4, 0xc4, 0xc9, 0x98, 0x37}}
+#define EFI_CA_SYSTEM76_GUID {0xf953eb13, 0xe915, 0x46d8, {0xaf, 0xcd, 0xa9, 0xd7, 0x52, 0x81, 0x9a, 0xe6}}
+// DBX file
+#define EFI_UEFI_DBX_GUID {0xa226f3fb, 0x0ba3, 0x481c, {0x9d, 0x1a, 0x6f, 0x21, 0x46, 0x94, 0x4e, 0x2a}}
+// Signature Owner
+#define EFI_MICROSOFT_OWNER_GUID { 0x77FA9ABD, 0x0359, 0x4D32, {0xBD, 0x60, 0x28, 0xF4, 0xE7, 0x8F, 0x78, 0x4B} }
 
-#define EFI_SECUREBOOT_PK_CERT_GUID \
-  { 0xF8104268, 0xA364, 0x45F5, {0x8E, 0x00, 0xAB, 0xA3, 0xFD, 0xEA, 0x12, 0xBE} }
-
-#define EFI_MICROSOFT_DB1_CERT_GUID \
-  { 0x26A517B0, 0xE3FD, 0x46C2, {0x89, 0x32, 0xE9, 0x26, 0xBF, 0x98, 0x94, 0x1F} }
-
-#define EFI_MICROSOFT_DB2_CERT_GUID \
-  { 0x91D2E32B, 0x0134, 0x4306, {0xBA, 0x90, 0x54, 0xED, 0xCB, 0xF3, 0x49, 0xCA} }
-
-#define EFI_MICROSOFT_DBX_GUID \
-  { 0x74BB6E72, 0x2A56, 0x4D0E, {0xA5, 0xB3, 0x5D, 0x39, 0xFC, 0x2E, 0xE3, 0x46} }
-
-#define EFI_MICROSOFT_OWNER_GUID \
-  { 0x77FA9ABD, 0x0359, 0x4D32, {0xBD, 0x60, 0x28, 0xF4, 0xE7, 0x8F, 0x78, 0x4B} }
-
-EFI_GUID gEfiSecureBootDb1CertGuid = EFI_MICROSOFT_DB1_CERT_GUID;
-EFI_GUID gEfiSecureBootDb2CertGuid = EFI_MICROSOFT_DB2_CERT_GUID;
-EFI_GUID gEfiSecureBootDbxCrlGuid = EFI_MICROSOFT_DBX_GUID;
-EFI_GUID gEfiSecureBootKekCertGuid = EFI_MICROSOFT_KEK_CERT_GUID;
-EFI_GUID gEfiSecureBootPkCertGuid = EFI_SECUREBOOT_PK_CERT_GUID;
-EFI_GUID gEfiMicrosoftOwnerGuid = EFI_MICROSOFT_OWNER_GUID;
+EFI_GUID mPkSystem76PkGuid = EFI_PK_SYSTEM76_GUID;
+EFI_GUID mKekMicrosoft2011Guid = EFI_KEK_MICROSOFT_2011_GUID;
+EFI_GUID mKekMicrosoft2023Guid = EFI_KEK_MICROSOFT_2023_GUID;
+EFI_GUID mKekSystem76 = EFI_KEK_SYSTEM76_GUID;
+EFI_GUID mDbWindows2011Guid = EFI_CA_WINDOWS_2011_GUID;
+EFI_GUID mDbWindows2023Guid = EFI_CA_WINDOWS_2023_GUID;
+EFI_GUID mDbMicrosoft2011Guid = EFI_CA_MICROSOFT_2011_GUID;
+EFI_GUID mDbMicrosoft2023Guid = EFI_CA_MICROSOFT_2023_GUID;
+EFI_GUID mDbSystem76Guid = EFI_CA_SYSTEM76_GUID;
+EFI_GUID mUefiDbxGuid = EFI_UEFI_DBX_GUID;
+EFI_GUID mMicrosoftOwnerGuid = EFI_MICROSOFT_OWNER_GUID;
 
 //
 // The most important thing about the variable payload is that it is a list of
@@ -434,16 +438,30 @@ InstallSecureBootHook (
   VOID        *Protocol;
   SETTINGS Settings;
 
-  UINT8 *MicrosoftPCA = 0;
-  UINTN MicrosoftPCASize;
-  UINT8 *MicrosoftUefiCA = 0;
-  UINTN MicrosoftUefiCASize;
-  UINT8 *MicrosoftKEK = 0;
-  UINTN MicrosoftKEKSize;
-  UINT8 *SecureBootPk = 0;
-  UINTN SecureBootPkSize;
-  UINT8 *MicrosoftDbx = 0;
-  UINTN MicrosoftDbxSize;
+  UINT8 *DbWindows2011 = 0;
+  UINTN DbWindows2011Size;
+  UINT8 *DbWindows2023 = 0;
+  UINTN DbWindows2023Size;
+  UINT8 *DbMicrosoft2011 = 0;
+  UINTN DbMicrosoft2011Size;
+  UINT8 *DbMicrosoft2023 = 0;
+  UINTN DbMicrosoft2023Size;
+  UINT8 *DbSystem76 = 0;
+  UINTN DbSystem76Size;
+
+  UINT8 *KekMicrosoft2011 = 0;
+  UINTN KekMicrosoft2011Size;
+  UINT8 *KekMicrosoft2023 = 0;
+  UINTN KekMicrosoft2023Size;
+  UINT8 *KekSystem76 = 0;
+  UINTN KekSystem76Size;
+
+  UINT8 *PkSystem76 = 0;
+  UINTN PkSystem76Size;
+
+  UINT8 *UefiDbx = 0;
+  UINTN UefiDbxSize;
+
 
   Status = gBS->LocateProtocol (&gEfiVariableWriteArchProtocolGuid, NULL, (VOID **)&Protocol);
   if (EFI_ERROR (Status)) {
@@ -475,19 +493,28 @@ InstallSecureBootHook (
     }
   }
 
-  Status = GetSectionFromAnyFv(&gEfiSecureBootDb1CertGuid, EFI_SECTION_RAW, 0, (void **)&MicrosoftPCA, &MicrosoftPCASize);
+  Status = GetSectionFromAnyFv(&mDbWindows2011Guid, EFI_SECTION_RAW, 0, (void **)&DbWindows2011, &DbWindows2011Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mDbWindows2023Guid, EFI_SECTION_RAW, 0, (void **)&DbWindows2023, &DbWindows2023Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mDbMicrosoft2011Guid, EFI_SECTION_RAW, 0, (void **)&DbMicrosoft2011, &DbMicrosoft2011Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mDbMicrosoft2023Guid, EFI_SECTION_RAW, 0, (void **)&DbMicrosoft2023, &DbMicrosoft2023Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mDbSystem76Guid, EFI_SECTION_RAW, 0, (void **)&DbSystem76, &DbSystem76Size);
   ASSERT_EFI_ERROR (Status);
 
-  Status = GetSectionFromAnyFv(&gEfiSecureBootDb2CertGuid, EFI_SECTION_RAW, 0, (void **)&MicrosoftUefiCA, &MicrosoftUefiCASize);
+  Status = GetSectionFromAnyFv(&mKekMicrosoft2011Guid, EFI_SECTION_RAW, 0, (void **)&KekMicrosoft2011, &KekMicrosoft2011Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mKekMicrosoft2023Guid, EFI_SECTION_RAW, 0, (void **)&KekMicrosoft2023, &KekMicrosoft2023Size);
+  ASSERT_EFI_ERROR (Status);
+  Status = GetSectionFromAnyFv(&mKekSystem76, EFI_SECTION_RAW, 0, (void **)&KekSystem76, &KekSystem76Size);
   ASSERT_EFI_ERROR (Status);
 
-  Status = GetSectionFromAnyFv(&gEfiSecureBootKekCertGuid, EFI_SECTION_RAW, 0, (void **)&MicrosoftKEK, &MicrosoftKEKSize);
+  Status = GetSectionFromAnyFv(&mPkSystem76PkGuid, EFI_SECTION_RAW, 0, (void **)&PkSystem76, &PkSystem76Size);
   ASSERT_EFI_ERROR (Status);
 
-  Status = GetSectionFromAnyFv(&gEfiSecureBootPkCertGuid, EFI_SECTION_RAW, 0, (void **)&SecureBootPk, &SecureBootPkSize);
-  ASSERT_EFI_ERROR (Status);
-
-  Status = GetSectionFromAnyFv(&gEfiSecureBootDbxCrlGuid, EFI_SECTION_RAW, 0, (void **)&MicrosoftDbx, &MicrosoftDbxSize);
+  Status = GetSectionFromAnyFv(&mUefiDbxGuid, EFI_SECTION_RAW, 0, (void **)&UefiDbx, &UefiDbxSize);
   ASSERT_EFI_ERROR (Status);
 
   Status = gRT->SetVariable (EFI_IMAGE_SECURITY_DATABASE1, &gEfiImageSecurityDatabaseGuid,
@@ -495,15 +522,18 @@ InstallSecureBootHook (
             EFI_VARIABLE_RUNTIME_ACCESS |
             EFI_VARIABLE_BOOTSERVICE_ACCESS |
             EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS),
-           MicrosoftDbxSize, MicrosoftDbx);
+           UefiDbxSize, UefiDbx);
   ASSERT_EFI_ERROR (Status);
 
   Status = EnrollListOfCerts (
     EFI_IMAGE_SECURITY_DATABASE,
     &gEfiImageSecurityDatabaseGuid,
     &gEfiCertX509Guid,
-    MicrosoftPCA,    MicrosoftPCASize,    &gEfiMicrosoftOwnerGuid,
-    MicrosoftUefiCA, MicrosoftUefiCASize, &gEfiMicrosoftOwnerGuid,
+    DbWindows2011, DbWindows2011Size, &mMicrosoftOwnerGuid,
+    DbWindows2023, DbWindows2023Size, &mMicrosoftOwnerGuid,
+    DbMicrosoft2011, DbMicrosoft2011Size, &mMicrosoftOwnerGuid,
+    DbMicrosoft2023, DbMicrosoft2023Size, &mMicrosoftOwnerGuid,
+    DbSystem76, DbSystem76Size, &gEfiCallerIdGuid,
     NULL);
   ASSERT_EFI_ERROR (Status);
 
@@ -511,8 +541,9 @@ InstallSecureBootHook (
     EFI_KEY_EXCHANGE_KEY_NAME,
     &gEfiGlobalVariableGuid,
     &gEfiCertX509Guid,
-    SecureBootPk, SecureBootPkSize, &gEfiCallerIdGuid,
-    MicrosoftKEK, MicrosoftKEKSize, &gEfiMicrosoftOwnerGuid,
+    KekMicrosoft2011, KekMicrosoft2011Size, &mMicrosoftOwnerGuid,
+    KekMicrosoft2023, KekMicrosoft2023Size, &mMicrosoftOwnerGuid,
+    KekSystem76, KekSystem76Size, &gEfiCallerIdGuid,
     NULL);
   ASSERT_EFI_ERROR (Status);
 
@@ -520,15 +551,20 @@ InstallSecureBootHook (
     EFI_PLATFORM_KEY_NAME,
     &gEfiGlobalVariableGuid,
     &gEfiCertX509Guid,
-    SecureBootPk, SecureBootPkSize, &gEfiGlobalVariableGuid,
+    PkSystem76, PkSystem76Size, &gEfiGlobalVariableGuid,
     NULL);
   ASSERT_EFI_ERROR (Status);
 
-  FreePool (MicrosoftPCA);
-  FreePool (MicrosoftUefiCA);
-  FreePool (MicrosoftKEK);
-  FreePool (SecureBootPk);
-  FreePool (MicrosoftDbx);
+  FreePool (DbWindows2011);
+  FreePool (DbWindows2023);
+  FreePool (DbMicrosoft2011);
+  FreePool (DbMicrosoft2023);
+  FreePool (DbSystem76);
+  FreePool (KekMicrosoft2011);
+  FreePool (KekMicrosoft2023);
+  FreePool (KekSystem76);
+  FreePool (PkSystem76);
+  FreePool (UefiDbx);
 
   Settings.CustomMode = STANDARD_SECURE_BOOT_MODE;
   Status = gRT->SetVariable (EFI_CUSTOM_MODE_NAME, &gEfiCustomModeEnableGuid,
