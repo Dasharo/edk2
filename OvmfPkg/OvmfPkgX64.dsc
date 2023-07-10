@@ -576,6 +576,18 @@
   # Point to the MdeModulePkg/Application/UiApp/UiApp.inf
   gEfiMdeModulePkgTokenSpaceGuid.PcdBootManagerMenuFile|{ 0x21, 0xaa, 0x2c, 0x46, 0x14, 0x76, 0x03, 0x45, 0x83, 0x6e, 0x8a, 0xb6, 0xf4, 0x66, 0x23, 0x31 }
 
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
+  
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -645,7 +657,8 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|1
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|1
 !endif
-
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
+  
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE && $(TPM_CONFIG_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS

@@ -2639,6 +2639,171 @@ BmEnumerateBootOptions (
   return BootOptions;
 }
 
+/* EFI System partition Scanning code Extension */
+
+EFI_BOOT_MANAGER_LOAD_OPTION * BmEspScanning (
+
+UINTN							*BootOptionCount,
+				
+OUT   EFI_BOOT_MANAGER_LOAD_OPTION			*BootOption,
+					           
+OUT    EFI_DEVICE_PATH_PROTOCOL				*CompletePath )
+
+{
+
+  EFI_STATUS                           	  	            Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
+  UINTN                                 		            HandleCount;
+  EFI_HANDLE                            	          *Handles;
+  EFI_BLOCK_IO_PROTOCOL                 	          *BlockIo;
+  UINTN                                 		            Removable;
+  UINTN                                 	 	            Index;
+  CHAR16                                		          *Description;
+  EFI_DEVICE_PATH_PROTOCOL                       *DevicePathNode;
+  EFI_DEVICE_PATH_PROTOCOL                       *TempHardDevPath;
+  EFI_PARTITION_INFO_PROTOCOL	          *PartitionInfo;
+  EFI_DEVICE_PATH_PROTOCOL	          *TempDevicePath;
+  EFI_FILE_PROTOCOL		          *RootDir;
+  EFI_FILE_PROTOCOL		          *File;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL       *Volume;
+  CHAR16				          *FilePath;
+
+  gBS->LocateHandleBuffer (ByProtocol, &gEfiBlockIoProtocolGuid, NULL, &HandleCount, &Handles);
+
+  if (EFI_ERROR(Status)) {
+
+  HandleCount = 0;
+  Handles = NULL;
+
+  }
+
+  for(Index=0; Index < HandleCount; Index++)
+
+{
+	Status = gBS->HandleProtocol(Handles[Index], &gEfiBlockIoProtocolGuid, (VOID **)&BlockIo);
+	
+	ASSERT_EFI_ERROR(Status);
+
+	Status = gBS->HandleProtocol(Handles[Index],&gEfiPartitionInfoProtocolGuid, (VOID **)&PartitionInfo);
+
+	ASSERT_EFI_ERROR(Status);
+
+
+Status  =  gBS->LocateProtocol(&gEfiPartitionInfoProtocolGuid, NULL, (VOID **)&PartitionInfo);
+
+if(EFI_ERROR(Status))     {
+
+return Status;
+
+}
+
+if(PartitionInfo->System == 1)	{
+
+AsciiPrint("EFI System Partition Found!");
+
+}
+ 
+else {
+
+AsciiPrint("EFI System Partition Not Found!");
+
+}
+
+if (HandleCount  !=  0)     {
+
+FreePool(Handles);
+
+}
+
+}
+
+for(Index =0; Index < HandleCount; Index++)     {
+
+Status = gBS->HandleProtocol(Handles[Index], &gEfiSimpleFileSystemProtocolGuid, (VOID *)&Volume);
+
+if(EFI_ERROR(Status))     {
+
+return Status;
+
+}
+
+Status = Volume->OpenVolume(Volume, &RootDir);
+
+if(EFI_ERROR(Status))      {
+
+return Status;
+
+}
+
+*Filepath = L"\EFI\Ubunut\grubx64.efi";
+
+Status = Root->Open(RootDir, &File, FilePath, EFI_FILE_MODE_READ, 0);
+
+if(EFI_ERROR(Status))     {
+
+return Status
+
+}
+
+DevicePathNode = FilePath;
+
+while(!IsDevicePathEnd (DevicePathNode))      {
+
+if ((DevicePathNode->Type == MEDIA_DEVICE_PATH)  &&  (DevicePathNode->SubType == MEDIA_HARDDRIVE_DP))     {
+
+FilePath = (CHAR16 *)(DevicePathNode+1);
+
+break;
+
+}
+
+DevicePath = NextDevicePathNode (DevicePathNode);
+
+}
+
+CHAR16    *PathText = ConvertDevicePathToText(FilePath, FALSE,  FALSE);
+
+TempDevicePath = AppendDevicePath (PathText, FilePath);
+ 
+File->Close(File);
+
+AsciiPrint("EFI System Partition File Path :", Filepath);
+
+return EFI_SUCCESS;
+
+}
+
+Description = BmGetBootDescription(Handles[Index]);
+
+if (HandleCount != 0)    {
+
+FreePool(Handles);
+
+}
+
+Status = EfiBootManagerInitializeLoadOption (
+             &LoadOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             LOAD_OPTION_ACTIVE,
+             Description,
+             FilePath,
+             NULL,
+             0
+             );
+
+ASSERT_EFI_ERROR(Status);
+
+FreePool(Description);
+
+EfiBootManagerAddLoadOptionVariable (&LoadOption, 1);
+
+}
+
+}
+
+
+
 /**
   The function enumerates all boot options, creates them and registers them in the BootOrder variable.
 **/

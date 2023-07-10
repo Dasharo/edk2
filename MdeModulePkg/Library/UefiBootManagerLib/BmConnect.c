@@ -11,7 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 /**
   Connect all the drivers to all the controllers.
 
-  This function makes sure all the current system drivers manage the correspoinding
+  This function makes sure all the current system drivers manage the corresponding
   controllers if have. And at the same time, makes sure all the system controllers
   have driver to manage it if have.
 **/
@@ -46,7 +46,7 @@ BmConnectAllDriversToAllControllers (
     }
 
     //
-    // Check to see if it's possible to dispatch an more DXE drivers.
+    // Check to see if it's possible to dispatch any more DXE drivers.
     // The above code may have made new DXE drivers show up.
     // If any new driver is dispatched (Status == EFI_SUCCESS) and we will try
     // the connect again.
