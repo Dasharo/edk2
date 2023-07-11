@@ -32,6 +32,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Protocol/SmmAccess2.h>
 
+#include <Library/LaptopBatteryLib.h>
+
 typedef struct {
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   UINTN                     ConnectType;
