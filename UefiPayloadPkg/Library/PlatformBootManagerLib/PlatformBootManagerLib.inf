@@ -79,6 +79,7 @@
   gEfiSmmAccess2ProtocolGuid
   gEfiPciRootBridgeIoProtocolGuid ## CONSUMES
   gEfiDevicePathProtocolGuid      ## CONSUMES
+  gEfiSmbiosProtocolGuid          ## CONSUMES
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
@@ -98,4 +99,6 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
   gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck
+  gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings

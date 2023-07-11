@@ -75,8 +75,12 @@ gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x100000
 gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
 gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
 gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
-
-gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x00000017
+## Used to block PCI OptionROM loading
+gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x10000017
+## Used to skip PS/2 keyboard detection.
+# Useful for laptops where the PS/2 keyboard is always connected.
+# If set to TRUE, Boot Manager will unconditionally add PS keyboard to ConIn.
+gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE|BOOLEAN|0x10000018
 
 [PcdsFixedAtBuild]
 ## Specifies the initial value for Register_A in RTC.
@@ -94,3 +98,4 @@ gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
 gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
 
 gUefiPayloadPkgTokenSpaceGuid.SmmStoreDelayWorkaround|TRUE|BOOLEAN|0x00000009
+gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A

@@ -35,7 +35,6 @@
   DEFINE TPM_CONFIG_ENABLE       = TRUE
   DEFINE SATA_PASSWORD_ENABLE    = TRUE
   DEFINE OPAL_PASSWORD_ENABLE    = TRUE
-  DEFINE LOAD_OPTION_ROMS        = FLASE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = TRUE
   DEFINE USE_CBMEM_FOR_CONSOLE   = FALSE
   DEFINE ABOVE_4G_MEMORY         = FALSE
@@ -174,9 +173,6 @@
   LoadLinuxLib|OvmfPkg/Library/LoadLinuxLib/LoadLinuxLib.inf
   MemEncryptSevLib|OvmfPkg/Library/BaseMemEncryptSevLib/BaseMemEncryptSevLib.inf
 
-# 
-#SMM for OVMF
-#
 
 !if $(SMM_REQUIRE) == FALSE
   LockBoxLib|OvmfPkg/Library/LockBoxLib/LockBoxBaseLib.inf 
@@ -205,9 +201,7 @@
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
 
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
-#
-#OPAL_PASSWORD
-#
+  
 
 !if $(OPAL_PASSWORD_ENABLE) == TRUE
   TcgStorageCoreLib|SecurityPkg/Library/TcgStorageCoreLib/TcgStorageCoreLib.inf
@@ -587,7 +581,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
-  
+
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -620,7 +614,7 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdPciMmio64Size|0x800000000
 !endif
 
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|0
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|2
 
   # Set video resolution for text setup.
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution|640
@@ -658,7 +652,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|1
 !endif
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
-  
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE && $(TPM_CONFIG_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS
@@ -730,8 +724,6 @@
 !endif
 !endif
 
-### SATA_PASSWORD
-
 !if $(SATA_PASSWORD_ENABLE) == TRUE
   SecurityPkg/HddPassword/HddPasswordPei.inf
 !endif
@@ -764,8 +756,6 @@
       NULL|SecurityPkg/Library/DxeTpm2MeasureBootLib/DxeTpm2MeasureBootLib.inf
 !endif
   }
-
-### SETUP_PASSWORD
 
 !if $(SETUP_PASSWORD_ENABLE) == TRUE
   DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf {
@@ -804,6 +794,12 @@
       NULL|DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
+
+!ifdef $(CSM_ENABLE)
+      NULL|OvmfPkg/Csm/LegacyBootManagerLib/LegacyBootManagerLib.inf
+      NULL|OvmfPkg/Csm/LegacyBootMaintUiLib/LegacyBootMaintUiLib.inf
+!endif
+
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
   }
@@ -912,7 +908,6 @@
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
   DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 !endif
-
 
   # Hash2
   #
@@ -1054,9 +1049,6 @@
   }
 !endif
 
-  #
-  # TPM support
-  #
 !if $(TPM_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf {
     <LibraryClasses>
@@ -1071,11 +1063,25 @@
   }
 !if $(TPM_CONFIG_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
+  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf {
+    <LibraryClasses>
+      Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+  }
 !endif
   SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
   }
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf {
+    <LibraryClasses>
+    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+  }
+!endif
+!endif
+
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+    SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
   SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf {
     <LibraryClasses>

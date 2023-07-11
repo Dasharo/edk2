@@ -25,7 +25,6 @@
   FLASH_DEFINITION                    = UefiPayloadPkg/UefiPayloadPkg.fdf
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
-
   #
   # SBL:      UEFI payload for Slim Bootloader
   # COREBOOT: UEFI payload for coreboot
@@ -93,10 +92,12 @@
   DEFINE LOAD_OPTION_ROMS               = TRUE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = FALSE
   DEFINE USE_CBMEM_FOR_CONSOLE          = FALSE
+  DEFINE SYSTEM76_EC_LOGGING            = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE DISABLE_MTRR_PROGRAMMING       = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
+  DEFINE SD_MMC_TIMEOUT                 = 1000000
 
   #
   # Network definition
@@ -128,7 +129,7 @@
 
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
-!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
+!if ($(USE_CBMEM_FOR_CONSOLE) == FALSE && $(SYSTEM76_EC_LOGGING) == FALSE)
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
   MSFT:RELEASE_*_*_CC_FLAGS      = /D MDEPKG_NDEBUG
@@ -226,6 +227,9 @@
 !if $(USE_CBMEM_FOR_CONSOLE) == TRUE
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
+!elseif $(SYSTEM76_EC_LOGGING) == TRUE
+  SerialPortLib|UefiPayloadPkg/Library/System76EcLib/System76EcLib.inf
+  PlatformHookLib|UefiPayloadPkg/Library/System76EcLib/System76EcLib.inf
 !else
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
   PlatformHookLib|UefiPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
@@ -388,7 +392,7 @@
 ################################################################################
 [PcdsFeatureFlag]
 
-!if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE)
+!if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE || $(SYSTEM76_EC_LOGGING) == TRUE)
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|TRUE
 !else
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|FALSE
@@ -415,6 +419,7 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdBootMenuKey|$(BOOT_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
@@ -423,7 +428,7 @@
 [PcdsPatchableInModule.common]
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x7
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
-!if $(USE_CBMEM_FOR_CONSOLE) == FALSE
+!if ($(USE_CBMEM_FOR_CONSOLE) == FALSE && $(SYSTEM76_EC_LOGGING) == FALSE)
   !if $(SOURCE_DEBUG_ENABLE)
     gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x17
   !else
@@ -471,6 +476,7 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
+  gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
 
 
 ################################################################################
@@ -519,6 +525,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|0
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
@@ -625,6 +632,7 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|$(IOMMU_ENABLE)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
@@ -717,6 +725,7 @@
   MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
+  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   #

@@ -281,6 +281,7 @@ RegisterBootManagerMenuAppBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
+  DEBUG((EFI_D_INFO, "Registering Boot Manager app option\n"));
   Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
   ASSERT_EFI_ERROR (Status);
 
@@ -289,6 +290,61 @@ RegisterBootManagerMenuAppBootOption (
   EfiBootManagerFreeLoadOption (&NewOption);
 
   return OptionNumber;
+}
+
+/**
+  Delete one boot option for BootManagerMenuApp.
+
+  @param  FileGuid          Input file guid for the BootManagerMenuApp.
+  @param  Description       Description of the BootManagerMenuApp boot option.
+  @param  IsBootCategory    Whether this is a boot category.
+
+  @retval OptionNumber      Return the option number info.
+
+**/
+EFI_STATUS
+UnregisterBootManagerMenuAppBootOption (
+  EFI_GUID                         *FileGuid,
+  CHAR16                           *Description,
+  BOOLEAN                          IsBootCategory
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
+  EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
+  UINTN                            BootOptionCount;
+  INTN                             OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION     *BootOptions;
+
+  DevicePath = FvFilePath (FileGuid);
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  DEBUG((EFI_D_INFO, "Unregistering Boot Manager app option\n"));
+  BootOptions = EfiBootManagerGetLoadOptions (
+                &BootOptionCount, LoadOptionTypeBoot
+                );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                &NewOption, BootOptions, BootOptionCount
+                );
+
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
+  }
+
+  return Status;
 }
 
 /**
@@ -354,7 +410,10 @@ GetBootManagerMenuAppOption (
     //
     // If not found the BootManagerMenuApp, create it.
     //
+    DEBUG((EFI_D_INFO, "Creating Boot Manager option\n"));
     OptionNumber = (UINT16) RegisterBootManagerMenuAppBootOption (&mBootMenuFile, L"UEFI BootManagerMenuApp", (UINTN) -1, FALSE);
+  } else {
+    DEBUG((EFI_D_INFO, "Boot Manager option number %d\n", OptionNumber));
   }
 
   return OptionNumber;
@@ -579,22 +638,20 @@ PlatformBootManagerBeforeConsole (
   VOID
 )
 {
-  EFI_INPUT_KEY                  Enter;
   EFI_INPUT_KEY                  Esc;
   EFI_INPUT_KEY                  F12;
   EFI_BOOT_MANAGER_LOAD_OPTION   BootOption;
   UINTN                          OptionNumber;
 
-  //
-  // Register ENTER as CONTINUE key
-  //
-  Enter.ScanCode    = SCAN_NULL;
-  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
-  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
+  // For Boot Menu Enabled functionality
+  EFI_STATUS                     Status;
+  BOOLEAN                        BootMenuEnable;
+  UINTN                          VarSize;
+
   //
   // Map ESC to Boot Manager Menu
   //
-  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);;
+  Esc.ScanCode    = FixedPcdGet16(PcdSetupMenuKey);
   Esc.UnicodeChar = CHAR_NULL;
   EfiBootManagerGetBootManagerMenu (&BootOption);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
@@ -604,8 +661,29 @@ PlatformBootManagerBeforeConsole (
   //
   F12.ScanCode    = FixedPcdGet16(PcdBootMenuKey);
   F12.UnicodeChar = CHAR_NULL;
-  OptionNumber    = GetBootManagerMenuAppOption ();
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+
+  DEBUG((EFI_D_ERROR, "Boot Manager option: %r, Size: %x, Enabled: %d\n",
+                      Status, VarSize, BootMenuEnable));
+
+  if ((Status == EFI_SUCCESS) && (VarSize == sizeof(BootMenuEnable)) && !BootMenuEnable) {
+    DEBUG((EFI_D_INFO, "Unregistering Boot Manager key option\n"));
+    EfiBootManagerDeleteKeyOptionVariable(NULL, 0, &F12, NULL);
+    UnregisterBootManagerMenuAppBootOption(&mBootMenuFile, L"UEFI BootManagerMenuApp", FALSE);
+  } else {
+    DEBUG((EFI_D_INFO, "Registering Boot Manager key option\n"));
+    OptionNumber = GetBootManagerMenuAppOption ();
+    EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F12, NULL);
+  }
+
   //
   // Install ready to lock.
   // This needs to be done before option rom dispatched.
@@ -624,6 +702,7 @@ PlatformBootManagerBeforeConsole (
   //
   FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
 
+  PlatformConsoleInit ();
   //
   // Find all display class PCI devices (using the handles from the previous
   // step), and connect them non-recursively. This should produce a number of
@@ -636,8 +715,6 @@ PlatformBootManagerBeforeConsole (
   // ErrOut.
   //
   FilterAndProcess (&gEfiGraphicsOutputProtocolGuid, NULL, AddOutput);
-
-  PlatformConsoleInit ();
 }
 
 CHAR16*
@@ -799,6 +876,180 @@ WarnIfRecoveryBoot (
   gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
 
   gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
+}
+
+/**
+
+  Acquire the string associated with the Index from smbios structure and return it.
+  The caller is responsible for free the string buffer.
+
+  @param    OptionalStrStart  The start position to search the string
+  @param    Index             The index of the string to extract
+  @param    String            The string that is extracted
+
+  @retval   EFI_SUCCESS       The function returns EFI_SUCCESS always.
+
+**/
+EFI_STATUS
+GetOptionalStringByIndex (
+  IN      CHAR8                   *OptionalStrStart,
+  IN      UINT8                   Index,
+  OUT     CHAR16                  **String
+  )
+{
+  UINTN          StrSize;
+
+  if (Index == 0) {
+    *String = AllocateZeroPool (sizeof (CHAR16));
+    return EFI_SUCCESS;
+  }
+
+  StrSize = 0;
+  do {
+    Index--;
+    OptionalStrStart += StrSize;
+    StrSize           = AsciiStrSize (OptionalStrStart);
+  } while (OptionalStrStart[StrSize] != 0 && Index != 0);
+
+  if ((Index != 0) || (StrSize == 1)) {
+    //
+    // Meet the end of strings set but Index is non-zero, or
+    // Find an empty string
+    //
+    *String = NULL;
+    return EFI_NOT_FOUND;
+  } else {
+    *String = AllocatePool (StrSize * sizeof (CHAR16));
+    AsciiStrToUnicodeStrS (OptionalStrStart, *String, StrSize);
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+VOID
+PrintSolStrings (
+  VOID
+)
+{
+  UINT8                             StrIndex;
+  CHAR16                            *FirmwareVersionString;
+  CHAR16                            *EcVersionString;
+  CHAR16                            *EcVariantString;
+  EFI_STATUS                        Status;
+  EFI_SMBIOS_HANDLE                 SmbiosHandle;
+  EFI_SMBIOS_PROTOCOL               *Smbios;
+  SMBIOS_TABLE_TYPE0                *Type0Record;
+  SMBIOS_TABLE_TYPE11               *Type11Record;
+  EFI_SMBIOS_TABLE_HEADER           *Record;
+  BOOLEAN                           GotType0;
+  BOOLEAN                           GotType11;
+  UINTN                             CurrentAttribute;
+
+  GotType0 = FALSE;
+  GotType11 = FALSE;
+
+  Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **) &Smbios);
+
+  if (EFI_ERROR(Status))
+    return;
+
+  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+  Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  while (!EFI_ERROR(Status)) {
+    if (Record->Type == SMBIOS_TYPE_BIOS_INFORMATION) {
+      Type0Record = (SMBIOS_TABLE_TYPE0 *) Record;
+      StrIndex = Type0Record->BiosVersion;
+      Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type0Record + Type0Record->Hdr.Length), StrIndex, &FirmwareVersionString);
+
+      if (!EFI_ERROR(Status) && (*FirmwareVersionString != 0x0000)) {
+        Print (L"Firmware version: %s\n", FirmwareVersionString);
+      } else {
+        Print (L"Firmware version: ");
+        CurrentAttribute = gST->ConOut->Mode->Attribute;
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+        Print (L"UNKNOWN\n");
+        gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+      }
+      GotType0 = TRUE;
+    }
+
+    if (Record->Type == SMBIOS_TYPE_OEM_STRINGS) {
+      Type11Record = (SMBIOS_TABLE_TYPE11 *) Record;
+      if (Type11Record->StringCount < 2) {
+        DEBUG((EFI_D_ERROR, "Missing some EC strings\n"));
+        Print (L"EC firmware version: ");
+        CurrentAttribute = gST->ConOut->Mode->Attribute;
+        gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+        Print (L"UNKNOWN\n");
+        Print (L"Unable to detect EC firmware version!\n");
+        Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+        gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+      } else {
+        // First string should be the EC variant
+        Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type11Record + Type11Record->Hdr.Length), 1, &EcVariantString);
+        // If string is not found or not open EC, print error straight away
+        if (EFI_ERROR(Status) || StrStr(EcVariantString, L"EC: unknown")) {
+          DEBUG((EFI_D_ERROR, "Missing EC variant string or EC variant reported as unknown\n"));
+          Print (L"EC firmware version: ");
+          CurrentAttribute = gST->ConOut->Mode->Attribute;
+          gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+          Print (L"UNKNOWN\n");
+          Print (L"Unable to detect EC firmware version!\n");
+          Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+          gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+        } else {
+          // Second string should be the EC firmware version.
+          // Print it without any error if found, because it has to be open EC now
+          Status = GetOptionalStringByIndex ((CHAR8*)((UINT8*)Type11Record + Type11Record->Hdr.Length), 2, &EcVersionString);
+          if (EFI_ERROR(Status) || StrStr(EcVersionString, L"EC firmware version: unknown")) {
+            DEBUG((EFI_D_ERROR, "Missing EC version string or EC version reported as unknown\n"));
+            CurrentAttribute = gST->ConOut->Mode->Attribute;
+            gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+            Print (L"UNKNOWN\n");
+            Print (L"Unable to detect EC firmware version!\n");
+            Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+            gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+          } else {
+            Print (L"%s\n", EcVersionString);
+            if (StrStr(EcVariantString, L"EC: proprietary")) {
+              CurrentAttribute = gST->ConOut->Mode->Attribute;
+              gST->ConOut->SetAttribute (gST->ConOut, EFI_RED | EFI_BRIGHT | EFI_BACKGROUND_BLACK);
+              Print (L"Proprietary EC firmware detected!\n");
+              Print (L"Please update your EC firmware per docs.dasharo.com instructions!\n");
+              gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+            }
+          }
+        }
+      }
+    }
+
+    if (GotType0 && GotType11)
+      break;
+
+    Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  }
+}
+
+/**
+  Refresh the logo on ReadyToBoot event. It will clear the screen from strings
+
+  and progress bar when timeout is reached or continue key is pressed.
+
+  @param    Event          Event pointer.
+  @param    Context        Context pass to this function.
+**/
+VOID
+EFIAPI
+RefreshLogo (
+  IN EFI_EVENT    Event,
+  IN VOID         *Context
+  )
+{
+  gBS->CloseEvent (Event);
+  gST->ConOut->ClearScreen (gST->ConOut);
+  BootLogoEnableLogo ();
 }
 
 /**
@@ -823,19 +1074,31 @@ PlatformBootManagerAfterConsole (
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
   BOOLEAN                        NetBootEnabled;
+  BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
+  EFI_EVENT                      Event;
+  EFI_INPUT_KEY                  Enter;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
 
-  EfiBootManagerConnectAll ();
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
   gST->ConOut->ClearScreen (gST->ConOut);
+
   WarnIfRecoveryBoot ();
-  
+
   BootLogoEnableLogo ();
+
+  //
+  // Register ENTER as CONTINUE key
+  //
+  Enter.ScanCode    = SCAN_NULL;
+  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
+  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
   // FIXME: USB devices are not being detected unless we wait a bit.
   gBS->Stall (100 * 1000);
+  EfiBootManagerConnectAll ();
   EfiBootManagerRefreshAllBootOption ();
 
   //
@@ -852,28 +1115,31 @@ PlatformBootManagerAfterConsole (
       &NetBootEnabled
       );
 
+  //
+  // Register iPXE
+  //
   if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
     if (NetBootEnabled) {
-      //
-      // Register iPXE
-      //
-      DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
+      DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
       PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                     (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                     LOAD_OPTION_ACTIVE);
     } else {
-      if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
-        DEBUG((DEBUG_INFO, "Registering iPXE boot option\n"));
-        PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                      LOAD_OPTION_ACTIVE);
-      } else {
-        DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+        DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
         PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                         (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                         LOAD_OPTION_ACTIVE);
-      }
     }
+  } else if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
+    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                  LOAD_OPTION_ACTIVE);
+  } else {
+    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE);
   }
   //
   // Register UEFI Shell
@@ -884,8 +1150,31 @@ PlatformBootManagerAfterConsole (
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
 
-  Print (L"%-5s to enter Setup\n%-5s to enter Boot Manager Menu\nENTER to boot directly",
-         SetupMenuKey, BootMenuKey);
+  VarSize = sizeof (BootMenuEnable);
+  Status = gRT->GetVariable (
+          L"BootManagerEnabled",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &BootMenuEnable
+        );
+
+  if (PcdGetBool (PcdPrintSolStrings))
+    PrintSolStrings();
+
+  Print (L"%-5s to enter Setup\n", SetupMenuKey);
+
+  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
+    Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
+
+  Print (L"ENTER to boot directly\n");
+
+  EfiCreateEventReadyToBootEx (
+             TPL_CALLBACK,
+             RefreshLogo,
+             NULL,
+             &Event
+             );
 }
 
 /**
@@ -916,12 +1205,6 @@ PlatformBootManagerWaitCallback (
     (Timeout - TimeoutRemain) * 100 / Timeout,
     0
     );
-
-  if (TimeoutRemain == 0) {
-    gBS->Stall (100 * 1000);
-    gST->ConOut->ClearScreen (gST->ConOut);
-    BootLogoEnableLogo ();
-  }
 }
 
 /**
