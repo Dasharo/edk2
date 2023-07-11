@@ -1,0 +1,28 @@
+## @file
+#  Include all platform specific features which can be customized by IBV/OEM.
+#
+#  Copyright (c) 2016 - 2019, Intel Corporation. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = LaptopBatteryLib
+  FILE_GUID                      = 5D0D7B0F-E2BB-499A-B658-18B93068BC22
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = LaptopBatteryLib
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  LaptopBatteryLibNull.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
