@@ -879,6 +879,192 @@ WarnIfRecoveryBoot (
   DrainInput ();
 }
 
+STATIC
+VOID
+WarnIfBatteryLow (
+  VOID
+)
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      TimerEvent;
+  EFI_EVENT      Events[2];
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  RETURN_STATUS  RetStatus;
+  UINT32         BatteryCapacity;
+  BOOLEAN        AcConnected;
+  BOOLEAN        BatteryConnected;
+  BOOLEAN        BatteryTooLow;
+  CHAR16         BatteryCapLine[81];
+  CHAR16         DelayLine[81];
+  BOOLEAN        CursorVisible;
+  BOOLEAN        EcReadDataFailure;
+  UINTN          CurrentAttribute;
+  UINTN          SecondsLeft;
+  EFI_TPL        OriginalTPL;
+
+  BatteryTooLow = FALSE;
+  EcReadDataFailure = FALSE;
+
+  OriginalTPL = gBS->RaiseTPL (TPL_HIGH_LEVEL);
+  RetStatus = LaptopGetAcState(&AcConnected);
+
+  if (RetStatus == RETURN_UNSUPPORTED) {
+    gBS->RestoreTPL (OriginalTPL);
+    return;
+  }
+
+  if (RetStatus != RETURN_SUCCESS)
+    EcReadDataFailure = TRUE;
+
+  RetStatus = LaptopGetBatState(&BatteryConnected);
+  if (RetStatus != RETURN_SUCCESS)
+    EcReadDataFailure = TRUE;
+
+  /* We only need the baterry capacity if AC not connected */
+  if (!EcReadDataFailure && !AcConnected && BatteryConnected) {
+    RetStatus = LaptopGetBatteryCapacity(&BatteryCapacity);
+    if (RetStatus != RETURN_SUCCESS)
+      EcReadDataFailure = TRUE;
+  }
+
+  gBS->RestoreTPL (OriginalTPL);
+
+  /* Check if there is a need to display a warning */
+  if (!EcReadDataFailure && BatteryConnected) {
+    if(AcConnected)
+      return;
+    if(!AcConnected && BatteryCapacity >= 5)
+      return;
+  }
+
+  if (!EcReadDataFailure && !AcConnected &&
+      BatteryConnected && BatteryCapacity < 5)
+    BatteryTooLow = TRUE;
+
+  Status = gBS->CreateEvent (
+      EVT_TIMER,
+      TPL_CALLBACK,
+      NULL,
+      NULL,
+      &TimerEvent
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
+
+  DrainInput ();
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
+
+  Events[0] = gST->ConIn->WaitForKey;
+  Events[1] = TimerEvent;
+
+  SecondsLeft = 10;
+  while (SecondsLeft > 0) {
+    if (BatteryTooLow) {
+    UnicodeSPrint (
+        BatteryCapLine,
+        sizeof (BatteryCapLine),
+        L"Current battery capacity: %d%%",
+        BatteryCapacity
+        );
+
+      UnicodeSPrint (
+          DelayLine,
+          sizeof (DelayLine),
+          L"(The laptop will shut down automatically in %d second%a.)",
+          SecondsLeft,
+          SecondsLeft == 1 ? "" : "s"
+          );
+
+      CreateMultiStringPopUp (
+          78,
+          11,
+          L"!!! WARNING !!!",
+          L"",
+          L"The laptop's current battery is critically low (< 5%).",
+          L"To protect your disk data from corruption due to abrupt shut down,",
+          L"the laptop will power off now. Please plug the AC adapter and power",
+          L"the laptop on again to boot.",
+          L"",
+          BatteryCapLine,
+          L"",
+          L"Press ENTER key to shut down immediately.",
+          DelayLine
+          );
+    } else if (!EcReadDataFailure && AcConnected && !BatteryConnected) {
+      UnicodeSPrint (
+          DelayLine,
+          sizeof (DelayLine),
+          L"(The boot process will continue automatically in %d second%a.)",
+          SecondsLeft,
+          SecondsLeft == 1 ? "" : "s"
+          );
+
+      CreateMultiStringPopUp (
+          78,
+          7,
+          L"!!! WARNING !!!",
+          L"",
+          L"The laptop's battery is not detected!",
+          L"Please check the battery connection or contact the manufacturer.",
+          L"",
+          L"Press ENTER key to continue.",
+          DelayLine
+          );
+    } else if (EcReadDataFailure) {
+      UnicodeSPrint (
+          DelayLine,
+          sizeof (DelayLine),
+          L"(The boot process will continue automatically in %d second%a.)",
+          SecondsLeft,
+          SecondsLeft == 1 ? "" : "s"
+          );
+
+      CreateMultiStringPopUp (
+          78,
+          7,
+          L"!!! ERROR !!!",
+          L"",
+          L"Could not retrieve information about AC and battery state!",
+          L"Please contact the manufacturer.",
+          L"",
+          L"Press ENTER key to continue.",
+          DelayLine
+          );
+    }
+
+    Status = gBS->WaitForEvent (2, Events, &Index);
+    ASSERT_EFI_ERROR (Status);
+
+    if (Index == 0) {
+      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      ASSERT_EFI_ERROR (Status);
+
+      if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+        break;
+      }
+    } else {
+      SecondsLeft--;
+    }
+  }
+
+  Status = gBS->CloseEvent (TimerEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  if (BatteryTooLow)
+    gRT->ResetSystem (EfiResetShutdown, EFI_SUCCESS, 0, NULL);
+
+  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
+}
+
 /**
 
   Acquire the string associated with the Index from smbios structure and return it.
@@ -1085,6 +1271,7 @@ PlatformBootManagerAfterConsole (
   gST->ConOut->EnableCursor (gST->ConOut, FALSE);
   gST->ConOut->ClearScreen (gST->ConOut);
 
+  WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
 
   BootLogoEnableLogo ();

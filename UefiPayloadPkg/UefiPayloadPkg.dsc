@@ -98,6 +98,7 @@
   DEFINE IOMMU_ENABLE                   = FALSE
   DEFINE SETUP_PASSWORD_ENABLE          = FALSE
   DEFINE SD_MMC_TIMEOUT                 = 1000000
+  DEFINE BATTERY_CHECK                  = FALSE
 
   #
   # Network definition
@@ -366,6 +367,11 @@
 !if $(TPM_ENABLE) == TRUE
   Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibTcg/Tpm12DeviceLibTcg.inf
   Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibTcg2/Tpm2DeviceLibTcg2.inf
+!endif
+!if $(BATTERY_CHECK)
+  LaptopBatteryLib|UefiPayloadPkg/Library/LaptopBatteryLib/LaptopBatteryLib.inf
+!else
+  LaptopBatteryLib|UefiPayloadPkg/Library/LaptopBatteryLib/LaptopBatteryLibNull.inf
 !endif
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
