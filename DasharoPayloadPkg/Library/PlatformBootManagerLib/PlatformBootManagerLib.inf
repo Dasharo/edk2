@@ -54,6 +54,7 @@
   PlatformHookLib
   Tcg2PhysicalPresenceLib
   CustomizedDisplayLib
+  LaptopBatteryLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
