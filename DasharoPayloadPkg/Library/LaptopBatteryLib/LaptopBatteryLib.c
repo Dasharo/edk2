@@ -64,7 +64,7 @@ EcRecvDataTimeout (
   UINTN            TimeoutUs
   )
 {
-  RETURN_STATUS    Status;
+  EFI_STATUS       Status;
 
   if (!Data)
     return RETURN_INVALID_PARAMETER;
@@ -85,7 +85,7 @@ EcSendDataTimeout (
   UINTN            TimeoutUs
   )
 {
-  RETURN_STATUS    Status;
+  EFI_STATUS       Status;
 
   Status = EcReadySend(TimeoutUs);
 
@@ -103,7 +103,7 @@ EcSendCmdTimeout (
   UINTN            TimeoutUs
   )
 {
-  RETURN_STATUS    Status;
+  EFI_STATUS       Status;
 
   if (!Cmd)
     return RETURN_INVALID_PARAMETER;
@@ -148,17 +148,21 @@ EcReadReg (
   UINT8           *Data
   )
 {
-  RETURN_STATUS   Status;
+  EFI_STATUS   Status;
 
   Status = EcSendCmd(RD_EC);
 
-  if (Status != RETURN_SUCCESS)
-      return Status;
+  if (Status != RETURN_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Failed to send read EC command for reg %02x: %r\n", Reg, Status));
+    return Status;
+  }
 
   Status = EcSendData(Reg);
 
-  if (Status != RETURN_SUCCESS)
-      return Status;
+  if (Status != RETURN_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Failed to send read EC address %02x: %r\n", Reg, Status));
+    return Status;
+  }
 
 	return EcRecvData(Data);
 }
@@ -207,7 +211,7 @@ LaptopGetAcState (
   BOOLEAN           *AcState
   )
 {
-  RETURN_STATUS     Status;
+  EFI_STATUS        Status;
   UINT8             ChargerState;
 
   Status = EcReadReg(CHARGER_STATE_REG, &ChargerState);
@@ -218,6 +222,8 @@ LaptopGetAcState (
   }
 
   *AcState = (ChargerState & AC_STATE) ? TRUE : FALSE;
+
+  DEBUG ((DEBUG_INFO, "AC adapter %aconnected\n", *AcState ? "" : "dis"));
 
   return RETURN_SUCCESS;
 }
@@ -239,7 +245,7 @@ LaptopGetBatState (
   BOOLEAN           *BatState
   )
 {
-  RETURN_STATUS     Status;
+  EFI_STATUS        Status;
   UINT8             ChargerState;
 
   Status = EcReadReg(CHARGER_STATE_REG, &ChargerState);
@@ -250,6 +256,8 @@ LaptopGetBatState (
   }
 
   *BatState = (ChargerState & BAT_STATE) ? TRUE : FALSE;
+
+  DEBUG ((DEBUG_INFO, "Battery %aconnected\n", *BatState ? "" : "dis"));
 
   return RETURN_SUCCESS;
 }
@@ -271,7 +279,7 @@ LaptopGetBatteryCapacity (
   UINT32             *BatteryCapacity
   )
 {
-  RETURN_STATUS     Status;
+  EFI_STATUS        Status;
   UINT32            LastFullChargeCap;
   UINT32            RemainingCap;
 
@@ -293,6 +301,8 @@ LaptopGetBatteryCapacity (
 
   if (*BatteryCapacity > 100)
     DEBUG ((DEBUG_WARN, "Battery capacity over 100%%: %d%%\n", *BatteryCapacity));
+  else
+    DEBUG ((DEBUG_INFO, "Battery capacity: %d%%\n", *BatteryCapacity));
 
   return RETURN_SUCCESS;
 }
