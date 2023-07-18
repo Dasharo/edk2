@@ -16,6 +16,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/PciIo.h>
 #include <Protocol/SmmCommunication.h>
 #include <Protocol/BlockIo.h>
+#include <Protocol/BlockIo2.h>
 #include <Protocol/LoadedImage.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/DevicePathToText.h>
