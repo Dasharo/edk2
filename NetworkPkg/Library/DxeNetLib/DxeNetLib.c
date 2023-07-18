@@ -2641,6 +2641,13 @@ NetLibDetectMediaWaitTimeout (
                   &DataSize
                   );
   if (!EFI_ERROR (Status)) {
+    if (DataSize == 0) {
+      if (MediaInfo != NULL) {
+        FreePool (MediaInfo);
+      }
+      return EFI_NOT_FOUND;
+    }
+
     *MediaState = MediaInfo->MediaState;
     FreePool (MediaInfo);
     if ((*MediaState != EFI_NOT_READY) || (Timeout < MEDIA_STATE_DETECT_TIME_INTERVAL)) {
@@ -2704,6 +2711,12 @@ NetLibDetectMediaWaitTimeout (
                                &DataSize
                                );
         if (!EFI_ERROR (Status)) {
+          if (DataSize == 0) {
+            if (MediaInfo != NULL) {
+              FreePool (MediaInfo);
+            }
+            return EFI_NOT_FOUND;
+          }
           *MediaState = MediaInfo->MediaState;
           FreePool (MediaInfo);
         } else {

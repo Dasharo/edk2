@@ -830,8 +830,12 @@ WifiMgrGetLinkState (
 
   gBS->RestoreTPL (OldTpl);
 
-  CopyMem (LinkState, UndiState, sizeof (EFI_ADAPTER_INFO_MEDIA_STATE));
-  FreePool (UndiState);
+  if (DataSize != 0) {
+    CopyMem (LinkState, UndiState, sizeof (EFI_ADAPTER_INFO_MEDIA_STATE));
+    FreePool (UndiState);
+  } else {
+    return EFI_NOT_FOUND;
+  }
   return EFI_SUCCESS;
 }
 
