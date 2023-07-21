@@ -185,6 +185,7 @@ formset
 
     suppressif ideqval FeaturesData.WatchdogState == 0;
       checkbox varid   = FeaturesData.WatchdogConfig.WatchdogEnable,
+               questionid = 0x1102,
                prompt  = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
                help    = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
                flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
@@ -192,7 +193,7 @@ formset
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
         numeric varid   = FeaturesData.WatchdogConfig.WatchdogTimeout,
-                questionid = 0x1102,
+                questionid = 0x1103,
                 prompt  = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_PROMPT),
                 help    = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_HELP),
                 flags   = RESET_REQUIRED | INTERACTIVE,
