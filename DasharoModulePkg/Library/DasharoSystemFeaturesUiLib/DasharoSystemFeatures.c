@@ -925,6 +925,14 @@ DasharoSystemFeaturesCallback (
           Value->b = PcdGetBool (PcdDefaultNetworkBootEnable);
           break;
         }
+      case 0x1102:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u16 = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
+          break;
+        }
       default:
         Status = EFI_UNSUPPORTED;
         break;
