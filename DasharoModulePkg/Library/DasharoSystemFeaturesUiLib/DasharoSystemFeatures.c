@@ -152,42 +152,9 @@ GetDefaultWatchdogConfig (
   IN OUT  DASHARO_FEATURES_DATA       *FeaturesData
   )
 {
-  EFI_STATUS                                      Status;
-  EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE       *FadtTable;
-  UINTN                                           AcpiBase;
-  UINT32                                          WatchdogCtl;
-
-  Status = LocateAcpiTableBySignature (
-              EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE,
-              (EFI_ACPI_DESCRIPTION_HEADER **) &FadtTable
-              );
-  if (EFI_ERROR (Status) || (FadtTable == NULL)) {
-    FeaturesData->WatchdogState = FALSE;
-    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
-    return;
-  }
-
-  /* On Intel platforms PM1A Event Block is the ACPI Base */
-  AcpiBase = FadtTable->Pm1aEvtBlk;
-
-  /* ACPI size is 0x100 bytes, check for invalid base */
-  if (AcpiBase > 0xFF00) {
-    FeaturesData->WatchdogState = FALSE;
-    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
-    return;
-  }
-
-  WatchdogCtl = IoRead32(AcpiBase + 0x54);
-
-  if (WatchdogCtl & PCH_OC_WDT_CTL_EN) {
-    FeaturesData->WatchdogState = TRUE;
-    FeaturesData->WatchdogConfig.WatchdogEnable = TRUE;
-    /* OC WDT timeout is 0 based (0 means 1 second) so increment to match the VFR */
-    FeaturesData->WatchdogConfig.WatchdogTimeout = (WatchdogCtl & PCH_OC_WDT_CTL_TOV_MASK) + 1;
-  } else {
-    FeaturesData->WatchdogState = FALSE;
-    FeaturesData->WatchdogConfig.WatchdogEnable = FALSE;
-  }
+    FeaturesData->WatchdogState = PcdGetBool (PcdShowOcWdtOptions);
+    FeaturesData->WatchdogConfig.WatchdogEnable = PcdGetBool (PcdShowOcWdtOptions);
+    FeaturesData->WatchdogConfig.WatchdogTimeout = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
 }
 
 
@@ -926,6 +893,14 @@ DasharoSystemFeaturesCallback (
           break;
         }
       case 0x1102:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->b = PcdGetBool (PcdShowOcWdtOptions);
+          break;
+        }
+      case 0x1103:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
