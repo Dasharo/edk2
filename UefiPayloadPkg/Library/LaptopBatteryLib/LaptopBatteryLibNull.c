@@ -43,7 +43,7 @@ RETURN_STATUS
 EFIAPI
 LaptopGetBatState (
   BOOLEAN           *BatState
-  );
+  )
 {
   return RETURN_UNSUPPORTED;
 }
