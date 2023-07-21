@@ -192,14 +192,14 @@ formset
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
         numeric varid   = FeaturesData.WatchdogConfig.WatchdogTimeout,
+                questionid = 0x1102,
                 prompt  = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_PROMPT),
                 help    = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_HELP),
-                flags   = RESET_REQUIRED,
+                flags   = RESET_REQUIRED | INTERACTIVE,
                 minimum = 300,
                 maximum = 1024,
                 step    = 0,        // Stepping of 0 equates to a manual entering
                                     // of a value, otherwise it will be adjusted by "+"/"-"
-                default = 300,
         endnumeric;
       endif;
     endif;
