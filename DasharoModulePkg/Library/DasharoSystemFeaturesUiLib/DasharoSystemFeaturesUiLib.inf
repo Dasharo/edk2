@@ -69,4 +69,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault

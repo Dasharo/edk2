@@ -49,7 +49,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000009
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|FALSE|BOOLEAN|0x0000000A
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|FALSE|BOOLEAN|0x0000000B
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault|500|UINT16|0x0000000C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions|FALSE|BOOLEAN|0x0000000C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault|500|UINT16|0x0000000D
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
