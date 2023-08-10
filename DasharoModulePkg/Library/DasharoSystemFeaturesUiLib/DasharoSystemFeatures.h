@@ -29,6 +29,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #include <Library/HiiLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/UefiHiiServicesLib.h>
+#include <Library/UefiLib.h>
 
 #include "DasharoSystemFeaturesHii.h"
 
