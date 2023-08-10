@@ -32,6 +32,9 @@
 #string STR_DASHARO_POWER_CONFIGURATION_TITLE   #language en-US  "Power Management Options"
 #string STR_DASHARO_POWER_CONFIGURATION_HELP    #language en-US  "Power management-related options"
 
+#string STR_FUM_PROMPT   #language en-US  "> Enter Firmware Update Mode"
+#string STR_FUM_HELP     #language en-US  "Disables all firmware protections for the duration of next boot."
+
 #string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
 #string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
 
