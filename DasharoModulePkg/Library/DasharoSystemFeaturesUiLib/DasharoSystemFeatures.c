@@ -28,6 +28,7 @@ STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
 STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
 STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
+STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -876,7 +877,10 @@ DasharoSystemFeaturesCallback (
   )
 {
   EFI_STATUS                                 Status;
+  EFI_INPUT_KEY                              Key;
+  BOOLEAN                                    Enable;
 
+  Enable = TRUE;
   Status = EFI_SUCCESS;
 
   switch (Action) {
@@ -914,6 +918,42 @@ DasharoSystemFeaturesCallback (
       }
       break;
     }
+  case EFI_BROWSER_ACTION_CHANGED:
+    {
+      if (QuestionId == 0x1330) {
+        do {
+          CreatePopUp (
+            EFI_BLACK | EFI_BACKGROUND_RED,
+            &Key,
+            L"",
+            L"You are about to enable Firmware Update Mode.",
+            L"This will turn off all flash protection mechanisms",
+            L"for the duration of the next boot.",
+            L"",
+            L"Press ENTER to continue and reboot or ESC to cancel...",
+            L"",
+            NULL
+            );
+        } while ((Key.ScanCode != SCAN_ESC) && (Key.UnicodeChar != CHAR_CARRIAGE_RETURN));
+
+        if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+          Status = gRT->SetVariable (
+              mFirmwareUpdateModeEfiVar,
+              &gDasharoSystemFeaturesGuid,
+              EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+              sizeof (Enable),
+              &Enable
+              );
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
+          gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+        }
+      } else {
+        Status = EFI_UNSUPPORTED;
+      }
+    }
+    break;
   default:
     Status = EFI_UNSUPPORTED;
     break;

@@ -107,7 +107,17 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    text
+      help  = STRING_TOKEN(STR_FUM_HELP),
+      text  = STRING_TOKEN(STR_FUM_PROMPT),
+      flags = INTERACTIVE,
+      key   = 0x1330;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+
   endform;
 
   form formid = DASHARO_NETWORK_OPTIONS_FORM_ID,
