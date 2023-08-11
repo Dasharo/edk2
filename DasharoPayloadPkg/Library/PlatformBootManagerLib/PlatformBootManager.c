@@ -1062,6 +1062,143 @@ WarnIfBatteryLow (
   DrainInput ();
 }
 
+STATIC
+VOID
+WarnIfFirmwareUpdateMode (
+  VOID
+)
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      TimerEvent;
+  EFI_EVENT      Events[2];
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  EFI_TIME       Time;
+  CHAR16         RandomDigit;
+  CHAR16         DelayLine[81];
+  CHAR16         PressKeyLine[81];
+  BOOLEAN        CursorVisible;
+  UINTN          CurrentAttribute;
+  UINTN          SecondsLeft;
+  UINTN          VarSize;
+  BOOLEAN        FUMEnabled;
+
+  VarSize = sizeof (FUMEnabled);
+
+  Status = gRT->GetVariable (
+      L"FirmwareUpdateMode",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &FUMEnabled
+      );
+
+  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled) || !FUMEnabled) {
+    return;
+  }
+
+  //
+  // Remove variable to disable FUM on next boot
+  //
+  Status = gRT->SetVariable (
+      L"FirmwareUpdateMode",
+      &gDasharoSystemFeaturesGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      0,
+      NULL
+      );
+
+  Status = gBS->CreateEvent (
+      EVT_TIMER,
+      TPL_CALLBACK,
+      NULL,
+      NULL,
+      &TimerEvent
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  Status = gRT->GetTime (&Time, NULL);
+  //
+  // Don't check status, even if the call failed we still have "random" data
+  // from stack where Time is located. It is better than nothing, and we don't
+  // need more.
+  //
+  RandomDigit = L'0' + (Time.Second % 10);
+
+  UnicodeSPrint (
+      PressKeyLine,
+      sizeof (PressKeyLine),
+      L"Press %c to continue.",
+      RandomDigit
+      );
+
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
+
+  DrainInput ();
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
+
+  Events[0] = gST->ConIn->WaitForKey;
+  Events[1] = TimerEvent;
+
+  SecondsLeft = 30;
+  while (SecondsLeft > 0) {
+    UnicodeSPrint (
+        DelayLine,
+        sizeof (DelayLine),
+        L"automatically in %d second%a.)",
+        SecondsLeft,
+        SecondsLeft == 1 ? "" : "s"
+        );
+
+    CreateMultiStringPopUp (
+        78,
+        11,
+        L"!!! WARNING !!!",
+        L"",
+        L"This message is displayed because the platform has booted in Firmware",
+        L"Update Mode. All firmware write protections are disabled in this mode.",
+        L"If you intend to update the firmware, press the key listed below to",
+        L"proceed; otherwise, press any other key or wait for the timeout.",
+        L"",
+        PressKeyLine,
+        L"",
+        L"(The platform will automatically reboot and disable Firmware Update Mode",
+        DelayLine
+        );
+
+    Status = gBS->WaitForEvent (2, Events, &Index);
+    ASSERT_EFI_ERROR (Status);
+
+    if (Index == 0) {
+      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      ASSERT_EFI_ERROR (Status);
+
+      if (Key.UnicodeChar == RandomDigit) {
+        break;
+      } else {
+        gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+      }
+    } else {
+      SecondsLeft--;
+    }
+  }
+
+  if (SecondsLeft == 0) {
+    gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+  }
+
+  Status = gBS->CloseEvent (TimerEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
+}
 /**
 
   Acquire the string associated with the Index from smbios structure and return it.
@@ -1270,6 +1407,7 @@ PlatformBootManagerAfterConsole (
 
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
+  WarnIfFirmwareUpdateMode ();
 
   BootLogoEnableLogo ();
 
