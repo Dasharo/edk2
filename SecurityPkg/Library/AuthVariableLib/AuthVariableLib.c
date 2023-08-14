@@ -230,10 +230,18 @@ AuthVariableLibInitialize (
     }
   }
 
+  Status = AuthServiceInternalFindVariable (L"FirmwareUpdateMode", &gDasharoSystemFeaturesGuid,
+                                            (VOID **) &Data, &DataSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", L"FirmwareUpdateMode"));
+  } else {
+    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", L"FirmwareUpdateMode"));
+  }
+
   //
   // Create "SecureBoot" variable with BS+RT attribute set.
   //
-  if ((SecureBootEnable == SECURE_BOOT_ENABLE) && (mPlatformMode == USER_MODE)) {
+  if ((SecureBootEnable == SECURE_BOOT_ENABLE) && (mPlatformMode == USER_MODE) && EFI_ERROR (Status)) {
     SecureBootMode = SECURE_BOOT_MODE_ENABLE;
   } else {
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
