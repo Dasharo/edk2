@@ -71,6 +71,7 @@ typedef struct {
   UINT8              PowerFailureState;
   BOOLEAN            ResizeableBarsEnabled;
   UINT8              OptionRomExecution;
+  BOOLEAN            EnableCamera;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
