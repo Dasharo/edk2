@@ -32,6 +32,7 @@ STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
 STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
 STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
 STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
+STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -45,6 +46,7 @@ STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
 STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
 STATIC UINT8     mResizeableBarsEnabledDefault = FALSE;
+STATIC BOOLEAN   mEnableCameraDefault = TRUE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -572,6 +574,27 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera);
+  Status = gRT->GetVariable (
+    mEnableCameraEfiVar,
+    &gDasharoSystemFeaturesGuid,
+    NULL,
+    &BufferSize,
+    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera = mEnableCameraDefault;
+    Status = gRT->SetVariable (
+        mEnableCameraEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -954,6 +977,19 @@ DasharoSystemFeaturesRouteConfig (
         );
     if (EFI_ERROR (Status)) {
       return Status;
+    }
+  }
+
+  if(Private->DasharoFeaturesData.EnableCamera != DasharoFeaturesData.EnableCamera) {
+    Status = gRT->SetVariable (
+        mEnableCameraEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.EnableCamera),
+        &DasharoFeaturesData.EnableCamera
+        );
+    if (EFI_ERROR (Status)) {
+        return Status;
     }
   }
 
