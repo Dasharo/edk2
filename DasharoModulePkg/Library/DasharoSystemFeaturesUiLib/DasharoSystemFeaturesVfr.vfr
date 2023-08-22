@@ -111,6 +111,12 @@ formset
       endcheckbox;
     endif;
 
+    checkbox varid  = FeaturesData.EnableCamera,
+             prompt = STRING_TOKEN(STR_ENABLE_CAMERA_PROMPT),
+             help   = STRING_TOKEN(STR_ENABLE_CAMERA_HELP),
+             flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+    endcheckbox;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
