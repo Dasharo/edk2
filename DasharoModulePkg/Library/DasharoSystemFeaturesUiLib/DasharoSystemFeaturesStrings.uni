@@ -123,3 +123,5 @@
 #string STR_ENABLE_CAMERA_PROMPT    #language en-US "Enable Camera"
 #string STR_ENABLE_CAMERA_HELP    #language en-US "If this option is disabled, the power to the USB webcam is disconnected completely"
 
+#string STR_WIFI_BT_ENABLE_PROMPT    #language en-US "Enable Wi-Fi + BT radios"
+#string STR_WIFI_BT_ENABLE_HELP      #language en-US "When not enabled, WiFi + Bluetooth card slot is disabled."
