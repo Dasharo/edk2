@@ -72,6 +72,7 @@ typedef struct {
   BOOLEAN            ResizeableBarsEnabled;
   UINT8              OptionRomExecution;
   BOOLEAN            EnableCamera;
+  BOOLEAN            EnableWifiBt;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
