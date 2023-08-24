@@ -33,6 +33,7 @@ STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
 STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
 STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
 STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
+STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -47,6 +48,7 @@ STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
 STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
 STATIC UINT8     mResizeableBarsEnabledDefault = FALSE;
 STATIC BOOLEAN   mEnableCameraDefault = TRUE;
+STATIC BOOLEAN   mEnableWifiBtDefault = TRUE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -595,6 +597,27 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt);
+  Status = gRT->GetVariable (
+      mEnableWifiBtEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt = mEnableWifiBtDefault;
+    Status = gRT->SetVariable (
+        mEnableWifiBtEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -948,6 +971,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.PowerFailureState),
         &DasharoFeaturesData.PowerFailureState
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.EnableWifiBt != DasharoFeaturesData.EnableWifiBt) {
+    Status = gRT->SetVariable (
+        mEnableWifiBtEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.EnableWifiBt),
+        &DasharoFeaturesData.EnableWifiBt
         );
     if (EFI_ERROR (Status)) {
       return Status;
