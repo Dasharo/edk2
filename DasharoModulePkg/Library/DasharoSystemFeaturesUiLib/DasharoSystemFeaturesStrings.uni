@@ -97,3 +97,10 @@
 
 #string STR_SLEEP_TYPE_S0IX   #language en-US "Suspend to Idle (S0ix)"
 #string STR_SLEEP_TYPE_S3     #language en-US "Suspend to RAM (S3)"
+
+#string STR_POWER_FAILURE_STATE_PROMPT  #language en-US "Power state after power failure"
+#string STR_POWER_FAILURE_STATE_HELP    #language en-US "Selects state the system gets into when power supply is restored after power failure"
+
+#string STR_POWER_FAILURE_STATE_OFF     #language en-US "Powered Off"
+#string STR_POWER_FAILURE_STATE_ON      #language en-US "Powered On"
+#string STR_POWER_FAILURE_STATE_KEEP    #language en-US "The state at the moment of power failure"
