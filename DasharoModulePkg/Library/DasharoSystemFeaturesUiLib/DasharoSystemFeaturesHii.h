@@ -62,6 +62,7 @@ typedef struct {
   IOMMU_CONFIG       IommuConfig;
   BOOLEAN            BootManagerEnabled;
   UINT8              SleepType;
+  UINT8              PowerFailureState;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
@@ -71,10 +72,16 @@ typedef struct {
 #define SLEEP_TYPE_S0IX  0
 #define SLEEP_TYPE_S3    1
 
+#define POWER_FAILURE_STATE_OFF     0
+#define POWER_FAILURE_STATE_ON      1
+#define POWER_FAILURE_STATE_KEEP    2
+#define POWER_FAILURE_STATE_HIDDEN  0xff
+
 #define LOCK_BIOS_QUESTION_ID              0x8000
 #define NETWORK_BOOT_QUESTION_ID           0x8001
 #define USB_STACK_QUESTION_ID              0x8002
 #define USB_MASS_STORAGE_QUESTION_ID       0x8003
+#define POWER_FAILURE_STATE_QUESTION_ID    0x8004
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 
