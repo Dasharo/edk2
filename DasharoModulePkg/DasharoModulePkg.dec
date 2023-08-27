@@ -51,6 +51,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|FALSE|BOOLEAN|0x0000000B
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions|FALSE|BOOLEAN|0x0000000C
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault|500|UINT16|0x0000000D
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState|0xff|UINT8|0x0000000E
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.

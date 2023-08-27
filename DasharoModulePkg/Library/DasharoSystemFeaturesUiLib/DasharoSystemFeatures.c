@@ -29,6 +29,7 @@ STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
 STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
 STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
 STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
+STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -499,6 +500,29 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState);
+  Status = gRT->GetVariable (
+      mPowerFailureStateEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState =
+        FixedPcdGet8 (PcdDefaultPowerFailureState);
+
+    Status = gRT->SetVariable (
+        mPowerFailureStateEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -845,6 +869,19 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
+  if (Private->DasharoFeaturesData.PowerFailureState != DasharoFeaturesData.PowerFailureState) {
+    Status = gRT->SetVariable (
+        mPowerFailureStateEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.PowerFailureState),
+        &DasharoFeaturesData.PowerFailureState
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
 }
@@ -910,6 +947,14 @@ DasharoSystemFeaturesCallback (
             return EFI_INVALID_PARAMETER;
 
           Value->u16 = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
+          break;
+        }
+      case 0x1104:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u8 = FixedPcdGet8 (PcdDefaultPowerFailureState);
           break;
         }
       default:
