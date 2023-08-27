@@ -46,6 +46,7 @@ typedef struct {
   BOOLEAN            ShowChipsetMenu;
   BOOLEAN            ShowPowerMenu;
   BOOLEAN            PowerMenuShowFanCurve;
+  BOOLEAN            PowerMenuShowSleepType;
   BOOLEAN            DasharoEnterprise;
   BOOLEAN            SecurityMenuShowIommu;
   // Feature data

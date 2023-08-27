@@ -236,14 +236,16 @@ formset
          endoneof;
     endif;
 
-    oneof varid = FeaturesData.SleepType,
-             prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
-             help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
-             flags  = RESET_REQUIRED,
+    suppressif ideqval FeaturesData.PowerMenuShowSleepType == 0;
+         oneof varid = FeaturesData.SleepType,
+                  prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
+                  help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
+                  flags  = RESET_REQUIRED,
 
-             option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
-             option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
-    endoneof;
+                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
+                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
+         endoneof;
+    endif;
 
     suppressif ideqval FeaturesData.PowerFailureState == POWER_FAILURE_STATE_HIDDEN;
          oneof varid = FeaturesData.PowerFailureState,
