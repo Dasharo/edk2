@@ -45,6 +45,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/DeferredImageLoad.h>
 #include <Protocol/PlatformBootManager.h>
 #include <Protocol/VariablePolicy.h>
+#include <Protocol/PartitionInfo.h>
 
 #include <Guid/MemoryTypeInformation.h>
 #include <Guid/FileInfo.h>
