@@ -589,7 +589,6 @@
 
   # Noexec settings for DXE.
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetNxForStack|FALSE
-  gEfiMdeModulePkgTokenSpaceGuid.PcdPropertiesTableEnable|FALSE
 
   # UefiCpuPkg PCDs related to initial AP bringup and general AP management.
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|64
