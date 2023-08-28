@@ -9,6 +9,8 @@ SPDX-License-Identifier: BSD-2-Clause
 #ifndef _DASHARO_SYSTEM_FEATURES_HII_H_
 #define _DASHARO_SYSTEM_FEATURES_HII_H_
 
+#include <DasharoOptions.h>
+
 #define DASHARO_SYSTEM_FEATURES_GUID  \
   { 0xd15b327e, 0xff2d, 0x4fc1, {0xab, 0xf6, 0xc1, 0x2b, 0xd0, 0x8c, 0x13, 0x59} }
 
@@ -68,11 +70,16 @@ typedef struct {
   UINT8              SleepType;
   UINT8              PowerFailureState;
   BOOLEAN            ResizeableBarsEnabled;
+  UINT8              OptionRomExecution;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
 #define ME_MODE_DISABLE_HECI  1
 #define ME_MODE_DISABLE_HAP   2
+
+#define OPTION_ROM_POLICY_DISABLE_ALL  DASHARO_OPTION_ROM_POLICY_DISABLE_ALL
+#define OPTION_ROM_POLICY_ENABLE_ALL   DASHARO_OPTION_ROM_POLICY_ENABLE_ALL
+#define OPTION_ROM_POLICY_VGA_ONLY     DASHARO_OPTION_ROM_POLICY_VGA_ONLY
 
 #define SLEEP_TYPE_S0IX  0
 #define SLEEP_TYPE_S3    1
@@ -87,6 +94,7 @@ typedef struct {
 #define WATCHDOG_TIMEOUT_QUESTION_ID      0x8002
 #define FIRMWARE_UPDATE_MODE_QUESTION_ID  0x8003
 #define POWER_FAILURE_STATE_QUESTION_ID   0x8004
+#define OPTION_ROM_STATE_QUESTION_ID      0x8005
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 

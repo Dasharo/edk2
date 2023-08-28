@@ -32,6 +32,7 @@
   DasharoModulePkg/DasharoModulePkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   DevicePathLib
@@ -75,3 +76,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
+  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
