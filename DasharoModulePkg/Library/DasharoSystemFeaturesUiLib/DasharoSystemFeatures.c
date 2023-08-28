@@ -31,6 +31,7 @@ STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
 STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
 STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
 STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
+STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -160,7 +161,6 @@ GetDefaultWatchdogConfig (
     FeaturesData->WatchdogConfig.WatchdogEnable = PcdGetBool (PcdShowOcWdtOptions);
     FeaturesData->WatchdogConfig.WatchdogTimeout = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
 }
-
 
 /**
   Install Dasharo System Features Menu driver.
@@ -344,6 +344,29 @@ DasharoSystemFeaturesUiLibConstructor (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution);
+  Status = gRT->GetVariable (
+      mOptionRomPolicyEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution = FixedPcdGetBool (PcdLoadOptionRoms)
+        ? OPTION_ROM_POLICY_ENABLE_ALL
+        : OPTION_ROM_POLICY_DISABLE_ALL;
+    Status = gRT->SetVariable (
+        mOptionRomPolicyEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -921,6 +944,19 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
+  if (Private->DasharoFeaturesData.OptionRomExecution != DasharoFeaturesData.OptionRomExecution) {
+    Status = gRT->SetVariable (
+        mOptionRomPolicyEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.OptionRomExecution),
+        &DasharoFeaturesData.OptionRomExecution
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
 }
@@ -994,6 +1030,15 @@ DasharoSystemFeaturesCallback (
             return EFI_INVALID_PARAMETER;
 
           Value->u8 = FixedPcdGet8 (PcdDefaultPowerFailureState);
+          break;
+        }
+      case OPTION_ROM_STATE_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u8 = FixedPcdGetBool (PcdLoadOptionRoms) ? OPTION_ROM_POLICY_ENABLE_ALL
+                                                          : OPTION_ROM_POLICY_DISABLE_ALL;
           break;
         }
       default:
