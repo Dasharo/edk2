@@ -19,6 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #define DASHARO_INTEL_ME_OPTIONS_FORM_ID       0x1004
 #define DASHARO_CHIPSET_CONFIGURATION_FORM_ID  0x1005
 #define DASHARO_POWER_CONFIGURATION_FORM_ID    0x1006
+#define DASHARO_PCI_CONFIGURATION_FORM_ID      0x1007
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
@@ -45,6 +46,7 @@ typedef struct {
   BOOLEAN            ShowNetworkMenu;
   BOOLEAN            ShowChipsetMenu;
   BOOLEAN            ShowPowerMenu;
+  BOOLEAN            ShowPciMenu;
   BOOLEAN            PowerMenuShowFanCurve;
   BOOLEAN            PowerMenuShowSleepType;
   BOOLEAN            DasharoEnterprise;
