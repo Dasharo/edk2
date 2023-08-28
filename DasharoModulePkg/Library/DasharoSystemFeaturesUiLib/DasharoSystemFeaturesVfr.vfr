@@ -274,6 +274,8 @@ formset
   form formid = DASHARO_PCI_CONFIGURATION_FORM_ID,
        title  = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE);
 
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
     suppressif ideqval FeaturesData.PciMenuShowResizeableBars == 0;
          checkbox varid  = FeaturesData.ResizeableBarsEnabled,
                   prompt = STRING_TOKEN(STR_RESIZEABLE_BARS_PROMPT),
@@ -282,5 +284,20 @@ formset
          endcheckbox;
     endif;
 
+    oneof varid  = FeaturesData.OptionRomExecution,
+             questionid = OPTION_ROM_STATE_QUESTION_ID,
+             prompt = STRING_TOKEN(STR_OPTION_ROM_PROMPT),
+             help   = STRING_TOKEN(STR_OPTION_ROM_HELP),
+             flags  = INTERACTIVE | RESET_REQUIRED,
+
+             option text = STRING_TOKEN(STR_OPTION_ROM_DISABLE), value = OPTION_ROM_POLICY_DISABLE_ALL, flags = 0;
+             option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE), value = OPTION_ROM_POLICY_ENABLE_ALL, flags = 0;
+             option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE_VGA), value = OPTION_ROM_POLICY_VGA_ONLY, flags = 0;
+    endoneof;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
   endform;
+
 endformset;
