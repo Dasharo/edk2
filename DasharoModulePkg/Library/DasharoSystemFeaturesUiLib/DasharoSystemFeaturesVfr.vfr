@@ -273,6 +273,14 @@ formset
 
   form formid = DASHARO_PCI_CONFIGURATION_FORM_ID,
        title  = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE);
-        
+
+    suppressif ideqval FeaturesData.PciMenuShowResizeableBars == 0;
+         checkbox varid  = FeaturesData.ResizeableBarsEnabled,
+                  prompt = STRING_TOKEN(STR_RESIZEABLE_BARS_PROMPT),
+                  help   = STRING_TOKEN(STR_RESIZEABLE_BARS_HELP),
+                  flags  = RESET_REQUIRED,
+         endcheckbox;
+    endif;
+
   endform;
 endformset;
