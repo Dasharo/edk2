@@ -30,6 +30,7 @@ STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
 STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
 STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
 STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
+STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -42,6 +43,7 @@ STATIC UINT8     mIommuEnableDefault = FALSE;
 STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
 STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
+STATIC UINT8     mResizeableBarsEnabledDefault = FALSE;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -217,6 +219,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowSleepType = PcdGetBool (PcdPowerMenuShowSleepType);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowIommu = PcdGetBool (PcdShowIommuOptions);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PciMenuShowResizeableBars = PcdGetBool (PcdPciMenuShowResizeableBars);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
@@ -521,6 +524,27 @@ DasharoSystemFeaturesUiLibConstructor (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled);
+  Status = gRT->GetVariable (
+      mResizeableBarsEnabledEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled = mResizeableBarsEnabledDefault;
+    Status = gRT->SetVariable (
+        mResizeableBarsEnabledEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -878,6 +902,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.PowerFailureState),
         &DasharoFeaturesData.PowerFailureState
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.ResizeableBarsEnabled != DasharoFeaturesData.ResizeableBarsEnabled) {
+    Status = gRT->SetVariable (
+        mResizeableBarsEnabledEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.ResizeableBarsEnabled),
+        &DasharoFeaturesData.ResizeableBarsEnabled
         );
     if (EFI_ERROR (Status)) {
       return Status;

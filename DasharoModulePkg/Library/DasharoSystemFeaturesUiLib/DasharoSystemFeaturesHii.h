@@ -51,6 +51,7 @@ typedef struct {
   BOOLEAN            PowerMenuShowSleepType;
   BOOLEAN            DasharoEnterprise;
   BOOLEAN            SecurityMenuShowIommu;
+  BOOLEAN            PciMenuShowResizeableBars;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -66,6 +67,7 @@ typedef struct {
   BOOLEAN            BootManagerEnabled;
   UINT8              SleepType;
   UINT8              PowerFailureState;
+  BOOLEAN            ResizeableBarsEnabled;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
