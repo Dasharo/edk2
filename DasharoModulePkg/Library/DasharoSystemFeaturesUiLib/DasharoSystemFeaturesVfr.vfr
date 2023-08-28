@@ -58,6 +58,12 @@ formset
               help   = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_HELP);
     endif;
 
+    suppressif ideqval FeaturesData.ShowPciMenu == 0;
+         goto DASHARO_PCI_CONFIGURATION_FORM_ID,
+              prompt = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE),
+              help   = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_HELP);
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -263,5 +269,10 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_PCI_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE);
+        
   endform;
 endformset;

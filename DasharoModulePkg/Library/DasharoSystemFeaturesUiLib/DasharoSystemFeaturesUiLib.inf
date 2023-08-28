@@ -65,6 +65,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
