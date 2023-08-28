@@ -212,6 +212,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowNetworkMenu = PcdGetBool (PcdShowNetworkMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowChipsetMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu = PcdGetBool (PcdShowPowerMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPciMenu = PcdGetBool (PcdShowPciMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowFanCurve = PcdGetBool (PcdPowerMenuShowFanCurve);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowSleepType = PcdGetBool (PcdPowerMenuShowSleepType);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
