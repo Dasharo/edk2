@@ -2436,6 +2436,241 @@ BdsLibGetBootableHandle (
   return ReturnHandle;
 }
 
+typedef struct {
+  CHAR16* FileName;
+  CHAR16* BootOptionFmt;
+} PRE_INSTALLED_BOOT_OPT;
+
+PRE_INSTALLED_BOOT_OPT PreInstalledBootOpts[] = {
+  { L"\\EFI\\Microsoft\\Boot\\bootmgfw.efi", L"Windows Boot Manager (on %s)" },
+  { L"\\EFI\\Suse\\elilo.efi",               L"Suse Boot Manager (on %s)" },
+  { L"\\EFI\\Redhat\\elilo.efi",             L"RedHat Boot Manager (on %s)" },
+};
+
+PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsLnx[] = {
+  { L"\\EFI\\ubuntu\\shimx64.efi",           L"Ubuntu (on %s)" },
+  { L"\\EFI\\ubuntu\\grubx64.efi",           L"Ubuntu (on %s)" },
+  { L"\\EFI\\redhat\\shimx64.efi",           L"RedHat (on %s)" },
+  { L"\\EFI\\redhat\\grubx64.efi",           L"RedHat (on %s)" },
+  { L"\\EFI\\fedora\\shimx64.efi",           L"Fedora (on %s)" },
+  { L"\\EFI\\fedora\\grubx64.efi",           L"Fedora (on %s)" },
+  { L"\\EFI\\centos\\shimx64.efi",           L"CentOS (on %s)" },
+  { L"\\EFI\\centos\\grubx64.efi",           L"CentOS (on %s)" },
+  { L"\\EFI\\opensuse\\shimx64.efi",         L"OpenSuse (on %s)" },
+  { L"\\EFI\\opensuse\\grubx64.efi",         L"OpenSuse (on %s)" },
+  { L"\\EFI\\debian\\shimx64.efi",           L"Debian (on %s)" },
+  { L"\\EFI\\debian\\grubx64.efi",           L"Debian (on %s)" },
+};
+
+PRE_INSTALLED_BOOT_OPT DtsBootOpt = {
+  L"\\EFI\\DTS\\grubx64.efi",           L"Ubuntu (on %s)" 
+};
+
+EFI_BOOT_MANAGER_LOAD_OPTION *
+CreatePreInstalledBootOption (
+  IN OUT EFI_BOOT_MANAGER_LOAD_OPTION   *BootOptions,
+  IN OUT UINTN                          *BootOptionCount,
+  IN EFI_HANDLE                         Handle,
+  IN PRE_INSTALLED_BOOT_OPT             *BootOpt
+)
+{
+  EFI_STATUS                            Status;
+  UINTN                                 OptNameSize;
+  CHAR16                                *Description;
+  CHAR16                                *FullOptionName;
+  EFI_DEVICE_PATH_PROTOCOL              *OptDevicePath;
+
+  Description = BmGetBootDescription (Handle);
+  BootOptions = ReallocatePool (
+                  sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
+                  sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
+                  BootOptions
+                  );
+  ASSERT (BootOptions != NULL);
+
+  if (Description != NULL)
+    OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(Description);
+  else
+    OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(L"Unknown");
+
+  FullOptionName = AllocatePool(OptNameSize * sizeof(CHAR16));
+  ASSERT (FullOptionName != NULL);
+
+  UnicodeSPrint(
+    FullOptionName,
+    OptNameSize * sizeof(CHAR16),
+    BootOpt->BootOptionFmt,
+    Description ? Description : L"Unknown");
+
+  OptDevicePath = FileDevicePath (Handle, BootOpt->FileName);
+  ASSERT (OptDevicePath != NULL);
+
+  DEBUG ((EFI_D_INFO, "%a: Creating boot option:\n  %s (%s)\n", __FUNCTION__,
+          FullOptionName, ConvertDevicePathToText(OptDevicePath, FALSE, FALSE)
+          ));
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &BootOptions[(*BootOptionCount)++],
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             LOAD_OPTION_ACTIVE,
+             FullOptionName,
+             OptDevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (FullOptionName);
+  FreePool (OptDevicePath);
+
+  if (Description != NULL)
+    FreePool (Description);
+
+  return BootOptions;
+}
+
+EFI_BOOT_MANAGER_LOAD_OPTION *
+BmEnumeratePreInstalledBootOptions (
+  IN OUT UINTN                                 *BootOptionCount
+  )
+{
+  EFI_STATUS                            Status;
+  UINTN                                 HandleCount;
+  EFI_HANDLE                            *Handles;
+  EFI_BLOCK_IO_PROTOCOL                 *BlkIo;
+  UINTN                                 Index;
+  UINTN                                 OsIdx;
+  UINTN                                 OptionsArraySize;
+  EFI_IMAGE_DOS_HEADER                  DosHeader;
+  EFI_IMAGE_OPTIONAL_HEADER_UNION       HdrData;
+  EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION   Hdr;
+  PRE_INSTALLED_BOOT_OPT                DtsBootOpt;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
+
+  ASSERT (BootOptionCount != NULL);
+
+  BootOptions = NULL;
+
+  //
+  // Parse simple file system not based on block io
+  //
+  gBS->LocateHandleBuffer (
+         ByProtocol,
+         &gEfiSimpleFileSystemProtocolGuid,
+         NULL,
+         &HandleCount,
+         &Handles
+         );
+  for (Index = 0; Index < HandleCount; Index++) {
+
+    DEBUG ((EFI_D_INFO, "%a: Processing file system:\n  %s\n", __FUNCTION__,
+          ConvertDevicePathToText(DevicePathFromHandle (Handles[Index]), FALSE, FALSE)
+          ));
+
+    //
+    // Skip the removable media, except if DTS
+    //
+    Status = gBS->HandleProtocol (
+                    Handles[Index],
+                    &gEfiBlockIoProtocolGuid,
+                    (VOID **) &BlkIo
+                    );
+    if (!EFI_ERROR (Status) && BlkIo->Media->RemovableMedia) {
+      Hdr.Union = &HdrData;
+      Status = BdsLibGetImageHeader (
+                 Handles[Index],
+                 DtsBootOpt.FileName,
+                 &DosHeader,
+                 Hdr
+                 );
+      if (!EFI_ERROR (Status) &&
+        EFI_IMAGE_MACHINE_TYPE_SUPPORTED (Hdr.Pe32->FileHeader.Machine) &&
+        Hdr.Pe32->OptionalHeader.Subsystem == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION) {
+        BootOptions = CreatePreInstalledBootOption(
+                        BootOptions,
+                        BootOptionCount,
+                        Handles[Index],
+                        &DtsBootOpt
+                        );
+      } else {
+        continue;
+      }
+    }
+
+    OptionsArraySize = sizeof (PreInstalledBootOpts) / sizeof(PRE_INSTALLED_BOOT_OPT);
+    for (OsIdx = 0; OsIdx < OptionsArraySize; OsIdx++) {
+
+      Hdr.Union = &HdrData;
+      Status = BdsLibGetImageHeader (
+                 Handles[Index],
+                 PreInstalledBootOpts[OsIdx].FileName,
+                 &DosHeader,
+                 Hdr
+                 );
+      if (!EFI_ERROR (Status) &&
+        EFI_IMAGE_MACHINE_TYPE_SUPPORTED (Hdr.Pe32->FileHeader.Machine) &&
+        Hdr.Pe32->OptionalHeader.Subsystem == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION) {
+        BootOptions = CreatePreInstalledBootOption(
+                        BootOptions,
+                        BootOptionCount,
+                        Handles[Index],
+                        &PreInstalledBootOpts[OsIdx]
+                        );
+      }
+
+    } // for PreInstalledBootOpts
+
+    OptionsArraySize = sizeof (PreInstalledBootOptsLnx) / sizeof(PRE_INSTALLED_BOOT_OPT);
+    for (OsIdx = 0; OsIdx < OptionsArraySize; OsIdx += 2) {
+
+      Hdr.Union = &HdrData;
+      Status = BdsLibGetImageHeader (
+                 Handles[Index],
+                 PreInstalledBootOptsLnx[OsIdx].FileName,
+                 &DosHeader,
+                 Hdr
+                 );
+      if (!EFI_ERROR (Status) &&
+        EFI_IMAGE_MACHINE_TYPE_SUPPORTED (Hdr.Pe32->FileHeader.Machine) &&
+        Hdr.Pe32->OptionalHeader.Subsystem == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION) {
+        BootOptions = CreatePreInstalledBootOption(
+                        BootOptions,
+                        BootOptionCount,
+                        Handles[Index],
+                        &PreInstalledBootOptsLnx[OsIdx]
+                        );
+      } else {
+        /* Shimx64.efi not found or any other error, try grubx64.efi */
+        Hdr.Union = &HdrData;
+        Status = BdsLibGetImageHeader (
+                 Handles[Index],
+                 PreInstalledBootOptsLnx[OsIdx + 1].FileName,
+                 &DosHeader,
+                 Hdr
+                 );
+        if (!EFI_ERROR (Status) &&
+          EFI_IMAGE_MACHINE_TYPE_SUPPORTED (Hdr.Pe32->FileHeader.Machine) &&
+          Hdr.Pe32->OptionalHeader.Subsystem == EFI_IMAGE_SUBSYSTEM_EFI_APPLICATION) {
+          BootOptions = CreatePreInstalledBootOption(
+                          BootOptions,
+                          BootOptionCount,
+                          Handles[Index],
+                          &PreInstalledBootOptsLnx[OsIdx + 1]
+                          );
+        }
+      }
+
+    } // for PreInstalledBootOptsLnx
+
+  } // for Handles
+
+  if (HandleCount != 0) {
+    FreePool (Handles);
+  }
+
+  return BootOptions;
+}
+
 /**
   Emuerate all possible bootable medias in the following order:
   1. Removable BlockIo            - The boot option only points to the removable media
@@ -2471,7 +2706,8 @@ BmEnumerateBootOptions (
   ASSERT (BootOptionCount != NULL);
 
   *BootOptionCount = 0;
-  BootOptions      = NULL;
+
+  BootOptions = BmEnumeratePreInstalledBootOptions(BootOptionCount);
 
   //
   // Parse removable block io followed by fixed block io
