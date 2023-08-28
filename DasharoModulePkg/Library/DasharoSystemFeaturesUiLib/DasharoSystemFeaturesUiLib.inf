@@ -74,3 +74,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars

@@ -107,3 +107,8 @@
 #string STR_POWER_FAILURE_STATE_OFF     #language en-US "Powered Off"
 #string STR_POWER_FAILURE_STATE_ON      #language en-US "Powered On"
 #string STR_POWER_FAILURE_STATE_KEEP    #language en-US "The state at the moment of power failure"
+
+#string STR_RESIZEABLE_BARS_PROMPT    #language en-US "Enable PCIe Resizeable BARs"
+#string STR_RESIZEABLE_BARS_HELP      #language en-US "Enables allocation of resizeable BARs for devices that request them.\n\n"
+                                                        "Enabling this option can cause conflicts with GPU virtualization.\n\n"
+                                                        "Requested size might exceed maximum BAR size of the firmware in which case performance might be reduced."
