@@ -112,3 +112,10 @@
 #string STR_RESIZEABLE_BARS_HELP      #language en-US "Enables allocation of resizeable BARs for devices that request them.\n\n"
                                                         "Enabling this option can cause conflicts with GPU virtualization.\n\n"
                                                         "Requested size might exceed maximum BAR size of the firmware in which case performance might be reduced."
+
+#string STR_OPTION_ROM_PROMPT   #language en-US  "OptionROM Execution Policy"
+#string STR_OPTION_ROM_HELP     #language en-US  "This option allows control over which OptionROMs get loaded."
+
+#string STR_OPTION_ROM_DISABLE      #language en-US  "Disable all OptionROMs loading"
+#string STR_OPTION_ROM_ENABLE       #language en-US  "Enable all OptionROMs loading"
+#string STR_OPTION_ROM_ENABLE_VGA   #language en-US  "Enable OptionROM loading only on GPUs"
