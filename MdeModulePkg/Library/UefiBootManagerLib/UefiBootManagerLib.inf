@@ -86,6 +86,7 @@
   gEfiDiskInfoScsiInterfaceGuid                 ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoSdMmcInterfaceGuid                ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoUfsInterfaceGuid                  ## SOMETIMES_CONSUMES ## GUID
+  gEfiPartTypeSystemPartGuid                    ## CONSUMES ## GUID
 
 [Protocols]
   gEfiPciRootBridgeIoProtocolGuid               ## CONSUMES
@@ -111,6 +112,7 @@
   gEfiRamDiskProtocolGuid                       ## SOMETIMES_CONSUMES
   gEfiDeferredImageLoadProtocolGuid             ## SOMETIMES_CONSUMES
   gEdkiiPlatformBootManagerProtocolGuid         ## SOMETIMES_CONSUMES
+  gEfiPartitionInfoProtocolGuid                 ## SOMETIMES_CONSUMES
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange      ## SOMETIMES_CONSUMES
