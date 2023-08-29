@@ -926,7 +926,7 @@ DasharoSystemFeaturesCallback (
   case EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING:
     {
       switch (QuestionId) {
-      case 0x1101:
+      case NETWORK_BOOT_QUESTION_ID:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
@@ -934,7 +934,7 @@ DasharoSystemFeaturesCallback (
           Value->b = PcdGetBool (PcdDefaultNetworkBootEnable);
           break;
         }
-      case 0x1102:
+      case WATCHDOG_OPTIONS_QUESTION_ID:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
@@ -942,7 +942,7 @@ DasharoSystemFeaturesCallback (
           Value->b = PcdGetBool (PcdShowOcWdtOptions);
           break;
         }
-      case 0x1103:
+      case WATCHDOG_TIMEOUT_QUESTION_ID:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
@@ -950,7 +950,7 @@ DasharoSystemFeaturesCallback (
           Value->u16 = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
           break;
         }
-      case 0x1104:
+      case POWER_FAILURE_STATE_QUESTION_ID:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
@@ -966,7 +966,7 @@ DasharoSystemFeaturesCallback (
     }
   case EFI_BROWSER_ACTION_CHANGED:
     {
-      if (QuestionId == 0x1330) {
+      if (QuestionId == FIRMWARE_UPDATE_MODE_QUESTION_ID) {
         do {
           CreatePopUp (
             EFI_BLACK | EFI_BACKGROUND_RED,
