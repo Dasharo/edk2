@@ -2529,6 +2529,27 @@ CreatePreInstalledBootOption (
   return BootOptions;
 }
 
+/**
+  Check if the device path is EFI system Partition.
+
+  @param  DevicePath    The ESP device path.
+
+  @retval TRUE    DevicePath is a device path for ESP.
+  @retval FALSE   DevicePath is not a device path for ESP.
+
+**/
+BOOLEAN
+IsEfiSysPartitionDevicePath (
+  EFI_DEVICE_PATH_PROTOCOL   *DevicePath
+  )
+{
+  EFI_STATUS                 Status;
+  EFI_HANDLE                 Handle;
+
+  Status = gBS->LocateDevicePath (&gEfiPartTypeSystemPartGuid, &DevicePath, &Handle);
+  return EFI_ERROR (Status) ? FALSE : TRUE;
+}
+
 EFI_BOOT_MANAGER_LOAD_OPTION *
 BmEnumeratePreInstalledBootOptions (
   IN OUT UINTN                                 *BootOptionCount
@@ -2552,11 +2573,11 @@ BmEnumeratePreInstalledBootOptions (
   BootOptions = NULL;
   DEBUG ((EFI_D_INFO, "%a\n", __FUNCTION__));
   //
-  // Parse simple file system not based on block io
+  // Parse gEfiPartTypeSystemPartGuid handles
   //
   gBS->LocateHandleBuffer (
          ByProtocol,
-         &gEfiSimpleFileSystemProtocolGuid,
+         &gEfiBlockIoProtocolGuid,
          NULL,
          &HandleCount,
          &Handles
@@ -2566,6 +2587,12 @@ BmEnumeratePreInstalledBootOptions (
     DEBUG ((EFI_D_INFO, "%a: Processing file system:\n  %s\n", __FUNCTION__,
           ConvertDevicePathToText(DevicePathFromHandle (Handles[Index]), FALSE, FALSE)
           ));
+
+    /* Skip non-ESP */
+    if (!IsEfiSysPartitionDevicePath(DevicePathFromHandle (Handles[Index]))) {
+      DEBUG ((EFI_D_INFO, "%a: Skipping, not an ESP\n", __FUNCTION__));
+      continue;
+    }
 
     //
     // Skip the removable media, except if DTS
