@@ -2463,8 +2463,65 @@ PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsLnx[] = {
 };
 
 PRE_INSTALLED_BOOT_OPT DtsBootOpt = {
-  L"\\EFI\\DTS\\grubx64.efi",           L"Ubuntu (on %s)" 
+  L"\\EFI\\DTS\\grubx64.efi",           L"Dasharo Tools Suite (on %s)" 
 };
+
+EFI_HANDLE
+GetDiskHandleByFsHandle (
+  EFI_HANDLE   FsHandle
+)
+{
+  UINTN                                 HandleCount;
+  EFI_HANDLE                            *Handles;
+  UINTN                                 Index;
+  EFI_DEVICE_PATH_PROTOCOL              *DiskDevicePath;
+  EFI_DEVICE_PATH_PROTOCOL              *FileSystemDevicePath;
+  BOOLEAN                               FoundMatch;
+
+  FoundMatch = FALSE;
+  FileSystemDevicePath = DevicePathFromHandle (FsHandle);
+
+  gBS->LocateHandleBuffer (
+         ByProtocol,
+         &gEfiBlockIoProtocolGuid,
+         NULL,
+         &HandleCount,
+         &Handles
+         );
+  for (Index = 0; Index < HandleCount; Index++) {
+
+    DiskDevicePath = DevicePathFromHandle (Handles[Index]);
+
+    while (!IsDevicePathEnd (DiskDevicePath)) {
+
+      if (!CompareMem(FileSystemDevicePath, DiskDevicePath, DevicePathNodeLength(FileSystemDevicePath))) {
+        if ((DevicePathType (DiskDevicePath) == MEDIA_DEVICE_PATH) &&
+            (DevicePathSubType (DiskDevicePath) == MEDIA_HARDDRIVE_DP)) {
+          // If DiskDevicePath has HardDrive DP, it is not the one we look for
+          break;
+        }
+        // Continue search
+        FileSystemDevicePath = NextDevicePathNode (FileSystemDevicePath);
+        DiskDevicePath = NextDevicePathNode (DiskDevicePath);
+      } else {
+        // If we found first uncommon node and it is HardDrive DP, then we have a match
+        if ((DevicePathType (FileSystemDevicePath) == MEDIA_DEVICE_PATH) &&
+            (DevicePathSubType (FileSystemDevicePath) == MEDIA_HARDDRIVE_DP)) {
+          FoundMatch = TRUE;
+        }
+        break;
+      }
+
+    }
+
+    if (FoundMatch)
+      return Handles[Index];
+
+  }
+
+  // No match, return the FS handle. Description will not be the one we would like to be though.
+  return FsHandle;
+}
 
 EFI_BOOT_MANAGER_LOAD_OPTION *
 CreatePreInstalledBootOption (
@@ -2480,7 +2537,7 @@ CreatePreInstalledBootOption (
   CHAR16                                *FullOptionName;
   EFI_DEVICE_PATH_PROTOCOL              *OptDevicePath;
 
-  Description = BmGetBootDescription (Handle);
+  Description = BmGetBootDescription (GetDiskHandleByFsHandle(Handle));
   BootOptions = ReallocatePool (
                   sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
                   sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
@@ -2565,7 +2622,6 @@ BmEnumeratePreInstalledBootOptions (
   EFI_IMAGE_DOS_HEADER                  DosHeader;
   EFI_IMAGE_OPTIONAL_HEADER_UNION       HdrData;
   EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION   Hdr;
-  PRE_INSTALLED_BOOT_OPT                DtsBootOpt;
   EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
 
   ASSERT (BootOptionCount != NULL);
@@ -2577,7 +2633,7 @@ BmEnumeratePreInstalledBootOptions (
   //
   gBS->LocateHandleBuffer (
          ByProtocol,
-         &gEfiBlockIoProtocolGuid,
+         &gEfiSimpleFileSystemProtocolGuid,
          NULL,
          &HandleCount,
          &Handles
