@@ -2476,6 +2476,7 @@ GetDiskHandleByFsHandle (
 {
   UINTN                                 HandleCount;
   EFI_HANDLE                            *Handles;
+  EFI_HANDLE                            DiskHandle;
   UINTN                                 Index;
   EFI_DEVICE_PATH_PROTOCOL              *DiskDevicePath;
   EFI_DEVICE_PATH_PROTOCOL              *FileSystemDevicePath;
@@ -2511,6 +2512,7 @@ GetDiskHandleByFsHandle (
         if ((DevicePathType (FileSystemDevicePath) == MEDIA_DEVICE_PATH) &&
             (DevicePathSubType (FileSystemDevicePath) == MEDIA_HARDDRIVE_DP)) {
           FoundMatch = TRUE;
+          DiskHandle = Handles[Index];
         }
         break;
       }
@@ -2522,7 +2524,7 @@ GetDiskHandleByFsHandle (
         FreePool (Handles);
       }
 
-      return Handles[Index];
+      return DiskHandle;
     }
 
   }
