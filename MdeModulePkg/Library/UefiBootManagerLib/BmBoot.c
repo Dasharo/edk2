@@ -2517,9 +2517,18 @@ GetDiskHandleByFsHandle (
 
     }
 
-    if (FoundMatch)
-      return Handles[Index];
+    if (FoundMatch) {
+      if (HandleCount != 0) {
+        FreePool (Handles);
+      }
 
+      return Handles[Index];
+    }
+
+  }
+
+  if (HandleCount != 0) {
+    FreePool (Handles);
   }
 
   // No match, return the FS handle. Description will not be the one we would like to be though.
@@ -2527,7 +2536,7 @@ GetDiskHandleByFsHandle (
 }
 
 VOID
-StrStripLeadingSpaces (
+StrStripTrailingSpaces (
   CHAR16                                *String
 )
 {
@@ -2563,9 +2572,9 @@ CreatePreInstalledBootOption (
                   );
   ASSERT (BootOptions != NULL);
 
-  if (Description != NULL) {
+  if (Description != NULL && StrLen(Description) != 0) {
     // Some descriptions have a space character at the end, strip it
-    StrStripLeadingSpaces(Description);
+    StrStripTrailingSpaces(Description);
     OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(Description);
   } else {
     OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(L"Unknown");
