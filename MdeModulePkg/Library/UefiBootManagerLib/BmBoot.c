@@ -2442,31 +2442,31 @@ typedef struct {
 } PRE_INSTALLED_BOOT_OPT;
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOpts[] = {
-  { L"\\EFI\\Microsoft\\Boot\\bootmgfw.efi", L"Windows Boot Manager ( on %s)" },
-  { L"\\EFI\\Suse\\elilo.efi",               L"Suse Boot Manager ( on %s)" },
-  { L"\\EFI\\Redhat\\elilo.efi",             L"RedHat Boot Manager ( on %s)" },
+  { L"\\EFI\\Microsoft\\Boot\\bootmgfw.efi", L"Windows Boot Manager (on %s)" },
+  { L"\\EFI\\Suse\\elilo.efi",               L"Suse Boot Manager (on %s)" },
+  { L"\\EFI\\Redhat\\elilo.efi",             L"RedHat Boot Manager (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsShim[] = {
-  { L"\\EFI\\ubuntu\\shimx64.efi",           L"Ubuntu ( on %s)" },
-  { L"\\EFI\\redhat\\shimx64.efi",           L"RedHat ( on %s)" },
-  { L"\\EFI\\fedora\\shimx64.efi",           L"Fedora ( on %s)" },
-  { L"\\EFI\\centos\\shimx64.efi",           L"CentOS ( on %s)" },
-  { L"\\EFI\\opensuse\\shimx64.efi",         L"OpenSuse ( on %s)" },
-  { L"\\EFI\\debian\\shimx64.efi",           L"Debian ( on %s)" },
+  { L"\\EFI\\ubuntu\\shimx64.efi",           L"Ubuntu (on %s)" },
+  { L"\\EFI\\redhat\\shimx64.efi",           L"RedHat (on %s)" },
+  { L"\\EFI\\fedora\\shimx64.efi",           L"Fedora (on %s)" },
+  { L"\\EFI\\centos\\shimx64.efi",           L"CentOS (on %s)" },
+  { L"\\EFI\\opensuse\\shimx64.efi",         L"OpenSuse (on %s)" },
+  { L"\\EFI\\debian\\shimx64.efi",           L"Debian (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsGrub[] = {
-  { L"\\EFI\\ubuntu\\grubx64.efi",           L"Ubuntu ( on %s)" },
-  { L"\\EFI\\redhat\\grubx64.efi",           L"RedHat ( on %s)" },
-  { L"\\EFI\\fedora\\grubx64.efi",           L"Fedora ( on %s)" },
-  { L"\\EFI\\centos\\grubx64.efi",           L"CentOS ( on %s)" },
-  { L"\\EFI\\opensuse\\grubx64.efi",         L"OpenSuse ( on %s)" },
-  { L"\\EFI\\debian\\grubx64.efi",           L"Debian ( on %s)" },
+  { L"\\EFI\\ubuntu\\grubx64.efi",           L"Ubuntu (on %s)" },
+  { L"\\EFI\\redhat\\grubx64.efi",           L"RedHat (on %s)" },
+  { L"\\EFI\\fedora\\grubx64.efi",           L"Fedora (on %s)" },
+  { L"\\EFI\\centos\\grubx64.efi",           L"CentOS (on %s)" },
+  { L"\\EFI\\opensuse\\grubx64.efi",         L"OpenSuse (on %s)" },
+  { L"\\EFI\\debian\\grubx64.efi",           L"Debian (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT DtsBootOpt = {
-  L"\\EFI\\DTS\\grubx64.efi",           L"Dasharo Tools Suite ( on %s)" 
+  L"\\EFI\\DTS\\grubx64.efi",           L"Dasharo Tools Suite (on %s)"
 };
 
 EFI_HANDLE
@@ -2526,6 +2526,21 @@ GetDiskHandleByFsHandle (
   return FsHandle;
 }
 
+VOID
+StrStripLeadingSpaces (
+  CHAR16                                *String
+)
+{
+  UINTN                                 Idx;
+
+  for (Idx = StrLen(String) - 1; Idx > 0; Idx--) {
+    if(String[Idx] == 0x0020)
+      String[Idx] = 0;
+    else
+      break;
+  }
+}
+
 EFI_BOOT_MANAGER_LOAD_OPTION *
 CreatePreInstalledBootOption (
   IN OUT EFI_BOOT_MANAGER_LOAD_OPTION   *BootOptions,
@@ -2548,10 +2563,13 @@ CreatePreInstalledBootOption (
                   );
   ASSERT (BootOptions != NULL);
 
-  if (Description != NULL)
+  if (Description != NULL) {
+    // Some descriptions have a space character at the end, strip it
+    StrStripLeadingSpaces(Description);
     OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(Description);
-  else
+  } else {
     OptNameSize = StrLen(BootOpt->BootOptionFmt) + StrLen(L"Unknown");
+  }
 
   FullOptionName = AllocatePool(OptNameSize * sizeof(CHAR16));
   ASSERT (FullOptionName != NULL);
