@@ -2633,10 +2633,35 @@ IsEfiSysPartitionDevicePath (
   )
 {
   EFI_STATUS                 Status;
+  EFI_DEVICE_PATH_PROTOCOL   *TempDevicePath;
+  HARDDRIVE_DEVICE_PATH      *Hd;
   EFI_HANDLE                 Handle;
 
-  Status = gBS->LocateDevicePath (&gEfiPartTypeSystemPartGuid, &DevicePath, &Handle);
-  return EFI_ERROR (Status) ? FALSE : TRUE;
+  //
+  // Check if the device path contains GPT node
+  //
+  TempDevicePath = DevicePath;
+
+  while (!IsDevicePathEnd (TempDevicePath)) {
+    if ((DevicePathType (TempDevicePath) == MEDIA_DEVICE_PATH) &&
+      (DevicePathSubType (TempDevicePath) == MEDIA_HARDDRIVE_DP)) {
+      Hd = (HARDDRIVE_DEVICE_PATH *)TempDevicePath;
+      if (Hd->MBRType == MBR_TYPE_EFI_PARTITION_TABLE_HEADER) {
+        break;
+      }
+    }
+    TempDevicePath = NextDevicePathNode (TempDevicePath);
+  }
+
+  if (!IsDevicePathEnd (TempDevicePath)) {
+    //
+    // Search for EFI system partition protocol on full device path in Boot Option
+    //
+    Status = gBS->LocateDevicePath (&gEfiPartTypeSystemPartGuid, &DevicePath, &Handle);
+    return EFI_ERROR (Status) ? FALSE : TRUE;
+  } else {
+    return FALSE;
+  }
 }
 
 EFI_BOOT_MANAGER_LOAD_OPTION *
@@ -2745,23 +2770,24 @@ BmEnumeratePreInstalledBootOptions (
     }
 
     //
-    // Skip the removable media, except if DTS
+    // Skip the removable media, except if DTS.
     //
+    BootOptions = CheckIfFilesExistAndCreateBootOptions (
+                    BootOptions,
+                    BootOptionCount,
+                    Handles[Index],
+                    &DtsBootOpt,
+                    1,
+                    NULL,
+                    0
+                    );
+
     Status = gBS->HandleProtocol (
                     Handles[Index],
                     &gEfiBlockIoProtocolGuid,
                     (VOID **) &BlkIo
                     );
     if (!EFI_ERROR (Status) && BlkIo->Media->RemovableMedia) {
-        BootOptions = CheckIfFilesExistAndCreateBootOptions (
-                        BootOptions,
-                        BootOptionCount,
-                        Handles[Index],
-                        &DtsBootOpt,
-                        sizeof (DtsBootOpt),
-                        NULL,
-                        0
-                        );
         DEBUG ((EFI_D_INFO, "%a: Skipping, media removable\n", __FUNCTION__));
         continue;
     }
