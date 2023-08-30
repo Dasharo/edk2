@@ -2550,7 +2550,7 @@ BmEnumeratePreInstalledBootOptions (
   ASSERT (BootOptionCount != NULL);
 
   BootOptions = NULL;
-
+  DEBUG ((EFI_D_INFO, "%a\n", __FUNCTION__));
   //
   // Parse simple file system not based on block io
   //
@@ -2593,6 +2593,7 @@ BmEnumeratePreInstalledBootOptions (
                         &DtsBootOpt
                         );
       } else {
+        DEBUG ((EFI_D_INFO, "%a: Skipping, media removable\n", __FUNCTION__));
         continue;
       }
     }
