@@ -10,6 +10,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "PciPlatformDxe.h"
 #include <Bus/Pci/PciBusDxe/PciBus.h>
 #include <Bus/Pci/PciBusDxe/PciOptionRomSupport.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+#include <DasharoOptions.h>
 
 //
 // The driver should only start on one graphics controller.
@@ -41,6 +43,81 @@ PciPlatformPrepController(
   )
 {
   return EFI_UNSUPPORTED;
+}
+
+STATIC
+BOOLEAN
+IsVgaDevice (
+  IN EFI_HANDLE  PciHandle
+  )
+{
+  EFI_STATUS           Status;
+  BOOLEAN              LoadOptionRom;
+  EFI_PCI_IO_PROTOCOL  *PciIo;
+  PCI_TYPE00           PciConfHeader;
+
+  LoadOptionRom = FALSE;
+
+  Status = gBS->HandleProtocol (
+      PciHandle,
+      &gEfiPciIoProtocolGuid,
+      (VOID **) &PciIo
+      );
+  if (EFI_ERROR (Status)) {
+      return FALSE;
+  }
+
+  //
+  // Read the PCI Configuration Header from the PCI Device
+  //
+  Status = PciIo->Pci.Read (
+      PciIo,
+      EfiPciIoWidthUint32,
+      0,
+      sizeof (PciConfHeader) / sizeof (UINT32),
+      &PciConfHeader
+      );
+  if (!EFI_ERROR (Status)) {
+      LoadOptionRom = IS_PCI_DISPLAY (&PciConfHeader);
+  }
+
+  return LoadOptionRom;
+}
+
+STATIC
+BOOLEAN
+ShouldLoadOptionRom (
+  IN EFI_HANDLE  PciHandle
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       BufferSize;
+  UINT8       OptionRomPolicy;
+
+  BufferSize = sizeof (OptionRomPolicy);
+  Status = gRT->GetVariable (
+      L"OptionRomPolicy",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &OptionRomPolicy
+      );
+  if (EFI_ERROR (Status)) {
+    // Fallback to PCD.
+    return PcdGetBool (PcdLoadOptionRoms);
+  }
+
+  switch (OptionRomPolicy) {
+    case DASHARO_OPTION_ROM_POLICY_ENABLE_ALL:
+      return TRUE;
+    case DASHARO_OPTION_ROM_POLICY_DISABLE_ALL:
+      return FALSE;
+    case DASHARO_OPTION_ROM_POLICY_VGA_ONLY:
+      return IsVgaDevice (PciHandle);
+  }
+
+  DEBUG ((EFI_D_WARN, "Warning: Unhandled Option ROM Policy value: %d\n", OptionRomPolicy));
+  return FALSE;
 }
 
 EFI_STATUS
@@ -81,7 +158,7 @@ PciGetPciRom (
   *RomImage = NULL;
   *RomSize = 0;
 
-  if (!PcdGetBool(PcdLoadOptionRoms)) {
+  if (!ShouldLoadOptionRom (PciHandle)) {
     return EFI_NOT_FOUND;
   }
 
