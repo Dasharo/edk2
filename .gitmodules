@@ -38,3 +38,6 @@
 [submodule "SecurityPkg/DeviceSecurity/SpdmLib/libspdm"]
 	path = SecurityPkg/DeviceSecurity/SpdmLib/libspdm
 	url = https://github.com/DMTF/libspdm.git
+[submodule "CrScreenshotDxe"]
+	path = CrScreenshotDxe
+	url = https://github.com/LongSoft/CrScreenshotDxe.git
