@@ -10,3 +10,6 @@
 [submodule "DasharoModulePkg"]
 	path = DasharoModulePkg
 	url = https://github.com/Dasharo/DasharoModulePkg.git
+[submodule "CrScreenshotDxe"]
+	path = CrScreenshotDxe
+	url = https://github.com/LongSoft/CrScreenshotDxe.git
