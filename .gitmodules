@@ -35,3 +35,6 @@
 [submodule "CryptoPkg/Library/MbedTlsLib/mbedtls"]
 	path = CryptoPkg/Library/MbedTlsLib/mbedtls
 	url = https://github.com/ARMmbed/mbedtls
+[submodule "CrScreenshotDxe"]
+	path = CrScreenshotDxe
+	url = https://github.com/LongSoft/CrScreenshotDxe.git
