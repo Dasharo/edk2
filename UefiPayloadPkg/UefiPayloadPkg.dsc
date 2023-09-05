@@ -683,6 +683,7 @@
   MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
 
   UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
+  CrScreenshotDxe/CrScreenshotDxe.inf
 
   #
   # SMBIOS Support
