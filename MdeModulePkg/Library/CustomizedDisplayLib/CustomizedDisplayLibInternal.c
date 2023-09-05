@@ -25,6 +25,7 @@ CHAR16  *gMoveHighlight;
 CHAR16  *gDecNumericInput;
 CHAR16  *gHexNumericInput;
 CHAR16  *gToggleCheckBox;
+CHAR16  *gScreenshotString;
 CHAR16  *gLibEmptyString;
 CHAR16  *gAreYouSure;
 CHAR16  *gYesResponse;
@@ -722,6 +723,7 @@ InitializeLibStrings (
   gDecNumericInput   = LibGetToken (STRING_TOKEN (DEC_NUMERIC_INPUT), mCDLStringPackHandle);
   gHexNumericInput   = LibGetToken (STRING_TOKEN (HEX_NUMERIC_INPUT), mCDLStringPackHandle);
   gToggleCheckBox    = LibGetToken (STRING_TOKEN (TOGGLE_CHECK_BOX), mCDLStringPackHandle);
+  gScreenshotString  = LibGetToken (STRING_TOKEN (SCREENSHOT_STRING), mCDLStringPackHandle);
 
   gAreYouSure   = LibGetToken (STRING_TOKEN (ARE_YOU_SURE), mCDLStringPackHandle);
   gYesResponse  = LibGetToken (STRING_TOKEN (ARE_YOU_SURE_YES), mCDLStringPackHandle);
@@ -762,6 +764,7 @@ FreeLibStrings (
   FreePool (gDecNumericInput);
   FreePool (gHexNumericInput);
   FreePool (gToggleCheckBox);
+  FreePool (gScreenshotString);
 
   FreePool (gAreYouSure);
   FreePool (gYesResponse);
