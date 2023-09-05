@@ -50,7 +50,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define FRONT_PAGE_HEADER_HEIGHT       6
 #define NONE_FRONT_PAGE_HEADER_HEIGHT  3
-#define FOOTER_HEIGHT                  4
+#define FOOTER_HEIGHT                  5
 #define STATUS_BAR_HEIGHT              1
 
 //
@@ -95,6 +95,7 @@ extern CHAR16  *gMoveHighlight;
 extern CHAR16  *gDecNumericInput;
 extern CHAR16  *gHexNumericInput;
 extern CHAR16  *gToggleCheckBox;
+extern CHAR16  *gScreenshotString;
 extern CHAR16  *gLibEmptyString;
 extern CHAR16  *gAreYouSure;
 extern CHAR16  *gYesResponse;
