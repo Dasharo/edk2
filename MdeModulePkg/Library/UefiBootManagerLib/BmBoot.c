@@ -2454,6 +2454,7 @@ STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsShim[] = {
   { L"\\EFI\\centos\\shimx64.efi",           L"CentOS (on %s)" },
   { L"\\EFI\\opensuse\\shimx64.efi",         L"OpenSuse (on %s)" },
   { L"\\EFI\\debian\\shimx64.efi",           L"Debian (on %s)" },
+  { L"\\EFI\\qubes\\shimx64.efi",            L"Qubes OS (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsGrub[] = {
@@ -2463,6 +2464,7 @@ STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsGrub[] = {
   { L"\\EFI\\centos\\grubx64.efi",           L"CentOS (on %s)" },
   { L"\\EFI\\opensuse\\grubx64.efi",         L"OpenSuse (on %s)" },
   { L"\\EFI\\debian\\grubx64.efi",           L"Debian (on %s)" },
+  { L"\\EFI\\qubes\\grubx64.efi",            L"Qubes OS (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT DtsBootOpt = {
