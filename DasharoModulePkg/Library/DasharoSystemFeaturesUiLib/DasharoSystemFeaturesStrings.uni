@@ -121,7 +121,15 @@
 #string STR_OPTION_ROM_ENABLE_VGA   #language en-US  "Enable OptionROM loading only on GPUs"
 
 #string STR_ENABLE_CAMERA_PROMPT    #language en-US "Enable Camera"
-#string STR_ENABLE_CAMERA_HELP    #language en-US "If this option is disabled, the power to the USB webcam is disconnected completely"
+#string STR_ENABLE_CAMERA_HELP      #language en-US "If this option is disabled, the power to the USB webcam is disconnected completely"
 
 #string STR_WIFI_BT_ENABLE_PROMPT    #language en-US "Enable Wi-Fi + BT radios"
 #string STR_WIFI_BT_ENABLE_HELP      #language en-US "When not enabled, WiFi + Bluetooth card slot is disabled."
+
+#string STR_BATTERY_START_THRESHOLD_PROMPT    #language en-US "Battery charging start threshold"
+#string STR_BATTERY_START_THRESHOLD_HELP      #language en-US "The battery will start charging once the charge level drops below this value."
+
+#string STR_BATTERY_STOP_THRESHOLD_PROMPT    #language en-US "Battery charging stop threshold"
+#string STR_BATTERY_STOP_THRESHOLD_HELP      #language en-US "The battery will stop charging once the charge level reaches this value."
+
+#string STR_BATTERY_THRESHOLD_RANGE_ERROR  #language en-US "The battery stop threshold must be greater than the start threshold!"
