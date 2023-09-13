@@ -34,6 +34,8 @@ STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
 STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
 STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
 STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
+STATIC CHAR16 mBatteryStartThresholdEfiVar[] = L"BatteryStartThreshold";
+STATIC CHAR16 mBatteryStopThresholdEfiVar[] = L"BatteryStopThreshold";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -49,6 +51,8 @@ STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
 STATIC UINT8     mResizeableBarsEnabledDefault = FALSE;
 STATIC BOOLEAN   mEnableCameraDefault = TRUE;
 STATIC BOOLEAN   mEnableWifiBtDefault = TRUE;
+STATIC UINT8     mBatteryStartThresholdDefault = 95;
+STATIC UINT8     mBatteryStopThresholdDefault = 98;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -221,6 +225,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPciMenu = PcdGetBool (PcdShowPciMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowFanCurve = PcdGetBool (PcdPowerMenuShowFanCurve);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowSleepType = PcdGetBool (PcdPowerMenuShowSleepType);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowBatteryThresholds = PcdGetBool (PcdPowerMenuShowBatteryThresholds);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowIommu = PcdGetBool (PcdShowIommuOptions);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PciMenuShowResizeableBars = PcdGetBool (PcdPciMenuShowResizeableBars);
@@ -614,6 +619,48 @@ DasharoSystemFeaturesUiLibConstructor (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold);
+  Status = gRT->GetVariable (
+    mBatteryStartThresholdEfiVar,
+    &gDasharoSystemFeaturesGuid,
+    NULL,
+    &BufferSize,
+    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold = mBatteryStartThresholdDefault;
+    Status = gRT->SetVariable (
+        mBatteryStartThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold);
+  Status = gRT->GetVariable (
+    mBatteryStopThresholdEfiVar,
+    &gDasharoSystemFeaturesGuid,
+    NULL,
+    &BufferSize,
+    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold = mBatteryStopThresholdDefault;
+    Status = gRT->SetVariable (
+        mBatteryStopThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -1023,6 +1070,36 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.EnableCamera),
         &DasharoFeaturesData.EnableCamera
+        );
+    if (EFI_ERROR (Status)) {
+        return Status;
+    }
+  }
+
+  if(DasharoFeaturesData.BatteryStartThreshold > DasharoFeaturesData.BatteryStopThreshold) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if(Private->DasharoFeaturesData.BatteryStartThreshold != DasharoFeaturesData.BatteryStartThreshold) {
+    Status = gRT->SetVariable (
+        mBatteryStartThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.BatteryStartThreshold),
+        &DasharoFeaturesData.BatteryStartThreshold
+        );
+    if (EFI_ERROR (Status)) {
+        return Status;
+    }
+  }
+
+  if(Private->DasharoFeaturesData.BatteryStopThreshold != DasharoFeaturesData.BatteryStopThreshold) {
+    Status = gRT->SetVariable (
+        mBatteryStopThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.BatteryStopThreshold),
+        &DasharoFeaturesData.BatteryStopThreshold
         );
     if (EFI_ERROR (Status)) {
         return Status;
