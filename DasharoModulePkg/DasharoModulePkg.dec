@@ -55,6 +55,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType|TRUE|BOOLEAN|0x0000000F
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu|FALSE|BOOLEAN|0x00000010
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars|FALSE|BOOLEAN|0x00000011
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds|FALSE|BOOLEAN|0x00000012
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
