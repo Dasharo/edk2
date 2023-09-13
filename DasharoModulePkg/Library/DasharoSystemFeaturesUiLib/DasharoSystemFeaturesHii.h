@@ -51,6 +51,7 @@ typedef struct {
   BOOLEAN            ShowPciMenu;
   BOOLEAN            PowerMenuShowFanCurve;
   BOOLEAN            PowerMenuShowSleepType;
+  BOOLEAN            PowerMenuShowBatteryThresholds;
   BOOLEAN            DasharoEnterprise;
   BOOLEAN            SecurityMenuShowIommu;
   BOOLEAN            PciMenuShowResizeableBars;
@@ -73,6 +74,8 @@ typedef struct {
   UINT8              OptionRomExecution;
   BOOLEAN            EnableCamera;
   BOOLEAN            EnableWifiBt;
+  UINT8              BatteryStartThreshold;
+  UINT8              BatteryStopThreshold;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
