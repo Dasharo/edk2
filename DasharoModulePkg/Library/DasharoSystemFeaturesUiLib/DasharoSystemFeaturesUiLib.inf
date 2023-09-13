@@ -76,4 +76,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms

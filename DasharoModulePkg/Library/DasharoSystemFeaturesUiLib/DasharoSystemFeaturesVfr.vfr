@@ -278,6 +278,33 @@ formset
          endoneof;
     endif;
 
+    suppressif ideqval FeaturesData.PowerMenuShowBatteryThresholds == 0;
+        numeric varid   = FeaturesData.BatteryStartThreshold,
+                prompt  = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_PROMPT),
+                help    = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                    ideqid FeaturesData.BatteryStartThreshold > FeaturesData.BatteryStopThreshold
+                endif
+        endnumeric;
+        numeric varid   = FeaturesData.BatteryStopThreshold,
+                prompt  = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_PROMPT),
+                help    = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                    ideqid FeaturesData.BatteryStartThreshold > FeaturesData.BatteryStopThreshold
+                endif
+        endnumeric;
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
