@@ -34,8 +34,7 @@ STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
 STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
 STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
 STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
-STATIC CHAR16 mBatteryStartThresholdEfiVar[] = L"BatteryStartThreshold";
-STATIC CHAR16 mBatteryStopThresholdEfiVar[] = L"BatteryStopThreshold";
+STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -623,44 +622,24 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold);
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig);
   Status = gRT->GetVariable (
-    mBatteryStartThresholdEfiVar,
+    mBatteryConfigEfiVar,
     &gDasharoSystemFeaturesGuid,
     NULL,
     &BufferSize,
-    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold
+    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig
   );
 
   if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold = mBatteryStartThresholdDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig.StartThreshold = mBatteryStartThresholdDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig.StopThreshold = mBatteryStopThresholdDefault;
     Status = gRT->SetVariable (
-        mBatteryStartThresholdEfiVar,
+        mBatteryConfigEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold),
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStartThreshold
-        );
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold);
-  Status = gRT->GetVariable (
-    mBatteryStopThresholdEfiVar,
-    &gDasharoSystemFeaturesGuid,
-    NULL,
-    &BufferSize,
-    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold
-  );
-
-  if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold = mBatteryStopThresholdDefault;
-    Status = gRT->SetVariable (
-        mBatteryStopThresholdEfiVar,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold),
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryStopThreshold
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -1076,33 +1055,19 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
-  if(DasharoFeaturesData.BatteryStartThreshold > DasharoFeaturesData.BatteryStopThreshold) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  if(Private->DasharoFeaturesData.BatteryStartThreshold != DasharoFeaturesData.BatteryStartThreshold) {
+  if (Private->DasharoFeaturesData.BatteryConfig.StartThreshold !=
+        DasharoFeaturesData.BatteryConfig.StartThreshold ||
+      Private->DasharoFeaturesData.BatteryConfig.StopThreshold !=
+        DasharoFeaturesData.BatteryConfig.StopThreshold) {
     Status = gRT->SetVariable (
-        mBatteryStartThresholdEfiVar,
+        mBatteryConfigEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.BatteryStartThreshold),
-        &DasharoFeaturesData.BatteryStartThreshold
+        sizeof (DasharoFeaturesData.BatteryConfig),
+        &DasharoFeaturesData.BatteryConfig
         );
     if (EFI_ERROR (Status)) {
-        return Status;
-    }
-  }
-
-  if(Private->DasharoFeaturesData.BatteryStopThreshold != DasharoFeaturesData.BatteryStopThreshold) {
-    Status = gRT->SetVariable (
-        mBatteryStopThresholdEfiVar,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.BatteryStopThreshold),
-        &DasharoFeaturesData.BatteryStopThreshold
-        );
-    if (EFI_ERROR (Status)) {
-        return Status;
+      return Status;
     }
   }
 
