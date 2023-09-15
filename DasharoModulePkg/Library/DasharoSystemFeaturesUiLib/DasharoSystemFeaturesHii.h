@@ -35,6 +35,11 @@ typedef struct {
   BOOLEAN IommuEnable;
   BOOLEAN IommuHandoff;
 } IOMMU_CONFIG;
+
+typedef struct {
+  UINT8  StartThreshold;
+  UINT8  StopThreshold;
+} BATTERY_CONFIG;
 #pragma pack(pop)
 
 #define FAN_CURVE_OPTION_SILENT 0
@@ -74,8 +79,7 @@ typedef struct {
   UINT8              OptionRomExecution;
   BOOLEAN            EnableCamera;
   BOOLEAN            EnableWifiBt;
-  UINT8              BatteryStartThreshold;
-  UINT8              BatteryStopThreshold;
+  BATTERY_CONFIG     BatteryConfig;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
