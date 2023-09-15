@@ -1095,6 +1095,9 @@ DasharoSystemFeaturesCallback (
             L"This will turn off all flash protection mechanisms",
             L"for the duration of the next boot.",
             L"",
+            L"DTS will be started automatically through iPXE, please",
+            L"make sure an Ethernet cable is connected before continuing.",
+            L"",
             L"Press ENTER to continue and reboot or ESC to cancel...",
             L"",
             NULL
