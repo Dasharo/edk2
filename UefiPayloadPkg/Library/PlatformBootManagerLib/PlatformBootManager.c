@@ -99,7 +99,8 @@ VOID
 PlatformRegisterFvBootOption (
   EFI_GUID                         *FileGuid,
   CHAR16                           *Description,
-  UINT32                           Attributes
+  UINT32                           Attributes,
+  BOOLEAN                          SetBootNext
   )
 {
   EFI_STATUS                        Status;
@@ -110,6 +111,7 @@ PlatformRegisterFvBootOption (
   MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
+  UINT16                            BootNextVal;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -151,7 +153,22 @@ PlatformRegisterFvBootOption (
   if (OptionIndex == -1) {
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
     ASSERT_EFI_ERROR (Status);
+    BootNextVal = (UINT16) NewOption.OptionNumber;
+  } else {
+    BootNextVal = (UINT16) BootOptions[OptionIndex].OptionNumber;
   }
+
+  if (SetBootNext) {
+    Status = gRT->SetVariable (
+                    EFI_BOOT_NEXT_VARIABLE_NAME,
+                    &gEfiGlobalVariableGuid,
+                    (EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE),
+                    sizeof(BootNextVal),
+                    &(BootNextVal)
+                    );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   EfiBootManagerFreeLoadOption (&NewOption);
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
@@ -1066,7 +1083,7 @@ WarnIfBatteryLow (
 }
 
 STATIC
-VOID
+BOOLEAN
 WarnIfFirmwareUpdateMode (
   VOID
 )
@@ -1097,7 +1114,7 @@ WarnIfFirmwareUpdateMode (
       );
 
   if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled) || !FUMEnabled) {
-    return;
+    return FALSE;
   }
 
   //
@@ -1212,6 +1229,7 @@ WarnIfFirmwareUpdateMode (
 
   gST->ConOut->ClearScreen (gST->ConOut);
   DrainInput ();
+  return TRUE;
 }
 /**
 
@@ -1408,6 +1426,7 @@ PlatformBootManagerAfterConsole (
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
   BOOLEAN                        NetBootEnabled;
+  BOOLEAN                        FUMEnabled;
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
   EFI_EVENT                      Event;
@@ -1421,7 +1440,7 @@ PlatformBootManagerAfterConsole (
 
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
-  WarnIfFirmwareUpdateMode ();
+  FUMEnabled = WarnIfFirmwareUpdateMode ();
 
   BootLogoEnableLogo ();
 
@@ -1454,12 +1473,19 @@ PlatformBootManagerAfterConsole (
   //
   // Register iPXE
   //
-  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
+  if (FUMEnabled) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option for FUM\n"));
+    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                  LOAD_OPTION_ACTIVE,
+                                  TRUE);
+  } else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
     if (NetBootEnabled) {
       DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
       PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                     (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                    LOAD_OPTION_ACTIVE);
+                                    LOAD_OPTION_ACTIVE,
+                                    FALSE);
     } else {
         DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
         PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
@@ -1470,7 +1496,8 @@ PlatformBootManagerAfterConsole (
     DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
     PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
                                   (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                  LOAD_OPTION_ACTIVE);
+                                  LOAD_OPTION_ACTIVE,
+                                  FALSE);
   } else {
     DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
     PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
@@ -1481,7 +1508,10 @@ PlatformBootManagerAfterConsole (
   // Register UEFI Shell
   //
   DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile), L"UEFI Shell", LOAD_OPTION_ACTIVE);
+  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile),
+                                L"UEFI Shell",
+                                LOAD_OPTION_ACTIVE,
+                                FALSE);
 
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
