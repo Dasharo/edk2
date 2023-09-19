@@ -100,7 +100,7 @@ PlatformRegisterFvBootOption (
   EFI_GUID                         *FileGuid,
   CHAR16                           *Description,
   UINT32                           Attributes,
-  BOOLEAN                          SetBootNext
+  BOOLEAN                          BootNow
   )
 {
   EFI_STATUS                        Status;
@@ -111,7 +111,6 @@ PlatformRegisterFvBootOption (
   MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
-  UINT16                            BootNextVal;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -142,6 +141,9 @@ PlatformRegisterFvBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
+  if (BootNow)
+    EfiBootManagerBoot (&NewOption);
+
   BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount, LoadOptionTypeBoot
                   );
@@ -152,20 +154,6 @@ PlatformRegisterFvBootOption (
 
   if (OptionIndex == -1) {
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
-    ASSERT_EFI_ERROR (Status);
-    BootNextVal = (UINT16) NewOption.OptionNumber;
-  } else {
-    BootNextVal = (UINT16) BootOptions[OptionIndex].OptionNumber;
-  }
-
-  if (SetBootNext) {
-    Status = gRT->SetVariable (
-                    EFI_BOOT_NEXT_VARIABLE_NAME,
-                    &gEfiGlobalVariableGuid,
-                    (EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE),
-                    sizeof(BootNextVal),
-                    &(BootNextVal)
-                    );
     ASSERT_EFI_ERROR (Status);
   }
 
