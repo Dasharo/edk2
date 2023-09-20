@@ -110,7 +110,7 @@ formset
                flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
       endcheckbox;
     endif;
-    
+
     checkbox varid  = FeaturesData.EnableWifiBt,
              prompt = STRING_TOKEN(STR_WIFI_BT_ENABLE_PROMPT),
              help   = STRING_TOKEN(STR_WIFI_BT_ENABLE_HELP),

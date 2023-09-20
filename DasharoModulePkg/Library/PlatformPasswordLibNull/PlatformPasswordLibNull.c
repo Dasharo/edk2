@@ -75,4 +75,3 @@ PlatformPasswordLibNullConstructor (
 
   return EFI_SUCCESS;
 }
-
