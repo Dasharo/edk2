@@ -770,4 +770,3 @@ UserAuthenticationUnload (
 
   return EFI_SUCCESS;
 }
-
