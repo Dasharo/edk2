@@ -64,6 +64,12 @@ formset
               help   = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_HELP);
     endif;
 
+    suppressif ideqval FeaturesData.ShowMemoryMenu == 0;
+         goto DASHARO_MEMORY_CONFIGURATION_FORM_ID,
+              prompt = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_TITLE),
+              help   = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_HELP);
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -333,6 +339,16 @@ formset
              option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE), value = OPTION_ROM_POLICY_ENABLE_ALL, flags = 0;
              option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE_VGA), value = OPTION_ROM_POLICY_VGA_ONLY, flags = 0;
     endoneof;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_MEMORY_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
