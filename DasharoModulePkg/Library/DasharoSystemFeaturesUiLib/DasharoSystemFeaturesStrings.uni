@@ -35,6 +35,9 @@
 #string STR_DASHARO_PCI_CONFIGURATION_TITLE   #language en-US  "PCI/PCIe Configuration"
 #string STR_DASHARO_PCI_CONFIGURATION_HELP    #language en-US  "PCI/PCIe configuration options"
 
+#string STR_DASHARO_MEMORY_CONFIGURATION_TITLE   #language en-US  "Memory Configuration"
+#string STR_DASHARO_MEMORY_CONFIGURATION_HELP    #language en-US  "Memory-related options"
+
 #string STR_FUM_PROMPT   #language en-US  "> Enter Firmware Update Mode"
 #string STR_FUM_HELP     #language en-US  "Disables all firmware protections for the duration of next boot."
 
