@@ -350,6 +350,17 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
+    oneof varid = FeaturesData.MemoryProfile,
+             prompt = STRING_TOKEN(STR_MEMORY_PROFILE_PROMPT),
+             help   = STRING_TOKEN(STR_MEMORY_PROFILE_HELP),
+             flags  = RESET_REQUIRED,
+
+             option text = STRING_TOKEN(STR_MEMORY_PROFILE_JEDEC), value = MEMORY_PROFILE_JEDEC, flags = DEFAULT;
+             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP1), value = MEMORY_PROFILE_XMP1, flags = 0;
+             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP2), value = MEMORY_PROFILE_XMP2, flags = 0;
+             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP3), value = MEMORY_PROFILE_XMP3, flags = 0;
+    endoneof;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);

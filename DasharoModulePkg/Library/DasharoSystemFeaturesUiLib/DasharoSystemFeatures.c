@@ -35,6 +35,7 @@ STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
 STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
 STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
 STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
+STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -52,6 +53,7 @@ STATIC BOOLEAN   mEnableCameraDefault = TRUE;
 STATIC BOOLEAN   mEnableWifiBtDefault = TRUE;
 STATIC UINT8     mBatteryStartThresholdDefault = 95;
 STATIC UINT8     mBatteryStopThresholdDefault = 98;
+STATIC UINT8     mMemoryProfileDefault = MEMORY_PROFILE_JEDEC;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -645,6 +647,27 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile);
+  Status = gRT->GetVariable (
+      mMemoryProfileEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile = mMemoryProfileDefault;
+    Status = gRT->SetVariable (
+        mMemoryProfileEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -1066,6 +1089,19 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.BatteryConfig),
         &DasharoFeaturesData.BatteryConfig
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.MemoryProfile != DasharoFeaturesData.MemoryProfile) {
+    Status = gRT->SetVariable (
+        mMemoryProfileEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.MemoryProfile),
+        &DasharoFeaturesData.MemoryProfile
         );
     if (EFI_ERROR (Status)) {
       return Status;
