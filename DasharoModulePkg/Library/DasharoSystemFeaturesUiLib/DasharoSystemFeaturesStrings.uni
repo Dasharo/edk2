@@ -136,3 +136,13 @@
 #string STR_BATTERY_STOP_THRESHOLD_HELP      #language en-US "The battery will stop charging once the charge level reaches this value."
 
 #string STR_BATTERY_THRESHOLD_RANGE_ERROR  #language en-US "The battery stop threshold must be greater than the start threshold!"
+
+#string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
+#string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
+                                                       "Selecting an XMP profile may result in unstable memory modules and even prevent system from booting.\n\n"
+                                                       "Changing this option causes memory retraining on the next boot which takes time to complete."
+
+#string STR_MEMORY_PROFILE_JEDEC   #language en-US  "JEDEC (safe non-overclocked default)"
+#string STR_MEMORY_PROFILE_XMP1    #language en-US  "XMP#1 (predefined extreme memory profile)"
+#string STR_MEMORY_PROFILE_XMP2    #language en-US  "XMP#2 (predefined extreme memory profile)"
+#string STR_MEMORY_PROFILE_XMP3    #language en-US  "XMP#3 (predefined extreme memory profile)"
