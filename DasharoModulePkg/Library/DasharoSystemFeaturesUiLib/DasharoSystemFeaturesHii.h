@@ -82,6 +82,7 @@ typedef struct {
   BOOLEAN            EnableCamera;
   BOOLEAN            EnableWifiBt;
   BATTERY_CONFIG     BatteryConfig;
+  UINT8              MemoryProfile;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
@@ -99,6 +100,12 @@ typedef struct {
 #define POWER_FAILURE_STATE_ON      1
 #define POWER_FAILURE_STATE_KEEP    2
 #define POWER_FAILURE_STATE_HIDDEN  0xff
+
+// Values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
+#define MEMORY_PROFILE_JEDEC  0
+#define MEMORY_PROFILE_XMP1   2
+#define MEMORY_PROFILE_XMP2   3
+#define MEMORY_PROFILE_XMP3   4
 
 #define NETWORK_BOOT_QUESTION_ID          0x8000
 #define WATCHDOG_OPTIONS_QUESTION_ID      0x8001
