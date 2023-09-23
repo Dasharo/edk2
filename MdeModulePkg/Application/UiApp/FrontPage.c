@@ -425,24 +425,37 @@ ConvertProcessorToString (
 }
 
 /**
-  Convert Memory Size to a string.
+  Convert Memory Info to a string.
 
   @param MemorySize      The size of the memory to process
+  @param MemorySpeed     The speed of the memory to process
   @param String          The string that is created
 
 **/
 VOID
-ConvertMemorySizeToString (
+ConvertMemoryInfoToString (
   IN  UINT32  MemorySize,
+  IN  UINT16  MemorySpeed,
   OUT CHAR16  **String
   )
 {
   CHAR16  *StringBuffer;
+  CHAR16  SpeedBuffer[8];
 
-  StringBuffer = AllocateZeroPool (0x24);
+  StringBuffer = AllocateZeroPool (0x34);
   ASSERT (StringBuffer != NULL);
-  UnicodeValueToStringS (StringBuffer, 0x24, LEFT_JUSTIFY, MemorySize, 10);
-  StrCatS (StringBuffer, 0x24 / sizeof (CHAR16), L" MB RAM");
+  UnicodeValueToStringS (StringBuffer, 0x34, LEFT_JUSTIFY, MemorySize, 10);
+  StrCatS (StringBuffer, 0x34 / sizeof (CHAR16), L" MB RAM");
+
+  //
+  // Some FSPs don't report speed in the memory HOB properly.
+  //
+  if (MemorySpeed != 0) {
+    UnicodeValueToStringS (SpeedBuffer, 8 * sizeof (CHAR16), LEFT_JUSTIFY, MemorySpeed, 10);
+    StrCatS (StringBuffer, 0x34 / sizeof (CHAR16), L" @ ");
+    StrCatS (StringBuffer, 0x34 / sizeof (CHAR16), SpeedBuffer);
+    StrCatS (StringBuffer, 0x34 / sizeof (CHAR16), L" MHz");
+  }
 
   *String = (CHAR16 *)StringBuffer;
 
@@ -515,12 +528,15 @@ UpdateFrontPageBannerStrings (
   SMBIOS_TABLE_TYPE0       *Type0Record;
   SMBIOS_TABLE_TYPE1       *Type1Record;
   SMBIOS_TABLE_TYPE4       *Type4Record;
+  SMBIOS_TABLE_TYPE17      *Type17Record;
   SMBIOS_TABLE_TYPE19      *Type19Record;
   EFI_SMBIOS_TABLE_HEADER  *Record;
   UINT64                   InstalledMemory;
+  UINT16                   MemorySpeed;
   BOOLEAN                  FoundCpu;
 
   InstalledMemory = 0;
+  MemorySpeed     = 0;
   FoundCpu        = 0;
 
   //
@@ -633,6 +649,13 @@ UpdateFrontPageBannerStrings (
       }
     }
 
+    if ( Record->Type == SMBIOS_TYPE_MEMORY_DEVICE ) {
+      Type17Record = (SMBIOS_TABLE_TYPE17 *) Record;
+      if (Type17Record->ConfiguredMemoryClockSpeed > MemorySpeed) {
+          MemorySpeed = Type17Record->ConfiguredMemoryClockSpeed;
+      }
+    }
+
     if ( Record->Type == SMBIOS_TYPE_MEMORY_ARRAY_MAPPED_ADDRESS ) {
       Type19Record = (SMBIOS_TABLE_TYPE19 *)Record;
       if (Type19Record->StartingAddress != 0xFFFFFFFF ) {
@@ -654,9 +677,9 @@ UpdateFrontPageBannerStrings (
   }
 
   //
-  // Now update the total installed RAM size
+  // Now update the total installed RAM size and its speed
   //
-  ConvertMemorySizeToString ((UINT32)InstalledMemory, &NewString);
+  ConvertMemoryInfoToString ((UINT32)InstalledMemory, MemorySpeed, &NewString);
   UiCustomizeFrontPageBanner (3, FALSE, &NewString);
   HiiSetString (gFrontPagePrivate.HiiHandle, STRING_TOKEN (STR_FRONT_PAGE_MEMORY_SIZE), NewString, NULL);
   FreePool (NewString);
