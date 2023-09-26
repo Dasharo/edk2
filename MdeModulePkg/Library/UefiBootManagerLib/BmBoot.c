@@ -2985,7 +2985,10 @@ BmEnumerateBootOptions (
 
   *BootOptionCount = 0;
 
-  BootOptions = BmEnumeratePreInstalledBootOptions(BootOptionCount);
+  if (PcdGetBool (PcdCreatePreInstalledBootOptions))
+    BootOptions = BmEnumeratePreInstalledBootOptions(BootOptionCount);
+  else
+    BootOptions = NULL;
 
   //
   // Parse removable block io followed by fixed block io
