@@ -224,7 +224,7 @@
   #
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
-!if $(USE_CBMEM_FOR_CONSOLE) == TRUE
+!if (($(USE_CBMEM_FOR_CONSOLE) == TRUE) && ($(TARGET) == RELEASE))
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
 !elseif $(SYSTEM76_EC_LOGGING) == TRUE
@@ -751,7 +751,18 @@
   #
   # ISA Support
   #
-  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
+  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf {
+    <LibraryClasses>
+    !if $(SYSTEM76_EC_LOGGING) == TRUE
+      SerialPortLib|DasharoPayloadPkg/Library/System76EcLib/System76EcLib.inf
+      PlatformHookLib|DasharoPayloadPkg/Library/System76EcLib/System76EcLib.inf
+    !else
+      SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
+      PlatformHookLib|DasharoPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
+    !endif
+  }
+
+
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
   OvmfPkg/SioBusDxe/SioBusDxe.inf
   MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
