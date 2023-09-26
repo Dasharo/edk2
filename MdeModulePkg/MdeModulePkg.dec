@@ -2318,6 +2318,13 @@
   # @Prompt Conduit to use in ArmFfaLib.
   gEfiMdeModulePkgTokenSpaceGuid.PcdFfaLibConduitSmc|TRUE|BOOLEAN|0x10000029
 
+  ## Controls whether to scan ESP partitions to detect pre-installed OSes and create boot options
+  # from it.
+  #   TRUE  - Create boot options for pre-installed OSes.<BR>
+  #   FALSE - Do not create boot options for pre-installed OSes.
+  # @Prompt Create boot options for pre-installed OSes.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions|FALSE|BOOLEAN|0x0001007a
+
 [PcdsPatchableInModule]
   ## Specify memory size with page number for PEI code when
   #  Loading Module at Fixed Address feature is enabled.
