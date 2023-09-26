@@ -1499,8 +1499,8 @@ InitializeBmmConfig (
                   &BootTimeout
                   );
   if (!EFI_ERROR (Status) && BootTimeout != 0xFFFF) {
-    DEBUG ((EFI_D_INFO, "%a: Timeout from variable: %d\n", __FUNCTION__, BootTimeOut));
-    PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
+    DEBUG ((EFI_D_INFO, "%a: Timeout from variable: %d\n", __FUNCTION__, BootTimeout));
+    PcdSet16S (PcdPlatformBootTimeOut, BootTimeout);
   }
 
   CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
