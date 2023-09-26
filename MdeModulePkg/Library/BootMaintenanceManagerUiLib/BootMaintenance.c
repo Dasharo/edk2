@@ -882,8 +882,8 @@ BootMaintRouteConfig (
   }
 
   if (CompareMem (&NewBmmData->BootTimeOut, &OldBmmData->BootTimeOut, sizeof (NewBmmData->BootTimeOut)) != 0) {
-    Status = gRT->SetVariable (
-                    L"Timeout",
+    Status = gRT->SetVariable(
+                    EFI_TIME_OUT_VARIABLE_NAME,
                     &gEfiGlobalVariableGuid,
                     EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
                     sizeof (UINT16),
@@ -1504,6 +1504,9 @@ InitializeBmmConfig (
   BM_MENU_ENTRY    *NewMenuEntry;
   BM_LOAD_CONTEXT  *NewLoadContext;
   UINT16           Index;
+  EFI_STATUS       Status;
+  UINTN            DataSize;
+  UINT16           BootTimeout = 0xFFFF;
 
   ASSERT (CallbackData != NULL);
 
@@ -1519,6 +1522,19 @@ InitializeBmmConfig (
       CallbackData->BmmFakeNvData.BootNext = Index;
       break;
     }
+  }
+
+  DataSize = sizeof(BootTimeout);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &BootTimeout
+                  );
+  if (!EFI_ERROR (Status) && BootTimeout != 0xFFFF) {
+    DEBUG ((EFI_D_INFO, "%a: Timeout from variable: %d\n", __FUNCTION__, BootTimeout));
+    PcdSet16S (PcdPlatformBootTimeOut, BootTimeout);
   }
 
   CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
