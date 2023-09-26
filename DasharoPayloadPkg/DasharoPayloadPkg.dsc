@@ -120,6 +120,8 @@
   DEFINE NETWORK_ISCSI_ENABLE           = TRUE
 !endif
 
+  DEFINE VARIABLE_SUPPORT               = SMMSTORE
+
 
 !include NetworkPkg/NetworkDefines.dsc.inc
   #
