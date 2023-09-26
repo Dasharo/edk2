@@ -687,6 +687,7 @@ BdsEntry (
   HotkeyTriggered = NULL;
   Status          = EFI_SUCCESS;
   BootSuccess     = FALSE;
+  BootTimeOut     = 0xFFFF;
 
   //
   // Insert the performance probe
@@ -729,30 +730,31 @@ BdsEntry (
   InitializeHwErrRecSupport ();
 
   Status = gRT->GetVariable(
-                  L"Timeout",
+                  EFI_TIME_OUT_VARIABLE_NAME,
                   &gEfiGlobalVariableGuid,
                   NULL,
                   &DataSize,
                   &BootTimeOut
                   );
-  if (!EFI_ERROR (Status) && BootTimeOut != 0 && BootTimeOut != 0xFFFF) {
+  if (!EFI_ERROR (Status) && BootTimeOut != 0xFFFF) {
+    DEBUG ((EFI_D_INFO, "[Bds] Timeout from variable: %d\n", BootTimeOut));
     PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
   } else {
     BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
-  }
-
-  if (BootTimeOut != 0xFFFF) {
-    //
-    // If time out value equal 0xFFFF, no need set to 0xFFFF to variable area because UEFI specification
-    // define same behavior between no value or 0xFFFF value for L"Timeout".
-    //
-    BdsDxeSetVariableAndReportStatusCodeOnError (
-      EFI_TIME_OUT_VARIABLE_NAME,
-      &gEfiGlobalVariableGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-      sizeof (UINT16),
-      &BootTimeOut
-      );
+    DEBUG ((EFI_D_INFO, "[Bds] Timeout from PCD: %d\n", BootTimeOut));
+    if (BootTimeOut != 0xFFFF) {
+      //
+      // If time out value equal 0xFFFF, no need set to 0xFFFF to variable area because UEFI specification
+      // define same behavior between no value or 0xFFFF value for L"Timeout".
+      //
+      BdsDxeSetVariableAndReportStatusCodeOnError (
+        EFI_TIME_OUT_VARIABLE_NAME,
+        &gEfiGlobalVariableGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (UINT16),
+        &BootTimeOut
+        );
+    }
   }
 
   //
