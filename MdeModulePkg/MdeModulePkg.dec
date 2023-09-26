@@ -2169,6 +2169,13 @@
   # @Prompt The value is use for Usb Network rate limiting supported.
   gEfiMdeModulePkgTokenSpaceGuid.PcdUsbNetworkRateLimitingFactor|100|UINT32|0x10000028
 
+  ## Controls whether to scan ESP partitions to detect pre-installed OSes and create boot options
+  # from it.
+  #   TRUE  - Create boot options for pre-installed OSes.<BR>
+  #   FALSE - Do not create boot options for pre-installed OSes.
+  # @Prompt Create boot options for pre-installed OSes.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions|FALSE|BOOLEAN|0x0001007a
+
 [PcdsPatchableInModule]
   ## Specify memory size with page number for PEI code when
   #  Loading Module at Fixed Address feature is enabled.
