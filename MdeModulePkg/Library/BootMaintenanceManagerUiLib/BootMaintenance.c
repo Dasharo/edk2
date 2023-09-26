@@ -1490,6 +1490,7 @@ InitializeBmmConfig (
     }
   }
 
+  DataSize = sizeof(BootTimeout);
   Status = gRT->GetVariable(
                   EFI_TIME_OUT_VARIABLE_NAME,
                   &gEfiGlobalVariableGuid,
