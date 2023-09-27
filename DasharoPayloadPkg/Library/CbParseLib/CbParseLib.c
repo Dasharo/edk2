@@ -951,6 +951,7 @@ ParseTimestampTable (
     return RETURN_NOT_FOUND;
   }
 
-  Performance->ResetEnd = CbTsRec->base_time;
+  /* ResetEnd must be reported in nanoseconds, not ticks */
+  Performance->ResetEnd = DivU64x32(CbTsRec->base_time, CbTsRec->tick_freq_mhz);
   return RETURN_SUCCESS;
 }
