@@ -82,6 +82,11 @@
   #
   DEFINE SHELL_TYPE                   = BUILD_SHELL
 
+  # For recent X86 CPU, 0x15 CPUID instruction will return Time Stamp Counter Frequence.
+  # This is how BaseCpuTimerLib works, and a recommended way to get Frequence, so set the default value as TRUE.
+  # Note: for emulation platform such as QEMU, this may not work and should set it as FALSE
+  DEFINE CPU_TIMER_LIB_ENABLE  = TRUE
+
   #
   # Security options:
   #
@@ -98,6 +103,7 @@
   DEFINE IOMMU_ENABLE                   = FALSE
   DEFINE SD_MMC_TIMEOUT                 = 1000000
   DEFINE BATTERY_CHECK                  = FALSE
+  DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
 
   #
   # Network definition
@@ -222,7 +228,11 @@
   #
   # Platform
   #
+!if $(CPU_TIMER_LIB_ENABLE) == TRUE
+  TimerLib|UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
+!else
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
+!endif
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
 !if (($(USE_CBMEM_FOR_CONSOLE) == TRUE) && ($(TARGET) == RELEASE))
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf
@@ -436,6 +446,10 @@
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
+!endif
+
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  gEfiMdePkgTokenSpaceGuid.PcdPerformanceLibraryPropertyMask|0x1
 !endif
 
 [PcdsPatchableInModule.common]
@@ -689,8 +703,6 @@
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
-  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
-
   DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
   CrScreenshotDxe/CrScreenshotDxe.inf
 
@@ -850,6 +862,10 @@
 
 !if $(IOMMU_ENABLE) == TRUE
   IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
+!endif
+
+!if $(PERFORMANCE_MEASUREMENT_ENABLE)
+  MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
 !endif
 
   #------------------------------
