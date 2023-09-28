@@ -1358,6 +1358,119 @@ PrintSolStrings (
   }
 }
 
+STATIC
+VOID
+SaveSmBiosFieldToEfiVar (
+  IN  VOID                          *FieldValue,
+  IN  UINTN                         FieldSize,
+  IN  CHAR16*                       VarName
+)
+{
+  VOID                              *CurrentValue;
+  EFI_STATUS                        Status;
+  UINTN                             CurrentSize;
+  BOOLEAN                           NeedUpdate;
+
+  NeedUpdate = FALSE;
+  CurrentSize = FieldSize;
+  CurrentValue = AllocatePool (FieldSize);
+
+  if (!CurrentValue)
+    return;
+
+  Status = gRT->GetVariable (
+             VarName,
+             &gDasharoSystemFeaturesGuid,
+             NULL,
+             &CurrentSize,
+             CurrentValue
+             );
+
+  if (EFI_ERROR (Status)) {
+    NeedUpdate = TRUE;
+  } else {
+    if (CurrentSize != FieldSize) 
+      NeedUpdate = TRUE;
+    else if (CompareMem (CurrentValue, FieldValue, FieldSize) != 0)
+      NeedUpdate = TRUE;
+  }
+
+  if (NeedUpdate) {
+    DEBUG ((EFI_D_INFO, "%s variable needs update\n", VarName));
+    Status = gRT->SetVariable (
+               VarName,
+               &gDasharoSystemFeaturesGuid,
+               EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+               FieldSize,
+               FieldValue
+               );
+  }
+
+  FreePool(CurrentValue);
+}
+
+STATIC
+VOID
+SaveSMBIOSFields (
+  VOID
+)
+{
+  UINT8                             StrIndex;
+  EFI_STATUS                        Status;
+  EFI_SMBIOS_HANDLE                 SmbiosHandle;
+  EFI_SMBIOS_PROTOCOL               *Smbios;
+  SMBIOS_TABLE_TYPE1                *Type1Record;
+  SMBIOS_TABLE_TYPE2                *Type2Record;
+  EFI_SMBIOS_TABLE_HEADER           *Record;
+  BOOLEAN                           GotType1;
+  BOOLEAN                           GotType2;
+  CHAR8                             *OptionalStrStart;
+  UINTN                             StrSize;
+
+  GotType1 = FALSE;
+  GotType2 = FALSE;
+
+  Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **) &Smbios);
+
+  if (EFI_ERROR(Status))
+    return;
+
+
+  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+  Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  while (!EFI_ERROR(Status)) {
+    if (Record->Type == SMBIOS_TYPE_SYSTEM_INFORMATION) {
+      Type1Record = (SMBIOS_TABLE_TYPE1 *) Record;
+      SaveSmBiosFieldToEfiVar((VOID *)&Type1Record->Uuid, sizeof(Type1Record->Uuid), L"Type1UUID");
+      GotType1 = TRUE;
+    }
+
+    if (Record->Type == SMBIOS_TYPE_BASEBOARD_INFORMATION) {
+      Type2Record = (SMBIOS_TABLE_TYPE2 *) Record;
+      StrIndex = Type2Record->SerialNumber;
+      OptionalStrStart = (CHAR8*)((UINT8*)Type2Record + Type2Record->Hdr.Length);
+      StrSize = 0;
+      do {
+        StrIndex--;
+        OptionalStrStart += StrSize;
+        StrSize  = AsciiStrSize (OptionalStrStart);
+      } while (OptionalStrStart[StrSize] != 0 && StrIndex != 0);
+
+      if ((StrIndex != 0) || (StrSize == 1))
+        DEBUG((EFI_D_INFO, "SMBIOS Type2 Serial Number missing\n"));
+      else
+        SaveSmBiosFieldToEfiVar((VOID *)OptionalStrStart, StrSize, L"Type2SN");
+
+      GotType2 = TRUE;
+    }
+
+    if (GotType1 && GotType2)
+      break;
+
+    Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  }
+}
+
 /**
   Refresh the logo on ReadyToBoot event. It will clear the screen from strings
 
@@ -1435,6 +1548,8 @@ PlatformBootManagerAfterConsole (
   // Process TPM PPI request
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
+
+  SaveSMBIOSFields();
 
   VarSize = sizeof (NetBootEnabled);
   Status = gRT->GetVariable (
