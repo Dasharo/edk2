@@ -813,6 +813,19 @@ InitUSBKeyboard (
   InitQueue (&UsbKeyboardDevice->EfiKeyQueue, sizeof (EFI_KEY_DATA));
   InitQueue (&UsbKeyboardDevice->EfiKeyQueueForNotify, sizeof (EFI_KEY_DATA));
 
+  Status = UsbSetIdleRequest (
+             UsbKeyboardDevice->UsbIo,
+             UsbKeyboardDevice->InterfaceDescriptor.InterfaceNumber,
+             0,
+             0
+             );
+  if (EFI_ERROR (Status)) {
+    REPORT_STATUS_CODE_WITH_DEVICE_PATH (
+      EFI_ERROR_CODE | EFI_ERROR_MINOR,
+      (EFI_PERIPHERAL_KEYBOARD | EFI_P_EC_INTERFACE_ERROR),
+      UsbKeyboardDevice->DevicePath
+      );
+  }
   //
   // Set boot protocol for the USB Keyboard.
   // This driver only supports boot protocol.
