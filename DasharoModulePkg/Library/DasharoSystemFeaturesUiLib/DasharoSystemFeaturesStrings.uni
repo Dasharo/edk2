@@ -38,6 +38,9 @@
 #string STR_DASHARO_MEMORY_CONFIGURATION_TITLE   #language en-US  "Memory Configuration"
 #string STR_DASHARO_MEMORY_CONFIGURATION_HELP    #language en-US  "Memory-related options"
 
+#string STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE   #language en-US  "Serial Port Configuration"
+#string STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP    #language en-US  "Serial port options"
+
 #string STR_FUM_PROMPT   #language en-US  "> Enter Firmware Update Mode"
 #string STR_FUM_HELP     #language en-US  "Disables all firmware protections for the duration of next boot."
 
@@ -146,3 +149,6 @@
 #string STR_MEMORY_PROFILE_XMP1    #language en-US  "XMP#1 (predefined extreme memory profile)"
 #string STR_MEMORY_PROFILE_XMP2    #language en-US  "XMP#2 (predefined extreme memory profile)"
 #string STR_MEMORY_PROFILE_XMP3    #language en-US  "XMP#3 (predefined extreme memory profile)"
+
+#string STR_SERIAL_CONSOLE_REDIRECTION_PROMPT   #language en-US  "Enable Serial Port Console Redirection"
+#string STR_SERIAL_CONSOLE_REDIRECTION_HELP     #language en-US  "Redirect the firmware console to the serial port."
