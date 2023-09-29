@@ -22,6 +22,7 @@ NETWORK_BOOT_POLICY_PROTOCOL  mNetworkBootPolicy;
 USB_STACK_POLICY_PROTOCOL mUsbStackPolicy;
 USB_MASS_STORAGE_POLICY_PROTOCOL mUsbMassStoragePolicy;
 PS2_CONTROLLER_POLICY_PROTOCOL mPs2ControllerPolicy;
+SERIAL_REDIRECTION_POLICY_PROTOCOL mSerialRedirectionPolicy;
 
 /**
   Entry point for the Boot Policies Driver.
@@ -54,6 +55,8 @@ InitializeBootPolicies (
   mUsbMassStoragePolicy.UsbMassStorageEnabled	= TRUE;
   mPs2ControllerPolicy.Revision			= PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
   mPs2ControllerPolicy.Ps2ControllerEnabled	= TRUE;
+  mSerialRedirectionPolicy.Revision = PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
+  mSerialRedirectionPolicy.SerialRedirectionEnabled = FALSE;
 
   Status = GetVariable2 (
              L"NetworkBoot",
@@ -176,6 +179,30 @@ InitializeBootPolicies (
   } else {
     PcdSet8S(PcdVTdPolicyPropertyMask, PcdVal & (~0x03));
     DEBUG ((EFI_D_INFO, "Boot Policy: DMA protection disabled\n"));
+  }
+
+  VarSize = sizeof(BOOLEAN);
+  Status = GetVariable2 (
+             L"SerialRedirection",
+             &gDasharoSystemFeaturesGuid,
+             (VOID **) &EfiVar,
+             &VarSize
+             );
+
+
+  if (Status == EFI_NOT_FOUND)
+    mSerialRedirectionPolicy.SerialRedirectionEnabled = FixedPcdGetBool(PcdSerialRedirectionDefaultState);
+  else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar)))
+    mSerialRedirectionPolicy.SerialRedirectionEnabled = *EfiVar;
+
+  if (mSerialRedirectionPolicy.SerialRedirectionEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoSerialRedirectionPolicyGuid,
+      &mSerialRedirectionPolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Serial Redirection\n"));
   }
 
   return EFI_SUCCESS;

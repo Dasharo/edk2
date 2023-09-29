@@ -36,6 +36,7 @@ STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
 STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
 STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
 STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
+STATIC CHAR16 mSerialRedirectionEfiVar[] = L"SerialRedirection";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -231,6 +232,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowIommu = PcdGetBool (PcdShowIommuOptions);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PciMenuShowResizeableBars = PcdGetBool (PcdPciMenuShowResizeableBars);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSerialPortMenu = PcdGetBool (PcdShowSerialPortMenu);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
@@ -369,7 +371,7 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution = FixedPcdGetBool (PcdLoadOptionRoms)
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution = PcdGetBool (PcdLoadOptionRoms)
         ? OPTION_ROM_POLICY_ENABLE_ALL
         : OPTION_ROM_POLICY_DISABLE_ALL;
     Status = gRT->SetVariable (
@@ -667,6 +669,28 @@ DasharoSystemFeaturesUiLibConstructor (
         );
     ASSERT_EFI_ERROR (Status);
   }
+
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection);
+  Status = gRT->GetVariable (
+      mSerialRedirectionEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection = PcdGetBool (PcdSerialRedirectionDefaultState);
+    Status = gRT->SetVariable (
+        mSerialRedirectionEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
 
   return EFI_SUCCESS;
 }
@@ -1108,6 +1132,19 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
+  if (Private->DasharoFeaturesData.SerialPortRedirection != DasharoFeaturesData.SerialPortRedirection) {
+    Status = gRT->SetVariable (
+        mSerialRedirectionEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.SerialPortRedirection),
+        &DasharoFeaturesData.SerialPortRedirection
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
 }
@@ -1188,8 +1225,16 @@ DasharoSystemFeaturesCallback (
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
 
-          Value->u8 = FixedPcdGetBool (PcdLoadOptionRoms) ? OPTION_ROM_POLICY_ENABLE_ALL
+          Value->u8 = PcdGetBool (PcdLoadOptionRoms) ? OPTION_ROM_POLICY_ENABLE_ALL
                                                           : OPTION_ROM_POLICY_DISABLE_ALL;
+          break;
+        }
+      case SERIAL_PORT_REDIR_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->b = PcdGetBool (PcdSerialRedirectionDefaultState);
           break;
         }
       default:
