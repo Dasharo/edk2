@@ -233,6 +233,8 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowIommu = PcdGetBool (PcdShowIommuOptions);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PciMenuShowResizeableBars = PcdGetBool (PcdPciMenuShowResizeableBars);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSerialPortMenu = PcdGetBool (PcdShowSerialPortMenu);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowWiFiBt = PcdGetBool (PcdSecurityShowWiFiBtOption);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowCamera = PcdGetBool (PcdSecurityShowCameraOption);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
