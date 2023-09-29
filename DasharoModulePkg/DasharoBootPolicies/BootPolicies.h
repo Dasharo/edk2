@@ -23,10 +23,14 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 #define DASHARO_PS2_CONTROLLER_POLICY_PROTOCOL_GUID \
   { 0x4885b96d, 0xbdf1, 0x496d, 0xbc, 0x3d, 0x3e, 0x79, 0x57, 0x74, 0xcd, 0x40 }
 
+#define DASHARO_SERIAL_REDIRECTION_POLICY_PROTOCOL_GUID \
+  { 0x0cd9776f, 0xd803, 0x42b4, 0x95, 0xa4, 0xa8, 0x58, 0x46, 0x46, 0x23, 0xc9 }
+
 #define NETWORK_BOOT_POLICY_PROTOCOL_REVISION_01	0x01
 #define USB_STACK_POLICY_PROTOCOL_REVISION_01		0x01
 #define USB_MASS_STORAGE_POLICY_PROTOCOL_REVISION_01	0x01
 #define PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01	0x01
+#define SERIAL_REDIRECTION_POLICY_PROTOCOL_REVISION_01	0x01
 
 typedef struct _NETWORK_BOOT_POLICY_PROTOCOL {
   UINT32           Revision;
@@ -48,6 +52,11 @@ typedef struct _PS2_CONTROLLER_POLICY_PROTOCOL {
   BOOLEAN          Ps2ControllerEnabled;
 } PS2_CONTROLLER_POLICY_PROTOCOL;
 
+typedef struct _SERIAL_REDIRECTION_POLICY_PROTOCOL {
+  UINT32           Revision;
+  BOOLEAN          SerialRedirectionEnabled;
+} SERIAL_REDIRECTION_POLICY_PROTOCOL;
+
 //
 // Extern the GUID for protocol users.
 //
@@ -55,5 +64,6 @@ extern EFI_GUID gDasharoNetworkBootPolicyGuid;
 extern EFI_GUID gDasharoUsbDriverPolicyGuid;
 extern EFI_GUID gDasharoUsbMassStoragePolicyGuid;
 extern EFI_GUID gDasharoPs2ControllerPolicyGuid;
+extern EFI_GUID gDasharoSerialRedirectionPolicyGuid;
 
 #endif
