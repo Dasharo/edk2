@@ -64,6 +64,8 @@ typedef struct {
   BOOLEAN            DasharoEnterprise;
   BOOLEAN            SecurityMenuShowIommu;
   BOOLEAN            PciMenuShowResizeableBars;
+  BOOLEAN            SecurityMenuShowWiFiBt;
+  BOOLEAN            SecurityMenuShowCamera;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
