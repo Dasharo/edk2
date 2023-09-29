@@ -45,12 +45,12 @@
   gDasharoUsbDriverPolicyGuid          ### PROVIDES
   gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
   gDasharoPs2ControllerPolicyGuid      ### PROVIDES
+  gDasharoSerialRedirectionPolicyGuid  ### PROVIDES
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
 
 [Depex]
   gEfiVariableArchProtocolGuid
-
-[Pcd]
-  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
