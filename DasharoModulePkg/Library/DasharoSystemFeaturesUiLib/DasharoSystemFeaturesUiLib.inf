@@ -68,6 +68,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
@@ -78,4 +79,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
