@@ -14,15 +14,16 @@ SPDX-License-Identifier: BSD-2-Clause
 #define DASHARO_SYSTEM_FEATURES_GUID  \
   { 0xd15b327e, 0xff2d, 0x4fc1, {0xab, 0xf6, 0xc1, 0x2b, 0xd0, 0x8c, 0x13, 0x59} }
 
-#define DASHARO_SYSTEM_FEATURES_FORM_ID        0x1000
-#define DASHARO_SECURITY_OPTIONS_FORM_ID       0x1001
-#define DASHARO_NETWORK_OPTIONS_FORM_ID        0x1002
-#define DASHARO_USB_CONFIGURATION_FORM_ID      0x1003
-#define DASHARO_INTEL_ME_OPTIONS_FORM_ID       0x1004
-#define DASHARO_CHIPSET_CONFIGURATION_FORM_ID  0x1005
-#define DASHARO_POWER_CONFIGURATION_FORM_ID    0x1006
-#define DASHARO_PCI_CONFIGURATION_FORM_ID      0x1007
-#define DASHARO_MEMORY_CONFIGURATION_FORM_ID   0x1008
+#define DASHARO_SYSTEM_FEATURES_FORM_ID             0x1000
+#define DASHARO_SECURITY_OPTIONS_FORM_ID            0x1001
+#define DASHARO_NETWORK_OPTIONS_FORM_ID             0x1002
+#define DASHARO_USB_CONFIGURATION_FORM_ID           0x1003
+#define DASHARO_INTEL_ME_OPTIONS_FORM_ID            0x1004
+#define DASHARO_CHIPSET_CONFIGURATION_FORM_ID       0x1005
+#define DASHARO_POWER_CONFIGURATION_FORM_ID         0x1006
+#define DASHARO_PCI_CONFIGURATION_FORM_ID           0x1007
+#define DASHARO_MEMORY_CONFIGURATION_FORM_ID        0x1008
+#define DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID   0x1009
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
@@ -56,6 +57,7 @@ typedef struct {
   BOOLEAN            ShowPowerMenu;
   BOOLEAN            ShowPciMenu;
   BOOLEAN            ShowMemoryMenu;
+  BOOLEAN            ShowSerialPortMenu;
   BOOLEAN            PowerMenuShowFanCurve;
   BOOLEAN            PowerMenuShowSleepType;
   BOOLEAN            PowerMenuShowBatteryThresholds;
@@ -83,6 +85,7 @@ typedef struct {
   BOOLEAN            EnableWifiBt;
   BATTERY_CONFIG     BatteryConfig;
   UINT8              MemoryProfile;
+  BOOLEAN            SerialPortRedirection;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
@@ -113,6 +116,7 @@ typedef struct {
 #define FIRMWARE_UPDATE_MODE_QUESTION_ID  0x8003
 #define POWER_FAILURE_STATE_QUESTION_ID   0x8004
 #define OPTION_ROM_STATE_QUESTION_ID      0x8005
+#define SERIAL_PORT_REDIR_QUESTION_ID     0x8006
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 

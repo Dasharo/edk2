@@ -70,6 +70,12 @@ formset
               help   = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_HELP);
     endif;
 
+    suppressif ideqval FeaturesData.ShowSerialPortMenu == 0;
+         goto DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID,
+              prompt = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE),
+              help   = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP);
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -360,6 +366,23 @@ formset
              option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP2), value = MEMORY_PROFILE_XMP2, flags = 0;
              option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP3), value = MEMORY_PROFILE_XMP3, flags = 0;
     endoneof;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform;
+
+  form formid = DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+      checkbox varid   = FeaturesData.SerialPortRedirection,
+               questionid = SERIAL_PORT_REDIR_QUESTION_ID,
+               prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_PROMPT),
+               help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_HELP),
+               flags   = INTERACTIVE | RESET_REQUIRED,
+      endcheckbox;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
