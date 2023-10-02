@@ -1258,3 +1258,8 @@
 !if $(SATA_PASSWORD_ENABLE) == TRUE
   SecurityPkg/HddPassword/HddPasswordDxe.inf
 !endif
+
+  CrScreenshotDxe/CrScreenshotDxe.inf {
+    <BuildOptions>
+      GCC:*_*_*_CC_FLAGS = -mmmx -msse
+  }
