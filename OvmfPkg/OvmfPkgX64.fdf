@@ -437,6 +437,8 @@ INF SecurityPkg/HddPassword/HddPasswordDxe.inf
 INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 !endif
 
+INF CrScreenshotDxe/CrScreenshotDxe.inf
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]
