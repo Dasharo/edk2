@@ -1387,8 +1387,8 @@ RefreshLogo (
   IN VOID         *Context
   )
 {
-  gBS->CloseEvent (Event);
-  gST->ConOut->ClearScreen (gST->ConOut);
+  //gBS->CloseEvent (Event);
+  //gST->ConOut->ClearScreen (gST->ConOut);
   BootLogoEnableLogo ();
 }
 
