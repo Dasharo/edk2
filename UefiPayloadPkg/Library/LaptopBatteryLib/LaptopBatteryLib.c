@@ -180,6 +180,8 @@ EcReadReg32 (
   if (!Data32)
     return RETURN_INVALID_PARAMETER;
 
+  *Data32 = 0;
+
   for (Index = 0; Index < 4; Index++) {
     Status = EcReadReg(Reg + Index, &Data8[Index]);
 
