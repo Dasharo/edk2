@@ -296,10 +296,10 @@ formset
 
     suppressif ideqval FeaturesData.PowerMenuShowBatteryThresholds == 0;
         numeric varid   = FeaturesData.BatteryConfig.StartThreshold,
+                questionid = BATTERY_START_THRESHOLD_QUESTION_ID,
                 prompt  = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_PROMPT),
                 help    = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_HELP),
                 flags   = RESET_REQUIRED | INTERACTIVE,
-                default = 95,
                 minimum = 0,
                 maximum = 100,
                 step    = 1,
@@ -309,10 +309,10 @@ formset
                 endif
         endnumeric;
         numeric varid   = FeaturesData.BatteryConfig.StopThreshold,
+                questionid = BATTERY_STOP_THRESHOLD_QUESTION_ID,
                 prompt  = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_PROMPT),
                 help    = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_HELP),
                 flags   = RESET_REQUIRED | INTERACTIVE,
-                default = 98,
                 minimum = 0,
                 maximum = 100,
                 step    = 1,
