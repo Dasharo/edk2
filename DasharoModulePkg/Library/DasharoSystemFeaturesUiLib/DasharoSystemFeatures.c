@@ -1239,6 +1239,22 @@ DasharoSystemFeaturesCallback (
           Value->b = PcdGetBool (PcdSerialRedirectionDefaultState);
           break;
         }
+      case BATTERY_START_THRESHOLD_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u8 = 95;
+          break;
+        }
+      case BATTERY_STOP_THRESHOLD_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u8 = 98;
+          break;
+        }
       default:
         Status = EFI_UNSUPPORTED;
         break;
