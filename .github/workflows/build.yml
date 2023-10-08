@@ -1,0 +1,51 @@
+name: Check EDK2 QEMU Build
+
+on:
+  push:
+    branches:
+      - dasharo
+  pull_request:
+    branches:
+      - dasharo
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'  # Checkout submodules recursively.
+
+    - name: Clone edk2-platforms Repository
+      run: |
+        git clone https://github.com/Dasharo/edk2-platforms.git && \
+        cd edk2-platforms && \
+        git checkout 3323ed481d35096fb6a7eae7b49f35eff00f86cf && \
+        cd -
+
+    - name: Build OVMF Firmware Image
+      run: |
+        docker run --rm -i -v $PWD:/home/coreboot/coreboot:rw \
+          -u $(id -u):$(id -g) -w /home/coreboot/coreboot \
+          coreboot/coreboot-sdk:2021-09-23_b0d87f753c \
+         ./.github/scripts/build-qemu.sh
+
+    - name: Check RELEASE build Artifacts
+      run: |
+        if [ -f "Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd" ] && [ -f "Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd" ]; then
+          echo "RELEASE build successful. OVMF firmware image files found."
+        else
+          echo "RELEASE build failed. OVMF firmware image files not found."
+          exit 1
+        fi
+
+    - name: Check DEBUG build Artifacts
+      run: |
+        if [ -f "Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd" ] && [ -f "Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd" ]; then
+          echo "DEBUG build successful. OVMF firmware image files found."
+        else
+          echo "DEBUG build failed. OVMF firmware image files not found."
+          exit 1
+        fi
