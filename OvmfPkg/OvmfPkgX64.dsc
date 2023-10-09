@@ -42,6 +42,7 @@
   DEFINE IOMMU_ENABLE            = FALSE
   DEFINE SETUP_PASSWORD_ENABLE   = TRUE
   DEFINE SERIAL_TERMINAL         = TRUE
+  DEFINE SERIAL_REDIRECTION_DEFAULT = FALSE
 
   #
   # Network definition
@@ -574,6 +575,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|$(SERIAL_REDIRECTION_DEFAULT)
 
 ################################################################################
 #
