@@ -41,6 +41,7 @@
   DEFINE DISABLE_MTRR_PROGRAMMING = TRUE
   DEFINE IOMMU_ENABLE            = FALSE
   DEFINE SETUP_PASSWORD_ENABLE   = TRUE
+  DEFINE SERIAL_TERMINAL         = TRUE
 
   #
   # Network definition
@@ -791,6 +792,7 @@
 !endif
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
   }
   
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
@@ -817,7 +819,9 @@
     <LibraryClasses>
       PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   }
+!if $(SERIAL_TERMINAL) == TRUE
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
+!endif
   MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf {
     <LibraryClasses>
       DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
