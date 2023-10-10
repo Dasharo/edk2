@@ -49,3 +49,13 @@ jobs:
           echo "DEBUG build failed. OVMF firmware image files not found."
           exit 1
         fi
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ovmf-artifacts  # Name for the artifact
+        path: |
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
