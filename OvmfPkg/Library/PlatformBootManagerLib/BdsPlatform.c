@@ -1778,6 +1778,12 @@ PlatformBootManagerAfterConsole (
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerAfterConsole\n"));
 
+  // This is probably the earliest we can print this, as before the console is
+  // not ready yet.
+  Print(L"ESC to enter Setup\n");
+  Print(L"F2 to enter Boot Manager Menu\n");
+  Print(L"ENTER to boot directly\n");
+
   if (PcdGetBool (PcdOvmfFlashVariablesEnable)) {
     DEBUG ((
       DEBUG_INFO,
