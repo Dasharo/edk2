@@ -512,7 +512,7 @@ PlatformRegisterOptionsAndKeys (
              NULL,
              (UINT16)OptionNumber,
              0,
-             &F2,
+             &Esc,
              NULL
              );
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
@@ -520,7 +520,7 @@ PlatformRegisterOptionsAndKeys (
              NULL,
              (UINT16)BootOption.OptionNumber,
              0,
-             &Esc,
+             &F2,
              NULL
              );
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
@@ -1934,8 +1934,8 @@ PlatformBootManagerAfterConsole (
 
   // This is probably the earliest we can print this, as before the console is
   // not ready yet.
-  Print(L"ESC to enter Setup\n");
-  Print(L"F2 to enter Boot Manager Menu\n");
+  Print(L"F2 to enter Setup\n");
+  Print(L"ESC to enter Boot Manager Menu\n");
   Print(L"ENTER to boot directly\n");
 
   if (PcdGetBool (PcdOvmfFlashVariablesEnable)) {
