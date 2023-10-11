@@ -2092,7 +2092,7 @@ PlatformBootManagerAfterConsole (
   //
   PlatformRegisterFvBootOption (
     &gUefiShellFileGuid,
-    L"EFI Internal Shell",
+    L"UEFI Shell",
     LOAD_OPTION_ACTIVE,
     ShellEnabled
     );
