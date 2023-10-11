@@ -1688,7 +1688,7 @@ PlatformBootManagerAfterConsole (
   // Register UEFI Shell
   //
   PlatformRegisterFvBootOption (
-    &gUefiShellFileGuid, L"EFI Internal Shell", LOAD_OPTION_ACTIVE
+    &gUefiShellFileGuid, L"UEFI Shell", LOAD_OPTION_ACTIVE
     );
 
   RemoveStaleFvFileOptions ();
