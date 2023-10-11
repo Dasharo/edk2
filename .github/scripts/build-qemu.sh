@@ -15,5 +15,5 @@ $EDK2_PLATFORMS_PATH/Features/Intel/PowerManagement:\
 $EDK2_PLATFORMS_PATH/Features/Intel/SystemInformation:\
 $EDK2_PLATFORMS_PATH/Features/Intel/UserInterface"
 
-build -D SERIAL_REDIRECTION_DEFAULT=TRUE -a IA32 -a X64 -t GCC5 -b RELEASE -p OvmfPkg/OvmfPkgX64.dsc
-build -D SERIAL_REDIRECTION_DEFAULT=TRUE -a IA32 -a X64 -t GCC5 -b DEBUG -p OvmfPkg/OvmfPkgX64.dsc
+build -a IA32 -a X64 -t GCC5 -b RELEASE -p OvmfPkg/OvmfPkgX64.dsc
+build -a IA32 -a X64 -t GCC5 -b DEBUG -p OvmfPkg/OvmfPkgX64.dsc
