@@ -14,6 +14,7 @@
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
+#include <Guid/TtyTerm.h>
 
 #include <Library/QemuFwCfgSimpleParserLib.h>
 
@@ -899,6 +900,7 @@ PrepareLpcBridgeDevicePath (
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
+  EFI_GUID                  TerminalTypeGuid;
   CHAR16                    *DevPathStr;
 
   DevicePath = NULL;
@@ -937,6 +939,10 @@ PrepareLpcBridgeDevicePath (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode
                  );
+
+  TerminalTypeGuid = gEfiTtyTermGuid;
+  CopyGuid (&gTerminalTypeDeviceNode.Guid, &TerminalTypeGuid);
+
   DevicePath = AppendDevicePathNode (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode
