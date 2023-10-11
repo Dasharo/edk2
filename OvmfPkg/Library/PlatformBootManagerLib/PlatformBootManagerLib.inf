@@ -83,3 +83,4 @@
   gEfiGlobalVariableGuid
   gRootBridgesConnectedEventGroupGuid
   gUefiShellFileGuid
+  gEfiTtyTermGuid
