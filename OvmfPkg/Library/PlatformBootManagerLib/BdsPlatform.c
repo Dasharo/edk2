@@ -14,6 +14,7 @@
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
+#include <Guid/TtyTerm.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -846,6 +847,7 @@ PrepareLpcBridgeDevicePath (
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
+  EFI_GUID                  TerminalTypeGuid;
   CHAR16                    *DevPathStr;
 
   DevicePath = NULL;
@@ -884,6 +886,10 @@ PrepareLpcBridgeDevicePath (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode
                  );
+
+  TerminalTypeGuid = gEfiTtyTermGuid;
+  CopyGuid (&gTerminalTypeDeviceNode.Guid, &TerminalTypeGuid);
+
   DevicePath = AppendDevicePathNode (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode
