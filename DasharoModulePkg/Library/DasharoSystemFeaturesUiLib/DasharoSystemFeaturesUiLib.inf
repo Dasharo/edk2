@@ -82,4 +82,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
