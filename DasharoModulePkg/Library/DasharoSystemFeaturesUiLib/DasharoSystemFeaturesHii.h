@@ -66,6 +66,7 @@ typedef struct {
   BOOLEAN            PciMenuShowResizeableBars;
   BOOLEAN            SecurityMenuShowWiFiBt;
   BOOLEAN            SecurityMenuShowCamera;
+  BOOLEAN            MeHapAvailable;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -121,6 +122,7 @@ typedef struct {
 #define SERIAL_PORT_REDIR_QUESTION_ID        0x8006
 #define BATTERY_START_THRESHOLD_QUESTION_ID  0x8007
 #define BATTERY_STOP_THRESHOLD_QUESTION_ID   0x8008
+#define INTEL_ME_MODE_QUESTION_ID            0x8009
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 
