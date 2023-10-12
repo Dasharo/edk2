@@ -62,6 +62,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|FALSE|BOOLEAN|0x000000015
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption|FALSE|BOOLEAN|0x000000016
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|FALSE|BOOLEAN|0x000000017
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState|0|UINT8|0x000000018
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable|TRUE|BOOLEAN|0x000000019
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
