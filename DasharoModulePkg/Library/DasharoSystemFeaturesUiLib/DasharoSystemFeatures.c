@@ -42,7 +42,6 @@ STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN   mLockBiosDefault = TRUE;
 STATIC BOOLEAN   mSmmBwpDefault = FALSE;
-STATIC UINT8     mMeModeDefault   = ME_MODE_ENABLE;
 STATIC BOOLEAN   mPs2ControllerDefault = TRUE;
 STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
 STATIC UINT8     mIommuEnableDefault = FALSE;
@@ -235,6 +234,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSerialPortMenu = PcdGetBool (PcdShowSerialPortMenu);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowWiFiBt = PcdGetBool (PcdSecurityShowWiFiBtOption);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowCamera = PcdGetBool (PcdSecurityShowCameraOption);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeHapAvailable = PcdGetBool (PcdIntelMeHapAvailable);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
@@ -352,7 +352,7 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = mMeModeDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = FixedPcdGet8(PcdIntelMeDefaultState);
     Status = gRT->SetVariable (
         mMeModeEfiVar,
         &gDasharoSystemFeaturesGuid,
@@ -1253,6 +1253,14 @@ DasharoSystemFeaturesCallback (
             return EFI_INVALID_PARAMETER;
 
           Value->u8 = 98;
+          break;
+        }
+      case INTEL_ME_MODE_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          Value->u8 = FixedPcdGet8(PcdIntelMeDefaultState);
           break;
         }
       default:

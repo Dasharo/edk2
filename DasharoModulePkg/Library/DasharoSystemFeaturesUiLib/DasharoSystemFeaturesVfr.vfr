@@ -202,13 +202,16 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     oneof varid  = FeaturesData.MeMode,
+             questionid = INTEL_ME_MODE_QUESTION_ID,
              prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
              help   = STRING_TOKEN(STR_ME_MODE_HELP),
-             flags  = RESET_REQUIRED,
+             flags  = RESET_REQUIRED | INTERACTIVE,
 
-             option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = DEFAULT;
+             option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
+          suppressif ideqval FeaturesData.MeHapAvailable == 0;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
+          endif;
     endoneof;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
