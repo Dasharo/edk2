@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - dasharo
+    tags:
+      - 'qemu_q35_v*'
   pull_request:
     branches:
       - dasharo
@@ -55,6 +57,16 @@ jobs:
       with:
         name: ovmf-artifacts  # Name for the artifact
         path: |
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.event.ref, 'refs/tags/qemu')
+      with:
+        files: |
           Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
           Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
           Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
