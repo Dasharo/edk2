@@ -645,7 +645,16 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryMenu|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|TRUE
 
 ################################################################################
 #
