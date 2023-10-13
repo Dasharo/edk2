@@ -38,6 +38,8 @@ jobs:
       run: |
         if [ -f "Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd" ] && [ -f "Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd" ]; then
           echo "RELEASE build successful. OVMF firmware image files found."
+          cp Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd OVMF_CODE_RELEASE.fd
+          cp Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd OVMF_VARS_RELEASE.fd
         else
           echo "RELEASE build failed. OVMF firmware image files not found."
           exit 1
@@ -47,6 +49,8 @@ jobs:
       run: |
         if [ -f "Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd" ] && [ -f "Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd" ]; then
           echo "DEBUG build successful. OVMF firmware image files found."
+          cp Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd OVMF_CODE_DEBUG.fd
+          cp Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd OVMF_VARS_DEBUG.fd
         else
           echo "DEBUG build failed. OVMF firmware image files not found."
           exit 1
@@ -57,17 +61,17 @@ jobs:
       with:
         name: ovmf-artifacts  # Name for the artifact
         path: |
-          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
-          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
-          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
-          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
+          OVMF_CODE_RELEASE.fd
+          OVMF_VARS_RELEASE.fd
+          OVMF_CODE_DEBUG.fd
+          OVMF_VARS_DEBUG.fd
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.event.ref, 'refs/tags/qemu')
       with:
         files: |
-          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
-          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
-          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
-          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
+          OVMF_CODE_RELEASE.fd
+          OVMF_VARS_RELEASE.fd
+          OVMF_CODE_DEBUG.fd
+          OVMF_VARS_DEBUG.fd
