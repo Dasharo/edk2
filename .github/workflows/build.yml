@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - dasharo
+  create:
+    # Trigger only on tag creation matching the format dasharo_qemu_vVERSION
+    tags:
+      - 'dasharo_qemu_v*'
 
 jobs:
   build:
@@ -59,3 +63,14 @@ jobs:
           Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
           Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
           Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd
+          Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd
+        tag_name: ${{ github.ref }}
