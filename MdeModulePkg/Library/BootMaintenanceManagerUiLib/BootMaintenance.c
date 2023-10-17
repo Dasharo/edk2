@@ -1084,7 +1084,8 @@ BootMaintCallback (
   UINTN             Index;
   EFI_DEVICE_PATH_PROTOCOL * File;
 
-  if (Action != EFI_BROWSER_ACTION_CHANGING && Action != EFI_BROWSER_ACTION_CHANGED && Action != EFI_BROWSER_ACTION_FORM_OPEN) {
+
+  if (Action != EFI_BROWSER_ACTION_CHANGING && Action != EFI_BROWSER_ACTION_CHANGED && Action != EFI_BROWSER_ACTION_FORM_OPEN && Action != EFI_BROWSER_ACTION_RESET_TO_DEFAULT) {
     //
     // Do nothing for other UEFI Action. Only do call back when data is changed or the form is open.
     //
@@ -1092,6 +1093,19 @@ BootMaintCallback (
   }
 
   Private        = BMM_CALLBACK_DATA_FROM_THIS (This);
+
+
+
+  if (Action == EFI_BROWSER_ACTION_DEFAULT_FIRMWARE) {
+    //find something like Private->BmmDefaultValues.BootTimeOut
+    CurrentFakeNVMap->BootTimeOut = Private->BmmOldFakeNVData.BootTimeOut;
+
+    HiiSetBrowserData(...);  // Update the value in the HII database
+
+    return EFI_SUCCESS;  // Indicate that the operation was successful
+  }
+
+
 
   if (Action == EFI_BROWSER_ACTION_FORM_OPEN) {
     if (QuestionId == KEY_VALUE_TRIGGER_FORM_OPEN_ACTION) {
