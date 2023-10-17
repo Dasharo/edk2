@@ -351,4 +351,13 @@ formset
 
   endform;
 
+  form formid = FORM_TIME_OUT_ID,
+       help = STRING_TOKEN(STR_HLP_AUTO_BOOT);
+       title = STRING_TOKEN(STR_FORM_STD_ERR_TITLE);
+       nosubmitif
+            prompt = STRING_TOKEN(AUTOBOOT_NOSUBMIT_IF_NEGATIVE),
+            //value < 0
+       endif;
+  endform;
+
 endformset;

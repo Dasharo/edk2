@@ -31,6 +31,8 @@
                                        #language fr-FR  "Modify boot driver options"
 #string STR_FORM_BOOT_ADD_TITLE        #language en-US  "Add Boot Option"
                                        #language fr-FR  "Add Boot Option"
+#string AUTOBOOT_NOSUBMIT_IF_NEGATIVE  #language en-US  "Autoboot Timeout value cannot be negative!"
+                                       #language fr-FR  "Autoboot Timeout value cannot be negative!"
 #string STR_FORM_BOOT_ADD_HELP         #language en-US  "Add EFI Application or Removable Fs as Boot Option"
                                        #language fr-FR  "Add EFI Application or Removable Fs as Boot Option"
 #string STR_FORM_BOOT_DEL_TITLE        #language en-US  "Delete Boot Option"
