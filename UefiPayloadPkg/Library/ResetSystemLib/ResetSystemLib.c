@@ -74,7 +74,7 @@ ResetCold (
   VOID
   )
 {
-  IoWrite8 ((UINTN)mAcpiBoardInfo.ResetRegAddress, mAcpiBoardInfo.ResetValue);
+  IoWrite8 ((UINTN)mAcpiBoardInfo.ResetRegAddress, mAcpiBoardInfo.ResetValue | 8);
   CpuDeadLoop ();
 }
 
