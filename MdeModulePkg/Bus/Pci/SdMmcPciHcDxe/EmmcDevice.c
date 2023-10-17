@@ -1471,9 +1471,17 @@ EmmcIdentification (
   UINT32                         Ocr;
   UINT16                         Rca;
   UINTN                          Retry;
+  UINT32                         val32;
 
   PciIo    = Private->PciIo;
   PassThru = &Private->PassThru;
+
+  if (BhtHostPciSupport(PciIo)) {
+    /* Clear clk src selection before reset */
+    val32 = PciBhtRead32(PciIo, BHT_CLK_SRC_SWITCH);
+    val32 &= ~BHT_PCR_SD_SEL_DLL;
+    PciBhtWrite32(PciIo, BHT_CLK_SRC_SWITCH, val32);
+  }
 
   Status = EmmcReset (PassThru, Slot);
   if (EFI_ERROR (Status)) {

@@ -635,5 +635,7 @@ DbgNull(IN CONST CHAR16 * fmt, ...);
 #define	BHT_PCIRMappingCtl    (0x204) /* PCI CFG Space Register Mapping Control Register */
 #define	BHT_PCIRMappingEn     (0x208) /* PCI CFG Space Register Mapping Enable Register */
 #define	BHT_GPIOCTL           (0x210) /* GPIO control register*/
+#define	BHT_CLK_SRC_SWITCH    (0x354) /* PCI CFG Space Register */
+#define BHT_PCR_SD_SEL_DLL    (1 << 16)
 
 #endif
