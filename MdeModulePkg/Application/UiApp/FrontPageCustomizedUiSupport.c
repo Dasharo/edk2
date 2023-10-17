@@ -11,8 +11,11 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/MdeModuleHii.h>
 #include <Guid/GlobalVariable.h>
 
+#include <Pi/PiFirmwareVolume.h>
+
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
+#include <Protocol/FirmwareVolumeBlock.h>
 
 #include <Library/HiiLib.h>
 #include <Library/DebugLib.h>
@@ -37,6 +40,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FRONT_PAGE_KEY_CONTINUE               0x1000
 #define FRONT_PAGE_KEY_RESET                  0x1001
 #define FRONT_PAGE_KEY_LANGUAGE               0x1002
+#define FRONT_PAGE_KEY_RESET_TO_DEFAULTS      0x1003
 #define FRONT_PAGE_KEY_DRIVER                 0x2000
 
 typedef struct {
@@ -153,6 +157,92 @@ LanguageChangeHandler (
   return EFI_SUCCESS;
 }
 
+STATIC
+EFI_FIRMWARE_VOLUME_BLOCK_PROTOCOL *
+FindNvarStoreFvb (
+  VOID
+  )
+
+{
+  UINTN                               NumberHandles = 0;
+  EFI_HANDLE                          *Buffer;
+  EFI_STATUS                          Status;
+  EFI_FIRMWARE_VOLUME_BLOCK_PROTOCOL  *Fvb;
+  EFI_PHYSICAL_ADDRESS                FvbBaseAddress;
+  EFI_PHYSICAL_ADDRESS                NvarStoreBase;
+
+  NvarStoreBase = (PcdGet64 (PcdFlashNvStorageVariableBase64) != 0) ?
+                     PcdGet64 (PcdFlashNvStorageVariableBase64) : PcdGet32 (PcdFlashNvStorageVariableBase);
+  //
+  // Locate all handles of Fvb protocol
+  //
+  Status = gBS->LocateHandleBuffer (
+                  ByProtocol,
+                  &gEfiFirmwareVolumeBlockProtocolGuid,
+                  NULL,
+                  &NumberHandles,
+                  &Buffer
+                  );
+
+  while (NumberHandles > 0) {
+    Status = gBS->HandleProtocol (
+                      Buffer[--NumberHandles],
+                      &gEfiFirmwareVolumeBlockProtocolGuid,
+                      (VOID **) &Fvb
+                      );
+    
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+    //
+    // Compare the address and select the right one
+    //
+    Status = Fvb->GetPhysicalAddress (Fvb, &FvbBaseAddress);
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+    if (FvbBaseAddress == NvarStoreBase) {
+      FreePool (Buffer);
+      return Fvb;
+    }
+
+  }
+
+  if (NumberHandles > 0)
+    FreePool (Buffer);
+
+  return NULL;
+}
+
+STATIC
+VOID
+EraseNvarStorage (
+  VOID
+)
+{
+  EFI_FIRMWARE_VOLUME_BLOCK_PROTOCOL  *Fvb;
+  UINT32                              FvbNumLba;
+  UINTN                               BlockSize;
+  UINTN                               NumBLocks;
+  EFI_STATUS                          Status;
+
+  Fvb = FindNvarStoreFvb ();
+
+  if (!Fvb)
+    return;
+
+  Status = Fvb->GetBlockSize (Fvb, 0, &BlockSize, &NumBLocks);
+  if (EFI_ERROR (Status)) {
+    return;
+  }
+
+  FvbNumLba = (PcdGet32 (PcdFlashNvStorageVariableSize) +
+               PcdGet32 (PcdFlashNvStorageFtwWorkingSize) +
+               PcdGet32 (PcdFlashNvStorageFtwSpareSize)) / BlockSize;
+
+  Fvb->EraseBlocks (Fvb, (EFI_LBA)0, FvbNumLba, EFI_LBA_LIST_TERMINATOR);
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -183,6 +273,7 @@ UiSupportLibCallbackHandler (
 {
   if (QuestionId != FRONT_PAGE_KEY_CONTINUE &&
       QuestionId != FRONT_PAGE_KEY_RESET &&
+      QuestionId != FRONT_PAGE_KEY_RESET_TO_DEFAULTS &&
       QuestionId != FRONT_PAGE_KEY_LANGUAGE) {
     return FALSE;
   }
@@ -224,6 +315,9 @@ UiSupportLibCallbackHandler (
       *Status = LanguageChangeHandler(Value);
       break;
 
+    case FRONT_PAGE_KEY_RESET_TO_DEFAULTS:
+      EraseNvarStorage ();
+      // Fallthrough
     case FRONT_PAGE_KEY_RESET:
       //
       // Reset
@@ -446,6 +540,29 @@ UiCreateResetMenu (
     FRONT_PAGE_KEY_RESET,
     STRING_TOKEN (STR_RESET_STRING),
     STRING_TOKEN (STR_RESET_STRING),
+    EFI_IFR_FLAG_CALLBACK,
+    0
+    );
+}
+
+/**
+  Create Reset to defaults menu in the front page.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateResetToDefaultsMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  )
+{
+  HiiCreateActionOpCode (
+    StartOpCodeHandle,
+    FRONT_PAGE_KEY_RESET_TO_DEFAULTS,
+    STRING_TOKEN (STR_RESET_TO_DEFAULTS_STRING),
+    STRING_TOKEN (STR_RESET_TO_DEFAULTS_STRING),
     EFI_IFR_FLAG_CALLBACK,
     0
     );

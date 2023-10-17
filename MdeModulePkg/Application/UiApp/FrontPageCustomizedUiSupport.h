@@ -62,6 +62,19 @@ UiCreateResetMenu (
   );
 
 /**
+  Create Reset to defaults menu in the front page.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateResetToDefaultsMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  );
+
+/**
   Rename the driver name if necessary.
 
   @param    DriverName          Input the driver name.

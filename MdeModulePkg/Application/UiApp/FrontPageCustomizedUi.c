@@ -58,6 +58,11 @@ UiCustomizeFrontPage (
   // Create reset menu.
   //
   UiCreateResetMenu(HiiHandle, StartOpCodeHandle);
+
+  //
+  // Create reset to defaults menu.
+  //
+  UiCreateResetToDefaultsMenu(HiiHandle, StartOpCodeHandle);
 }
 
 /**
