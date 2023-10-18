@@ -894,7 +894,6 @@ BootMaintRouteConfig (
       goto Exit;
     }
 
-    PcdSet16S (PcdPlatformBootTimeOut, NewBmmData->BootTimeOut);
     Private->BmmOldFakeNVData.BootTimeOut = NewBmmData->BootTimeOut;
   }
 
@@ -1532,12 +1531,12 @@ InitializeBmmConfig (
                   &DataSize,
                   &BootTimeout
                   );
-  if (!EFI_ERROR (Status) && BootTimeout != 0xFFFF) {
+  if (!EFI_ERROR (Status)) {
     DEBUG ((EFI_D_INFO, "%a: Timeout from variable: %d\n", __FUNCTION__, BootTimeout));
-    PcdSet16S (PcdPlatformBootTimeOut, BootTimeout);
+    CallbackData->BmmFakeNvData.BootTimeOut = BootTimeout;
+  } else {
+    CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
   }
-
-  CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
 
   //
   // Initialize data which located in Boot Options Menu

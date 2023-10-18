@@ -1647,8 +1647,22 @@ PlatformBootManagerWaitCallback (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION White;
   UINT16                              Timeout;
+  UINTN                               DataSize;
+  EFI_STATUS                          Status;
 
-  Timeout = PcdGet16 (PcdPlatformBootTimeOut);
+  DEBUG ((EFI_D_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
+
+  DataSize = sizeof(Timeout);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &Timeout
+                  );
+  if (EFI_ERROR (Status)) {
+    Timeout = PcdGet16 (PcdPlatformBootTimeOut);
+  }
 
   Black.Raw = 0x00000000;
   White.Raw = 0x00FFFFFF;

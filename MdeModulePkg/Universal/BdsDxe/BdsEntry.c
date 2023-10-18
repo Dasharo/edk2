@@ -318,10 +318,25 @@ BdsWait (
 {
   EFI_STATUS  Status;
   UINT16      TimeoutRemain;
+  UINT16      BootTimeout;
+  UINTN       DataSize;
 
   DEBUG ((DEBUG_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
 
-  TimeoutRemain = PcdGet16 (PcdPlatformBootTimeOut);
+  DataSize = sizeof(BootTimeout);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &BootTimeout
+                  );
+  if (EFI_ERROR (Status)) {
+    BootTimeout = PcdGet16 (PcdPlatformBootTimeOut);
+  }
+
+  TimeoutRemain = BootTimeout;
+
   while (TimeoutRemain != 0) {
     DEBUG ((DEBUG_INFO, "[Bds]BdsWait(%d)..Zzzz...\n", (UINTN)TimeoutRemain));
     PlatformBootManagerWaitCallback (TimeoutRemain);
@@ -354,7 +369,7 @@ BdsWait (
   // Note that the (TimeoutRemain == 0) condition excludes
   // PcdPlatformBootTimeOut=0xFFFF, and that's deliberate.
   //
-  if ((PcdGet16 (PcdPlatformBootTimeOut) != 0) && (TimeoutRemain == 0)) {
+  if ((BootTimeout != 0) && (TimeoutRemain == 0)) {
     PlatformBootManagerWaitCallback (0);
   }
 
@@ -755,9 +770,7 @@ BdsEntry (
                   &DataSize,
                   &BootTimeOut
                   );
-  if (!EFI_ERROR (Status) && BootTimeOut != 0xFFFF) {
-    PcdSet16S (PcdPlatformBootTimeOut, BootTimeOut);
-  } else {
+  if (EFI_ERROR (Status)) {
     BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
     if (BootTimeOut != 0xFFFF) {
       //
