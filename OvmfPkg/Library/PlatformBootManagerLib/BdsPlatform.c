@@ -575,7 +575,7 @@ PlatformBootManagerBeforeConsole (
   EFI_HANDLE     Handle;
   EFI_STATUS     Status;
   UINT16         FrontPageTimeout;
-  RETURN_STATUS  PcdStatus;
+  UINTN          DataSize;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerBeforeConsole\n"));
   InstallDevicePathCallback ();
@@ -651,29 +651,37 @@ PlatformBootManagerBeforeConsole (
     XenDetected () ? gXenPlatformConsole : gPlatformConsole
     );
 
-  FrontPageTimeout = GetFrontPageTimeoutFromQemu ();
-  PcdStatus        = PcdSet16S (PcdPlatformBootTimeOut, FrontPageTimeout);
-  ASSERT_RETURN_ERROR (PcdStatus);
-  //
-  // Reflect the PCD in the standard Timeout variable.
-  //
-  Status = gRT->SetVariable (
+  DataSize = sizeof(FrontPageTimeout);
+  Status = gRT->GetVariable(
                   EFI_TIME_OUT_VARIABLE_NAME,
                   &gEfiGlobalVariableGuid,
-                  (EFI_VARIABLE_NON_VOLATILE |
-                   EFI_VARIABLE_BOOTSERVICE_ACCESS |
-                   EFI_VARIABLE_RUNTIME_ACCESS),
-                  sizeof FrontPageTimeout,
+                  NULL,
+                  &DataSize,
                   &FrontPageTimeout
                   );
-  DEBUG ((
-    EFI_ERROR (Status) ? DEBUG_ERROR : DEBUG_VERBOSE,
-    "%a: SetVariable(%s, %u): %r\n",
-    __func__,
-    EFI_TIME_OUT_VARIABLE_NAME,
-    FrontPageTimeout,
-    Status
-    ));
+  if (EFI_ERROR (Status)) {
+    FrontPageTimeout = GetFrontPageTimeoutFromQemu ();
+    //
+    // Reflect the PCD in the standard Timeout variable.
+    //
+    Status = gRT->SetVariable (
+                    EFI_TIME_OUT_VARIABLE_NAME,
+                    &gEfiGlobalVariableGuid,
+                    (EFI_VARIABLE_NON_VOLATILE |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS),
+                    sizeof FrontPageTimeout,
+                    &FrontPageTimeout
+                    );
+    DEBUG ((
+      EFI_ERROR (Status) ? DEBUG_ERROR : DEBUG_VERBOSE,
+      "%a: SetVariable(%s, %u): %r\n",
+      __FUNCTION__,
+      EFI_TIME_OUT_VARIABLE_NAME,
+      FrontPageTimeout,
+      Status
+      ));
+  }
 
   if (!FeaturePcdGet (PcdBootRestrictToFirmware)) {
     PlatformRegisterOptionsAndKeys ();
@@ -2137,8 +2145,22 @@ PlatformBootManagerWaitCallback (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  White;
   UINT16                               TimeoutInitial;
+  UINTN                                DataSize;
+  EFI_STATUS                           Status;
 
-  TimeoutInitial = PcdGet16 (PcdPlatformBootTimeOut);
+  DEBUG ((EFI_D_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
+
+  DataSize = sizeof (TimeoutInitial);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &TimeoutInitial
+                  );
+  if (EFI_ERROR (Status)) {
+    TimeoutInitial = PcdGet16 (PcdPlatformBootTimeOut);
+  }
 
   //
   // If PcdPlatformBootTimeOut is set to zero, then we consider
