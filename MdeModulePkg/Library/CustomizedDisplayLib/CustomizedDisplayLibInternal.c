@@ -583,7 +583,7 @@ PrintHotKeyHelpString (
 
   CopyMem (&LocalScreen, &gScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
   ColumnWidth           = (LocalScreen.RightColumn - LocalScreen.LeftColumn) / 3;
-  BottomRowOfHotKeyHelp = LocalScreen.BottomRow - STATUS_BAR_HEIGHT - 3;
+  BottomRowOfHotKeyHelp = LocalScreen.BottomRow - STATUS_BAR_HEIGHT - 4;
   ColumnStr             = gLibEmptyString;
 
   //
