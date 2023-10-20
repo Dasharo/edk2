@@ -761,6 +761,10 @@ TheKey2:
     switch (Key.UnicodeChar) {
       case '+':
       case '-':
+        if (ManualInput && ((NumericOp->Flags & EFI_IFR_DISPLAY) == EFI_IFR_DISPLAY_UINT_DEC)) {
+          UpdateStatusBar(INPUT_ERROR, TRUE);
+          break;
+        }
         if (ManualInput && IntInput) {
           //
           // In Manual input mode, check whether input the negative flag.
