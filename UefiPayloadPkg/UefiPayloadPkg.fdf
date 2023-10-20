@@ -346,6 +346,7 @@ INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 !endif
 
+INF SecurityPkg/Tcg/MemoryOverwriteControl/TcgMor.inf
 
 #
 # Shell
