@@ -11,6 +11,11 @@
 #include <Uefi/UefiBaseType.h>
 #include <Base.h>
 
+BOOLEAN
+FileIsInFv (
+  EFI_DEVICE_PATH_PROTOCOL  *FilePath
+  );
+
 VOID
 PlatformRegisterFvBootOption (
   EFI_GUID  *FileGuid,
