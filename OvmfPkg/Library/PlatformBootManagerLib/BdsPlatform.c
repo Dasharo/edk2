@@ -318,7 +318,8 @@ PlatformRegisterFvBootOption (
   EFI_GUID  *FileGuid,
   CHAR16    *Description,
   UINT32    Attributes,
-  BOOLEAN   Enabled
+  BOOLEAN   Enabled,
+  BOOLEAN   BootNow
   )
 {
   EFI_STATUS                         Status;
@@ -368,6 +369,9 @@ PlatformRegisterFvBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
+  if (BootNow)
+    EfiBootManagerBoot (&NewOption);
+
   BootOptions = EfiBootManagerGetLoadOptions (
                   &BootOptionCount,
                   LoadOptionTypeBoot
@@ -387,6 +391,72 @@ PlatformRegisterFvBootOption (
                BootOptions[OptionIndex].OptionNumber,
                LoadOptionTypeBoot
                );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+VOID
+PlatformUnregisterFvBootOption (
+  EFI_GUID  *FileGuid,
+  CHAR16    *Description,
+  UINT32    Attributes
+  )
+{
+  EFI_STATUS                         Status;
+  INTN                               OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION       NewOption;
+  EFI_BOOT_MANAGER_LOAD_OPTION       *BootOptions;
+  UINTN                              BootOptionCount;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **)&LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
+  DevicePath = AppendDevicePathNode (
+                 DevicePath,
+                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
+                 );
+  ASSERT (DevicePath != NULL);
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             Attributes,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption,
+                  BootOptions,
+                  BootOptionCount
+                  );
+
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -2102,7 +2172,8 @@ PlatformBootManagerAfterConsole (
     &gUefiShellFileGuid,
     L"UEFI Shell",
     LOAD_OPTION_ACTIVE,
-    ShellEnabled
+    ShellEnabled,
+    FALSE
     );
 
   //
@@ -2112,7 +2183,8 @@ PlatformBootManagerAfterConsole (
     &gGrubFileGuid,
     L"Grub Bootloader",
     LOAD_OPTION_ACTIVE,
-    TRUE
+    TRUE,
+    FALSE
     );
 
   RemoveStaleFvFileOptions ();
