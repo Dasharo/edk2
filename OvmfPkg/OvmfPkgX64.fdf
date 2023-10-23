@@ -376,6 +376,18 @@ INF OvmfPkg/TdxDxe/TdxDxe.inf
 !include NetworkPkg/Network.fdf.inc
   INF  OvmfPkg/VirtioNetDxe/VirtioNet.inf
 
+#
+# iPXE support
+#
+!if $(NETWORK_IPXE) == TRUE
+  #
+  # build system or user should put the ipxe.efi file here before EDK2 build
+  #
+  FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
+   SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/ipxe.efi
+  }
+!endif
+
 INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
 #
