@@ -49,13 +49,29 @@
   #
   # Network definition
   #
+  DEFINE NETWORK_PXE_BOOT               = FALSE
+  DEFINE NETWORK_ENABLE                 = FALSE
   DEFINE NETWORK_TLS_ENABLE             = FALSE
   DEFINE NETWORK_IP6_ENABLE             = FALSE
+  DEFINE NETWORK_IP4_ENABLE             = TRUE
+  DEFINE NETWORK_LAN_ROM                = FALSE
+
+!if $(NETWORK_PXE_BOOT) == TRUE
+  DEFINE NETWORK_SNP_ENABLE             = TRUE
   DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
+  DEFINE NETWORK_ISCSI_ENABLE           = FALSE
+!else
+  DEFINE NETWORK_SNP_ENABLE             = FALSE
+  DEFINE NETWORK_HTTP_BOOT_ENABLE       = TRUE
   DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
   DEFINE NETWORK_ISCSI_ENABLE           = TRUE
+!endif
 
 !include NetworkPkg/NetworkDefines.dsc.inc
+  #
+  # IPXE support
+  #
+  DEFINE NETWORK_IPXE                   = TRUE
 
   #
   # Device drivers
