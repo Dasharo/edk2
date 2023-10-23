@@ -63,7 +63,6 @@ This function checks whether a File exists within the firmware volume.
                        otherwise.
 **/
 BOOLEAN
-static
 FileIsInFv (
   EFI_DEVICE_PATH_PROTOCOL  *FilePath
   )
