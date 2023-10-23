@@ -33,6 +33,8 @@
   OvmfPkg/OvmfPkg.dec
   SecurityPkg/SecurityPkg.dec
   ShellPkg/ShellPkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -61,6 +63,9 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuVariableEvent
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashVariablesEnable
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfHostBridgePciDevId
+  gUefiPayloadPkgTokenSpaceGuid.PcdiPXEFile
+  gUefiPayloadPkgTokenSpaceGuid.PcdiPXEOptionName
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate         ## CONSUMES
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits         ## CONSUMES
@@ -84,3 +89,4 @@
   gRootBridgesConnectedEventGroupGuid
   gUefiShellFileGuid
   gEfiTtyTermGuid
+  gDasharoSystemFeaturesGuid
