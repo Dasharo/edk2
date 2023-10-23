@@ -352,7 +352,7 @@ INF MdeModulePkg/Logo/LogoDxe.inf
   # build system or user should put the ipxe.efi file here before EDK2 build
   #
   FILE FREEFORM = B68653C7-EEA1-4435-A199-A44F59E4476C {
-   SECTION PE32 = UefiPayloadPkg/NetworkDrivers/ipxe.efi
+   SECTION PE32 = ipxe.efi
   }
 !endif
 
