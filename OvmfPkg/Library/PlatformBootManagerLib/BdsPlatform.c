@@ -2007,6 +2007,9 @@ PlatformBootManagerAfterConsole (
   )
 {
   EFI_BOOT_MODE  BootMode;
+  BOOLEAN        NetBootEnabled;
+  UINTN          VarSize;
+  EFI_STATUS     Status;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerAfterConsole\n"));
 
@@ -2072,6 +2075,43 @@ PlatformBootManagerAfterConsole (
     EfiBootManagerRefreshAllBootOption ();
   }
 
+  VarSize = sizeof (NetBootEnabled);
+  Status = gRT->GetVariable (
+      L"NetworkBoot",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &NetBootEnabled
+      );
+
+  //
+  // Register iPXE
+  //
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
+    if (NetBootEnabled) {
+      DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
+      PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE,
+                                    FALSE);
+    } else {
+        DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
+        PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                        (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                        LOAD_OPTION_ACTIVE);
+    }
+  } else if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
+    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                  LOAD_OPTION_ACTIVE,
+                                  FALSE);
+  } else {
+    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE);
+  }
   //
   // Register UEFI Shell
   //
