@@ -10,6 +10,7 @@
 #include <Guid/RootBridgesConnectedEventGroup.h>
 #include <Guid/SerialPortLibVendor.h>
 #include <Protocol/FirmwareVolume2.h>
+#include <Protocol/LoadedImage.h>
 #include <Protocol/VirtioDevice.h>
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
@@ -230,6 +231,157 @@ GetBootManagerMenuAppOption (
   }
 
   return OptionNumber;
+}
+
+STATIC VOID
+PlatformRegisterFvBootOption2 (
+  EFI_GUID  *FileGuid,
+  CHAR16    *Description,
+  UINT32    Attributes,
+  BOOLEAN   Enabled,
+  BOOLEAN   BootNow
+  )
+{
+  EFI_STATUS                         Status;
+  INTN                               OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION       NewOption;
+  EFI_BOOT_MANAGER_LOAD_OPTION       *BootOptions;
+  UINTN                              BootOptionCount;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **)&LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
+  DevicePath = AppendDevicePathNode (
+                 DevicePath,
+                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
+                 );
+  ASSERT (DevicePath != NULL);
+
+  //
+  // File is not in firmware, so it is going to be deleted anyway by
+  // RemoveStaleFvFileOptions, let's not add it.
+  //
+  if (!FileIsInFv (DevicePath)) {
+    FreePool (DevicePath);
+    return;
+  }
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             Attributes,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  if (BootNow)
+    EfiBootManagerBoot (&NewOption);
+
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption,
+                  BootOptions,
+                  BootOptionCount
+                  );
+
+  if ((OptionIndex == -1) && Enabled) {
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+    ASSERT_EFI_ERROR (Status);
+  } else if ((OptionIndex != -1) && !Enabled) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (
+               BootOptions[OptionIndex].OptionNumber,
+               LoadOptionTypeBoot
+               );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+STATIC VOID
+PlatformUnregisterFvBootOption (
+  EFI_GUID  *FileGuid,
+  CHAR16    *Description,
+  UINT32    Attributes
+  )
+{
+  EFI_STATUS                         Status;
+  INTN                               OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION       NewOption;
+  EFI_BOOT_MANAGER_LOAD_OPTION       *BootOptions;
+  UINTN                              BootOptionCount;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **)&LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
+  DevicePath = AppendDevicePathNode (
+                 DevicePath,
+                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
+                 );
+  ASSERT (DevicePath != NULL);
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             Attributes,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption,
+                  BootOptions,
+                  BootOptionCount
+                  );
+
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
 
 VOID
@@ -1858,21 +2010,23 @@ PlatformBootManagerAfterConsole (
   //
   // Register UEFI Shell
   //
-  PlatformRegisterFvBootOption (
+  PlatformRegisterFvBootOption2 (
     &gUefiShellFileGuid,
     L"UEFI Shell",
     LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
-    ShellEnabled
+    ShellEnabled,
+    FALSE
     );
 
   //
   // Register Grub
   //
-  PlatformRegisterFvBootOption (
+  PlatformRegisterFvBootOption2 (
     &gGrubFileGuid,
     L"Grub Bootloader",
     LOAD_OPTION_ACTIVE,
-    TRUE
+    TRUE,
+    FALSE
     );
 
   RemoveStaleFvFileOptions ();
