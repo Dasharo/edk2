@@ -5,6 +5,7 @@ source ./edksetup.sh
 
 export EDK2_PLATFORMS_PATH="$WORKSPACE/edk2-platforms"
 export PACKAGES_PATH="$WORKSPACE:\
+$WORKSPACE/ipxe/src/bin-x86_64-efi-sb:\
 $EDK2_PLATFORMS_PATH/Platform/Intel:\
 $EDK2_PLATFORMS_PATH/Silicon/Intel:\
 $EDK2_PLATFORMS_PATH/Features/Intel:\

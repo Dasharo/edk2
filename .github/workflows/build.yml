@@ -27,6 +27,24 @@ jobs:
         git checkout 3323ed481d35096fb6a7eae7b49f35eff00f86cf && \
         cd -
 
+    - name: Clone iPXE Repository
+      run: |
+        git clone https://git.ipxe.org/ipxe.git && \
+        cd ipxe && \
+        git checkout 77b07ea4fdc259d7253c6f9df2beda6e6c7a9d85 && \
+        sed -i 's|//#define\s*IMAGE_SCRIPT.*|#define IMAGE_SCRIPT|' "src/config/general.h" && \
+        sed -i 's|.*DOWNLOAD_PROTO_HTTPS|#define DOWNLOAD_PROTO_HTTPS|g'  "src/config/general.h" && \
+        wget https://raw.githubusercontent.com/Dasharo/dasharo-blobs/main/dasharo/dasharo.ipxe && \
+        cd -
+
+    - name: Build iPXE
+      run: |
+        docker run --rm -i -v $PWD/ipxe:/home/coreboot/ipxe:rw \
+          -v $PWD/.github:/home/coreboot/ipxe/.github \
+          -u $(id -u):$(id -g) -w /home/coreboot/ipxe \
+          coreboot/coreboot-sdk:2021-09-23_b0d87f753c \
+         ./.github/scripts/build-ipxe.sh
+
     - name: Build OVMF Firmware Image
       run: |
         docker run --rm -i -v $PWD:/home/coreboot/coreboot:rw \
