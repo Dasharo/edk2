@@ -52,10 +52,13 @@ EnrollFromDefault (
       return Status;
   }
 
-  CreateTimeBasedPayload (&DataSize, (UINT8 **)&Data);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Fail to create time-based data payload: %r", Status));
-    return Status;
+  // dbx from uefi.org comes with the time payload already
+  if (StrCmp (DefaultName, EFI_DBX_DEFAULT_VARIABLE_NAME)) {
+    CreateTimeBasedPayload (&DataSize, (UINT8 **)&Data);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "Fail to create time-based data payload: %r", Status));
+      return Status;
+    }
   }
 
   //

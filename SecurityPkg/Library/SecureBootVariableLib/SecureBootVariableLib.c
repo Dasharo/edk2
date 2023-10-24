@@ -156,6 +156,13 @@ SecureBootFetchData (
                );
 
     if (Status == EFI_SUCCESS) {
+      /* dbx file downloaded from uefi.org is a raw variable value, simply reutrn the buffer. */
+      if (CompareGuid(KeyFileGuid, &gDefaultdbxFileGuid)) {
+        *SigListOut = (EFI_SIGNATURE_LIST *)Buffer;
+        *SigListsSize = Size;
+        return EFI_SUCCESS;
+      }
+
       RsaPubKey = NULL;
       if (RsaGetPublicKeyFromX509 (Buffer, Size, &RsaPubKey) == FALSE) {
         DEBUG ((DEBUG_ERROR, "%a: Invalid key format: %d\n", __FUNCTION__, KeyIndex));
