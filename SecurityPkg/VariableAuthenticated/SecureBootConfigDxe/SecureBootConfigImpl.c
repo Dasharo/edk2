@@ -4487,6 +4487,76 @@ error:
   return Status;
 }
 
+
+/**
+  This function reinitializes Secure Boot variables with default values.
+
+  @retval   EFI_SUCCESS           Success to update the signature list page
+  @retval   others                Fail to delete or enroll signature data.
+**/
+STATIC EFI_STATUS
+EFIAPI
+KeyEraseAll (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       SetupMode;
+
+  Status = EFI_SUCCESS;
+
+  Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  // Clear all the keys and databases
+  Status = DeleteDb ();
+  if (EFI_ERROR (Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG ((DEBUG_ERROR, "Fail to clear DB: %r\n", Status));
+    return Status;
+  }
+
+  Status = DeleteDbx ();
+  if (EFI_ERROR (Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG ((DEBUG_ERROR, "Fail to clear DBX: %r\n", Status));
+    return Status;
+  }
+
+  Status = DeleteDbt ();
+  if (EFI_ERROR (Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG ((DEBUG_ERROR, "Fail to clear DBT: %r\n", Status));
+    return Status;
+  }
+
+  Status = DeleteKEK ();
+  if (EFI_ERROR (Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG ((DEBUG_ERROR, "Fail to clear KEK: %r\n", Status));
+    return Status;
+  }
+
+  Status = DeletePlatformKey ();
+  if (EFI_ERROR (Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG ((DEBUG_ERROR, "Fail to clear PK: %r\n", Status));
+    return Status;
+  }
+
+  // After PK clear, Setup Mode shall be enabled
+  Status = GetSetupMode (&SetupMode);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot get SetupMode variable: %r\n",
+      Status));
+    return Status;
+  }
+
+  if (SetupMode == USER_MODE) {
+    DEBUG((DEBUG_INFO, "Skipped - USER_MODE\n"));
+    return EFI_SUCCESS;
+  }
+
+  return Status;
+}
+
 /**
   This function is called to provide results data to the driver.
 
@@ -5140,6 +5210,33 @@ SecureBootCallback (
           Status = UpdateSecureBootString (Private);
           SecureBootExtractConfigFromVariable (Private, IfrNvData);
         }
+        break;
+      }
+      case KEY_SECURE_BOOT_ERASE_ALL_KEYS:
+      {
+        Status = gBS->LocateProtocol (&gEfiHiiPopupProtocolGuid, NULL, (VOID **) &HiiPopup);
+        if (EFI_ERROR (Status)) {
+          return Status;
+        }
+        Status = HiiPopup->CreatePopup (
+                             HiiPopup,
+                             EfiHiiPopupStyleInfo,
+                             EfiHiiPopupTypeYesNo,
+                             Private->HiiHandle,
+                             STRING_TOKEN (STR_ERASE_ALL_KEYS_POPUP),
+                             &UserSelection
+                             );
+        if (UserSelection == EfiHiiPopupSelectionYes) {
+          Status = KeyEraseAll ();
+        }
+        //
+        // Update secure boot strings after key reset
+        //
+        if (Status == EFI_SUCCESS) {
+          Status = UpdateSecureBootString (Private);
+          SecureBootExtractConfigFromVariable (Private, IfrNvData);
+        }
+        break;
       }
       default:
         break;
