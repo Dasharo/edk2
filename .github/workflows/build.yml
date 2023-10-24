@@ -5,7 +5,7 @@ on:
     branches:
       - dasharo
     tags:
-      - 'dasharo_qemu_v*'
+      - 'qemu_q35_v*'
   pull_request:
     branches:
       - dasharo
