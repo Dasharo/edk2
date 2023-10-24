@@ -256,10 +256,6 @@
   ## Number of page frames to use for storing grant table entries.
   gUefiOvmfPkgTokenSpaceGuid.PcdXenGrantFrames|4|UINT32|0x33
 
-  ## FFS filename to find the ipxe application.
-  gUefiPayloadPkgTokenSpaceGuid.PcdiPXEFile|{ 0xC7, 0x53, 0x86, 0xb6, 0xA1, 0xEE, 0x35, 0x44, 0xA1, 0x99, 0xA4, 0x4F, 0x59, 0xE4, 0x47, 0x6C }|VOID*|0x10000006
-  gUefiPayloadPkgTokenSpaceGuid.PcdiPXEOptionName|L"iPXE Network Boot"|VOID*|0x10000007
-
 [PcdsDynamic, PcdsDynamicEx]
   gUefiOvmfPkgTokenSpaceGuid.PcdEmuVariableEvent|0|UINT64|2
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashVariablesEnable|FALSE|BOOLEAN|0x10
