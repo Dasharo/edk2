@@ -105,6 +105,7 @@
   DEFINE SD_MMC_TIMEOUT                 = 1000000
   DEFINE BATTERY_CHECK                  = FALSE
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
+  DEFINE RAM_DISK_ENABLE                = FALSE
 
   #
   # Network definition
@@ -676,7 +677,9 @@
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-
+!if $(RAM_DISK_ENABLE) == TRUE
+  MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
+!endif
   PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
   MdeModulePkg/Universal/Metronome/Metronome.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
