@@ -656,6 +656,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|TRUE
 
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
