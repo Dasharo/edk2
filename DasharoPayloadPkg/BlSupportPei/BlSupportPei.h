@@ -23,6 +23,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/IoLib.h>
 #include <Library/PlatformSupportLib.h>
 #include <IndustryStandard/Acpi.h>
+#include <Guid/VariableFormat.h>
+#include <Guid/SystemNvDataGuid.h>
+#include <Guid/NvVarStoreFormatted.h>
 #include <Guid/MemoryTypeInformation.h>
 #include <Guid/FirmwareFileSystem2.h>
 #include <Guid/SystemTableInfoGuid.h>
