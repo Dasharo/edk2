@@ -2006,9 +2006,17 @@ EfiBootManagerBoot (
         SecureBoot = NULL;
         GetEfiGlobalVariable2 (EFI_SECURE_BOOT_MODE_NAME, (VOID**)&SecureBoot, NULL);
         if ((SecureBoot != NULL) && (*SecureBoot == SECURE_BOOT_MODE_ENABLE)) {
-          AsciiPrint ("SecureBoot is enabled.\n");
+          AsciiPrint ("Secure Boot is enabled.\n");
         } else {
-          AsciiPrint ("SecureBoot is disabled.\n");
+          AsciiPrint ("Secure Boot is disabled.\n");
+        }
+
+        if ((BootOption->Status == EFI_ACCESS_DENIED) &&
+            (SecureBoot != NULL) &&
+            (*SecureBoot == SECURE_BOOT_MODE_ENABLE)) {
+          AsciiPrint (
+              "The image signature is invalid or missing!\n"
+              "Sign the image with a valid key or disable Secure Boot\n");
         }
 
         if (SecureBoot != NULL) {
