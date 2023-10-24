@@ -31,6 +31,21 @@ SetSecureBootMode (
   );
 
 /**
+
+  Set the platform secure boot state into "Enabled" or "Disabled".
+
+  @param[in]   SecureBootMode        New secure boot state.
+
+  @return EFI_SUCCESS                The platform has switched to the new state successfully.
+  @return other                      Fail to operate the secure boot state.
+
+**/
+EFI_STATUS
+SetSecureBootState (
+  IN  UINT8  SecureBootState
+);
+
+/**
   Fetches the value of SetupMode variable.
 
   @param[out] SetupMode             Pointer to UINT8 for SetupMode output
