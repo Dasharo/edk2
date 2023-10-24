@@ -394,6 +394,109 @@ MemInfoCallback (
 }
 
 /**
+  Check the integrity of firmware volume header.
+
+  @retval  EFI_SUCCESS   - The firmware volume is consistent
+  @retval  EFI_NOT_FOUND - The firmware volume has been corrupted.
+
+**/
+EFI_STATUS
+ValidateFvHeader (
+  SMMSTORE_INFO *SmmStoreInfo
+  )
+{
+  UINT16                      Checksum;
+  EFI_FIRMWARE_VOLUME_HEADER  *FwVolHeader;
+  VARIABLE_STORE_HEADER       *VariableStoreHeader;
+  UINTN                       VariableStoreLength;
+  UINTN                       FvLength;
+  UINT32                      NvStorageSize;
+  UINT32                      NvVariableSize;
+  UINT32                      FtwWorkingSize;
+  UINT32                      FtwSpareSize;
+
+
+  NvStorageSize = SmmStoreInfo->NumBlocks * SmmStoreInfo->BlockSize;
+  FtwSpareSize   = (SmmStoreInfo->NumBlocks / 2) * SmmStoreInfo->BlockSize;
+  FtwWorkingSize = SmmStoreInfo->BlockSize;
+  NvVariableSize = NvStorageSize - FtwSpareSize - FtwWorkingSize;
+
+  FwVolHeader        = (EFI_FIRMWARE_VOLUME_HEADER *)(UINTN)SmmStoreInfo->MmioAddress;
+  if (!FwVolHeader) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+
+  FvLength = FtwSpareSize + FtwWorkingSize + NvVariableSize;
+
+  //
+  // Verify the header revision, header signature, length
+  // Length of FvBlock cannot be 2**64-1
+  // HeaderLength cannot be an odd number
+  //
+  if (  (FwVolHeader->Revision  != EFI_FVH_REVISION)
+     || (FwVolHeader->Signature != EFI_FVH_SIGNATURE)
+     || (FwVolHeader->FvLength  != FvLength)
+        )
+  {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: No Firmware Volume header present\n",
+      __FUNCTION__
+      ));
+    return EFI_NOT_FOUND;
+  }
+
+  // Check the Firmware Volume Guid
+  if ( CompareGuid (&FwVolHeader->FileSystemGuid, &gEfiSystemNvDataFvGuid) == FALSE ) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: Firmware Volume Guid non-compatible\n",
+      __FUNCTION__
+      ));
+    return EFI_NOT_FOUND;
+  }
+
+  // Verify the header checksum
+  Checksum = CalculateSum16 ((UINT16 *)FwVolHeader, FwVolHeader->HeaderLength);
+  if (Checksum != 0) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: FV checksum is invalid (Checksum:0x%X)\n",
+      __FUNCTION__,
+      Checksum
+      ));
+    return EFI_NOT_FOUND;
+  }
+
+  VariableStoreHeader = (VARIABLE_STORE_HEADER *)(UINTN)(SmmStoreInfo->MmioAddress + FwVolHeader->HeaderLength);
+
+  // Check the Variable Store Guid
+  if (!CompareGuid (&VariableStoreHeader->Signature, &gEfiVariableGuid) &&
+      !CompareGuid (&VariableStoreHeader->Signature, &gEfiAuthenticatedVariableGuid))
+  {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: Variable Store Guid non-compatible\n",
+      __FUNCTION__
+      ));
+    return EFI_NOT_FOUND;
+  }
+
+  VariableStoreLength = NvVariableSize - FwVolHeader->HeaderLength;
+  if (VariableStoreHeader->Size != VariableStoreLength) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: Variable Store Length does not match\n",
+      __FUNCTION__
+      ));
+    return EFI_NOT_FOUND;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
   This is the entrypoint of PEIM
 
   @param  FileHandle  Handle of the file being invoked.
@@ -583,6 +686,17 @@ BlPeiEntryPoint (
     ASSERT (NewSMMSTOREInfo != NULL);
     CopyMem (NewSMMSTOREInfo, &SMMSTOREInfo, sizeof (SMMSTOREInfo));
     DEBUG ((DEBUG_INFO, "Created SMMSTORE info hob\n"));
+
+    Status = ValidateFvHeader (&SMMSTOREInfo);
+    if (EFI_ERROR (Status)) {
+      Status = PeiServicesSetBootMode (BOOT_WITH_DEFAULT_SETTINGS);
+      DEBUG ((DEBUG_INFO, "BootMode: Boot with default settings\n"));
+      ASSERT_EFI_ERROR (Status);
+    } else {
+      Status = PeiServicesSetBootMode (BOOT_ASSUMING_NO_CONFIGURATION_CHANGES);
+      DEBUG ((DEBUG_INFO, "BootMode: Boot boot assuming no configuration changes\n"));
+      ASSERT_EFI_ERROR (Status);
+    }
   }
 
   //
