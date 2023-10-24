@@ -91,6 +91,7 @@
   # Security options:
   #
   DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE SECURE_BOOT_DEFAULT_ENABLE     = TRUE
   DEFINE TPM_ENABLE                     = TRUE
   DEFINE SATA_PASSWORD_ENABLE           = FALSE
   DEFINE OPAL_PASSWORD_ENABLE           = FALSE
@@ -443,6 +444,12 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+
+!if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
+!else
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
+!endif
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
