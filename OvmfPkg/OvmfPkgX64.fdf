@@ -278,6 +278,31 @@ INF  OvmfPkg/LsiScsiDxe/LsiScsiDxe.inf
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   INF  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   INF  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+
+  # gDefaultKEKFileGuid
+  FILE FREEFORM = 6F64916E-9F7A-4C35-B952-CD041EFB05A3 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorKEKCA2011_2011-06-24.crt
+    SECTION UI = "DefaultKekCert"
+  }
+
+  # gDefaultPKFileGuid
+  FILE FREEFORM = 85254EA7-4759-4FC4-82D4-5EED5FB0A4A0 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/pk.crt
+    SECTION UI = "DefaultPkCert"
+  }
+
+  # gDefaultdbFileGuid
+  FILE FREEFORM = C491D352-7623-4843-ACCC-2791A7574421 {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicWinProPCA2011_2011-10-19.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorUEFCA2011_2011-06-27.crt
+    SECTION UI = "DefaultDbCert"
+  }
+
+  # gDefaultdbxFileGuid
+  FILE FREEFORM = 5740766A-718E-4DC0-9935-C36F7D3F884F {
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin
+    SECTION UI = "DefaultDbxCert"
+  }
 !endif
 
 INF  MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
