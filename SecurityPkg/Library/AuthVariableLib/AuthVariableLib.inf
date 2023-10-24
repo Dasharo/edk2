@@ -44,6 +44,10 @@
   BaseCryptLib
   PlatformSecureLib
   VariablePolicyLib
+  PcdLib
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Guids]
   ## CONSUMES            ## Variable:L"SetupMode"
