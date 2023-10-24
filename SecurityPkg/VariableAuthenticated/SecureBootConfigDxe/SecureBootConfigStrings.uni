@@ -18,12 +18,20 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_SECURE_BOOT_STATE_HELP         #language en-US "Current Secure Boot state: enabled or disabled."
 #string STR_SECURE_BOOT_STATE_CONTENT      #language en-US " "
 
-#string STR_SECURE_BOOT_PROMPT             #language en-US "Attempt Secure Boot"
+#string STR_ENROLL_PK_MSG                  #language en-US "To enable Secure Boot, set Secure Boot Mode to Custom and enroll the keys/PK first."
+
+#string STR_SECURE_BOOT_PROMPT             #language en-US "Enable Secure Boot"
 #string STR_SECURE_BOOT_HELP               #language en-US "Enable/Disable the Secure Boot feature after platform reset"
 
-#string STR_SECURE_RESET_TO_DEFAULTS_HELP  #language en-US "Enroll keys with data from default variables"
-#string STR_SECURE_RESET_TO_DEFAULTS       #language en-US "Reset Secure Boot Keys"
+#string STR_SECURE_RESET_TO_DEFAULTS_HELP  #language en-US "Enroll keys with data from default variables.\n\nBecause the PK may also be enrolled, the Secure Boot state may automatically switch to enabled state."
+#string STR_SECURE_RESET_TO_DEFAULTS       #language en-US "> Reset to default Secure Boot Keys"
+
 #string STR_RESET_TO_DEFAULTS_POPUP        #language en-US "Secure Boot Keys & databases will be initialized from defaults.\n Are you sure?"
+
+#string STR_SECURE_ERASE_ALL_KEYS_HELP     #language en-US "Erases all Secure Boot keys and leaves the related variables empty.\nYou will need to provision the keys to use Secure Boot again or reset the Secure Boot keys to defaults."
+#string STR_SECURE_ERASE_ALL_KEYS          #language en-US "> Erase all Secure Boot Keys"
+
+#string STR_ERASE_ALL_KEYS_POPUP           #language en-US "Secure Boot Keys & databases will be erased and Secure Boot disabled.\n Are you sure?"
 
 #string STR_SECURE_BOOT_ENROLL_SIGNATURE   #language en-US "Enroll Signature"
 #string STR_SECURE_BOOT_DELETE_SIGNATURE   #language en-US "Delete Signature"
@@ -74,10 +82,11 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_STANDARD_MODE                  #language en-US "Standard Mode"
 #string STR_CUSTOM_MODE                    #language en-US "Custom Mode"
 
-#string STR_SECURE_BOOT_OPTION             #language en-US "Custom Secure Boot Options"
-#string STR_SECURE_BOOT_OPTION_HELP        #language en-US "Enter into Custom Secure Boot Options Form"
+#string STR_SECURE_BOOT_OPTION             #language en-US "Advanced Secure Boot Keys Management"
+#string STR_SECURE_BOOT_OPTION_HELP        #language en-US "Enter into Advanced Secure Boot Keys Management Form"
 
-#string STR_SECURE_BOOT_OPTION_TITLE       #language en-US "Custom Secure Boot Options"
+#string STR_SECURE_BOOT_OPTION_TITLE       #language en-US "Advanced Secure Boot Keys Management"
+#string STR_SECURE_BOOT_MANUAL_KEY_MGMT    #language en-US "Individual key management:"
 
 #string STR_SECURE_BOOT_PK_OPTION          #language en-US "PK Options"
 #string STR_SECURE_BOOT_PK_OPTION_HELP     #language en-US "Enroll/Delete PK"
