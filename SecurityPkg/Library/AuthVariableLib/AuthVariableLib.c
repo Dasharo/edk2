@@ -217,7 +217,7 @@ AuthVariableLibInitialize (
     //
     // "SecureBootEnable" not exist, initialize it in USER_MODE.
     //
-    SecureBootEnable = SECURE_BOOT_ENABLE;
+    SecureBootEnable = FixedPcdGet8 (PcdSecureBootDefaultEnable);
     Status           = AuthServiceInternalUpdateVariable (
                          EFI_SECURE_BOOT_ENABLE_NAME,
                          &gEfiSecureBootEnableDisableGuid,
