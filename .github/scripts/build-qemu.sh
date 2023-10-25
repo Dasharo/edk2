@@ -16,5 +16,5 @@ $EDK2_PLATFORMS_PATH/Features/Intel/PowerManagement:\
 $EDK2_PLATFORMS_PATH/Features/Intel/SystemInformation:\
 $EDK2_PLATFORMS_PATH/Features/Intel/UserInterface"
 
-build -a IA32 -a X64 -t GCC5 -b RELEASE -p OvmfPkg/OvmfPkgX64.dsc --pcd gUefiPayloadPkgTokenSpaceGuid.PcdiPXEOptionName=L"iPXE Network Boot"
-build -a IA32 -a X64 -t GCC5 -b DEBUG -p OvmfPkg/OvmfPkgX64.dsc --pcd gUefiPayloadPkgTokenSpaceGuid.PcdiPXEOptionName=L"iPXE Network Boot"
+build -a IA32 -a X64 -t GCC5 -b RELEASE -p OvmfPkg/OvmfPkgX64.dsc
+build -a IA32 -a X64 -t GCC5 -b DEBUG -p OvmfPkg/OvmfPkgX64.dsc
