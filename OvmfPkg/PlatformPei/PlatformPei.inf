@@ -65,6 +65,7 @@
   PcdLib
 
 [Pcd]
+  gUefiOvmfPkgTokenSpaceGuid.PcdOvmfFlashNvStorageVariableBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvBase
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfPeiMemFvSize
   gUefiOvmfPkgTokenSpaceGuid.PcdOvmfDxeMemFvBase

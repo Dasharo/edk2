@@ -452,13 +452,71 @@ MiscInitialization (
   }
 }
 
+EFI_STATUS
+ValidateFvHeader (
+  EFI_FIRMWARE_VOLUME_HEADER            *FwVolHeader
+  )
+/*++
+
+  Routine Description:
+    Check the integrity of firmware volume header
+
+  Arguments:
+    FwVolHeader           - A pointer to a firmware volume header
+
+  Returns:
+    EFI_SUCCESS           - The firmware volume is consistent
+    EFI_NOT_FOUND         - The firmware volume has corrupted. So it is not an
+                            FV
+
+--*/
+{
+  UINT16 Checksum;
+
+  //
+  // Verify the header revision, header signature, length
+  // Length of FvBlock cannot be 2**64-1
+  // HeaderLength cannot be an odd number
+  //
+  if ((FwVolHeader->Revision != EFI_FVH_REVISION) ||
+      (FwVolHeader->Signature != EFI_FVH_SIGNATURE) ||
+      (FwVolHeader->FvLength == ((UINTN) -1)) ||
+      ((FwVolHeader->HeaderLength & 0x01) != 0)
+      ) {
+    return EFI_NOT_FOUND;
+  }
+
+  //
+  // Verify the header checksum
+  //
+
+  Checksum = CalculateSum16 ((UINT16 *) FwVolHeader,
+               FwVolHeader->HeaderLength);
+  if (Checksum != 0) {
+    UINT16 Expected;
+
+    Expected =
+      (UINT16) (((UINTN) FwVolHeader->Checksum + 0x10000 - Checksum) & 0xffff);
+
+    DEBUG ((EFI_D_INFO, "FV@%p Checksum is 0x%x, expected 0x%x\n",
+            FwVolHeader, FwVolHeader->Checksum, Expected));
+    return EFI_NOT_FOUND;
+  }
+
+  return EFI_SUCCESS;
+}
 
 VOID
 BootModeInitialization (
   VOID
   )
 {
-  EFI_STATUS    Status;
+  EFI_STATUS                          Status;
+  EFI_FIRMWARE_VOLUME_HEADER          *FwVolHeader;
+
+  FwVolHeader =
+    (EFI_FIRMWARE_VOLUME_HEADER *) (UINTN)
+      PcdGet32 (PcdOvmfFlashNvStorageVariableBase);
 
   if (CmosRead8 (0xF) == 0xFE) {
     mBootMode = BOOT_ON_S3_RESUME;
@@ -470,6 +528,20 @@ BootModeInitialization (
 
   Status = PeiServicesInstallPpi (mPpiBootMode);
   ASSERT_EFI_ERROR (Status);
+
+  //
+  // Set BootMode based on FV header state
+  //
+  Status = ValidateFvHeader (FwVolHeader);
+  if (EFI_ERROR (Status)) {
+    Status = PeiServicesSetBootMode (BOOT_WITH_DEFAULT_SETTINGS);
+    DEBUG ((DEBUG_INFO, "BootMode: Boot with default settings\n"));
+    ASSERT_EFI_ERROR (Status);
+  } else {
+    Status = PeiServicesSetBootMode (BOOT_ASSUMING_NO_CONFIGURATION_CHANGES);
+    DEBUG ((DEBUG_INFO, "BootMode: Boot boot assuming no configuration changes\n"));
+    ASSERT_EFI_ERROR (Status);
+  }
 }
 
 
