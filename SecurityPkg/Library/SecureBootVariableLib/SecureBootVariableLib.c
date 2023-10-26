@@ -156,6 +156,13 @@ SecureBootFetchData (
                );
 
     if (Status == EFI_SUCCESS) {
+      /* dbx file downloaded from uefi.org is a raw variable value, simply reutrn the buffer. */
+      if (CompareGuid(KeyFileGuid, &gDefaultdbxFileGuid)) {
+        *SigListOut = (EFI_SIGNATURE_LIST *)Buffer;
+        *SigListsSize = Size;
+        return EFI_SUCCESS;
+      }
+
       RsaPubKey = NULL;
       if (RsaGetPublicKeyFromX509 (Buffer, Size, &RsaPubKey) == FALSE) {
         DEBUG ((DEBUG_ERROR, "%a: Invalid key format: %d\n", __FUNCTION__, KeyIndex));
@@ -356,6 +363,45 @@ SetSecureBootMode (
                 EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
                 sizeof (UINT8),
                 &SecureBootMode
+                );
+}
+
+
+/**
+
+  Set the platform secure boot state into "Enabled" or "Disabled".
+
+  @param[in]   SecureBootMode        New secure boot state.
+
+  @return EFI_SUCCESS                The platform has switched to the new state successfully.
+  @return other                      Fail to operate the secure boot mode.
+
+**/
+EFI_STATUS
+SetSecureBootState (
+  IN  UINT8  SecureBootState
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gRT->SetVariable (
+                  EFI_SECURE_BOOT_MODE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  sizeof(UINT8),
+                  &SecureBootState
+                  );
+
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  return gRT->SetVariable (
+                EFI_SECURE_BOOT_ENABLE_NAME,
+                &gEfiSecureBootEnableDisableGuid,
+                EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                sizeof (UINT8),
+                &SecureBootState
                 );
 }
 

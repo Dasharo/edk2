@@ -50,6 +50,7 @@
   UefiHiiServicesLib
   DebugLib
   HiiLib
+  PcdLib
   PlatformSecureLib
   DevicePathLib
   FileExplorerLib
@@ -111,6 +112,9 @@
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
   gEfiDevicePathProtocolGuid                    ## PRODUCES
   gEfiHiiPopupProtocolGuid
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND

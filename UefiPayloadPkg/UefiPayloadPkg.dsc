@@ -91,6 +91,7 @@
   # Security options:
   #
   DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE SECURE_BOOT_DEFAULT_ENABLE     = TRUE
   DEFINE TPM_ENABLE                     = TRUE
   DEFINE SATA_PASSWORD_ENABLE           = FALSE
   DEFINE OPAL_PASSWORD_ENABLE           = FALSE
@@ -105,6 +106,7 @@
   DEFINE SD_MMC_TIMEOUT                 = 1000000
   DEFINE BATTERY_CHECK                  = FALSE
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
+  DEFINE RAM_DISK_ENABLE                = FALSE
   #
   # Network definition
   #
@@ -393,6 +395,8 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/RuntimeCryptLib.inf
   SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
   PerformanceLib|MdeModulePkg/Library/DxePerformanceLib/DxePerformanceLib.inf
+  DebugLib|MdePkg/Library/DxeRuntimeDebugLibSerialPort/DxeRuntimeDebugLibSerialPort.inf
+
 [LibraryClasses.common.UEFI_DRIVER,LibraryClasses.common.UEFI_APPLICATION]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
@@ -438,6 +442,12 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+
+!if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
+!else
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
+!endif
 
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
@@ -658,7 +668,9 @@
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-
+!if $(RAM_DISK_ENABLE) == TRUE
+  MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
+!endif
   PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
   MdeModulePkg/Universal/Metronome/Metronome.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf

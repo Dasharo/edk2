@@ -32,8 +32,12 @@ formset
       text   = STRING_TOKEN(STR_SECURE_BOOT_STATE_PROMPT),
         text   = STRING_TOKEN(STR_SECURE_BOOT_STATE_CONTENT);
 
+
+    suppressif ideqval SECUREBOOT_CONFIGURATION.HasPk == 1;
+      subtitle text = STRING_TOKEN(STR_ENROLL_PK_MSG);
+    endif;
     //
-    // Display of Check Box: Attempt Secure Boot
+    // Display of Check Box: Enable Secure Boot
     //
     grayoutif ideqval SECUREBOOT_CONFIGURATION.HideSecureBoot == 1 OR NOT ideqval SECUREBOOT_CONFIGURATION.PhysicalPresent == 1;
     checkbox varid = SECUREBOOT_CONFIGURATION.AttemptSecureBoot,
@@ -56,24 +60,15 @@ formset
           option text = STRING_TOKEN(STR_CUSTOM_MODE),      value = SECURE_BOOT_MODE_CUSTOM,   flags = 0;
     endoneof;
 
-    //
-    // Display of 'Current Secure Boot Mode'
-    //
     suppressif questionref(SecureBootMode) == SECURE_BOOT_MODE_STANDARD;
-    grayoutif NOT ideqval SECUREBOOT_CONFIGURATION.PhysicalPresent == 1;
-    goto FORMID_SECURE_BOOT_OPTION_FORM,
-         prompt = STRING_TOKEN(STR_SECURE_BOOT_OPTION),
-         help   = STRING_TOKEN(STR_SECURE_BOOT_OPTION_HELP),
-         flags  = INTERACTIVE,
-         key    = KEY_SECURE_BOOT_OPTION;
+      grayoutif NOT ideqval SECUREBOOT_CONFIGURATION.PhysicalPresent == 1;
+      goto FORMID_SECURE_BOOT_OPTION_FORM,
+           prompt = STRING_TOKEN(STR_SECURE_BOOT_OPTION),
+           help   = STRING_TOKEN(STR_SECURE_BOOT_OPTION_HELP),
+           flags  = INTERACTIVE,
+           key    = KEY_SECURE_BOOT_OPTION;
+      endif;
     endif;
-    endif;
-
-    text
-      help   = STRING_TOKEN(STR_SECURE_RESET_TO_DEFAULTS_HELP),
-      text   = STRING_TOKEN(STR_SECURE_RESET_TO_DEFAULTS),
-      flags  = INTERACTIVE,
-      key    = KEY_SECURE_BOOT_RESET_TO_DEFAULT;
 
   endform;
 
@@ -83,6 +78,23 @@ formset
   form formid = FORMID_SECURE_BOOT_OPTION_FORM,
     title  = STRING_TOKEN(STR_SECURE_BOOT_OPTION_TITLE);
 
+    subtitle text = STRING_TOKEN(STR_NULL);
+
+    text
+      help   = STRING_TOKEN(STR_SECURE_RESET_TO_DEFAULTS_HELP),
+      text   = STRING_TOKEN(STR_SECURE_RESET_TO_DEFAULTS),
+      flags  = INTERACTIVE | RESET_REQUIRED,
+      key    = KEY_SECURE_BOOT_RESET_TO_DEFAULT;
+
+    text
+      help   = STRING_TOKEN(STR_SECURE_ERASE_ALL_KEYS_HELP),
+      text   = STRING_TOKEN(STR_SECURE_ERASE_ALL_KEYS),
+      flags  = INTERACTIVE | RESET_REQUIRED,
+      key    = KEY_SECURE_BOOT_ERASE_ALL_KEYS;
+
+
+    subtitle text = STRING_TOKEN(STR_NULL);
+    subtitle text = STRING_TOKEN(STR_SECURE_BOOT_MANUAL_KEY_MGMT);
     subtitle text = STRING_TOKEN(STR_NULL);
 
     goto FORMID_SECURE_BOOT_PK_OPTION_FORM,
