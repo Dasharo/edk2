@@ -706,7 +706,7 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
   UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
-  CrScreenshotDxe/CrScreenshotDxe.inf
+  #CrScreenshotDxe/CrScreenshotDxe.inf
 
   #
   # SMBIOS Support

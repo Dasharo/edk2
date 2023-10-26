@@ -375,7 +375,7 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 !endif
 !endif
 
-INF CrScreenshotDxe/CrScreenshotDxe.inf
+#INF CrScreenshotDxe/CrScreenshotDxe.inf
 
 ################################################################################
 #
