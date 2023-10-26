@@ -659,6 +659,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState|0
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
