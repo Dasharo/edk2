@@ -191,9 +191,9 @@
   MemEncryptSevLib|OvmfPkg/Library/BaseMemEncryptSevLib/BaseMemEncryptSevLib.inf
 
 !if $(SMM_REQUIRE) == FALSE
-  LockBoxLib|OvmfPkg/Library/LockBoxLib/LockBoxBaseLib.inf 
+  LockBoxLib|OvmfPkg/Library/LockBoxLib/LockBoxBaseLib.inf
 !else
-  LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf  
+  LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
 !endif
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FrameBufferBltLib|MdeModulePkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
@@ -495,6 +495,7 @@
 
 [PcdsFixedAtBuild]
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions|TRUE
 !if $(SMM_REQUIRE) == FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
 !endif
@@ -821,7 +822,7 @@
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|TRUE
   }
-  
+
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
 
