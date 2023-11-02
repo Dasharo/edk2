@@ -541,6 +541,7 @@
 
 [PcdsFixedAtBuild]
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions|TRUE
 !if $(SMM_REQUIRE) == FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
 !endif
