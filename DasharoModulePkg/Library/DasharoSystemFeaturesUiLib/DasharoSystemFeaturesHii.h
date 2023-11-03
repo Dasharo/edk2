@@ -67,6 +67,7 @@ typedef struct {
   BOOLEAN            SecurityMenuShowWiFiBt;
   BOOLEAN            SecurityMenuShowCamera;
   BOOLEAN            MeHapAvailable;
+  BOOLEAN            S3SupportExperimental;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
