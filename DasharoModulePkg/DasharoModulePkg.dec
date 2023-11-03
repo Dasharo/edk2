@@ -64,6 +64,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|FALSE|BOOLEAN|0x000000017
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState|0|UINT8|0x000000018
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable|TRUE|BOOLEAN|0x000000019
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental|FALSE|BOOLEAN|0x000000020
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
