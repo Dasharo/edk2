@@ -84,4 +84,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
