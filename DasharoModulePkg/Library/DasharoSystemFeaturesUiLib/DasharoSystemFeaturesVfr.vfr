@@ -277,10 +277,16 @@ formset
          oneof varid = FeaturesData.SleepType,
                   prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
                   help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
+
                   flags  = RESET_REQUIRED,
 
                   option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
+               suppressif ideqval FeaturesData.S3SupportExperimental == 1;
                   option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
+               endif;
+               suppressif ideqval FeaturesData.S3SupportExperimental == 0;
+                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S3_EXPERIMENTAL), value = SLEEP_TYPE_S3, flags = 0;
+               endif;
          endoneof;
     endif;
 
