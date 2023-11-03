@@ -101,11 +101,22 @@
                                                      "If unsure or see any problems with DMA/IOMMU during OS boot, keep it disabled."
 
 #string STR_SLEEP_TYPE_PROMPT   #language en-US "Platform sleep type"
-#string STR_SLEEP_TYPE_HELP     #language en-US "Selects which sleep function should be enabled in the firmware and available to use in OS.\n\n"
-                                                  "Note that Suspend to Idle (S0ix) will not work if Intel ME is disabled."
+#string STR_SLEEP_TYPE_HELP     #language en-US "Select the sleep type that will be exposed to the OS.\n\n"
+                                                  "Note that Suspend to Idle (S0ix) will not work if Intel ME is disabled.\n\n"
+                                                  "Recommended settings:\n"
+                                                  "- Windows: S0ix\n"
+                                                  "- Linux: S3\n\n"
+
+#string STR_SLEEP_TYPE_HELP_EXPERIMENTAL    #language en-US "Select the sleep type that will be exposed to the OS.\n\n"
+                                                              "Note that Suspend to Idle (S0ix) will not work if Intel ME is disabled.\n\n"
+                                                              "Recommended settings:\n"
+                                                              "- Windows: S0ix\n"
+                                                              "- Linux: S3\n\n"
+                                                              "Note: S3 support is experimental on this device."
 
 #string STR_SLEEP_TYPE_S0IX   #language en-US "Suspend to Idle (S0ix)"
 #string STR_SLEEP_TYPE_S3     #language en-US "Suspend to RAM (S3)"
+#string STR_SLEEP_TYPE_S3_EXPERIMENTAL     #language en-US "Suspend to RAM (S3) - Experimental"
 
 #string STR_POWER_FAILURE_STATE_PROMPT  #language en-US "Power state after power failure"
 #string STR_POWER_FAILURE_STATE_HELP    #language en-US "Selects state the system gets into when power supply is restored after power failure"
