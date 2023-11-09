@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/MdeModuleHii.h>
 #include <Guid/GlobalVariable.h>
 
+#include <Protocol/FormBrowserEx.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
 
@@ -182,6 +183,8 @@ UiSupportLibCallbackHandler (
   OUT EFI_STATUS                  *Status
   )
 {
+  EDKII_FORM_BROWSER_EXTENSION_PROTOCOL *FormBrowserEx;
+
   if ((QuestionId != FRONT_PAGE_KEY_CONTINUE) &&
       (QuestionId != FRONT_PAGE_KEY_RESET) &&
       (QuestionId != FRONT_PAGE_KEY_LANGUAGE))
@@ -231,6 +234,10 @@ UiSupportLibCallbackHandler (
         //
         // Reset
         //
+        *Status = gBS->LocateProtocol (&gEdkiiFormBrowserExProtocolGuid, NULL, (VOID **) &FormBrowserEx);
+        if (!EFI_ERROR (Status))
+          FormBrowserEx->SaveReminder();
+
         gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
         *Status = EFI_UNSUPPORTED;
 
