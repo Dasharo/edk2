@@ -58,6 +58,9 @@
   SecureBootVariableLib
   SecureBootVariableProvisionLib
 
+[FixedPcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
+
 [Guids]
   ## SOMETIMES_CONSUMES      ## Variable:L"CustomMode"
   ## SOMETIMES_PRODUCES      ## Variable:L"CustomMode"
