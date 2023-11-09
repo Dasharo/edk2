@@ -62,6 +62,7 @@
 [Protocols]
   gEfiSmbiosProtocolGuid                        ## CONSUMES
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES
+  gEdkiiFormBrowserExProtocolGuid               ## CONSUMES
 
 [FeaturePcd]
 
