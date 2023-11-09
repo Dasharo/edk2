@@ -5010,7 +5010,8 @@ SecureBootCallback (
       break;
     }
   } else if (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD) {
-    if (QuestionId == KEY_HIDE_SECURE_BOOT) {
+    switch (QuestionId) {
+    case KEY_HIDE_SECURE_BOOT: {
       GetVariable2 (EFI_PLATFORM_KEY_NAME, &gEfiGlobalVariableGuid, (VOID**)&Pk, NULL);
       if (Pk == NULL) {
         IfrNvData->HideSecureBoot = TRUE;
@@ -5019,6 +5020,22 @@ SecureBootCallback (
         IfrNvData->HideSecureBoot = FALSE;
       }
       Value->b = IfrNvData->HideSecureBoot;
+      break;
+    }
+    case KEY_SECURE_BOOT_ENABLE: {
+      Value->u8 = FixedPcdGet8 (PcdSecureBootDefaultEnable);
+      if (EFI_ERROR (SaveSecureBootVariable (Value->u8))) {
+        CreatePopUp (
+          EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+          &Key,
+          L"Could not restore Secure Boot to default state!",
+          NULL
+          );
+      }
+      break;
+    }
+    default:
+      break;
     }
   } else if (Action == EFI_BROWSER_ACTION_FORM_CLOSE) {
     //
