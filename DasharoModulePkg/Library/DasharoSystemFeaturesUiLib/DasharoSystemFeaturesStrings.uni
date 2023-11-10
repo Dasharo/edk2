@@ -119,7 +119,8 @@
 #string STR_SLEEP_TYPE_S3_EXPERIMENTAL     #language en-US "Suspend to RAM (S3) - Experimental"
 
 #string STR_POWER_FAILURE_STATE_PROMPT  #language en-US "Power state after power failure"
-#string STR_POWER_FAILURE_STATE_HELP    #language en-US "Selects state the system gets into when power supply is restored after power failure"
+#string STR_POWER_FAILURE_STATE_HELP    #language en-US "Selects state the system gets into when power supply is restored after power failure.\n\n"
+                                                          "Note that the definition of power failure varies between platforms and it might take absence of power for up to 30 seconds for this option to apply."
 
 #string STR_POWER_FAILURE_STATE_OFF     #language en-US "Powered Off"
 #string STR_POWER_FAILURE_STATE_ON      #language en-US "Powered On"
