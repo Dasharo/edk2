@@ -282,6 +282,7 @@ INF  OvmfPkg/LsiScsiDxe/LsiScsiDxe.inf
   # gDefaultKEKFileGuid
   FILE FREEFORM = 6F64916E-9F7A-4C35-B952-CD041EFB05A3 {
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorKEKCA2011_2011-06-24.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/microsoft_corporation_kek_2k_ca_2023.crt
     SECTION UI = "DefaultKekCert"
   }
 
@@ -295,6 +296,8 @@ INF  OvmfPkg/LsiScsiDxe/LsiScsiDxe.inf
   FILE FREEFORM = C491D352-7623-4843-ACCC-2791A7574421 {
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicWinProPCA2011_2011-10-19.crt
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorUEFCA2011_2011-06-27.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/windows_uefi_ca_2023.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/microsoft_uefi_ca_2023.crt
     SECTION UI = "DefaultDbCert"
   }
 
