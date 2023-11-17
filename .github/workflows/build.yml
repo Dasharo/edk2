@@ -31,7 +31,7 @@ jobs:
       run: |
         git clone https://git.ipxe.org/ipxe.git && \
         cd ipxe && \
-        git checkout 4bffe0f0d9d0e1496ae5cfb7579e813277c29b0f && \
+        git checkout 77b07ea4fdc259d7253c6f9df2beda6e6c7a9d85 && \
         sed -i 's|//#define\s*IMAGE_SCRIPT.*|#define IMAGE_SCRIPT|' "src/config/general.h" && \
         sed -i 's|.*DOWNLOAD_PROTO_HTTPS|#define DOWNLOAD_PROTO_HTTPS|g'  "src/config/general.h" && \
         wget https://raw.githubusercontent.com/Dasharo/dasharo-blobs/main/dasharo/dasharo.ipxe && \
