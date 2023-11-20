@@ -86,7 +86,7 @@ jobs:
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.event.ref, 'refs/tags/dasharo_qemu')
+      if: startsWith(github.event.ref, 'refs/tags/qemu')
       with:
         files: |
           OVMF_CODE_RELEASE.fd
