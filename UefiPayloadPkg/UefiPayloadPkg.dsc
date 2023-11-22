@@ -799,6 +799,9 @@
   UefiPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
 !endif
 
+  # TEST
+  DisplayLinkPkg/DisplayLinkGop/DisplayLinkGopDxe.inf
+
 !if $(PERFORMANCE_MEASUREMENT_ENABLE)
   MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
 !endif
