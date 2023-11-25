@@ -615,6 +615,8 @@
   SecurityPkg/HddPassword/HddPasswordPei.inf
 !endif
 
+  SecurityPkg/Tcg/MemoryOverwriteControl/TcgMor.inf
+
 [Components.X64]
   #
   # DXE Core
