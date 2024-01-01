@@ -48,6 +48,34 @@ UiCreateLanguageMenu (
   IN VOID                        *StartOpCodeHandle
   );
 
+
+/**
+  Create System Date menu in the front page with date opcode.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateDateMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  );
+
+
+/**
+  Create System Time menu in the front page with time opcode.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateTimeMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  );
+
 /**
   Create Reset menu.
 
