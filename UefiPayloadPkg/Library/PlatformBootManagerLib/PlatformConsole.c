@@ -96,15 +96,14 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define KEYBOARD_8042_STATUS_REGISTER   0x64
 
 #define KBC_INPBUF_VIA60_KBECHO         0xEE
-#define KEYBOARD_CMDECHO_ACK            0xFA
+#define KEYBOARD_CMD_ACK                0xFA
 #define KEYBOARD_CMD_RESEND             0xFE
 
 #define KEYBOARD_STATUS_REGISTER_HAS_OUTPUT_DATA     BIT0
 #define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      BIT1
 #define KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT     BIT6
 
-#define KEYBOARD_TIMEOUT                65536   // 0.07s
-#define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
+#define KEYBOARD_TIMEOUT                10000   // 0.5s in 50us steps
 
 typedef enum _TYPE_OF_TERMINAL {
   TerminalTypePcAnsi                = 0,
@@ -124,11 +123,29 @@ VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
 VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
 
 BOOLEAN  mDetectDisplayOnly;
+
+BOOLEAN
+WaitPs2BufEmpty (
+  VOID
+  )
+{
+  UINT32                TimeOut;
+
+  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut++) {
+    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0)
+      return TRUE;
+
+    MicroSecondDelay (50);
+  }
+
+  return FALSE;
+}
+
 /**
-  Check if PS2 keyboard is conntected, by sending ECHO command.
+  Check if PS2 keyboard is connected, by sending identify command to the device.
   @param                        none
   @retval TRUE                  connected
-  @retvar FALSE                 unconnected
+  @retval FALSE                 disconnected
 **/
 BOOLEAN
 DetectPs2Keyboard (
@@ -136,100 +153,62 @@ DetectPs2Keyboard (
   )
 {
   UINT32                TimeOut;
-  UINT32                RegEmptied;
+  UINT8                 RegEmptied;
   UINT8                 Data;
   UINT8                 Status;
-  UINT32                SumTimeOut;
-  UINT32                GotIt;
+  UINT8                 Retries;
 
-  TimeOut     = 0;
   RegEmptied  = 0;
+  Retries     = 0;
 
   if (PcdGetBool (PcdSkipPs2Detect))
     return TRUE;
 
-  //
-  // Wait for input buffer empty
-  //
-  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-    if ((IoRead8 (KEYBOARD_8042_STATUS_REGISTER) & KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA) == 0) {
-      RegEmptied = 1;
-      break;
-    }
-    MicroSecondDelay (30);
-  }
-
-  if (RegEmptied == 0) {
-    DEBUG ((EFI_D_INFO, "PS2 reg not emptied\n"));
+  if (!WaitPs2BufEmpty ()) {
+    DEBUG ((EFI_D_INFO, "PS/2 reg not emptied\n"));
     return FALSE;
   }
 
-  //
-  // Write it
-  //
   IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
 
-  //
-  // wait for 1s
-  //
-  GotIt       = 0;
-  TimeOut     = 0;
-  SumTimeOut  = 0;
-  Data        = 0;
-  Status      = 0;
+  for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut++) {
+    MicroSecondDelay (50);
+    Status = IoRead8 (KEYBOARD_8042_STATUS_REGISTER);
+    Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
 
-  //
-  // Read from 8042 (multiple times if needed)
-  // until the expected value appears
-  // use SumTimeOut to control the iteration
-  //
-  while (1) {
+    // Keyboard present if we get an echo back
+    if (Data == KBC_INPBUF_VIA60_KBECHO)
+      return TRUE;
 
-    //
-    // Perform a read
-    //
-    for (TimeOut = 0; TimeOut < KEYBOARD_TIMEOUT; TimeOut += 30) {
-      Status = IoRead8 (KEYBOARD_8042_STATUS_REGISTER);
-      Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
-      MicroSecondDelay (30);
+    // We got an ack, there is a chance keybaord is present, wait for echo
+    if (Data == KEYBOARD_CMD_ACK)
+      continue;
+
+    if (Data == KEYBOARD_CMD_RESEND) {
+      Retries++;
+
+      if (Retries > 3)
+        return FALSE;
+
+      if (!WaitPs2BufEmpty ())
+        return FALSE;
+
+      // Reset counter and retry
+      IoWrite8 (KEYBOARD_8042_DATA_REGISTER, KBC_INPBUF_VIA60_KBECHO);
+      TimeOut = 0;
+      continue;
     }
 
-    SumTimeOut += TimeOut;
-
-    if (PcdGetBool (PcdDetectPs2KbOnCmdAck)) {
-      if(Data == KEYBOARD_CMDECHO_ACK) {
-        GotIt = 1;
-        break;
-      }
-    }
-
-    // If keyboard not connected, the timeout will occurr
-    if (Status & KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT || Data == KEYBOARD_CMD_RESEND) {
+    // If keyboard not connected, the timeout will occurr, unlikely anything is connected
+    if (Status & KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT) {
       DEBUG ((EFI_D_INFO, "PS/2 receive timeout, keyboard not connected\n"));
-      GotIt = 0;
-      break;
+      return FALSE;
     }
 
-    if (SumTimeOut >= KEYBOARD_WAITFORVALUE_TIMEOUT || PcdGetBool (PcdFastPS2Detection)) {
-      // Some PS/2 controllers may not respond to echo command.
-      // Assume keybaord connected if no timeout has been detected
-      DEBUG ((EFI_D_INFO, "PS/2 detect timeout\n"));
-      if (Data == KBC_INPBUF_VIA60_KBECHO) {
-        GotIt = 1;
-        break;
-      }
-      break;
-    }
+    DEBUG ((EFI_D_INFO, "PS/2 status %02x data %02x\n", Status, Data));
   }
 
-  //
-  // Check results
-  //
-  if (GotIt == 1) {
-    return TRUE;
-  } else {
-    return FALSE;
-  }
+  return FALSE;
 }
 
 /**
