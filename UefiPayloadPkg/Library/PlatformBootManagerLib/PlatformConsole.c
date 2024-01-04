@@ -103,7 +103,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define KEYBOARD_STATUS_REGISTER_HAS_INPUT_DATA      BIT1
 #define KEYBOARD_STATUS_REGISTER_RECEIVE_TIMEOUT     BIT6
 
-#define KEYBOARD_TIMEOUT                10000   // 0.5s in 50us steps
+#define KEYBOARD_TIMEOUT                20000   // 1s in 50us steps
 
 typedef enum _TYPE_OF_TERMINAL {
   TerminalTypePcAnsi                = 0,
@@ -175,7 +175,7 @@ DetectPs2Keyboard (
     MicroSecondDelay (50);
     Status = IoRead8 (KEYBOARD_8042_STATUS_REGISTER);
     Data = IoRead8 (KEYBOARD_8042_DATA_REGISTER);
-
+    DEBUG ((EFI_D_INFO, "PS/2 status %02x data %02x\n", Status, Data));
     // Keyboard present if we get an echo back
     if (Data == KBC_INPBUF_VIA60_KBECHO)
       return TRUE;
@@ -204,9 +204,12 @@ DetectPs2Keyboard (
       DEBUG ((EFI_D_INFO, "PS/2 receive timeout, keyboard not connected\n"));
       return FALSE;
     }
-
-    DEBUG ((EFI_D_INFO, "PS/2 status %02x data %02x\n", Status, Data));
   }
+
+  // We didn't receive echo, but if the command was accepted,
+  // there is a high chance keyboard is present
+  if (Data == KEYBOARD_CMD_ACK)
+    return TRUE;
 
   return FALSE;
 }
