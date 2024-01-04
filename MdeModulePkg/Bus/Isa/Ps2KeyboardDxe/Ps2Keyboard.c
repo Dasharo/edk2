@@ -416,6 +416,8 @@ KbdControllerDriverStart (
   return Status;
 
 ErrorExit:
+
+  DEBUG ((DEBUG_ERROR, "PS/2 keyboard error %r, error code %x\n", Status, StatusCode));
   //
   // Report error code
   //
