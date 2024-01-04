@@ -1783,6 +1783,21 @@ InitKeyboard (
       KeyboardError (ConsoleIn, L"Update keyboard status lights error!\n");
       goto Done;
     }
+
+    //
+    // Enable Keyboard
+    //
+    Status = KeyboardWrite (ConsoleIn, KEYBOARD_KBEN);
+    if (EFI_ERROR (Status)) {
+      KeyboardError (ConsoleIn, L"Keyboard enable command error!\n");
+      goto Done;
+    }
+
+    Status = KeyboardWaitForValue (ConsoleIn, KEYBOARD_8048_RETURN_8042_ACK);
+    if (EFI_ERROR (Status)) {
+      KeyboardError (ConsoleIn, L"Keyboard enable command ack error!\n");
+      goto Done;
+    }
   }
   //
   // At last, we can now enable the mouse interface if appropriate
