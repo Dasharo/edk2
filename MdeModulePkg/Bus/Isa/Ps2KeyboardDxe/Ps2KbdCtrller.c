@@ -1828,13 +1828,13 @@ CheckKeyboardConnect (
   UINTN          WaitForValueTimeOutBcakup;
 
   //
-  // enable keyboard itself and wait for its ack
-  // If can't receive ack, Keyboard should not be connected.
+  // send an echo command and wait for response,
+  // if received echo back, then keybaord present
   //
   if (!PcdGetBool (PcdFastPS2Detection)) {
     Status = KeyboardWrite (
                ConsoleIn,
-               KEYBOARD_KBEN
+               KBC_INPBUF_VIA60_KBECHO
                );
 
     if (EFI_ERROR (Status)) {
@@ -1847,7 +1847,7 @@ CheckKeyboardConnect (
     mWaitForValueTimeOut = KEYBOARD_WAITFORVALUE_TIMEOUT;
     Status = KeyboardWaitForValue (
                ConsoleIn,
-               KEYBOARD_CMDECHO_ACK
+               KBC_INPBUF_VIA60_KBECHO
                );
     mWaitForValueTimeOut = WaitForValueTimeOutBcakup;
 
