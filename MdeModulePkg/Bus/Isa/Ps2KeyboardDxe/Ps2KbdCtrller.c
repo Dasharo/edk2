@@ -1669,7 +1669,7 @@ InitKeyboard (
   //
   // For resetting keyboard is not mandatory before booting OS and sometimes keyboard responses very slow,
   // and to support KB hot plug, we need to let the InitKB succeed no matter whether there is a KB device connected
-  // to system. So we only do the real resetting for keyboard when user asks and there is a real KB connected t system,
+  // to system. So we only do the real resetting for keyboard when user asks and there is a real KB connected to system,
   // and normally during booting an OS, it's skipped.
   //
   if (ExtendedVerification && CheckKeyboardConnect (ConsoleIn)) {
@@ -1747,41 +1747,41 @@ InitKeyboard (
       goto Done;
     }
 
-  //
-  // Clear Keyboard Scancode Buffer
-  //
-  Status = KeyboardWrite (ConsoleIn, KEYBOARD_8048_COMMAND_CLEAR_OUTPUT_DATA);
-  if (EFI_ERROR (Status)) {
-    KeyboardError (ConsoleIn, L"8042 controller data write error!\n");
-    goto Done;
-  }
-
-  Status = KeyboardWaitForValue (ConsoleIn, KEYBOARD_8048_RETURN_8042_ACK);
-  if (EFI_ERROR (Status)) {
-    KeyboardError (ConsoleIn, L"Some specific value not acquired from 8042 controller!\n");
-    goto Done;
-  }
-  //
-  if (Ps2Policy != NULL) {
-    if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_CAPSLOCK) == EFI_KEYBOARD_CAPSLOCK) {
-      ConsoleIn->CapsLock = TRUE;
+    //
+    // Clear Keyboard Scancode Buffer
+    //
+    Status = KeyboardWrite (ConsoleIn, KEYBOARD_8048_COMMAND_CLEAR_OUTPUT_DATA);
+    if (EFI_ERROR (Status)) {
+      KeyboardError (ConsoleIn, L"8042 controller data write error!\n");
+      goto Done;
     }
 
-    if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_NUMLOCK) == EFI_KEYBOARD_NUMLOCK) {
-      ConsoleIn->NumLock = TRUE;
+    Status = KeyboardWaitForValue (ConsoleIn, KEYBOARD_8048_RETURN_8042_ACK);
+    if (EFI_ERROR (Status)) {
+      KeyboardError (ConsoleIn, L"Some specific value not acquired from 8042 controller!\n");
+      goto Done;
     }
+    //
+    if (Ps2Policy != NULL) {
+      if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_CAPSLOCK) == EFI_KEYBOARD_CAPSLOCK) {
+        ConsoleIn->CapsLock = TRUE;
+      }
 
-    if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_SCROLLLOCK) == EFI_KEYBOARD_SCROLLLOCK) {
-      ConsoleIn->ScrollLock = TRUE;
+      if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_NUMLOCK) == EFI_KEYBOARD_NUMLOCK) {
+        ConsoleIn->NumLock = TRUE;
+      }
+
+      if ((Ps2Policy->KeyboardLight & EFI_KEYBOARD_SCROLLLOCK) == EFI_KEYBOARD_SCROLLLOCK) {
+        ConsoleIn->ScrollLock = TRUE;
+      }
     }
-  }
-  //
-  // Update Keyboard Lights
-  //
-  Status = UpdateStatusLights (ConsoleIn);
-  if (EFI_ERROR (Status)) {
-    KeyboardError (ConsoleIn, L"Update keyboard status lights error!\n");
-    goto Done;
+    //
+    // Update Keyboard Lights
+    //
+    Status = UpdateStatusLights (ConsoleIn);
+    if (EFI_ERROR (Status)) {
+      KeyboardError (ConsoleIn, L"Update keyboard status lights error!\n");
+      goto Done;
     }
   }
   //
