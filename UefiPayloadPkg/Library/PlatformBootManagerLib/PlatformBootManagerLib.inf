@@ -91,6 +91,10 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdShellFile
   gUefiPayloadPkgTokenSpaceGuid.PcdiPXEFile
   gUefiPayloadPkgTokenSpaceGuid.PcdiPXEOptionName
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity
@@ -102,4 +106,5 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck
   gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings

@@ -209,6 +209,82 @@ IsFvFileBootOptionPresent (
   return FALSE;
 }
 
+STATIC
+VOID
+PrepareMemtestParameters (
+  IN OUT UINT8                     **Parameters,
+  IN OUT UINTN                     *ParametersLength
+  )
+{
+
+  // For Boot Menu Enabled functionality
+  EFI_STATUS                     Status;
+  BOOLEAN                        SerialEnable;
+  UINTN                          VarSize;
+  UINT8                          SerialIdx;
+
+  if (ParametersLength == NULL || Parameters == NULL)
+    return;
+
+  VarSize = sizeof (SerialEnable);
+  Status = gRT->GetVariable (
+          L"SerialRedirection",
+          &gDasharoSystemFeaturesGuid,
+          NULL,
+          &VarSize,
+          &SerialEnable
+        );
+
+  if (EFI_ERROR (Status))
+    SerialEnable = PcdGetBool (PcdSerialRedirectionDefaultState);
+
+  if (!SerialEnable) {
+    *ParametersLength = 0;
+    *Parameters = NULL;
+    return;
+  }
+
+  *Parameters = AllocateZeroPool (32);
+
+  if (*Parameters == NULL) {
+    *ParametersLength = 0;
+    return;
+  }
+
+  if (PcdGetBool (PcdSerialUseMmio)) {
+    *ParametersLength = AsciiSPrint (
+                          (CHAR8 *)*Parameters,
+                          31,
+                          "console=mmio%d,0x%x",
+                          PcdGet32 (PcdSerialRegisterStride),
+                          PcdGet64 (PcdSerialRegisterBase)
+                          );
+  } else {
+
+    switch (PcdGet64 (PcdSerialRegisterBase)) {
+    case 0x3F8: SerialIdx = 0; break;
+    case 0x2F8: SerialIdx = 1; break;
+    case 0x3E8: SerialIdx = 2; break;
+    case 0x2E8: SerialIdx = 3; break;
+    default:
+      *ParametersLength = 0;
+      FreePool(*Parameters);
+      *Parameters = NULL;
+      return;
+    }
+
+    *ParametersLength = AsciiSPrint (
+                          (CHAR8 *)*Parameters,
+                          31,
+                          "console=ttyS%d,%d",
+                          SerialIdx,
+                          PcdGet32 (PcdSerialBaudRate)
+                          );
+  }
+
+  *ParametersLength = *ParametersLength + 1;
+}
+
 VOID
 PlatformRegisterFvBootOption (
   EFI_GUID                         *FileGuid,
@@ -226,6 +302,8 @@ PlatformRegisterFvBootOption (
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
   BOOLEAN                           FvFilePresent;
+  UINT8                             *Parameters;
+  UINTN                             ParametersLength;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -243,6 +321,9 @@ PlatformRegisterFvBootOption (
                  );
   ASSERT (DevicePath != NULL);
 
+  if (CompareGuid (FileGuid, &mMemtest86PlusFile))
+    PrepareMemtestParameters (&Parameters, &ParametersLength);
+
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
              LoadOptionNumberUnassigned,
@@ -250,8 +331,8 @@ PlatformRegisterFvBootOption (
              Attributes,
              Description,
              DevicePath,
-             NULL,
-             0
+             Parameters,
+             ParametersLength
              );
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
