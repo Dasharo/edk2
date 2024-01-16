@@ -23,6 +23,10 @@ EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
 };
 
+EFI_GUID mMemtest86PlusFile = {
+  0x691E759D, 0xF4E3, 0x4509, { 0x8B, 0xCA, 0xDD, 0x20, 0xA5, 0x2A, 0xC6, 0x8A }
+};
+
 VOID
 InstallReadyToLock (
   VOID
@@ -95,6 +99,116 @@ PlatformFindLoadOption (
   return -1;
 }
 
+/**
+  Remove all MemoryMapped(...)/FvFile(...) and Fv(...)/FvFile(...) boot options
+  whose device paths do not resolve exactly to an FvFile in the system.
+
+  This removes any boot options that point to binaries built into the firmware
+  and have become stale due to any of the following:
+  - FvMain's base address or size changed (historical),
+  - FvMain's FvNameGuid changed,
+  - the FILE_GUID of the pointed-to binary changed,
+  - the referenced binary is no longer built into the firmware.
+
+  EfiBootManagerFindLoadOption() used in PlatformRegisterFvBootOption() only
+  avoids exact duplicates.
+**/
+STATIC
+BOOLEAN
+IsFvFileBootOptionPresent (
+  EFI_BOOT_MANAGER_LOAD_OPTION *BootOption
+  )
+{
+
+  EFI_DEVICE_PATH_PROTOCOL *Node1, *Node2, *SearchNode;
+  EFI_STATUS               Status;
+  EFI_HANDLE               FvHandle;
+
+  //
+  // If the device path starts with neither MemoryMapped(...) nor Fv(...),
+  // then keep the boot option.
+  //
+  Node1 = BootOption->FilePath;
+  if (!(DevicePathType (Node1) == HARDWARE_DEVICE_PATH &&
+        DevicePathSubType (Node1) == HW_MEMMAP_DP) &&
+      !(DevicePathType (Node1) == MEDIA_DEVICE_PATH &&
+        DevicePathSubType (Node1) == MEDIA_PIWG_FW_VOL_DP)) {
+    return TRUE;
+  }
+
+  //
+  // If the second device path node is not FvFile(...), then keep the boot
+  // option.
+  //
+  Node2 = NextDevicePathNode (Node1);
+  if (DevicePathType (Node2) != MEDIA_DEVICE_PATH ||
+      DevicePathSubType (Node2) != MEDIA_PIWG_FW_FILE_DP) {
+    return TRUE;
+  }
+
+  //
+  // Locate the Firmware Volume2 protocol instance that is denoted by the
+  // boot option. If this lookup fails (i.e., the boot option references a
+  // firmware volume that doesn't exist), then we'll proceed to delete the
+  // boot option.
+  //
+  SearchNode = Node1;
+  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid,
+                  &SearchNode, &FvHandle);
+
+  if (!EFI_ERROR (Status)) {
+    //
+    // The firmware volume was found; now let's see if it contains the FvFile
+    // identified by GUID.
+    //
+    EFI_FIRMWARE_VOLUME2_PROTOCOL     *FvProtocol;
+    MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *FvFileNode;
+    UINTN                             BufferSize;
+    EFI_FV_FILETYPE                   FoundType;
+    EFI_FV_FILE_ATTRIBUTES            FileAttributes;
+    UINT32                            AuthenticationStatus;
+
+    Status = gBS->HandleProtocol (FvHandle, &gEfiFirmwareVolume2ProtocolGuid,
+                    (VOID **)&FvProtocol);
+    ASSERT_EFI_ERROR (Status);
+
+    FvFileNode = (MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)Node2;
+    //
+    // Buffer==NULL means we request metadata only: BufferSize, FoundType,
+    // FileAttributes.
+    //
+    Status = FvProtocol->ReadFile (
+                            FvProtocol,
+                            &FvFileNode->FvFileName, // NameGuid
+                            NULL,                    // Buffer
+                            &BufferSize,
+                            &FoundType,
+                            &FileAttributes,
+                            &AuthenticationStatus
+                            );
+    if (!EFI_ERROR (Status)) {
+      //
+      // The FvFile was found. Keep the boot option.
+      //
+      return TRUE;
+    }
+  }
+
+  CHAR16 *DevicePathString = ConvertDevicePathToText(BootOption->FilePath, FALSE, FALSE);
+  DEBUG ((
+    EFI_ERROR (Status) ? EFI_D_WARN : EFI_D_VERBOSE,
+    "%s FvFile not present\n",
+    DevicePathString == NULL ? L"<unavailable>" : DevicePathString,
+    Status
+    ));
+
+  if (DevicePathString != NULL) {
+    FreePool (DevicePathString);
+  }
+
+  return FALSE;
+}
+
 VOID
 PlatformRegisterFvBootOption (
   EFI_GUID                         *FileGuid,
@@ -111,6 +225,7 @@ PlatformRegisterFvBootOption (
   MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
+  BOOLEAN                           FvFilePresent;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -140,6 +255,27 @@ PlatformRegisterFvBootOption (
              );
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
+
+  FvFilePresent = IsFvFileBootOptionPresent(&NewOption);
+
+  if (!FvFilePresent) {
+    BootOptions = EfiBootManagerGetLoadOptions (
+                    &BootOptionCount, LoadOptionTypeBoot
+                    );
+
+    OptionIndex = EfiBootManagerFindLoadOption (
+                    &NewOption, BootOptions, BootOptionCount
+                    );
+    // Delete the stale boot option if it was present but no longer is.
+    if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+      Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                       BootOptions[OptionIndex].OptionType);
+      ASSERT_EFI_ERROR (Status);
+    }
+    EfiBootManagerFreeLoadOption (&NewOption);
+    EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+    return;
+  }
 
   if (BootNow)
     EfiBootManagerBoot (&NewOption);
@@ -423,7 +559,6 @@ GetBootManagerMenuAppOption (
 
   return OptionNumber;
 }
-
 
 /**
   Check if the handle satisfies a particular condition.
@@ -1613,6 +1748,15 @@ PlatformBootManagerAfterConsole (
   DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
   PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile),
                                 L"UEFI Shell",
+                                LOAD_OPTION_ACTIVE,
+                                FALSE);
+
+  //
+  // Register Memtest86Plus
+  //
+  DEBUG((DEBUG_INFO, "Registering Memtest86+ boot option\n"));
+  PlatformRegisterFvBootOption (&mMemtest86PlusFile,
+                                L"Memtest86+",
                                 LOAD_OPTION_ACTIVE,
                                 FALSE);
 

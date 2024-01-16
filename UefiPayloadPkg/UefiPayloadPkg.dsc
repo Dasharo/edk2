@@ -107,6 +107,7 @@
   DEFINE BATTERY_CHECK                  = FALSE
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
   DEFINE RAM_DISK_ENABLE                = FALSE
+  DEFINE MEMTEST_ENABLE                 = FALSE
   #
   # Network definition
   #

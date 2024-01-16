@@ -276,6 +276,18 @@ INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   }
 !endif
 
+#
+# Memtest86+ support
+#
+!if $(MEMTEST_ENABLE) == TRUE
+  #
+  # coreboot build system should put the memtest.efi file here before EDK2 build
+  #
+  FILE FREEFORM = 691E759D-F4E3-4509-8BCA-DD20A52AC68A {
+   SECTION PE32 = UefiPayloadPkg/memtest.efi
+  }
+!endif
+
 INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
 #
