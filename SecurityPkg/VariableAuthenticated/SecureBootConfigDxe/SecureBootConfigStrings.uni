@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #langdef en-US "English"
 
-#string STR_SECUREBOOT_TITLE               #language en-US "Secure Boot Configuration"
+#string STR_SECUREBOOT_TITLE               #language en-US "Secure Boot"
 #string STR_SECUREBOOT_HELP                #language en-US "Press <Enter> to select Secure Boot options."
 
 #string STR_NULL                           #language en-US ""

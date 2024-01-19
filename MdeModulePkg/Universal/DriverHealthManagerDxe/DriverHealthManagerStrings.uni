@@ -13,8 +13,8 @@
 #langdef   en-US "English"
 #langdef   fr-FR "Français"
 
-#string STR_FORM_TITLE                 #language en-US  "Driver Health Manager"
-                                       #language fr-FR  "Driver Health Manager"
+#string STR_FORM_TITLE                 #language en-US  "Option ROM Status"
+                                       #language fr-FR  "Option ROM Status"
 #string STR_FORM_HELP                  #language en-US  "List all the Driver Health instances to manage"
                                        #language fr-FR  "List all the Driver Health instances to manage"
 #string STR_NULL                       #language en-US  ""

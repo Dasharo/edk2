@@ -17,7 +17,7 @@
 #string STR_FORM_SET_HELP                        #language en-US "Select to manage"
 
 /////////////////////////////////   MULTIPLE FORMS   /////////////////////////////////
-#string STR_OPAL                                 #language en-US "TCG Drive Management"
+#string STR_OPAL                                 #language en-US "TCG OPAL Settings"
 
 /////////////////////////////////   MAIN MENU FORM   /////////////////////////////////
 #string STR_MAIN_PHY_DISKS_LBL                   #language en-US "Physical Disks:"
