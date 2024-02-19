@@ -400,12 +400,21 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-      checkbox varid   = FeaturesData.SerialPortRedirection,
-               questionid = SERIAL_PORT_REDIR_QUESTION_ID,
-               prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_PROMPT),
-               help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_HELP),
-               flags   = INTERACTIVE | RESET_REQUIRED,
-      endcheckbox;
+     checkbox varid   = FeaturesData.SerialPortRedirection,
+              questionid = SERIAL_PORT_REDIR_QUESTION_ID,
+              prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_PROMPT),
+              help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_HELP),
+              flags   = INTERACTIVE | RESET_REQUIRED,
+     endcheckbox;
+
+    suppressif ideqval FeaturesData.Have2ndUart == 0;
+        checkbox varid   = FeaturesData.SerialPort2Redirection,
+                 questionid = SERIAL_PORT2_REDIR_QUESTION_ID,
+                 prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT),
+                 help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_HELP),
+                 flags   = INTERACTIVE | RESET_REQUIRED,
+        endcheckbox;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
