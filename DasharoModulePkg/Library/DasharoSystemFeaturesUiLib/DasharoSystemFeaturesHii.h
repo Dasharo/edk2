@@ -128,6 +128,7 @@ typedef struct {
 #define BATTERY_START_THRESHOLD_QUESTION_ID  0x8007
 #define BATTERY_STOP_THRESHOLD_QUESTION_ID   0x8008
 #define INTEL_ME_MODE_QUESTION_ID            0x8009
+#define SLEEP_TYPE_QUESTION_ID               0x800A
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 
