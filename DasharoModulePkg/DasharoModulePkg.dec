@@ -65,6 +65,10 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState|0|UINT8|0x000000018
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable|TRUE|BOOLEAN|0x000000019
   gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental|FALSE|BOOLEAN|0x000000020
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios|FALSE|BOOLEAN|0x00000001A
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp|FALSE|BOOLEAN|0x00000001B
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum|TRUE|BOOLEAN|0x00000001C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|FALSE|BOOLEAN|0x00000001D
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
