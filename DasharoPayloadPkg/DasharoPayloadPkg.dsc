@@ -54,6 +54,8 @@
   DEFINE UART_DEFAULT_STOP_BITS       = 1
   DEFINE DEFAULT_TERMINAL_TYPE        = 4
 
+  DEFINE UART_ON_SUPERIO              = FALSE
+
   DEFINE BOOT_MENU_KEY                = 0x0016
   DEFINE SETUP_MENU_KEY               = 0x0017
 
@@ -446,6 +448,8 @@
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
 
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
+
 !if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
 !else
@@ -780,6 +784,9 @@
   #
   # ISA Support
   #
+!if $(UART_ON_SUPERIO) == TRUE && $(SYSTEM76_EC_LOGGING) == FALSE
+  MdeModulePkg/Bus/Pci/PciSioSerialDxe/PciSioSerialDxe.inf
+!else
   MdeModulePkg/Universal/SerialDxe/SerialDxe.inf {
     <LibraryClasses>
     !if $(SYSTEM76_EC_LOGGING) == TRUE
@@ -790,7 +797,7 @@
       PlatformHookLib|DasharoPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
     !endif
   }
-
+!endif
 
   OvmfPkg/SioBusDxe/SioBusDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE

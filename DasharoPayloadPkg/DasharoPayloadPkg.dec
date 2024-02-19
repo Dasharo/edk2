@@ -97,3 +97,4 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
 gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
 
 gDasharoPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A
+gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B
