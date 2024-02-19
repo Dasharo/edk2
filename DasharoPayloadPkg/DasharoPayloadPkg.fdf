@@ -157,7 +157,11 @@ INF MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
 #
 # ISA Support
 #
+!if $(UART_ON_SUPERIO) == TRUE && $(SYSTEM76_EC_LOGGING) == FALSE
+INF MdeModulePkg/Bus/Pci/PciSioSerialDxe/PciSioSerialDxe.inf
+!else
 INF MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
+!endif
 INF OvmfPkg/SioBusDxe/SioBusDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
 INF MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
