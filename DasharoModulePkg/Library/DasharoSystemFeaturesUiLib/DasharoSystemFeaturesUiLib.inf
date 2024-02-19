@@ -89,5 +89,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
