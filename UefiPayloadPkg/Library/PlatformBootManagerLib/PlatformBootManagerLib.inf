@@ -103,4 +103,5 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
   gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings
