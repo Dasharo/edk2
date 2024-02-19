@@ -69,6 +69,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp|FALSE|BOOLEAN|0x00000001B
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum|TRUE|BOOLEAN|0x00000001C
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|FALSE|BOOLEAN|0x00000001D
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3|FALSE|BOOLEAN|0x00000001E
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.

@@ -1287,6 +1287,18 @@ DasharoSystemFeaturesCallback (
           Value->u8 = FixedPcdGet8(PcdIntelMeDefaultState);
           break;
         }
+      case SLEEP_TYPE_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          if (PcdGetBool (PcdSleepTypeDefaultS3))
+            Value->u8 = SLEEP_TYPE_S3;
+          else
+            Value->u8 = SLEEP_TYPE_S0IX;
+
+          break;
+        }
       default:
         Status = EFI_UNSUPPORTED;
         break;
