@@ -119,6 +119,7 @@ typedef enum _TYPE_OF_TERMINAL {
 } TYPE_OF_TERMINAL;
 
 ACPI_HID_DEVICE_PATH       gPnpPs2KeyboardDeviceNode  = gPnpPs2Keyboard;
+ACPI_HID_DEVICE_PATH       gPnp16550ComPortDeviceNode = gPnp16550ComPort;
 UART_DEVICE_PATH           gUartDeviceNode            = gUart;
 VENDOR_DEVICE_PATH         gTerminalTypeDeviceNode    = gPcAnsiTerminal;
 VENDOR_DEVICE_PATH         gUartDeviceVendorNode      = gUartVendor;
@@ -232,6 +233,69 @@ DetectPs2Keyboard (
   }
 }
 
+STATIC
+VOID
+RegisterUartConsole (
+  IN   EFI_DEVICE_PATH_PROTOCOL  *DevicePath,
+  IN   EFI_DEVICE_PATH_PROTOCOL  *UartNode,
+  IN   UINT32                    UartNumber
+)
+{
+  EFI_STATUS                Status;
+  BOOLEAN                   UartEnabled;
+  UINTN                     VarSize;
+  CHAR16                    *DevPathStr;
+
+  VarSize = sizeof (UartEnabled);
+  Status = gRT->GetVariable (
+      UartNumber == 1 ? L"SerialRedirection2" : L"SerialRedirection",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &UartEnabled
+      );
+
+  if (EFI_ERROR (Status)) {
+    if (UartNumber == 1)
+      UartEnabled = PcdGetBool (PcdHave2ndUart) ? PcdGetBool (PcdSerialRedirection2DefaultState) : FALSE;
+    else
+      UartEnabled = PcdGetBool (PcdSerialRedirectionDefaultState);
+  }
+
+  if (PcdGetBool (PcdSerialOnSuperIo))
+    DevicePath = AppendDevicePathNode ((EFI_DEVICE_PATH_PROTOCOL *)DevicePath, UartNode);
+  else
+    DevicePath = AppendDevicePathNode ((EFI_DEVICE_PATH_PROTOCOL *)NULL, UartNode);
+
+  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode);
+  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode);
+
+  //
+  // Print Device Path
+  //
+  DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  if (DevPathStr != NULL) {
+    DEBUG((
+      EFI_D_INFO,
+      "%segistering UART Console: COM%d DevPath: %s\n",
+      UartEnabled ? L"R" : L"Unr",
+      UartNumber + 1,
+      DevPathStr
+      ));
+    FreePool(DevPathStr);
+  }
+
+  if (UartEnabled) {
+    EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
+    EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+    EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
+  } else {
+    EfiBootManagerUpdateConsoleVariable (ConOut, NULL, DevicePath);
+    EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+    EfiBootManagerUpdateConsoleVariable (ErrOut, NULL, DevicePath);
+  }
+}
+
 /**
   Add IsaKeyboard to ConIn; add IsaSerial to ConOut, ConIn, ErrOut.
 
@@ -265,9 +329,13 @@ PrepareLpcBridgeDevicePath (
     return Status;
   }
 
+  /* Start the drivers for all child devices of this controller/device */
+  gBS->ConnectController (DeviceHandle, NULL, NULL, TRUE);
+
+  TempDevicePath = DevicePath;
+
   /* Don't bother with adding PS/2 keyboard if PS/2 not enabled in the project */
   if (PcdGetBool (PcdShowPs2Option)) {
-    TempDevicePath = DevicePath;
     DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
 
     VarSize = sizeof (Ps2Enabled);
@@ -310,13 +378,6 @@ PrepareLpcBridgeDevicePath (
     }
   } // PcdShowPs2Option
 
-  //
-  // Register COM1
-  //
-  DevicePath = TempDevicePath;
-  DevicePath = AppendDevicePathNode ((EFI_DEVICE_PATH_PROTOCOL *)NULL, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceVendorNode);
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode);
-
   switch (PcdGet8 (PcdDefaultTerminalType)) {
   case TerminalTypePcAnsi:    TerminalTypeGuid = gEfiPcAnsiGuid;      break;
   case TerminalTypeVt100:     TerminalTypeGuid = gEfiVT100Guid;       break;
@@ -332,11 +393,31 @@ PrepareLpcBridgeDevicePath (
 
   CopyGuid (&gTerminalTypeDeviceNode.Guid, &TerminalTypeGuid);
 
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode);
+  if (!PcdGetBool (PcdSerialOnSuperIo)) {
+    //
+    // Register COM1
+    //
+    DevicePath = TempDevicePath;
 
-  EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
+    RegisterUartConsole(DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceVendorNode, 0);
+  } else {
+    //
+    // Register COM1
+    //
+    DevicePath = TempDevicePath;
+
+    gPnp16550ComPortDeviceNode.UID = 0;
+    RegisterUartConsole(DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnp16550ComPortDeviceNode, 0);
+
+    //
+    // Register COM2
+    //
+    DevicePath = TempDevicePath;
+    gPnp16550ComPortDeviceNode.UID = 1;
+
+    RegisterUartConsole(DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnp16550ComPortDeviceNode, 1);
+
+  }
 
   return EFI_SUCCESS;
 }
@@ -357,6 +438,9 @@ PreparePciSerialDevicePath (
 {
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
+  BOOLEAN                   PciSerialEnabled;
+  UINTN                     VarSize;
+  CHAR16                    *DevPathStr;
 
   DevicePath = NULL;
   Status = gBS->HandleProtocol (
@@ -368,12 +452,43 @@ PreparePciSerialDevicePath (
     return Status;
   }
 
+  VarSize = sizeof (PciSerialEnabled);
+  Status = gRT->GetVariable (
+      L"SerialRedirection",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &PciSerialEnabled
+      );
+
+  if (EFI_ERROR (Status))
+    PciSerialEnabled = PcdGetBool (PcdSerialRedirectionDefaultState);
+
   DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode);
   DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode);
+  //
+  // Print Device Path
+  //
+  DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  if (DevPathStr != NULL) {
+    DEBUG((
+      EFI_D_INFO,
+      "%segistering PCI Serial Console, DevPath: %s\n",
+      PciSerialEnabled ? L"R" : L"Unr",
+      DevPathStr
+      ));
+    FreePool(DevPathStr);
+  }
 
-  EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ConIn,  DevicePath, NULL);
-  EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
+  if (PciSerialEnabled) {
+    EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
+    EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+    EfiBootManagerUpdateConsoleVariable (ErrOut, DevicePath, NULL);
+  } else {
+    EfiBootManagerUpdateConsoleVariable (ConOut, NULL, DevicePath);
+    EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+    EfiBootManagerUpdateConsoleVariable (ErrOut, NULL, DevicePath);
+  }
 
   return EFI_SUCCESS;
 }
@@ -553,7 +668,7 @@ DetectAndPreparePlatformPciDevicePath (
   //
   // Here we decide which Serial device to enable in PCI bus
   //
-  if (IS_PCI_16550SERIAL (Pci)) {
+  if (IS_PCI_16550SERIAL (Pci) && !PcdGetBool (PcdSerialOnSuperIo)) {
     //
     // Add them to ConOut, ConIn, ErrOut.
     //

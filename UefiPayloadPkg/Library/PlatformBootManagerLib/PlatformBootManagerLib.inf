@@ -105,3 +105,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
   gUefiPayloadPkgTokenSpaceGuid.PcdPrintSolStrings
+  gUefiPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart

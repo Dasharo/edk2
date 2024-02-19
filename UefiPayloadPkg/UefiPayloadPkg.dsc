@@ -54,6 +54,7 @@
 
   # Enabling the serial terminal will slow down the boot menu redering!
   DEFINE SERIAL_TERMINAL              = FALSE
+  DEFINE UART_ON_SUPERIO              = FALSE
 
   DEFINE PLATFORM_BOOT_TIMEOUT        = 5
   DEFINE BOOT_MENU_KEY                = 0x0016
@@ -444,6 +445,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
 
+  gUefiPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
+
 !if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
 !else
@@ -770,6 +773,9 @@
   #
   # ISA Support
   #
+!if $(UART_ON_SUPERIO) == TRUE && $(SYSTEM76_EC_LOGGING) == FALSE
+  MdeModulePkg/Bus/Pci/PciSioSerialDxe/PciSioSerialDxe.inf
+!else
   MdeModulePkg/Universal/SerialDxe/SerialDxe.inf {
     <LibraryClasses>
     !if $(SYSTEM76_EC_LOGGING) == TRUE
@@ -780,7 +786,7 @@
       PlatformHookLib|UefiPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
     !endif
   }
-
+!endif
 
   OvmfPkg/SioBusDxe/SioBusDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
