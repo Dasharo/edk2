@@ -190,10 +190,26 @@ InitializeBootPolicies (
              );
 
 
-  if (Status == EFI_NOT_FOUND)
+  if (EFI_ERROR (Status))
     mSerialRedirectionPolicy.SerialRedirectionEnabled = FixedPcdGetBool(PcdSerialRedirectionDefaultState);
-  else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(*EfiVar)))
+  else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
     mSerialRedirectionPolicy.SerialRedirectionEnabled = *EfiVar;
+
+  /* Check if second port redirection is enabled */
+  if (FixedPcdGetBool (PcdHave2ndUart)) {
+    VarSize = sizeof(BOOLEAN);
+    Status = GetVariable2 (
+               L"SerialRedirection2",
+               &gDasharoSystemFeaturesGuid,
+               (VOID **) &EfiVar,
+               &VarSize
+               );
+
+    if (EFI_ERROR (Status))
+      mSerialRedirectionPolicy.SerialRedirectionEnabled |= FixedPcdGetBool(PcdSerialRedirection2DefaultState);
+    else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
+      mSerialRedirectionPolicy.SerialRedirectionEnabled |= *EfiVar;
+  }
 
   if (mSerialRedirectionPolicy.SerialRedirectionEnabled) {
     gBS->InstallMultipleProtocolInterfaces (

@@ -50,7 +50,10 @@
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
+
 
 [Depex]
   gEfiVariableArchProtocolGuid
