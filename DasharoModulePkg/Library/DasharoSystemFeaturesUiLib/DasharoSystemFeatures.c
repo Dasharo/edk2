@@ -236,6 +236,29 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowCamera = PcdGetBool (PcdSecurityShowCameraOption);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeHapAvailable = PcdGetBool (PcdIntelMeHapAvailable);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.S3SupportExperimental = PcdGetBool (PcdS3SupportExperimental);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowLockBios = PcdGetBool (PcdShowLockBios);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSmmBwp = PcdGetBool (PcdShowSmmBwp);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowFum = PcdGetBool (PcdShowFum);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
+
+  // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
+  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu = PcdGetBool (PcdDasharoEnterprise) ||
+                                                                         PcdGetBool (PcdShowIommuOptions) ||
+                                                                         PcdGetBool (PcdSecurityShowWiFiBtOption) ||
+                                                                         PcdGetBool (PcdSecurityShowCameraOption) ||
+                                                                         PcdGetBool (PcdShowLockBios) ||
+                                                                         PcdGetBool (PcdShowSmmBwp) ||
+                                                                         PcdGetBool (PcdShowFum);
+
+  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu)
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowOcWdtOptions) ||
+                                                                        PcdGetBool (PcdShowPs2Option);
+  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu)
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu = PcdGetBool (PcdPowerMenuShowFanCurve) ||
+                                                                      PcdGetBool (PcdPowerMenuShowSleepType) ||
+                                                                      PcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
+                                                                      (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
 
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
@@ -1273,6 +1296,9 @@ DasharoSystemFeaturesCallback (
   case EFI_BROWSER_ACTION_CHANGED:
     {
       if (QuestionId == FIRMWARE_UPDATE_MODE_QUESTION_ID) {
+        if (!PcdGetBool(PcdShowFum))
+          return EFI_UNSUPPORTED;
+
         do {
           CreatePopUp (
             EFI_BLACK | EFI_BACKGROUND_RED,

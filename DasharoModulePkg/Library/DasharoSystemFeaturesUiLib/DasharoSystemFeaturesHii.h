@@ -58,6 +58,10 @@ typedef struct {
   BOOLEAN            ShowPciMenu;
   BOOLEAN            ShowMemoryMenu;
   BOOLEAN            ShowSerialPortMenu;
+  BOOLEAN            ShowLockBios;
+  BOOLEAN            ShowSmmBwp;
+  BOOLEAN            ShowFum;
+  BOOLEAN            ShowPs2Option;
   BOOLEAN            PowerMenuShowFanCurve;
   BOOLEAN            PowerMenuShowSleepType;
   BOOLEAN            PowerMenuShowBatteryThresholds;
