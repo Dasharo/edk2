@@ -86,17 +86,21 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox varid  = FeaturesData.LockBios,
-             prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
-             help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
-             flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
-    endcheckbox;
+    suppressif ideqval FeaturesData.ShowLockBios == 0;
+          checkbox varid  = FeaturesData.LockBios,
+                   prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
+                   help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
+                   flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+          endcheckbox;
+    endif;
 
-    checkbox varid  = FeaturesData.SmmBwp,
-             prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
-             help   = STRING_TOKEN(STR_SMM_BWP_HELP),
-             flags  = RESET_REQUIRED,
-    endcheckbox;
+    suppressif ideqval FeaturesData.ShowSmmBwp == 0;
+          checkbox varid  = FeaturesData.SmmBwp,
+                   prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
+                   help   = STRING_TOKEN(STR_SMM_BWP_HELP),
+                   flags  = RESET_REQUIRED,
+          endcheckbox;
+    endif;
 
     suppressif ideqval FeaturesData.SecurityMenuShowIommu == 0;
       checkbox name   = IommuEnable,
@@ -139,14 +143,16 @@ formset
       endcheckbox;
     endif;
 
-    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
-    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    suppressif ideqval FeaturesData.ShowFum == 0;
+        subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+        subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    text
-      help  = STRING_TOKEN(STR_FUM_HELP),
-      text  = STRING_TOKEN(STR_FUM_PROMPT),
-      flags = INTERACTIVE,
-      key   = FIRMWARE_UPDATE_MODE_QUESTION_ID;
+        text
+            help  = STRING_TOKEN(STR_FUM_HELP),
+            text  = STRING_TOKEN(STR_FUM_PROMPT),
+            flags = INTERACTIVE,
+            key   = FIRMWARE_UPDATE_MODE_QUESTION_ID;
+     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -224,11 +230,13 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox varid   = FeaturesData.Ps2Controller,
-             prompt  = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
-             help    = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
-             flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
-    endcheckbox;
+    suppressif ideqval FeaturesData.ShowPs2Option == 0;
+        checkbox varid   = FeaturesData.Ps2Controller,
+                 prompt  = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
+                 help    = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
+                 flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
+        endcheckbox;
+    endif;
 
     suppressif ideqval FeaturesData.WatchdogState == 0;
       checkbox varid   = FeaturesData.WatchdogConfig.WatchdogEnable,

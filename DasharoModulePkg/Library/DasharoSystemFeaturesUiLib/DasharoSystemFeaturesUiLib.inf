@@ -85,4 +85,9 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
+
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
