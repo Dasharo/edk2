@@ -47,7 +47,6 @@ STATIC UINT8     mFanCurveOptionDefault = FAN_CURVE_OPTION_SILENT;
 STATIC UINT8     mIommuEnableDefault = FALSE;
 STATIC UINT8     mIommuHandoffDefault = FALSE;
 STATIC BOOLEAN   mBootManagerEnabledDefault = TRUE;
-STATIC UINT8     mSleepTypeDefault = SLEEP_TYPE_S0IX;
 STATIC UINT8     mResizeableBarsEnabledDefault = FALSE;
 STATIC BOOLEAN   mEnableCameraDefault = TRUE;
 STATIC BOOLEAN   mEnableWifiBtDefault = TRUE;
@@ -556,7 +555,9 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType = mSleepTypeDefault;
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType = PcdGetBool (PcdSleepTypeDefaultS3)
+                                                                ? SLEEP_TYPE_S3
+                                                                : SLEEP_TYPE_S0IX;
     Status = gRT->SetVariable (
         mSleepTypeEfiVar,
         &gDasharoSystemFeaturesGuid,
@@ -1285,6 +1286,18 @@ DasharoSystemFeaturesCallback (
             return EFI_INVALID_PARAMETER;
 
           Value->u8 = FixedPcdGet8(PcdIntelMeDefaultState);
+          break;
+        }
+      case SLEEP_TYPE_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          if (PcdGetBool (PcdSleepTypeDefaultS3))
+            Value->u8 = SLEEP_TYPE_S3;
+          else
+            Value->u8 = SLEEP_TYPE_S0IX;
+
           break;
         }
       default:
