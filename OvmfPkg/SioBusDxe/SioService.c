@@ -44,6 +44,24 @@ SIO_RESOURCES_IO  mCom2Resources = {
 };
 
 //
+// COM 3 UART Controller
+//
+GLOBAL_REMOVE_IF_UNREFERENCED
+SIO_RESOURCES_IO mCom3Resources = {
+  { { ACPI_FIXED_LOCATION_IO_PORT_DESCRIPTOR }, 0x3E8, 8 },
+  { ACPI_END_TAG_DESCRIPTOR,                    0        }
+};
+
+//
+// COM 4 UART Controller
+//
+GLOBAL_REMOVE_IF_UNREFERENCED
+SIO_RESOURCES_IO mCom4Resources = {
+  { { ACPI_FIXED_LOCATION_IO_PORT_DESCRIPTOR }, 0x2E8, 8 },
+  { ACPI_END_TAG_DESCRIPTOR,                    0        }
+};
+
+//
 // PS/2 Keyboard Controller
 //
 GLOBAL_REMOVE_IF_UNREFERENCED
@@ -69,6 +87,16 @@ SIO_DEVICE_INFO  mDevicesInfo[] = {
     1,
     { (ACPI_SMALL_RESOURCE_HEADER *)&mCom2Resources              }
   },  // COM 2 UART Controller
+  {
+    EISA_PNP_ID (0x501),
+    0,
+    { (ACPI_SMALL_RESOURCE_HEADER *) &mCom3Resources }
+  },  // COM 3 UART Controller
+  {
+    EISA_PNP_ID (0x501),
+    1,
+    { (ACPI_SMALL_RESOURCE_HEADER *) &mCom4Resources }
+  },  // COM 4 UART Controller
   {
     EISA_PNP_ID (0x303),
     0,
