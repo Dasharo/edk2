@@ -264,47 +264,52 @@ PrepareLpcBridgeDevicePath (
   if (EFI_ERROR (Status)) {
     return Status;
   }
-  TempDevicePath = DevicePath;
-  DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
 
-  VarSize = sizeof (Ps2Enabled);
-  Status = gRT->GetVariable (
-      L"Ps2Controller",
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &VarSize,
-      &Ps2Enabled
-      );
+  /* Don't bother with adding PS/2 keyboard if PS/2 not enabled in the project */
+  if (PcdGetBool (PcdShowPs2Option)) {
+    TempDevicePath = DevicePath;
+    DevicePath = AppendDevicePathNode (DevicePath, (EFI_DEVICE_PATH_PROTOCOL *)&gPnpPs2KeyboardDeviceNode);
 
-  if ((Status == EFI_SUCCESS) && (VarSize == sizeof(Ps2Enabled))) {
-    if (Ps2Enabled) {
-      DEBUG ((DEBUG_INFO, "PS/2 controller enabled\n"));
+    VarSize = sizeof (Ps2Enabled);
+    Status = gRT->GetVariable (
+        L"Ps2Controller",
+        &gDasharoSystemFeaturesGuid,
+        NULL,
+        &VarSize,
+        &Ps2Enabled
+        );
+
+    if ((Status == EFI_SUCCESS) && (VarSize == sizeof(Ps2Enabled))) {
+      if (Ps2Enabled) {
+        DEBUG ((DEBUG_INFO, "PS/2 controller enabled\n"));
+        if (DetectPs2Keyboard()) {
+          //
+          // Register Keyboard
+          //
+          DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
+          EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
+        } else {
+          // Remove PS/2 Keyboard from ConIn
+          DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
+          EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+        }
+      } else {
+        DEBUG ((DEBUG_INFO, "PS/2 controller disabled\n"));
+        // Remove PS/2 Keyboard from ConIn
+        EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
+      }
+    } else {
+      DEBUG ((DEBUG_INFO, "PS/2 controller variable status %r\n", Status));
       if (DetectPs2Keyboard()) {
         //
         // Register Keyboard
         //
         DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
         EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
-      } else {
-        // Remove PS/2 Keyboard from ConIn
-        DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
-        EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
       }
-    } else {
-      DEBUG ((DEBUG_INFO, "PS/2 controller disabled\n"));
-      // Remove PS/2 Keyboard from ConIn
-      EfiBootManagerUpdateConsoleVariable (ConIn, NULL, DevicePath);
     }
-  } else {
-    DEBUG ((DEBUG_INFO, "PS/2 controller variable status %r\n", Status));
-    if (DetectPs2Keyboard()) {
-      //
-      // Register Keyboard
-      //
-      DEBUG ((DEBUG_INFO, "PS/2 keyboard connected\n"));
-      EfiBootManagerUpdateConsoleVariable (ConIn, DevicePath, NULL);
-    }
-  }
+  } // PcdShowPs2Option
+
   //
   // Register COM1
   //

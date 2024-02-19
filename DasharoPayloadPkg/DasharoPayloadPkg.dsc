@@ -517,7 +517,11 @@
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
 
+!if $(PS2_KEYBOARD_ENABLE) == TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
+!else
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|TRUE
+!endif
 
 
 ################################################################################
@@ -675,6 +679,7 @@
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|$(IOMMU_ENABLE)
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 !if $(RAM_DISK_ENABLE) == TRUE
