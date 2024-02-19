@@ -72,6 +72,7 @@ typedef struct {
   BOOLEAN            SecurityMenuShowCamera;
   BOOLEAN            MeHapAvailable;
   BOOLEAN            S3SupportExperimental;
+  BOOLEAN            Have2ndUart;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -94,6 +95,7 @@ typedef struct {
   BATTERY_CONFIG     BatteryConfig;
   UINT8              MemoryProfile;
   BOOLEAN            SerialPortRedirection;
+  BOOLEAN            SerialPort2Redirection;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0
@@ -129,6 +131,7 @@ typedef struct {
 #define BATTERY_STOP_THRESHOLD_QUESTION_ID   0x8008
 #define INTEL_ME_MODE_QUESTION_ID            0x8009
 #define SLEEP_TYPE_QUESTION_ID               0x800A
+#define SERIAL_PORT2_REDIR_QUESTION_ID       0x800B
 
 extern EFI_GUID gDasharoSystemFeaturesGuid;
 
