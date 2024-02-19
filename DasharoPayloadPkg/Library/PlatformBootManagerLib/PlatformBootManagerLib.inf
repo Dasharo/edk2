@@ -101,4 +101,5 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck
   gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
   gDasharoPayloadPkgTokenSpaceGuid.PcdPrintSolStrings
