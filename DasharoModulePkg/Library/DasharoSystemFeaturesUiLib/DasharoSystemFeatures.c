@@ -37,6 +37,7 @@ STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
 STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
 STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
 STATIC CHAR16 mSerialRedirectionEfiVar[] = L"SerialRedirection";
+STATIC CHAR16 mSerialRedirection2EfiVar[] = L"SerialRedirection2";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -240,6 +241,7 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSmmBwp = PcdGetBool (PcdShowSmmBwp);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowFum = PcdGetBool (PcdShowFum);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Have2ndUart = PcdGetBool (PcdHave2ndUart);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
@@ -718,6 +720,30 @@ DasharoSystemFeaturesUiLibConstructor (
   }
 
 
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection);
+  Status = gRT->GetVariable (
+      mSerialRedirection2EfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection
+      );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection = PcdGetBool(PcdHave2ndUart) ?
+                                                                                PcdGetBool (PcdSerialRedirection2DefaultState) :
+                                                                                FALSE;
+    Status = gRT->SetVariable (
+        mSerialRedirection2EfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+
   return EFI_SUCCESS;
 }
 
@@ -1171,6 +1197,19 @@ DasharoSystemFeaturesRouteConfig (
     }
   }
 
+  if (Private->DasharoFeaturesData.SerialPort2Redirection != DasharoFeaturesData.SerialPort2Redirection) {
+    Status = gRT->SetVariable (
+        mSerialRedirection2EfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.SerialPort2Redirection),
+        &DasharoFeaturesData.SerialPort2Redirection
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
 }
@@ -1261,6 +1300,17 @@ DasharoSystemFeaturesCallback (
             return EFI_INVALID_PARAMETER;
 
           Value->b = PcdGetBool (PcdSerialRedirectionDefaultState);
+          break;
+        }
+        case SERIAL_PORT2_REDIR_QUESTION_ID:
+        {
+          if (Value == NULL)
+            return EFI_INVALID_PARAMETER;
+
+          if (PcdGetBool (PcdHave2ndUart))
+            Value->b = PcdGetBool (PcdSerialRedirection2DefaultState);
+          else
+            Value->b = FALSE;
           break;
         }
       case BATTERY_START_THRESHOLD_QUESTION_ID:

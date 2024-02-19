@@ -70,6 +70,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum|TRUE|BOOLEAN|0x00000001C
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|FALSE|BOOLEAN|0x00000001D
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3|FALSE|BOOLEAN|0x00000001E
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState|FALSE|BOOLEAN|0x00000001F
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart|FALSE|BOOLEAN|0x000000021
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.

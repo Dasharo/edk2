@@ -90,5 +90,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
