@@ -48,6 +48,7 @@
 
 [Pcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
 
 [Guids]
   ## CONSUMES            ## Variable:L"SetupMode"

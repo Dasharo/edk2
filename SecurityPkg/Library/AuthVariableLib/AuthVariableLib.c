@@ -241,11 +241,15 @@ AuthVariableLibInitialize (
   //
   // Create "SecureBoot" variable with BS+RT attribute set.
   //
-  if ((SecureBootEnable == SECURE_BOOT_ENABLE) && (mPlatformMode == USER_MODE) && EFI_ERROR (Status)) {
+  if ((SecureBootEnable == SECURE_BOOT_ENABLE) && (mPlatformMode == USER_MODE)) {
     SecureBootMode = SECURE_BOOT_MODE_ENABLE;
   } else {
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
   }
+
+  // Disable Secure Boot if FUM enabled in the project and currently active
+  if (PcdGetBool (PcdShowFum) && !EFI_ERROR (Status))
+    SecureBootMode = SECURE_BOOT_MODE_DISABLE;
 
   Status = AuthServiceInternalUpdateVariable (
              EFI_SECURE_BOOT_MODE_NAME,
