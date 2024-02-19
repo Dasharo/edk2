@@ -283,12 +283,12 @@ formset
 
     suppressif ideqval FeaturesData.PowerMenuShowSleepType == 0;
          oneof varid = FeaturesData.SleepType,
+                  questionid = SLEEP_TYPE_QUESTION_ID,
                   prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
                   help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
+                  flags  = RESET_REQUIRED | INTERACTIVE,
 
-                  flags  = RESET_REQUIRED,
-
-                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = DEFAULT;
+                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = 0;
                suppressif ideqval FeaturesData.S3SupportExperimental == 1;
                   option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
                endif;
