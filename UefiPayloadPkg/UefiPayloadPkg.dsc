@@ -442,6 +442,7 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
 
 !if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
@@ -508,7 +509,11 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
+!if $(PS2_KEYBOARD_ENABLE) == TRUE
   gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
+!else
+  gUefiPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|TRUE
+!endif
 
 
 ################################################################################
