@@ -1527,7 +1527,8 @@ PlatformBootManagerAfterConsole (
 
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
-  FUMEnabled = WarnIfFirmwareUpdateMode ();
+  FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
+
 
   BootLogoEnableLogo ();
 
