@@ -58,7 +58,7 @@ UiCustomizeBMMPage (
   //
   // Create "Time Out" menu.
   //
-  BmmCreateTimeOutMenu (HiiHandle, StartOpCodeHandle);
+  // BmmCreateTimeOutMenu (HiiHandle, StartOpCodeHandle);
 }
 
 /**
