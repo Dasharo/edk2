@@ -40,6 +40,17 @@ formset
     //
     label LABEL_FORM_MAIN_END;
 
+    numeric varid   = BmmData.BootTimeOut,
+            questionid = FORM_TIME_OUT_ID,
+            prompt  = STRING_TOKEN(STR_NUM_AUTO_BOOT),
+            help    = STRING_TOKEN(STR_HLP_AUTO_BOOT),
+            flags   = RESET_REQUIRED | INTERACTIVE | NUMERIC_SIZE_2 | DISPLAY_UINT_DEC,
+            key     = FORM_TIME_OUT_ID,
+            minimum = 0,
+            maximum = 65535,
+            step    = 0,
+    endnumeric;
+
   endform;
 
   form formid = FORM_BOOT_SETUP_ID,
