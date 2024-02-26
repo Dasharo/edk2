@@ -443,7 +443,6 @@
   gUefiPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|$(SETUP_MENU_KEY)
   gUefiPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
 
   gUefiPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
 
@@ -674,6 +673,7 @@
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|$(IOMMU_ENABLE)
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 !if $(RAM_DISK_ENABLE) == TRUE
