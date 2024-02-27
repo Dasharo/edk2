@@ -1,0 +1,36 @@
+// *++
+//
+//  Copyright (c) 2024, 3mdeb All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//  Module Name:
+//
+//   ApuConfigurationUiStrings.uni
+//
+//  Abstract:
+//
+//    String definitions for Dasharo APU Configuration UI.
+//
+// --*/
+
+/=#
+
+#langdef en-US "English"
+
+#string STR_FORM_APU_CONFIG_TITLE     #language en-US  "Dasharo APU Configuration"
+
+#string STR_CPB_PROMPT                #language en-US  "Core Performance Boost"
+#string STR_CPB_HELP                  #language en-US  "Enables/disables AMD Core Performance Boost. When enabled, two additional boosted P-states will be available.\n\n"
+                                                         "The performance of a single core can be raised from 1000MHz up to 1400Mhz if other cores are inactive.\n\n"
+
+                                                         "Disable the feature if you notice system instability."
+
+#string STR_WATCHDOG_ENABLE_PROMPT    #language en-US  "Enable watchdog"
+#string STR_WATCHDOG_ENABLE_HELP      #language en-US  "Enables/disables FCH Watchdog Timer during POST.\n\n"
+                                                         "If the timers expires, for example due to an unexpected hang or lockup, the platform will be reset after specified timeout."
+
+#string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
+#string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 60s, maximum 65535s."
+
+#string STR_PCIE_PWR_MGMT_PROMPT      #language en-US  "Enable PCI Express power management features"
+#string STR_PCIE_PWR_MGMT_HELP        #language en-US  "When enabled the Clock Power Management, ASPM L0s and L1 features will be enabled on PCI Express ports."

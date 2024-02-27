@@ -1,0 +1,17 @@
+// /** @file
+// Dasharo APU Configuration UI module.
+//
+// Copyright (c) 2024, 3mdeb All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+// **/
+
+
+#string STR_MODULE_ABSTRACT
+#language en-US "Dasharo APU Configuration UI module."
+
+#string STR_MODULE_DESCRIPTION
+#language en-US "Dasharo APU Configuration UI module."
+
+
