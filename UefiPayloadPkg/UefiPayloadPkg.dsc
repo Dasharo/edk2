@@ -108,6 +108,8 @@
   DEFINE BATTERY_CHECK                  = FALSE
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
   DEFINE RAM_DISK_ENABLE                = FALSE
+  DEFINE APU_CONFIG_ENABLE              = FALSE
+
   #
   # Network definition
   #
@@ -656,6 +658,10 @@
     <LibraryClasses>
       PlatformPasswordLib|DasharoModulePkg/Library/PlatformPasswordLibNull/PlatformPasswordLibNull.inf
   }
+!endif
+
+!if $(APU_CONFIG_ENABLE) == TRUE
+  UefiPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
 !endif
 
   UefiCpuPkg/CpuDxe/CpuDxe.inf
