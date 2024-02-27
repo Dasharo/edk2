@@ -339,6 +339,10 @@ INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 !endif
 
+!if $(APU_CONFIG_ENABLE) == TRUE
+INF DasharoPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
+!endif
+
 #
 # Shell
 #
