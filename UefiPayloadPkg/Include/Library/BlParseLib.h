@@ -18,6 +18,7 @@
 #include <Guid/SmmStoreInfoGuid.h>
 #include <Guid/TcgPhysicalPresenceGuid.h>
 #include <Ppi/SecPerformance.h>
+#include <Coreboot.h>
 
 #ifndef __BOOTLOADER_PARSE_LIB__
 #define __BOOTLOADER_PARSE_LIB__

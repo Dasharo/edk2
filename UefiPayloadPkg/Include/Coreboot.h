@@ -774,7 +774,7 @@ enum vb2_context_flags {
 	 * support two RW slots.
 	 */
 	VB2_CONTEXT_SLOT_A_ONLY = (1 << 29),
-}
+};
 
 /* MAX_SIZE should not be changed without bumping up DATA_VERSION_MAJOR. */
 #define VB2_CONTEXT_MAX_SIZE 384

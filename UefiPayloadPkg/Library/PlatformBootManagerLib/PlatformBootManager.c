@@ -792,10 +792,13 @@ WarnIfRecoveryBoot (
   BOOLEAN        CursorVisible;
   UINTN          CurrentAttribute;
   UINTN          SecondsLeft;
+  UINT32         VbootFlags;
 
-  RetStatus = ParseVBootWorkbuf (&RecoveryCode, &RecoveryReason);
+  RetStatus = ParseVBootWorkbuf (&VbootFlags, &RecoveryCode, &RecoveryReason);
 
-  if (RetStatus != RETURN_SUCCESS || RecoveryCode == 0) {
+  if (RetStatus != RETURN_SUCCESS
+        || !(VbootFlags & VB2_CONTEXT_RECOVERY_MODE)
+        || RecoveryCode == 0) {
     return;
   }
 
@@ -844,13 +847,16 @@ WarnIfRecoveryBoot (
 
     CreateMultiStringPopUp (
         78,
-        12,
+        15,
         L"!!! WARNING !!!",
         L"",
-        L"This message is displayed because the platform has booted from the recovery",
-        L"firmware partition. If you have just updated firmware, it is likely that",
-        L"the signature verification process failed. Please verify again that the",
-        L"firmware was downloaded from the proper source and try updating again.",
+        L"Recovery boot mode is active."
+        L"",
+        L"If you just updated your firmware, this may mean the update did not install",
+        L"correctly. Check docs.dasharo.com for up-to-date firmware update",
+        L"instructions.",
+        L"If this message persists after a re-boot, or you did not just update your",
+        L"firmware, this may indicate attempted tampering.",
         L"",
         RecoveryCodeLine,
         RecoveryMsgLine,
@@ -1403,7 +1409,7 @@ SaveSmBiosFieldToEfiVar (
   if (EFI_ERROR (Status)) {
     NeedUpdate = TRUE;
   } else {
-    if (CurrentSize != FieldSize) 
+    if (CurrentSize != FieldSize)
       NeedUpdate = TRUE;
     else if (CompareMem (CurrentValue, FieldValue, FieldSize) != 0)
       NeedUpdate = TRUE;
