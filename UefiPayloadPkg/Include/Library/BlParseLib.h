@@ -181,6 +181,7 @@ ParseTPMPPIInfo (
 RETURN_STATUS
 EFIAPI
 ParseVBootWorkbuf (
+  OUT UINT32       *Flags,
   OUT UINT8        *RecoveryCode,
   OUT CONST CHAR8 **RecoveryReason
   );

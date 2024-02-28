@@ -916,6 +916,7 @@ GetRecoveryReasonString(
 RETURN_STATUS
 EFIAPI
 ParseVBootWorkbuf (
+  OUT UINT32       *Flags,
   OUT UINT8        *RecoveryCode,
   OUT CONST CHAR8 **RecoveryReason
   )
@@ -923,7 +924,7 @@ ParseVBootWorkbuf (
   struct cb_cbmem_entry *CbmemEntry;
   struct cb_vboot_workbuf_v2 *Workbuf;
 
-  if (RecoveryCode == NULL || RecoveryReason == NULL) {
+  if (Flags == NULL || RecoveryCode == NULL || RecoveryReason == NULL) {
     return RETURN_INVALID_PARAMETER;
   }
 
@@ -944,6 +945,7 @@ ParseVBootWorkbuf (
     return RETURN_NOT_FOUND;
   }
 
+  *Flags = Workbuf->flags;
   *RecoveryCode = Workbuf->recovery_reason;
   *RecoveryReason = GetRecoveryReasonString(Workbuf->recovery_reason);
 
