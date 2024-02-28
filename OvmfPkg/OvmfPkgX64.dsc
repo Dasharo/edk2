@@ -1294,3 +1294,5 @@
     <BuildOptions>
       GCC:*_*_*_CC_FLAGS = -mmmx -msse
   }
+
+  DasharoPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
