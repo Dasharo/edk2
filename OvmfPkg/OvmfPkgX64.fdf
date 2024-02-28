@@ -457,6 +457,8 @@ INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 
 INF CrScreenshotDxe/CrScreenshotDxe.inf
 
+INF UefiPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]

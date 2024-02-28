@@ -1103,3 +1103,5 @@
     <BuildOptions>
       GCC:*_*_*_CC_FLAGS = -mmmx -msse
   }
+
+  UefiPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
