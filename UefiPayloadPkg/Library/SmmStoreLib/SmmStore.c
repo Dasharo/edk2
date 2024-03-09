@@ -416,7 +416,7 @@ SmmStoreLibInitialize (
     DEBUG (
       (
        DEBUG_INFO,
-       "%a: No memory space descriptor for com buffer found\n",
+       "%a: No memory space descriptor for MMIO memory found\n",
        __FUNCTION__
       )
       );
