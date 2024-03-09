@@ -74,7 +74,10 @@ InstallTablesFromXsdt (
       FadtTable = (EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE *)
                     (UINTN) CurrentTablePointer;
       DsdtTable  = (EFI_ACPI_DESCRIPTION_HEADER *) (UINTN) FadtTable->XDsdt;
+
       FacsTable = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) FadtTable->XFirmwareCtrl;
+      if (FacsTable == NULL)
+          FacsTable = (EFI_ACPI_6_3_FIRMWARE_ACPI_CONTROL_STRUCTURE *) (UINTN) FadtTable->FirmwareCtrl;
 
       if (!AsciiStrnCmp ((CHAR8 *) &DsdtTable->Signature, "DSDT", 4)) {
         //
