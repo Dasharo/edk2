@@ -39,6 +39,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FRONT_PAGE_KEY_RESET                  0x1001
 #define FRONT_PAGE_KEY_LANGUAGE               0x1002
 #define FRONT_PAGE_KEY_DRIVER                 0x2000
+#define FRONT_PAGE_KEY_DATE                   0x8000
+#define FRONT_PAGE_KEY_TIME                   0x8001
 
 typedef struct {
   EFI_STRING_ID   PromptId;
@@ -391,6 +393,58 @@ UiCreateLanguageMenu (
     EFI_IFR_FLAG_CALLBACK,
     EFI_IFR_NUMERIC_SIZE_1,
     OptionsOpCodeHandle,
+    NULL
+    );
+}
+
+/**
+  Create date menu in the front page.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateDateMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  )
+{
+  HiiCreateDateOpCode (
+    StartOpCodeHandle,
+    FRONT_PAGE_KEY_DATE,
+    0,
+    0,
+    STRING_TOKEN(STR_DATE_PROMPT),
+    STRING_TOKEN(STR_DATE_HELP),
+    0,
+    QF_DATE_STORAGE_TIME,
+    NULL
+    );
+}
+
+/**
+  Create time menu in the front page.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreateTimeMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  )
+{
+  HiiCreateTimeOpCode (
+    StartOpCodeHandle,
+    FRONT_PAGE_KEY_TIME,
+    0x0,
+    0x0,
+    STRING_TOKEN(STR_TIME_PROMPT),
+    STRING_TOKEN(STR_TIME_HELP),
+    0,
+    QF_TIME_STORAGE_TIME,
     NULL
     );
 }
