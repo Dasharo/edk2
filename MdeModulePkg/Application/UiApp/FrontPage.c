@@ -528,10 +528,14 @@ UpdateFrontPageBannerStrings (
   SMBIOS_TABLE_TYPE17               *Type17Record;
   SMBIOS_TABLE_TYPE19               *Type19Record;
   EFI_SMBIOS_TABLE_HEADER           *Record;
+  UINT16                            MemorySize;
+  UINT32                            ExtendedMemorySize;
   UINT64                            InstalledMemory;
   UINT16                            MemorySpeed;
   BOOLEAN                           FoundCpu;
 
+  MemorySize = 0xFFFF; // means "unknown" in Type 17 table of SMBIOS
+  ExtendedMemorySize = 0;
   InstalledMemory = 0;
   MemorySpeed = 0;
   FoundCpu = 0;
@@ -651,6 +655,9 @@ UpdateFrontPageBannerStrings (
       if (Type17Record->ConfiguredMemoryClockSpeed > MemorySpeed) {
           MemorySpeed = Type17Record->ConfiguredMemoryClockSpeed;
       }
+
+      MemorySize = Type17Record->Size;
+      ExtendedMemorySize = Type17Record->ExtendedSize;
     }
 
     if ( Record->Type == SMBIOS_TYPE_MEMORY_ARRAY_MAPPED_ADDRESS ) {
@@ -665,6 +672,19 @@ UpdateFrontPageBannerStrings (
     }
 
     Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &Record, NULL);
+  }
+
+  if ( InstalledMemory == 0 && MemorySize != 0xFFFF ) {
+      if ( MemorySize == 0x7FFF ) {
+          // There is more than (32GiB - 1MiB) of memory.  The size is given in Mebibytes.
+          InstalledMemory = ExtendedMemorySize;
+      } else if ( MemorySize & 0x8000 ) {
+          // The size is given in Kibibytes.
+          InstalledMemory = RShiftU64 (MemorySize & ~0x8000U, 10);
+      } else {
+          // The size is given in Mebibytes.
+          InstalledMemory = MemorySize;
+      }
   }
 
   //
