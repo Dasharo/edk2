@@ -3022,6 +3022,8 @@ DhComputeKey (
   If Seed is NULL, then default seed is used.
   If this interface is not supported, then return FALSE.
 
+  RandomSeed has not been implemented in BaseCryptoLibMbedTls.
+
   @param[in]  Seed      Pointer to seed value.
                         If NULL, default seed is used.
   @param[in]  SeedSize  Size of seed value.
