@@ -2490,6 +2490,7 @@ GetDiskHandleByFsHandle (
   UINTN                                 Index;
   EFI_DEVICE_PATH_PROTOCOL              *DiskDevicePath;
   EFI_DEVICE_PATH_PROTOCOL              *FileSystemDevicePath;
+  EFI_DEVICE_PATH_PROTOCOL              *TempFileSystemDevicePath;
   BOOLEAN                               FoundMatch;
 
   FoundMatch = FALSE;
@@ -2505,43 +2506,50 @@ GetDiskHandleByFsHandle (
   for (Index = 0; Index < HandleCount; Index++) {
 
     DiskDevicePath = DevicePathFromHandle (Handles[Index]);
+    TempFileSystemDevicePath = FileSystemDevicePath;
 
-    while (!IsDevicePathEnd (DiskDevicePath)) {
+    while (!IsDevicePathEnd (DiskDevicePath) && !IsDevicePathEnd (TempFileSystemDevicePath)) {
 
-      if (!CompareMem(FileSystemDevicePath, DiskDevicePath, DevicePathNodeLength(FileSystemDevicePath))) {
+      if (!CompareMem(TempFileSystemDevicePath, DiskDevicePath, DevicePathNodeLength(TempFileSystemDevicePath))) {
         if ((DevicePathType (DiskDevicePath) == MEDIA_DEVICE_PATH) &&
             (DevicePathSubType (DiskDevicePath) == MEDIA_HARDDRIVE_DP)) {
           // If DiskDevicePath has HardDrive DP, it is not the one we look for
           break;
         }
         // Continue search
-        FileSystemDevicePath = NextDevicePathNode (FileSystemDevicePath);
+        TempFileSystemDevicePath = NextDevicePathNode (TempFileSystemDevicePath);
         DiskDevicePath = NextDevicePathNode (DiskDevicePath);
+
+        // If we reached the end, check for a match, because the loop will not check it on next iteration
+        if (IsDevicePathEnd (DiskDevicePath)) {
+          if ((DevicePathType (TempFileSystemDevicePath) == MEDIA_DEVICE_PATH) &&
+              (DevicePathSubType (TempFileSystemDevicePath) == MEDIA_HARDDRIVE_DP)) {
+            FoundMatch = TRUE;
+            DiskHandle = Handles[Index];
+          }
+        }
       } else {
         // If we found first uncommon node and it is HardDrive DP, then we have a match
-        if ((DevicePathType (FileSystemDevicePath) == MEDIA_DEVICE_PATH) &&
-            (DevicePathSubType (FileSystemDevicePath) == MEDIA_HARDDRIVE_DP)) {
+        if ((DevicePathType (TempFileSystemDevicePath) == MEDIA_DEVICE_PATH) &&
+            (DevicePathSubType (TempFileSystemDevicePath) == MEDIA_HARDDRIVE_DP)) {
           FoundMatch = TRUE;
           DiskHandle = Handles[Index];
         }
         break;
       }
-
     }
 
     if (FoundMatch) {
-      if (HandleCount != 0) {
+      if (HandleCount != 0)
         FreePool (Handles);
-      }
 
       return DiskHandle;
     }
 
   }
 
-  if (HandleCount != 0) {
+  if (HandleCount != 0)
     FreePool (Handles);
-  }
 
   // No match, return the FS handle. Description will not be the one we would like to be though.
   return FsHandle;
@@ -2574,6 +2582,7 @@ CreatePreInstalledBootOption (
   UINTN                                 OptNameSize;
   CHAR16                                *Description;
   CHAR16                                *FullOptionName;
+  CHAR16                                *DevPathStr;
   EFI_DEVICE_PATH_PROTOCOL              *OptDevicePath;
 
   Description = BmGetBootDescription (GetDiskHandleByFsHandle(Handle));
@@ -2604,9 +2613,13 @@ CreatePreInstalledBootOption (
   OptDevicePath = FileDevicePath (Handle, BootOpt->FileName);
   ASSERT (OptDevicePath != NULL);
 
+  DevPathStr = ConvertDevicePathToText(OptDevicePath, FALSE, FALSE);
+
   DEBUG ((EFI_D_INFO, "%a: Creating boot option:\n  %s (%s)\n", __FUNCTION__,
-          FullOptionName, ConvertDevicePathToText(OptDevicePath, FALSE, FALSE)
-          ));
+          FullOptionName, DevPathStr ? DevPathStr : L"<Unknown>"));
+
+  if (DevPathStr)
+    FreePool(DevPathStr);
 
   Status = EfiBootManagerInitializeLoadOption (
              &BootOptions[(*BootOptionCount)++],
@@ -2752,6 +2765,7 @@ BmEnumeratePreInstalledBootOptions (
   EFI_BLOCK_IO_PROTOCOL                 *BlkIo;
   UINTN                                 Index;
   EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
+  CHAR16                                *DevPathStr;
 
   ASSERT (BootOptionCount != NULL);
 
@@ -2769,9 +2783,13 @@ BmEnumeratePreInstalledBootOptions (
          );
   for (Index = 0; Index < HandleCount; Index++) {
 
+    DevPathStr = ConvertDevicePathToText(DevicePathFromHandle (Handles[Index]), FALSE, FALSE);
+
     DEBUG ((EFI_D_INFO, "%a: Processing file system:\n  %s\n", __FUNCTION__,
-          ConvertDevicePathToText(DevicePathFromHandle (Handles[Index]), FALSE, FALSE)
-          ));
+            DevPathStr ? DevPathStr : L"<Unknown>"));
+
+    if (DevPathStr)
+      FreePool(DevPathStr);
 
     /* Skip non-ESP */
     if (!IsEfiSysPartitionDevicePath(DevicePathFromHandle (Handles[Index]))) {
@@ -2798,8 +2816,8 @@ BmEnumeratePreInstalledBootOptions (
                     (VOID **) &BlkIo
                     );
     if (!EFI_ERROR (Status) && BlkIo->Media->RemovableMedia) {
-        DEBUG ((EFI_D_INFO, "%a: Skipping, media removable\n", __FUNCTION__));
-        continue;
+      DEBUG ((EFI_D_INFO, "%a: Skipping, media removable\n", __FUNCTION__));
+      continue;
     }
 
     // Custom boot managers first
