@@ -80,7 +80,7 @@
 #string STR_WATCHDOG_ENABLE_HELP     #language en-US  "Enables/disables OC Watchdog Timer during POST. If the timers expires, for example due to an unexpected hang or lockup, the platform will be reset after specified timeout."
 
 #string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
-#string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 60s, maximum 1024s."
+#string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 300s, maximum 1024s."
 
 #string STR_BOOT_MENU_ENABLED_PROMPT  #language en-US  "Boot menu enabled"
 #string STR_BOOT_MENU_ENABLED_HELP  #language en-US  "Enables or disables choice of one-time boot menu"
