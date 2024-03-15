@@ -72,6 +72,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3|FALSE|BOOLEAN|0x00000001E
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState|FALSE|BOOLEAN|0x00000001F
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart|FALSE|BOOLEAN|0x000000021
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault|FALSE|BOOLEAN|0x000000022
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
