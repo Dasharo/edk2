@@ -92,5 +92,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
