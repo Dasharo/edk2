@@ -238,12 +238,12 @@ formset
         endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.WatchdogState == 0;
+    suppressif ideqval FeaturesData.WatchdogAvailable == 0;
       checkbox varid   = FeaturesData.WatchdogConfig.WatchdogEnable,
-               questionid = WATCHDOG_OPTIONS_QUESTION_ID,
+               questionid = WATCHDOG_ENABLE_QUESTION_ID,
                prompt  = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
                help    = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
-               flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
+               flags   = RESET_REQUIRED,
       endcheckbox;
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;

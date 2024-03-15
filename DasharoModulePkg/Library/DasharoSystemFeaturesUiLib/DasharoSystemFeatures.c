@@ -24,7 +24,7 @@ STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
 STATIC CHAR16 mBootManagerEnabledEfiVar[] = L"BootManagerEnabled";
 STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
 STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
-STATIC CHAR16 mWatchdogStateEfiVar[] = L"WatchdogAvailable";
+STATIC CHAR16 mWatchdogAvailableEfiVar[] = L"WatchdogAvailable";
 STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
 STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
 STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
@@ -159,7 +159,7 @@ LocateAcpiTableBySignature (
   This function will be called only if the Watchdog variable is not present.
   It will populate the initial state based on what coreboot has programmed.
   If watchdog was not enabled on first boot, it means it was not enabled,
-  and watchdog options should be hidden (WatchdogState == FALSE);
+  and watchdog options should be hidden (WatchdogAvailable == FALSE);
 **/
 VOID
 EFIAPI
@@ -167,8 +167,8 @@ GetDefaultWatchdogConfig (
   IN OUT  DASHARO_FEATURES_DATA       *FeaturesData
   )
 {
-    FeaturesData->WatchdogState = PcdGetBool (PcdShowOcWdtOptions);
-    FeaturesData->WatchdogConfig.WatchdogEnable = PcdGetBool (PcdShowOcWdtOptions);
+    FeaturesData->WatchdogAvailable = PcdGetBool (PcdShowOcWdtOptions);
+    FeaturesData->WatchdogConfig.WatchdogEnable = PcdGetBool (PcdOcWdtEnableDefault);
     FeaturesData->WatchdogConfig.WatchdogTimeout = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
 }
 
@@ -433,13 +433,13 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState);
+  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable);
   Status = gRT->GetVariable (
-      mWatchdogStateEfiVar,
+      mWatchdogAvailableEfiVar,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable
       );
 
   if (Status == EFI_NOT_FOUND) {
@@ -455,11 +455,11 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
 
     Status = gRT->SetVariable (
-        mWatchdogStateEfiVar,
+        mWatchdogAvailableEfiVar,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState),
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogState
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable
         );
     ASSERT_EFI_ERROR (Status);
   } else {
@@ -1261,12 +1261,12 @@ DasharoSystemFeaturesCallback (
           Value->b = PcdGetBool (PcdDefaultNetworkBootEnable);
           break;
         }
-      case WATCHDOG_OPTIONS_QUESTION_ID:
+      case WATCHDOG_ENABLE_QUESTION_ID:
         {
           if (Value == NULL)
             return EFI_INVALID_PARAMETER;
 
-          Value->b = PcdGetBool (PcdShowOcWdtOptions);
+          Value->b = PcdGetBool (PcdOcWdtEnableDefault);
           break;
         }
       case WATCHDOG_TIMEOUT_QUESTION_ID:

@@ -82,7 +82,7 @@ typedef struct {
   UINT8              MeMode;
   BOOLEAN            Ps2Controller;
   WATCHDOG_CONFIG    WatchdogConfig;
-  BOOLEAN            WatchdogState; // holds the state of watchdog before VAR population
+  BOOLEAN            WatchdogAvailable;
   UINT8              FanCurveOption;
   IOMMU_CONFIG       IommuConfig;
   BOOLEAN            BootManagerEnabled;
@@ -121,7 +121,7 @@ typedef struct {
 #define MEMORY_PROFILE_XMP3   4
 
 #define NETWORK_BOOT_QUESTION_ID             0x8000
-#define WATCHDOG_OPTIONS_QUESTION_ID         0x8001
+#define WATCHDOG_ENABLE_QUESTION_ID         0x8001
 #define WATCHDOG_TIMEOUT_QUESTION_ID         0x8002
 #define FIRMWARE_UPDATE_MODE_QUESTION_ID     0x8003
 #define POWER_FAILURE_STATE_QUESTION_ID      0x8004
