@@ -110,6 +110,7 @@
   gEfiRamDiskProtocolGuid                       ## SOMETIMES_CONSUMES
   gEfiDeferredImageLoadProtocolGuid             ## SOMETIMES_CONSUMES
   gEdkiiPlatformBootManagerProtocolGuid         ## SOMETIMES_CONSUMES
+  gEfiPartitionInfoProtocolGuid                 ## SOMETIMES_CONSUMES
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange      ## SOMETIMES_CONSUMES

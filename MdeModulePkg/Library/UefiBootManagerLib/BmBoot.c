@@ -2642,49 +2642,35 @@ CreatePreInstalledBootOption (
 }
 
 /**
-  Check if the device path is EFI system Partition.
+  Check if the SimpleFileSystem handle is an EFI system Partition.
 
-  @param  DevicePath    The ESP device path.
+  @param  FsHandle    The handle with SimpleFileSystem.
 
-  @retval TRUE    DevicePath is a device path for ESP.
-  @retval FALSE   DevicePath is not a device path for ESP.
+  @retval TRUE    FsHandle is an ESP.
+  @retval FALSE   FsHandle is not a an ESP.
 
 **/
 BOOLEAN
-IsEfiSysPartitionDevicePath (
-  EFI_DEVICE_PATH_PROTOCOL   *DevicePath
+IsEfiSysPartition (
+  IN EFI_HANDLE                FsHandle
   )
 {
-  EFI_STATUS                 Status;
-  EFI_DEVICE_PATH_PROTOCOL   *TempDevicePath;
-  HARDDRIVE_DEVICE_PATH      *Hd;
-  EFI_HANDLE                 Handle;
+  EFI_STATUS                   Status;
+  EFI_PARTITION_INFO_PROTOCOL  *PartitionInfo;
 
   //
-  // Check if the device path contains GPT node
+  // PartitionInfo protocol should be present if the SimpleFS protocol is present.
   //
-  TempDevicePath = DevicePath;
+  Status = gBS->HandleProtocol (
+                  FsHandle,
+                  &gEfiPartitionInfoProtocolGuid,
+                  (VOID**)&PartitionInfo
+                  );
 
-  while (!IsDevicePathEnd (TempDevicePath)) {
-    if ((DevicePathType (TempDevicePath) == MEDIA_DEVICE_PATH) &&
-      (DevicePathSubType (TempDevicePath) == MEDIA_HARDDRIVE_DP)) {
-      Hd = (HARDDRIVE_DEVICE_PATH *)TempDevicePath;
-      if (Hd->MBRType == MBR_TYPE_EFI_PARTITION_TABLE_HEADER) {
-        break;
-      }
-    }
-    TempDevicePath = NextDevicePathNode (TempDevicePath);
-  }
+  if (!EFI_ERROR (Status))
+    return (PartitionInfo->System == 1);
 
-  if (!IsDevicePathEnd (TempDevicePath)) {
-    //
-    // Search for EFI system partition protocol on full device path in Boot Option
-    //
-    Status = gBS->LocateDevicePath (&gEfiPartTypeSystemPartGuid, &DevicePath, &Handle);
-    return EFI_ERROR (Status) ? FALSE : TRUE;
-  } else {
-    return FALSE;
-  }
+  return FALSE;
 }
 
 EFI_BOOT_MANAGER_LOAD_OPTION *
@@ -2792,7 +2778,7 @@ BmEnumeratePreInstalledBootOptions (
       FreePool(DevPathStr);
 
     /* Skip non-ESP */
-    if (!IsEfiSysPartitionDevicePath(DevicePathFromHandle (Handles[Index]))) {
+    if (!IsEfiSysPartition(Handles[Index])) {
       DEBUG ((EFI_D_INFO, "%a: Skipping, not an ESP\n", __FUNCTION__));
       continue;
     }
