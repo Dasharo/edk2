@@ -75,7 +75,7 @@ else
 BUILD_CFLAGS = -MD -fshort-wchar -fno-strict-aliasing -fwrapv \
 -fno-delete-null-pointer-checks -Wall -Werror \
 -Wno-deprecated-declarations -Wno-stringop-truncation -Wno-restrict \
--Wno-unused-result -nostdlib -g
+-Wno-unused-result -nostdlib -g -Wno-vla-parameter -Wno-stringop-overflow -Wno-use-after-free -Wno-dangling-pointer
 endif
 BUILD_LFLAGS =
 BUILD_CXXFLAGS = -Wno-unused-result
