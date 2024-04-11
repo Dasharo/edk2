@@ -14,6 +14,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/GlobalVariable.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
+#include <Coreboot.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -828,22 +829,42 @@ WarnIfRecoveryBoot (
         SecondsLeft == 1 ? "" : "s"
         );
 
-    CreateMultiStringPopUp (
-        78,
-        12,
-        L"!!! WARNING !!!",
-        L"",
-        L"This message is displayed because the platform has booted from the recovery",
-        L"firmware partition. If you have just updated firmware, it is likely that",
-        L"the signature verification process failed. Please verify again that the",
-        L"firmware was downloaded from the proper source and try updating again.",
-        L"",
-        RecoveryCodeLine,
-        RecoveryMsgLine,
-        L"",
-        L"Press ENTER key to continue.",
-        DelayLine
-        );
+    switch (RecoveryCode) {
+      case VB2_RECOVERY_EC_SOFTWARE_SYNC:
+        CreateMultiStringPopUp (
+            78,
+            10,
+            L"!!! WARNING !!!",
+            L"",
+            L"Embedded Controller firmware update failed. Try rebooting the device",
+            L"with an AC adapter connected.",
+            L"",
+            L"If the message persists, contact support or see docs.dasharo.com for",
+            L"more information.",
+            L"",
+            L"Press ENTER key to continue.",
+            DelayLine
+            );
+        break;
+      default:
+        CreateMultiStringPopUp (
+            78,
+            12,
+            L"!!! WARNING !!!",
+            L"",
+            L"This message is displayed because the platform has booted from the recovery",
+            L"firmware partition. If you have just updated firmware, it is likely that",
+            L"the signature verification process failed. Please verify again that the",
+            L"firmware was downloaded from the proper source and try updating again.",
+            L"",
+            RecoveryCodeLine,
+            RecoveryMsgLine,
+            L"",
+            L"Press ENTER key to continue.",
+            DelayLine
+            );
+        break;
+    }
 
     Status = gBS->WaitForEvent (2, Events, &Index);
     ASSERT_EFI_ERROR (Status);
@@ -1389,7 +1410,7 @@ SaveSmBiosFieldToEfiVar (
   if (EFI_ERROR (Status)) {
     NeedUpdate = TRUE;
   } else {
-    if (CurrentSize != FieldSize) 
+    if (CurrentSize != FieldSize)
       NeedUpdate = TRUE;
     else if (CompareMem (CurrentValue, FieldValue, FieldSize) != 0)
       NeedUpdate = TRUE;
