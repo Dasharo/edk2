@@ -27,7 +27,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio         ## PRODUCES

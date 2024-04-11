@@ -31,7 +31,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -64,7 +64,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand
-  gUefiPayloadPkgTokenSpaceGuid.PcdShellFile
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShellFile
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity
