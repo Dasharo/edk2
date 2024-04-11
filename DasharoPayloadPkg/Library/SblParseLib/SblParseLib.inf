@@ -26,7 +26,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -43,4 +43,4 @@
   gEfiGraphicsDeviceInfoHobGuid
 
 [Pcd]
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop

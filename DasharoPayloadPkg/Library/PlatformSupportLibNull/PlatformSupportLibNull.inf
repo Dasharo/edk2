@@ -25,4 +25,4 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec

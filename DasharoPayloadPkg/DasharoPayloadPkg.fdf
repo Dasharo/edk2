@@ -10,8 +10,8 @@
 
 ################################################################################
 [FD.UefiPayload]
-BaseAddress   = 0x800000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-Size          = 0x410000|gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+BaseAddress   = 0x800000|gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
+Size          = 0x410000|gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
 ErasePolarity = 1
 BlockSize     = 0x1000
 NumBlocks     = 0x410
@@ -42,13 +42,13 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-INF UefiPayloadPkg/SecCore/SecCore.inf
+INF DasharoPayloadPkg/SecCore/SecCore.inf
 
 INF MdeModulePkg/Core/Pei/PeiMain.inf
 INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
 INF MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
 INF MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
-INF UefiPayloadPkg/BlSupportPei/BlSupportPei.inf
+INF DasharoPayloadPkg/BlSupportPei/BlSupportPei.inf
 INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 ################################################################################
@@ -107,7 +107,7 @@ INF MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 INF MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 INF MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
-INF UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
+INF DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
 INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 #
@@ -132,7 +132,7 @@ INF MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
 INF MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
 INF MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
 INF MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
-INF UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
+INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 
 #
 # SCSI/ATA/IDE/DISK Support

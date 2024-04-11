@@ -10,7 +10,7 @@
 
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
-  PACKAGE_NAME                   = UefiPayloadPkg
+  PACKAGE_NAME                   = DasharoPayloadPkg
   PACKAGE_GUID                   = E0FC9D50-415E-4946-B686-9A130D5859E7
   PACKAGE_VERSION                = 0.1
 
@@ -22,7 +22,7 @@
   #
   ## Defines the token space for the UEFI Payload Package PCDs.
   #
-  gUefiPayloadPkgTokenSpaceGuid  = {0x1d127ea, 0xf6f1, 0x4ef6, {0x94, 0x15, 0x8a, 0x0, 0x0, 0x93, 0xf8, 0x9d}}
+  gDasharoPayloadPkgTokenSpaceGuid  = {0x66d719f9, 0xfa16, 0x4729, {0xa9, 0xb5, 0x23, 0xad, 0xd4, 0xc6, 0x8e, 0x93}}
 
   #
   # Gop Temp
@@ -52,20 +52,18 @@
 ################################################################################
 [PcdsFixedAtBuild, PcdsPatchableInModule]
 ## Indicates the base address of the payload binary in memory
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
 ## Provides the size of the payload binary in memory
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize|0|UINT32|0x10000002
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize|0|UINT32|0x10000002
 ## Payload stack top
-gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop|0x90000|UINT32|0x10000004
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop|0x90000|UINT32|0x10000004
 
 ## FFS filename to find the shell application.
-gUefiPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x9E, 0x1c, 0x4f, 0xAD, 0x65, 0xE0, 0x52, 0x68, 0xD0, 0xB4, 0xD1 }|VOID*|0x10000005
+gDasharoPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x9E, 0x1c, 0x4f, 0xAD, 0x65, 0xE0, 0x52, 0x68, 0xD0, 0xB4, 0xD1 }|VOID*|0x10000005
 
 ## Used to help reduce fragmentation in the EFI memory map
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x10000013
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
-gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
-
-
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x10000013
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
