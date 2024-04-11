@@ -33,6 +33,7 @@
   MdeModulePkg/MdeModulePkg.dec
   IntelFsp2Pkg/IntelFsp2Pkg.dec
   IntelFsp2WrapperPkg/IntelFsp2WrapperPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
 
@@ -61,13 +62,13 @@
   gEfiPeiMasterBootModePpiGuid
 
 [Pcd]
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
-  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory
-  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS
-  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType
-  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData
-  gUefiPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+  gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory
+  gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS
+  gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType
+  gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData
+  gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode
 
 [Depex]
   TRUE
