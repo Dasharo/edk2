@@ -35,7 +35,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
-  UefiPayloadPkg/UefiPayloadPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -53,6 +53,6 @@
   gEfiPayLoadHobBasePpiGuid                     # PPI ALWAYS_PRODUCED
 
 [Pcd]
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop

@@ -27,6 +27,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
 
 [Pcd]

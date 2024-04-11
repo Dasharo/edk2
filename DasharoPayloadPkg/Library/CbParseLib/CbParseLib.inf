@@ -26,6 +26,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
 
 [LibraryClasses]
@@ -36,4 +37,4 @@
   PcdLib
 
 [Pcd]
-  gUefiPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+  gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop

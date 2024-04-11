@@ -14,15 +14,15 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                       = UefiPayloadPkg
-  PLATFORM_GUID                       = F71608AB-D63D-4491-B744-A99998C8CD96
+  PLATFORM_NAME                       = DasharoPayloadPkg
+  PLATFORM_GUID                       = 9EE9C760-A126-41E6-8D35-42FFF29C8DC8
   PLATFORM_VERSION                    = 0.1
   DSC_SPECIFICATION                   = 0x00010005
   SUPPORTED_ARCHITECTURES             = IA32|X64
   BUILD_TARGETS                       = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER                    = DEFAULT
-  OUTPUT_DIRECTORY                    = Build/UefiPayloadPkgX64
-  FLASH_DEFINITION                    = UefiPayloadPkg/UefiPayloadPkg.fdf
+  OUTPUT_DIRECTORY                    = Build/DasharoPayloadPkgX64
+  FLASH_DEFINITION                    = DasharoPayloadPkg/DasharoPayloadPkg.fdf
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
@@ -173,11 +173,11 @@
   #
   # Platform
   #
-  TimerLib|UefiPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
-  ResetSystemLib|UefiPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
+  TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
+  ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
-  PlatformHookLib|UefiPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
-  PlatformBootManagerLib|UefiPayloadPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
+  PlatformHookLib|DasharoPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
+  PlatformBootManagerLib|DasharoPayloadPkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   IoApicLib|PcAtChipsetPkg/Library/BaseIoApicLib/BaseIoApicLib.inf
 
   #
@@ -192,11 +192,11 @@
   PeCoffExtraActionLib|MdePkg/Library/BasePeCoffExtraActionLibNull/BasePeCoffExtraActionLibNull.inf
   DebugAgentLib|MdeModulePkg/Library/DebugAgentLibNull/DebugAgentLibNull.inf
 !endif
-  PlatformSupportLib|UefiPayloadPkg/Library/PlatformSupportLibNull/PlatformSupportLibNull.inf
+  PlatformSupportLib|DasharoPayloadPkg/Library/PlatformSupportLibNull/PlatformSupportLibNull.inf
 !if $(BOOTLOADER) == "COREBOOT"
-  BlParseLib|UefiPayloadPkg/Library/CbParseLib/CbParseLib.inf
+  BlParseLib|DasharoPayloadPkg/Library/CbParseLib/CbParseLib.inf
 !else
-  BlParseLib|UefiPayloadPkg/Library/SblParseLib/SblParseLib.inf
+  BlParseLib|DasharoPayloadPkg/Library/SblParseLib/SblParseLib.inf
 !endif
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
@@ -369,7 +369,7 @@
   #
   # SEC Core
   #
-  UefiPayloadPkg/SecCore/SecCore.inf
+  DasharoPayloadPkg/SecCore/SecCore.inf
 
   #
   # PEI Core
@@ -386,7 +386,7 @@
   MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
   MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
 
-  UefiPayloadPkg/BlSupportPei/BlSupportPei.inf
+  DasharoPayloadPkg/BlSupportPei/BlSupportPei.inf
   MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 [Components.X64]
@@ -438,7 +438,7 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 
-  UefiPayloadPkg/BlSupportDxe/BlSupportDxe.inf
+  DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
 
   #
   # SMBIOS Support
@@ -456,7 +456,7 @@
   MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
   MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf {
     <LibraryClasses>
-      PciHostBridgeLib|UefiPayloadPkg/Library/PciHostBridgeLib/PciHostBridgeLib.inf
+      PciHostBridgeLib|DasharoPayloadPkg/Library/PciHostBridgeLib/PciHostBridgeLib.inf
   }
 
   #
@@ -505,7 +505,7 @@
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
   MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
-  UefiPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
+  DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 
   #------------------------------
   #  Build the shell
