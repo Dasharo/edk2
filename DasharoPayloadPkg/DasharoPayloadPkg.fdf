@@ -137,6 +137,12 @@ INF DasharoPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
 !endif
 
 #
+# ACPI Support
+#
+INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+INF DasharoPayloadPkg/AcpiPlatformDxe/AcpiPlatformDxe.inf
+
+#
 # PCI Support
 #
 INF MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
