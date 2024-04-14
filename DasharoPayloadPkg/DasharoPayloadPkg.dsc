@@ -296,9 +296,7 @@
   # SMMSTORE
   #
 !if $(BOOTLOADER) == "COREBOOT"
-  SmmStoreLib|DasharoPayloadPkg/Library/CbSMMStoreLib/CbSMMStoreLib.inf
-!else
-  SmmStoreLib|DasharoPayloadPkg/Library/SblSMMStoreLib/SblSMMStoreLib.inf
+  SmmStoreLib|DasharoPayloadPkg/Library/SmmStoreLib/SmmStoreLib.inf
 !endif
 
 !if $(TPM_ENABLE) == TRUE
@@ -497,6 +495,14 @@
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|$(PLATFORM_BOOT_TIMEOUT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|FALSE
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize  |0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize  |0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase  |0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0
+
   ## This PCD defines the video horizontal resolution.
   #  This PCD could be set to 0 then video resolution could be at highest resolution.
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution|0
@@ -638,10 +644,14 @@
   MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
   PcAtChipsetPkg/PcatRealTimeClockRuntimeDxe/PcatRealTimeClockRuntimeDxe.inf
+!if $(BOOTLOADER) == "COREBOOT"
+  DasharoPayloadPkg/SmmStoreFvb/SmmStoreFvbRuntimeDxe.inf
+!endif
   MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/VarCheckUefiLib/VarCheckUefiLib.inf
+      NULL|EmbeddedPkg/Library/NvVarStoreFormattedLib/NvVarStoreFormattedLib.inf
   }
 
   #
@@ -737,13 +747,6 @@
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
   DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
   DasharoPayloadPkg/PciPlatformDxe/PciPlatformDxe.inf
-
-  #
-  # SMMSTORE
-  #
-!if $(BOOTLOADER) == "COREBOOT"
-  DasharoPayloadPkg/BlSMMStoreDxe/BlSMMStoreDxe.inf
-!endif
 
   #
   # Network Support

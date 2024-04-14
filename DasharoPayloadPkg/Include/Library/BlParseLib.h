@@ -12,7 +12,7 @@
 #include <Guid/SerialPortInfoGuid.h>
 #include <Guid/SystemTableInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
-#include <Guid/SMMSTOREInfoGuid.h>
+#include <Guid/SmmStoreInfoGuid.h>
 #include <Guid/TcgPhysicalPresenceGuid.h>
 #include <Ppi/SecPerformance.h>
 
