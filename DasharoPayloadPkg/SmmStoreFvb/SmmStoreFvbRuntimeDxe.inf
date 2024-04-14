@@ -1,24 +1,24 @@
-#/** @file
+## @file
+#  This is the component description file for SmmStore module.
 #
-#  Component description file for SMMSTORE module
-#
-#  Copyright (c) 2020, 9elements Agency GmbH<BR>
+#  Copyright (c) 2022, 9elements GmbH.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-#**/
+##
+
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = UefiPayloadBlSMMStoreDxe
+  BASE_NAME                      = SmmStoreFvbRuntimeDxe
   FILE_GUID                      = A0402FCA-6B25-4CEA-B7DD-C08F99714B29
   MODULE_TYPE                    = DXE_RUNTIME_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = BlSMMSTOREInitialise
+  ENTRY_POINT                    = SmmStoreInitialize
 
 [Sources.common]
-  BlSMMStoreDxe.h
-  BlSMMStoreDxe.c
-  BlSMMStoreFvbDxe.c
+  SmmStoreFvbRuntimeDxe.c
+  SmmStoreFvbRuntime.h
+  SmmStoreFvbRuntime.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -27,7 +27,6 @@
   DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
-  IoLib
   BaseLib
   DebugLib
   HobLib
@@ -40,17 +39,14 @@
 
 [Guids]
   gEfiSystemNvDataFvGuid
-  gEfiVariableGuid
+  gEfiVariableGuid                  ## PRODUCES ## PROTOCOL
   gEfiAuthenticatedVariableGuid
   gEfiEventVirtualAddressChangeGuid
   gEdkiiNvVarStoreFormattedGuid     ## PRODUCES ## PROTOCOL
-  gEfiSMMSTOREInfoHobGuid
 
 [Protocols]
-  gEfiBlockIoProtocolGuid
-  gEfiDevicePathProtocolGuid
-  gEfiFirmwareVolumeBlockProtocolGuid ## PRODUCES
-  gEfiDiskIoProtocolGuid
+  gEfiDevicePathProtocolGuid          ## BY_START
+  gEfiFirmwareVolumeBlockProtocolGuid ## BY_START
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase
@@ -59,7 +55,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
-  gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
 
 [Depex]
-  gEfiCpuArchProtocolGuid
+  TRUE

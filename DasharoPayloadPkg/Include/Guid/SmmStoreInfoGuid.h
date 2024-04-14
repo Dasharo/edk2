@@ -1,18 +1,18 @@
 /** @file
-  This file defines the hob structure for system tables like ACPI, SMBIOS tables.
+  This file defines the hob structure for coreboot's SmmStore.
 
-  Copyright (c) 2020, 9elements Agency GmbH<BR>
+  Copyright (c) 2022, 9elements GmbH<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#ifndef __SMMSTORE_GUID_H__
-#define __SMMSTORE_GUID_H__
+#ifndef SMMSTORE_GUID_H_
+#define SMMSTORE_GUID_H_
 
 ///
 /// System Table Information GUID
 ///
-extern EFI_GUID gEfiSMMSTOREInfoHobGuid;
+extern EFI_GUID  gEfiSmmStoreInfoHobGuid;
 
 typedef struct {
   UINT64    ComBuffer;
@@ -24,4 +24,4 @@ typedef struct {
   UINT8     Reserved0[3];
 } SMMSTORE_INFO;
 
-#endif
+#endif // SMMSTORE_GUID_H_
