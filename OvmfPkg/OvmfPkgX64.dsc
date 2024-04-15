@@ -711,6 +711,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|TRUE
 
 ################################################################################
 #
@@ -981,6 +982,7 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
     <PcdsFixedAtBuild>
       gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|$(DASHARO_SYSTEM_FEATURES_ENABLE)
+      gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|TRUE
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
   OvmfPkg/QemuKernelLoaderFsDxe/QemuKernelLoaderFsDxe.inf {
