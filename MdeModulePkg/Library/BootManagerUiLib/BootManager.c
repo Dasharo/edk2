@@ -497,8 +497,10 @@ UpdateBootManager (
   EFI_STATUS                    Status;
   EFI_LOADED_IMAGE_PROTOCOL     *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL      *DevicePath;
+  UINTN                         OptionCount;
 
   DeviceType = (UINT16)-1;
+  OptionCount = 0;
 
   //
   // for better user experience
@@ -573,6 +575,8 @@ UpdateBootManager (
       continue;
     }
 
+    OptionCount++;
+
     //
     // Don't display UiApp within the boot options
     //
@@ -633,6 +637,10 @@ UpdateBootManager (
       EFI_IFR_FLAG_CALLBACK,
       0
       );
+  }
+
+  if (OptionCount == 0) {
+    HiiCreateSubTitleOpCode (StartOpCodeHandle, STRING_TOKEN (STR_NO_BOOTABLE_MEDIA), 0, 0, 0);
   }
 
   if (NeedEndOp) {
