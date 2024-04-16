@@ -43,7 +43,7 @@
   BaseLib
   PcdLib
   DebugAgentLib
-  UefiCpuLib
+  BaseCpuLib
   PeCoffGetEntryPointLib
   PeCoffExtraActionLib
 
