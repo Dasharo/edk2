@@ -493,8 +493,10 @@ UpdateBootManager (
   BOOLEAN                       IsLegacyOption;
   BOOLEAN                       NeedEndOp;
   UINTN                         MaxLen;
+  UINTN                         OptionCount;
 
   DeviceType = (UINT16)-1;
+  OptionCount = 0;
 
   //
   // for better user experience
@@ -535,8 +537,9 @@ UpdateBootManager (
   EndLabel               = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (EndOpCodeHandle, &gEfiIfrTianoGuid, NULL, sizeof (EFI_IFR_GUID_LABEL));
   EndLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
   EndLabel->Number       = LABEL_BOOT_OPTION_END;
-  mKeyInput              = 0;
-  NeedEndOp              = FALSE;
+
+  mKeyInput = 0;
+  NeedEndOp = FALSE;
   for (Index = 0; Index < BootOptionCount; Index++) {
     //
     // At this stage we are creating a menu entry, thus the Keys are reproduceable
@@ -549,6 +552,8 @@ UpdateBootManager (
     if ((BootOption[Index].Attributes & LOAD_OPTION_HIDDEN) != 0) {
       continue;
     }
+
+    OptionCount++;
 
     //
     // Group the legacy boot option in the sub title created dynamically
@@ -603,6 +608,10 @@ UpdateBootManager (
       EFI_IFR_FLAG_CALLBACK,
       0
       );
+  }
+
+  if (OptionCount == 0) {
+    HiiCreateSubTitleOpCode (StartOpCodeHandle, STRING_TOKEN (STR_NO_BOOTABLE_MEDIA), 0, 0, 0);
   }
 
   if (NeedEndOp) {
