@@ -2582,11 +2582,6 @@ PciEnumeratorLight (
                );
 
     if (!EFI_ERROR (Status)) {
-      //
-      // Remove those PCI devices which are rejected when full enumeration
-      //
-      RemoveRejectedPciDevices (RootBridgeDev->Handle, RootBridgeDev);
-
       if (!PcdGetBool (PcdPciDisableBusEnumeration)) {
         //
         // Process option rom light
@@ -2705,109 +2700,6 @@ StartManagingRootBridge (
   RootBridgeDev->PciRootBridgeIo = PciRootBridgeIo;
 
   return EFI_SUCCESS;
-}
-
-/**
-  This routine can be used to check whether a PCI device should be rejected when light enumeration.
-
-  @param PciIoDevice  Pci device instance.
-
-  @retval TRUE      This device should be rejected.
-  @retval FALSE     This device shouldn't be rejected.
-
-**/
-BOOLEAN
-IsPciDeviceRejected (
-  IN PCI_IO_DEVICE  *PciIoDevice
-  )
-{
-  EFI_STATUS  Status;
-  UINT32      TestValue;
-  UINT32      OldValue;
-  UINT32      Mask;
-  UINT8       BarOffset;
-
-  //
-  // PPB should be skip!
-  //
-  if (IS_PCI_BRIDGE (&PciIoDevice->Pci)) {
-    return FALSE;
-  }
-
-  if (IS_CARDBUS_BRIDGE (&PciIoDevice->Pci)) {
-    //
-    // Only test base registers for P2C
-    //
-    for (BarOffset = 0x1C; BarOffset <= 0x38; BarOffset += 2 * sizeof (UINT32)) {
-      Mask   = (BarOffset < 0x2C) ? 0xFFFFF000 : 0xFFFFFFFC;
-      Status = BarExisted (PciIoDevice, BarOffset, &TestValue, &OldValue);
-      if (EFI_ERROR (Status)) {
-        continue;
-      }
-
-      TestValue = TestValue & Mask;
-      if ((TestValue != 0) && (TestValue == (OldValue & Mask))) {
-        //
-        // The bar isn't programed, so it should be rejected
-        //
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  for (BarOffset = 0x14; BarOffset <= 0x24; BarOffset += sizeof (UINT32)) {
-    //
-    // Test PCI devices
-    //
-    Status = BarExisted (PciIoDevice, BarOffset, &TestValue, &OldValue);
-    if (EFI_ERROR (Status)) {
-      continue;
-    }
-
-    if ((TestValue & 0x01) != 0) {
-      //
-      // IO Bar
-      //
-      Mask      = 0xFFFFFFFC;
-      TestValue = TestValue & Mask;
-      if ((TestValue != 0) && (TestValue == (OldValue & Mask))) {
-        return TRUE;
-      }
-    } else {
-      //
-      // Mem Bar
-      //
-      Mask      = 0xFFFFFFF0;
-      TestValue = TestValue & Mask;
-
-      if ((TestValue & 0x07) == 0x04) {
-        //
-        // Mem64 or PMem64
-        //
-        BarOffset += sizeof (UINT32);
-        if ((TestValue != 0) && (TestValue == (OldValue & Mask))) {
-          //
-          // Test its high 32-Bit BAR
-          //
-          Status = BarExisted (PciIoDevice, BarOffset, &TestValue, &OldValue);
-          if (TestValue == OldValue) {
-            return TRUE;
-          }
-        }
-      } else {
-        //
-        // Mem32 or PMem32
-        //
-        if ((TestValue != 0) && (TestValue == (OldValue & Mask))) {
-          return TRUE;
-        }
-      }
-    }
-  }
-
-  return FALSE;
 }
 
 /**
