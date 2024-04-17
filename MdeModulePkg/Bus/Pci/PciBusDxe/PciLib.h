@@ -40,20 +40,6 @@ GetBackPcCardBar (
   );
 
 /**
-  Remove rejected pci device from specific root bridge
-  handle.
-
-  @param RootBridgeHandle  Specific parent root bridge handle.
-  @param Bridge            Bridge device instance.
-
-**/
-VOID
-RemoveRejectedPciDevices (
-  IN EFI_HANDLE     RootBridgeHandle,
-  IN PCI_IO_DEVICE  *Bridge
-  );
-
-/**
   Submits the I/O and memory resource requirements for the specified PCI Host Bridge.
 
   @param PciResAlloc  Point to protocol instance of EFI_PCI_HOST_BRIDGE_RESOURCE_ALLOCATION_PROTOCOL.
