@@ -140,65 +140,6 @@ GetBackPcCardBar (
 }
 
 /**
-  Remove rejected pci device from specific root bridge
-  handle.
-
-  @param RootBridgeHandle  Specific parent root bridge handle.
-  @param Bridge            Bridge device instance.
-
-**/
-VOID
-RemoveRejectedPciDevices (
-  IN EFI_HANDLE     RootBridgeHandle,
-  IN PCI_IO_DEVICE  *Bridge
-  )
-{
-  PCI_IO_DEVICE  *Temp;
-  LIST_ENTRY     *CurrentLink;
-  LIST_ENTRY     *LastLink;
-
-  if (!FeaturePcdGet (PcdPciBusHotplugDeviceSupport)) {
-    return;
-  }
-
-  CurrentLink = Bridge->ChildList.ForwardLink;
-
-  while (CurrentLink != NULL && CurrentLink != &Bridge->ChildList) {
-    Temp = PCI_IO_DEVICE_FROM_LINK (CurrentLink);
-
-    if (IS_PCI_BRIDGE (&Temp->Pci)) {
-      //
-      // Remove rejected devices recusively
-      //
-      RemoveRejectedPciDevices (RootBridgeHandle, Temp);
-    } else {
-      //
-      // Skip rejection for all PPBs, while detect rejection for others
-      //
-      if (IsPciDeviceRejected (Temp)) {
-        //
-        // For P2C, remove all devices on it
-        //
-        if (!IsListEmpty (&Temp->ChildList)) {
-          RemoveAllPciDeviceOnBridge (RootBridgeHandle, Temp);
-        }
-
-        //
-        // Finally remove itself
-        //
-        LastLink = CurrentLink->BackLink;
-        RemoveEntryList (CurrentLink);
-        FreePciDevice (Temp);
-
-        CurrentLink = LastLink;
-      }
-    }
-
-    CurrentLink = CurrentLink->ForwardLink;
-  }
-}
-
-/**
   Dump the resourc map of the bridge device.
 
   @param[in] BridgeResource   Resource descriptor of the bridge device.
