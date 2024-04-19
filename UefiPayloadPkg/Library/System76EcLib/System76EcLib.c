@@ -46,7 +46,7 @@ void system76_ec_print(UINT8 byte) {
     system76_ec_write(3, len + 1);
 
     // If we hit the end of the buffer, or were given a newline, flush
-    if (byte == '\n' || len >= 128) {
+    if (byte == '\n' || len >= 1) {
         system76_ec_flush();
     }
 }
