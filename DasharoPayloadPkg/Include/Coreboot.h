@@ -747,4 +747,13 @@ struct cb_tpm_physical_presence {
 	UINT8 ppi_version;	/* BCD encoded */
 };
 
+#define CB_TAG_CAPSULE  0x00b0
+
+struct cb_range {
+	UINT32 tag;
+	UINT32 size;
+	UINT64 range_start;
+	UINT32 range_size;
+} __attribute__((packed));
+
 #endif // _COREBOOT_PEI_H_INCLUDED_
