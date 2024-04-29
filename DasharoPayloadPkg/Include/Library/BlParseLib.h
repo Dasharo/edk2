@@ -25,6 +25,9 @@
 typedef RETURN_STATUS \
         (*BL_MEM_INFO_CALLBACK) (MEMROY_MAP_ENTRY *MemoryMapEntry, VOID *Param);
 
+typedef VOID \
+        (*BL_CAPSULE_CALLBACK) (EFI_PHYSICAL_ADDRESS BaseAddress, UINT64 Length);
+
 /**
   This function retrieves the parameter base address from boot loader.
 
@@ -177,6 +180,20 @@ RETURN_STATUS
 EFIAPI
 ParseTimestampTable (
   OUT FIRMWARE_SEC_PERFORMANCE *Performance
+  );
+
+/**
+  Parse update capsules passed in by coreboot
+
+  @param  CapsuleCallback   The callback routine invoked for each capsule.
+
+  @retval RETURN_SUCCESS    Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND  coreboot table is missing.
+**/
+RETURN_STATUS
+EFIAPI
+ParseCapsules (
+  IN BL_CAPSULE_CALLBACK  CapsuleCallback
   );
 
 #endif
