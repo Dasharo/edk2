@@ -955,3 +955,39 @@ ParseTimestampTable (
   Performance->ResetEnd = DivU64x32(CbTsRec->base_time, CbTsRec->tick_freq_mhz);
   return RETURN_SUCCESS;
 }
+
+/**
+  Parse update capsules passed in by coreboot
+
+  @param  CapsuleCallback   The callback routine invoked for each capsule.
+
+  @retval RETURN_SUCCESS    Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND  coreboot table is missing.
+**/
+RETURN_STATUS
+EFIAPI
+ParseCapsules (
+  IN BL_CAPSULE_CALLBACK  CapsuleCallback
+  )
+{
+  struct cb_header  *Header;
+  struct cb_range   *Range;
+  UINT8             *TmpPtr;
+  UINTN             Idx;
+
+  Header = GetParameterBase ();
+  if (Header == NULL) {
+    return RETURN_NOT_FOUND;
+  }
+
+  TmpPtr = (UINT8 *)Header + Header->header_bytes;
+  for (Idx = 0; Idx < Header->table_entries; Idx++) {
+    Range = (struct cb_range *)TmpPtr;
+    if (Range->tag == CB_TAG_CAPSULE) {
+      CapsuleCallback (Range->range_start, Range->range_size);
+    }
+    TmpPtr += Range->size;
+  }
+
+  return RETURN_SUCCESS;
+}
