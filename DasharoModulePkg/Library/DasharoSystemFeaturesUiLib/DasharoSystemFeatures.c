@@ -38,6 +38,7 @@ STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
 STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
 STATIC CHAR16 mSerialRedirectionEfiVar[] = L"SerialRedirection";
 STATIC CHAR16 mSerialRedirection2EfiVar[] = L"SerialRedirection2";
+STATIC CHAR16 mCpuThrottlingThresholdEfiVar[] = L"CpuThrottlingThreshold";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -54,6 +55,7 @@ STATIC BOOLEAN   mEnableWifiBtDefault = TRUE;
 STATIC UINT8     mBatteryStartThresholdDefault = 95;
 STATIC UINT8     mBatteryStopThresholdDefault = 98;
 STATIC UINT8     mMemoryProfileDefault = MEMORY_PROFILE_JEDEC;
+STATIC UINT8     mCpuThrottlingThresholdDefault = 80;
 
 STATIC DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  mDasharoSystemFeaturesPrivate = {
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_SIGNATURE,
@@ -241,6 +243,9 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowFum = PcdGetBool (PcdShowFum);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Have2ndUart = PcdGetBool (PcdHave2ndUart);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowCpuThrottlingThreshold= PcdGetBool (PcdShowCpuThrottlingThreshold);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature = FixedPcdGet8(PcdCpuMaxTemperature);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold = FixedPcdGet8(PcdCpuMaxTemperature) - 63;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
@@ -744,6 +749,26 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
   }
 
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold);
+  Status = gRT->GetVariable (
+      mCpuThrottlingThresholdEfiVar,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold = mCpuThrottlingThresholdDefault;
+    Status = gRT->SetVariable (
+        mCpuThrottlingThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
 
   return EFI_SUCCESS;
 }
@@ -1205,6 +1230,20 @@ DasharoSystemFeaturesRouteConfig (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SerialPort2Redirection),
         &DasharoFeaturesData.SerialPort2Redirection
+        );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (Private->DasharoFeaturesData.CpuThrottlingThreshold !=
+        DasharoFeaturesData.CpuThrottlingThreshold) {
+    Status = gRT->SetVariable (
+        mCpuThrottlingThresholdEfiVar,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (DasharoFeaturesData.CpuThrottlingThreshold),
+        &DasharoFeaturesData.CpuThrottlingThreshold
         );
     if (EFI_ERROR (Status)) {
       return Status;
