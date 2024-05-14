@@ -73,6 +73,7 @@ typedef struct {
   BOOLEAN            MeHapAvailable;
   BOOLEAN            S3SupportExperimental;
   BOOLEAN            Have2ndUart;
+  BOOLEAN            ShowCpuThrottlingThreshold;
   // Feature data
   BOOLEAN            LockBios;
   BOOLEAN            SmmBwp;
@@ -96,6 +97,9 @@ typedef struct {
   UINT8              MemoryProfile;
   BOOLEAN            SerialPortRedirection;
   BOOLEAN            SerialPort2Redirection;
+  UINT8              CpuThrottlingThreshold;
+  UINT8              CpuMaxTemperature;
+  UINT8              CpuMinThrottlingThreshold;
 } DASHARO_FEATURES_DATA;
 
 #define ME_MODE_ENABLE        0

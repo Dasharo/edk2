@@ -167,3 +167,7 @@
 
 #string STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT   #language en-US  "Enable COM2 Port Console Redirection"
 #string STR_SERIAL_CONSOLE_REDIRECTION2_HELP     #language en-US  "Redirect the firmware console to the second serial port."
+
+#string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "CPU Throttling Threshold"
+#string STR_CPU_THROTTLING_THRESHOLD_HELP        #language en-US  "The temperature above which the CPU will start throttling itself."
+#string STR_CPU_THROTTLING_THRESHOLD_RANGE_ERROR #language en-US  "The throttling threshold must be between TjMax - 63 and TjMax!!"
