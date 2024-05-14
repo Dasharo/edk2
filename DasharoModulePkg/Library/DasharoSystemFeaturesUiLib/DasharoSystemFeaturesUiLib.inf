@@ -93,5 +93,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms

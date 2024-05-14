@@ -73,6 +73,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState|FALSE|BOOLEAN|0x00000001F
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart|FALSE|BOOLEAN|0x000000021
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault|FALSE|BOOLEAN|0x000000022
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold|TRUE|BOOLEAN|0x00000023
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature|100|UINT8|0x00000024
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
