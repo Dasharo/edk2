@@ -1,0 +1,13 @@
+// /** @file
+// A library for providing services related to Dasharo-specific EFI variables.
+//
+// Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// **/
+
+
+#string STR_MODULE_ABSTRACT     #language en-US "DasharoVariablesLib library provides services related to Dasharo-specific EFI variables."
+
+#string STR_MODULE_DESCRIPTION  #language en-US "DasharoVariablesLib library exposes list of Dasharo-specific variables and a few functions related to handling them."

@@ -1,0 +1,54 @@
+#
+#  A library for providing services related to Dasharo-specific EFI variables.
+#
+#  Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = DasharoVariablesLib
+  MODULE_UNI_FILE                = DasharoVariablesLib.uni
+  FILE_GUID                      = F7C51973-0F61-4955-87D2-710FD578D161
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = DasharoVariablesLib|DXE_DRIVER
+  CONSTRUCTOR                    = DasharoVariablesLibConstructor
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  DasharoVariablesLib.c
+
+[Packages]
+  DasharoModulePkg/DasharoModulePkg.dec
+  MdePkg/MdePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  PcdLib
+
+[Guids]
+  gDasharoSystemFeaturesGuid           ### CONSUMES
+
+[Pcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
+
+  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
