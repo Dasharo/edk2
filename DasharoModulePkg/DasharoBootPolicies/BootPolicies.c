@@ -13,7 +13,7 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 #include <Library/DebugLib.h>
 #include <Library/UefiLib.h>
 #include "BootPolicies.h"
-#include "Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesHii.h"
+#include <DasharoOptions.h>
 
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -41,7 +41,7 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
-  IOMMU_CONFIG *IommuConfig;
+  DASHARO_IOMMU_CONFIG *IommuConfig;
   UINT8 PcdVal = 0;
 
   gBS = SystemTable->BootServices;
