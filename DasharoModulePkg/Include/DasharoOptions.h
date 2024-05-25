@@ -100,4 +100,14 @@ typedef struct {
 
 #pragma pack(pop)
 
+// Set of possible values of Dasharo variables.
+typedef union {
+  BOOLEAN  Boolean;
+  UINT8    Uint8;
+
+  DASHARO_WATCHDOG_CONFIG  Watchdog;
+  DASHARO_IOMMU_CONFIG     Iommu;
+  DASHARO_BATTERY_CONFIG   Battery;
+} DASHARO_VAR_DATA;
+
 #endif
