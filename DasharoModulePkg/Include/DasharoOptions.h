@@ -51,8 +51,53 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // UINT8 type.
 //
 
+#define DASHARO_FAN_CURVE_OPTION_SILENT        0
+#define DASHARO_FAN_CURVE_OPTION_PERFORMANCE   1
+
+#define DASHARO_ME_MODE_ENABLE                 0
+#define DASHARO_ME_MODE_DISABLE_HECI           1
+#define DASHARO_ME_MODE_DISABLE_HAP            2
+
 #define DASHARO_OPTION_ROM_POLICY_DISABLE_ALL  0
 #define DASHARO_OPTION_ROM_POLICY_ENABLE_ALL   1
 #define DASHARO_OPTION_ROM_POLICY_VGA_ONLY     2
+
+#define DASHARO_SLEEP_TYPE_S0IX                0
+#define DASHARO_SLEEP_TYPE_S3                  1
+
+#define DASHARO_POWER_FAILURE_STATE_OFF        0
+#define DASHARO_POWER_FAILURE_STATE_ON         1
+#define DASHARO_POWER_FAILURE_STATE_KEEP       2
+#define DASHARO_POWER_FAILURE_STATE_HIDDEN     0xff
+
+// The values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
+#define DASHARO_MEMORY_PROFILE_JEDEC           0
+#define DASHARO_MEMORY_PROFILE_XMP1            2
+#define DASHARO_MEMORY_PROFILE_XMP2            3
+#define DASHARO_MEMORY_PROFILE_XMP3            4
+
+//
+// Structures describing format of some of the above EFI variables.  Must be
+// packed.
+//
+
+#pragma pack(push,1)
+
+typedef struct {
+  BOOLEAN  WatchdogEnable;
+  UINT16   WatchdogTimeout;
+} DASHARO_WATCHDOG_CONFIG;
+
+typedef struct {
+  BOOLEAN  IommuEnable;
+  BOOLEAN  IommuHandoff;
+} DASHARO_IOMMU_CONFIG;
+
+typedef struct {
+  UINT8  StartThreshold;
+  UINT8  StopThreshold;
+} DASHARO_BATTERY_CONFIG;
+
+#pragma pack(pop)
 
 #endif

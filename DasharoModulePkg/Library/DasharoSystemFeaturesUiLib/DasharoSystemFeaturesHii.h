@@ -27,26 +27,6 @@ SPDX-License-Identifier: BSD-2-Clause
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
-#pragma pack(push,1)
-typedef struct {
-  BOOLEAN WatchdogEnable;
-  UINT16  WatchdogTimeout;
-} WATCHDOG_CONFIG;
-
-typedef struct {
-  BOOLEAN IommuEnable;
-  BOOLEAN IommuHandoff;
-} IOMMU_CONFIG;
-
-typedef struct {
-  UINT8  StartThreshold;
-  UINT8  StopThreshold;
-} BATTERY_CONFIG;
-#pragma pack(pop)
-
-#define FAN_CURVE_OPTION_SILENT 0
-#define FAN_CURVE_OPTION_PERFORMANCE 1
-
 typedef struct {
   // Feature visibility
   BOOLEAN            ShowSecurityMenu;
@@ -74,55 +54,66 @@ typedef struct {
   BOOLEAN            S3SupportExperimental;
   BOOLEAN            Have2ndUart;
   BOOLEAN            ShowCpuThrottlingThreshold;
+
   // Feature data
-  BOOLEAN            LockBios;
-  BOOLEAN            SmmBwp;
-  BOOLEAN            NetworkBoot;
-  BOOLEAN            UsbStack;
-  BOOLEAN            UsbMassStorage;
-  UINT8              MeMode;
-  BOOLEAN            Ps2Controller;
-  WATCHDOG_CONFIG    WatchdogConfig;
-  BOOLEAN            WatchdogAvailable;
-  UINT8              FanCurveOption;
-  IOMMU_CONFIG       IommuConfig;
-  BOOLEAN            BootManagerEnabled;
-  UINT8              SleepType;
-  UINT8              PowerFailureState;
-  BOOLEAN            ResizeableBarsEnabled;
-  UINT8              OptionRomExecution;
-  BOOLEAN            EnableCamera;
-  BOOLEAN            EnableWifiBt;
-  BATTERY_CONFIG     BatteryConfig;
-  UINT8              MemoryProfile;
-  BOOLEAN            SerialPortRedirection;
-  BOOLEAN            SerialPort2Redirection;
-  UINT8              CpuThrottlingThreshold;
-  UINT8              CpuMaxTemperature;
-  UINT8              CpuMinThrottlingThreshold;
+  BOOLEAN                  LockBios;
+  BOOLEAN                  SmmBwp;
+  BOOLEAN                  NetworkBoot;
+  BOOLEAN                  UsbStack;
+  BOOLEAN                  UsbMassStorage;
+  UINT8                    MeMode;
+  BOOLEAN                  Ps2Controller;
+  DASHARO_WATCHDOG_CONFIG  WatchdogConfig;
+  BOOLEAN                  WatchdogAvailable;
+  UINT8                    FanCurveOption;
+  DASHARO_IOMMU_CONFIG     IommuConfig;
+  BOOLEAN                  BootManagerEnabled;
+  UINT8                    SleepType;
+  UINT8                    PowerFailureState;
+  BOOLEAN                  ResizeableBarsEnabled;
+  UINT8                    OptionRomExecution;
+  BOOLEAN                  EnableCamera;
+  BOOLEAN                  EnableWifiBt;
+  DASHARO_BATTERY_CONFIG   BatteryConfig;
+  UINT8                    MemoryProfile;
+  BOOLEAN                  SerialPortRedirection;
+  BOOLEAN                  SerialPort2Redirection;
+  UINT8                    CpuThrottlingThreshold;
+  UINT8                    CpuMaxTemperature;
+  UINT8                    CpuMinThrottlingThreshold;
 } DASHARO_FEATURES_DATA;
 
-#define ME_MODE_ENABLE        0
-#define ME_MODE_DISABLE_HECI  1
-#define ME_MODE_DISABLE_HAP   2
+//
+// DasharoOptions.h can be included by files unrelated to Dasharo in which case
+// it's useful to indicate where they came from.
+//
+// HII code, however, is already specific to Dasharo and there is no need to
+// have extra 8 characters here.
+//
+
+#define FAN_CURVE_OPTION_SILENT        DASHARO_FAN_CURVE_OPTION_SILENT
+#define FAN_CURVE_OPTION_PERFORMANCE   DASHARO_FAN_CURVE_OPTION_PERFORMANCE
+
+#define ME_MODE_ENABLE                 DASHARO_ME_MODE_ENABLE
+#define ME_MODE_DISABLE_HECI           DASHARO_ME_MODE_DISABLE_HECI
+#define ME_MODE_DISABLE_HAP            DASHARO_ME_MODE_DISABLE_HAP
 
 #define OPTION_ROM_POLICY_DISABLE_ALL  DASHARO_OPTION_ROM_POLICY_DISABLE_ALL
 #define OPTION_ROM_POLICY_ENABLE_ALL   DASHARO_OPTION_ROM_POLICY_ENABLE_ALL
 #define OPTION_ROM_POLICY_VGA_ONLY     DASHARO_OPTION_ROM_POLICY_VGA_ONLY
 
-#define SLEEP_TYPE_S0IX  0
-#define SLEEP_TYPE_S3    1
+#define SLEEP_TYPE_S0IX                DASHARO_SLEEP_TYPE_S0IX
+#define SLEEP_TYPE_S3                  DASHARO_SLEEP_TYPE_S3
 
-#define POWER_FAILURE_STATE_OFF     0
-#define POWER_FAILURE_STATE_ON      1
-#define POWER_FAILURE_STATE_KEEP    2
-#define POWER_FAILURE_STATE_HIDDEN  0xff
+#define POWER_FAILURE_STATE_OFF        DASHARO_POWER_FAILURE_STATE_OFF
+#define POWER_FAILURE_STATE_ON         DASHARO_POWER_FAILURE_STATE_ON
+#define POWER_FAILURE_STATE_KEEP       DASHARO_POWER_FAILURE_STATE_KEEP
+#define POWER_FAILURE_STATE_HIDDEN     DASHARO_POWER_FAILURE_STATE_HIDDEN
 
-// Values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
-#define MEMORY_PROFILE_JEDEC  0
-#define MEMORY_PROFILE_XMP1   2
-#define MEMORY_PROFILE_XMP2   3
-#define MEMORY_PROFILE_XMP3   4
+#define MEMORY_PROFILE_JEDEC           DASHARO_MEMORY_PROFILE_JEDEC
+#define MEMORY_PROFILE_XMP1            DASHARO_MEMORY_PROFILE_XMP1
+#define MEMORY_PROFILE_XMP2            DASHARO_MEMORY_PROFILE_XMP2
+#define MEMORY_PROFILE_XMP3            DASHARO_MEMORY_PROFILE_XMP3
 
 #define NETWORK_BOOT_QUESTION_ID             0x8000
 #define WATCHDOG_ENABLE_QUESTION_ID         0x8001
