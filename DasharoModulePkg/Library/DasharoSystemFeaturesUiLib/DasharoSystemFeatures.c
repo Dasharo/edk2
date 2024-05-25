@@ -15,31 +15,6 @@ SPDX-License-Identifier: BSD-2-Clause
 // Feature state
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
 
-STATIC CHAR16 mLockBiosEfiVar[] = L"LockBios";
-STATIC CHAR16 mSmmBwpEfiVar[] = L"SmmBwp";
-STATIC CHAR16 mMeModeEfiVar[] = L"MeMode";
-STATIC CHAR16 mNetworkBootEfiVar[] = L"NetworkBoot";
-STATIC CHAR16 mUsbStackEfiVar[] = L"UsbDriverStack";
-STATIC CHAR16 mUsbMassStorageEfiVar[] = L"UsbMassStorage";
-STATIC CHAR16 mBootManagerEnabledEfiVar[] = L"BootManagerEnabled";
-STATIC CHAR16 mPs2ControllerEfiVar[] = L"Ps2Controller";
-STATIC CHAR16 mWatchdogEfiVar[] = L"WatchdogConfig";
-STATIC CHAR16 mWatchdogAvailableEfiVar[] = L"WatchdogAvailable";
-STATIC CHAR16 mFanCurveOptionEfiVar[] = L"FanCurveOption";
-STATIC CHAR16 mIommuConfigEfiVar[] = L"IommuConfig";
-STATIC CHAR16 mSleepTypeEfiVar[] = L"SleepType";
-STATIC CHAR16 mFirmwareUpdateModeEfiVar[] = L"FirmwareUpdateMode";
-STATIC CHAR16 mPowerFailureStateEfiVar[] = L"PowerFailureState";
-STATIC CHAR16 mResizeableBarsEnabledEfiVar[] = L"PCIeResizeableBarsEnabled";
-STATIC CHAR16 mOptionRomPolicyEfiVar[] = L"OptionRomPolicy";
-STATIC CHAR16 mEnableCameraEfiVar[] = L"EnableCamera";
-STATIC CHAR16 mEnableWifiBtEfiVar[] = L"EnableWifiBt";
-STATIC CHAR16 mBatteryConfigEfiVar[] = L"BatteryConfig";
-STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
-STATIC CHAR16 mSerialRedirectionEfiVar[] = L"SerialRedirection";
-STATIC CHAR16 mSerialRedirection2EfiVar[] = L"SerialRedirection2";
-STATIC CHAR16 mCpuThrottlingThresholdEfiVar[] = L"CpuThrottlingThreshold";
-
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
 STATIC BOOLEAN   mLockBiosDefault = TRUE;
@@ -269,7 +244,7 @@ DasharoSystemFeaturesUiLibConstructor (
   // Setup feature state
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
   Status = gRT->GetVariable (
-      mLockBiosEfiVar,
+      DASHARO_VAR_LOCK_BIOS,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -279,7 +254,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios = mLockBiosDefault;
     Status = gRT->SetVariable (
-        mLockBiosEfiVar,
+        DASHARO_VAR_LOCK_BIOS,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios),
@@ -290,7 +265,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot);
   Status = gRT->GetVariable (
-      mNetworkBootEfiVar,
+      DASHARO_VAR_NETWORK_BOOT,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -300,7 +275,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot = PcdGetBool (PcdDefaultNetworkBootEnable);
     Status = gRT->SetVariable (
-        mNetworkBootEfiVar,
+        DASHARO_VAR_NETWORK_BOOT,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot),
@@ -311,7 +286,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack);
   Status = gRT->GetVariable (
-      mUsbStackEfiVar,
+      DASHARO_VAR_USB_STACK,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -321,7 +296,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack = mUsbStackDefault;
     Status = gRT->SetVariable (
-        mUsbStackEfiVar,
+        DASHARO_VAR_USB_STACK,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack),
@@ -332,7 +307,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage);
   Status = gRT->GetVariable (
-      mUsbMassStorageEfiVar,
+      DASHARO_VAR_USB_MASS_STORAGE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -342,7 +317,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage = mUsbMassStorageDefault;
     Status = gRT->SetVariable (
-        mUsbMassStorageEfiVar,
+        DASHARO_VAR_USB_MASS_STORAGE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage),
@@ -353,7 +328,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp);
   Status = gRT->GetVariable (
-      mSmmBwpEfiVar,
+      DASHARO_VAR_SMM_BWP,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -363,7 +338,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp = mSmmBwpDefault;
     Status = gRT->SetVariable (
-        mSmmBwpEfiVar,
+        DASHARO_VAR_SMM_BWP,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp),
@@ -374,7 +349,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode);
   Status = gRT->GetVariable (
-      mMeModeEfiVar,
+      DASHARO_VAR_ME_MODE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -384,7 +359,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode = FixedPcdGet8(PcdIntelMeDefaultState);
     Status = gRT->SetVariable (
-        mMeModeEfiVar,
+        DASHARO_VAR_ME_MODE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode),
@@ -395,7 +370,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution);
   Status = gRT->GetVariable (
-      mOptionRomPolicyEfiVar,
+      DASHARO_VAR_OPTION_ROM_POLICY,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -407,7 +382,7 @@ DasharoSystemFeaturesUiLibConstructor (
         ? OPTION_ROM_POLICY_ENABLE_ALL
         : OPTION_ROM_POLICY_DISABLE_ALL;
     Status = gRT->SetVariable (
-        mOptionRomPolicyEfiVar,
+        DASHARO_VAR_OPTION_ROM_POLICY,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution),
@@ -418,7 +393,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller);
   Status = gRT->GetVariable (
-      mPs2ControllerEfiVar,
+      DASHARO_VAR_PS2_CONTROLLER,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -428,7 +403,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller = mPs2ControllerDefault;
     Status = gRT->SetVariable (
-        mPs2ControllerEfiVar,
+        DASHARO_VAR_PS2_CONTROLLER,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller),
@@ -439,7 +414,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable);
   Status = gRT->GetVariable (
-      mWatchdogAvailableEfiVar,
+      DASHARO_VAR_WATCHDOG_AVAILABLE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -450,7 +425,7 @@ DasharoSystemFeaturesUiLibConstructor (
     GetDefaultWatchdogConfig(&mDasharoSystemFeaturesPrivate.DasharoFeaturesData);
 
     Status = gRT->SetVariable (
-        mWatchdogEfiVar,
+        DASHARO_VAR_WATCHDOG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig),
@@ -459,7 +434,7 @@ DasharoSystemFeaturesUiLibConstructor (
     ASSERT_EFI_ERROR (Status);
 
     Status = gRT->SetVariable (
-        mWatchdogAvailableEfiVar,
+        DASHARO_VAR_WATCHDOG_AVAILABLE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable),
@@ -469,7 +444,7 @@ DasharoSystemFeaturesUiLibConstructor (
   } else {
     BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig);
     Status = gRT->GetVariable (
-        mWatchdogEfiVar,
+        DASHARO_VAR_WATCHDOG,
         &gDasharoSystemFeaturesGuid,
         NULL,
         &BufferSize,
@@ -478,7 +453,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
     if (Status == EFI_NOT_FOUND) {
       Status = gRT->SetVariable (
-          mWatchdogEfiVar,
+          DASHARO_VAR_WATCHDOG,
           &gDasharoSystemFeaturesGuid,
           EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
           sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig),
@@ -490,7 +465,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled);
   Status = gRT->GetVariable(
-      mBootManagerEnabledEfiVar,
+      DASHARO_VAR_BOOT_MANAGER_ENABLED,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -499,7 +474,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled = mBootManagerEnabledDefault;
     Status = gRT->SetVariable(
-	    mBootManagerEnabledEfiVar,
+	    DASHARO_VAR_BOOT_MANAGER_ENABLED,
       &gDasharoSystemFeaturesGuid,
 	    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
 	    sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled),
@@ -511,7 +486,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption);
   Status = gRT->GetVariable (
-      mFanCurveOptionEfiVar,
+      DASHARO_VAR_FAN_CURVE_OPTION,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -521,7 +496,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption = mFanCurveOptionDefault;
     Status = gRT->SetVariable (
-        mFanCurveOptionEfiVar,
+        DASHARO_VAR_FAN_CURVE_OPTION,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption),
@@ -532,7 +507,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig);
   Status = gRT->GetVariable (
-      mIommuConfigEfiVar,
+      DASHARO_VAR_IOMMU_CONFIG,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -543,7 +518,7 @@ DasharoSystemFeaturesUiLibConstructor (
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuEnable = mIommuEnableDefault;
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig.IommuHandoff = mIommuHandoffDefault;
     Status = gRT->SetVariable (
-        mIommuConfigEfiVar,
+        DASHARO_VAR_IOMMU_CONFIG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig),
@@ -554,7 +529,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType);
   Status = gRT->GetVariable (
-      mSleepTypeEfiVar,
+      DASHARO_VAR_SLEEP_TYPE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -566,7 +541,7 @@ DasharoSystemFeaturesUiLibConstructor (
                                                                 ? SLEEP_TYPE_S3
                                                                 : SLEEP_TYPE_S0IX;
     Status = gRT->SetVariable (
-        mSleepTypeEfiVar,
+        DASHARO_VAR_SLEEP_TYPE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType),
@@ -577,7 +552,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState);
   Status = gRT->GetVariable (
-      mPowerFailureStateEfiVar,
+      DASHARO_VAR_POWER_FAILURE_STATE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -589,7 +564,7 @@ DasharoSystemFeaturesUiLibConstructor (
         FixedPcdGet8 (PcdDefaultPowerFailureState);
 
     Status = gRT->SetVariable (
-        mPowerFailureStateEfiVar,
+        DASHARO_VAR_POWER_FAILURE_STATE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState),
@@ -600,7 +575,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled);
   Status = gRT->GetVariable (
-      mResizeableBarsEnabledEfiVar,
+      DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -610,7 +585,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled = mResizeableBarsEnabledDefault;
     Status = gRT->SetVariable (
-        mResizeableBarsEnabledEfiVar,
+        DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled),
@@ -621,7 +596,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera);
   Status = gRT->GetVariable (
-    mEnableCameraEfiVar,
+    DASHARO_VAR_ENABLE_CAMERA,
     &gDasharoSystemFeaturesGuid,
     NULL,
     &BufferSize,
@@ -631,7 +606,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera = mEnableCameraDefault;
     Status = gRT->SetVariable (
-        mEnableCameraEfiVar,
+        DASHARO_VAR_ENABLE_CAMERA,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera),
@@ -642,7 +617,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt);
   Status = gRT->GetVariable (
-      mEnableWifiBtEfiVar,
+      DASHARO_VAR_ENABLE_WIFI_BT,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -652,7 +627,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt = mEnableWifiBtDefault;
     Status = gRT->SetVariable (
-        mEnableWifiBtEfiVar,
+        DASHARO_VAR_ENABLE_WIFI_BT,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt),
@@ -663,7 +638,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig);
   Status = gRT->GetVariable (
-    mBatteryConfigEfiVar,
+    DASHARO_VAR_BATTERY_CONFIG,
     &gDasharoSystemFeaturesGuid,
     NULL,
     &BufferSize,
@@ -674,7 +649,7 @@ DasharoSystemFeaturesUiLibConstructor (
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig.StartThreshold = mBatteryStartThresholdDefault;
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig.StopThreshold = mBatteryStopThresholdDefault;
     Status = gRT->SetVariable (
-        mBatteryConfigEfiVar,
+        DASHARO_VAR_BATTERY_CONFIG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig),
@@ -685,7 +660,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile);
   Status = gRT->GetVariable (
-      mMemoryProfileEfiVar,
+      DASHARO_VAR_MEMORY_PROFILE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -695,7 +670,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile = mMemoryProfileDefault;
     Status = gRT->SetVariable (
-        mMemoryProfileEfiVar,
+        DASHARO_VAR_MEMORY_PROFILE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile),
@@ -706,7 +681,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection);
   Status = gRT->GetVariable (
-      mSerialRedirectionEfiVar,
+      DASHARO_VAR_SERIAL_REDIRECTION,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -716,7 +691,7 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection = PcdGetBool (PcdSerialRedirectionDefaultState);
     Status = gRT->SetVariable (
-        mSerialRedirectionEfiVar,
+        DASHARO_VAR_SERIAL_REDIRECTION,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection),
@@ -728,7 +703,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection);
   Status = gRT->GetVariable (
-      mSerialRedirection2EfiVar,
+      DASHARO_VAR_SERIAL_REDIRECTION2,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -740,7 +715,7 @@ DasharoSystemFeaturesUiLibConstructor (
                                                                                 PcdGetBool (PcdSerialRedirection2DefaultState) :
                                                                                 FALSE;
     Status = gRT->SetVariable (
-        mSerialRedirection2EfiVar,
+        DASHARO_VAR_SERIAL_REDIRECTION2,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection),
@@ -751,7 +726,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold);
   Status = gRT->GetVariable (
-      mCpuThrottlingThresholdEfiVar,
+      DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,
@@ -761,11 +736,53 @@ DasharoSystemFeaturesUiLibConstructor (
   if (Status == EFI_NOT_FOUND) {
     mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold = mCpuThrottlingThresholdDefault;
     Status = gRT->SetVariable (
-        mCpuThrottlingThresholdEfiVar,
+        DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_CPU_MAX_TEMPERATURE,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature = FixedPcdGet8(PcdCpuMaxTemperature);
+    Status = gRT->SetVariable (
+        DASHARO_VAR_CPU_MAX_TEMPERATURE,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature
+        );
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold
+  );
+
+  if (Status == EFI_NOT_FOUND) {
+    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold = FixedPcdGet8(PcdCpuMaxTemperature) - 63;
+    Status = gRT->SetVariable (
+        DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD,
+        &gDasharoSystemFeaturesGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold),
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold
         );
     ASSERT_EFI_ERROR (Status);
   }
@@ -958,7 +975,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.LockBios != DasharoFeaturesData.LockBios) {
     Status = gRT->SetVariable (
-        mLockBiosEfiVar,
+        DASHARO_VAR_LOCK_BIOS,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.LockBios),
@@ -971,7 +988,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.SmmBwp != DasharoFeaturesData.SmmBwp) {
     Status = gRT->SetVariable (
-        mSmmBwpEfiVar,
+        DASHARO_VAR_SMM_BWP,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SmmBwp),
@@ -984,7 +1001,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.NetworkBoot != DasharoFeaturesData.NetworkBoot) {
     Status = gRT->SetVariable (
-        mNetworkBootEfiVar,
+        DASHARO_VAR_NETWORK_BOOT,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.NetworkBoot),
@@ -997,7 +1014,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.UsbStack != DasharoFeaturesData.UsbStack) {
     Status = gRT->SetVariable (
-        mUsbStackEfiVar,
+        DASHARO_VAR_USB_STACK,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.UsbStack),
@@ -1010,7 +1027,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.UsbMassStorage != DasharoFeaturesData.UsbMassStorage) {
     Status = gRT->SetVariable (
-        mUsbMassStorageEfiVar,
+        DASHARO_VAR_USB_MASS_STORAGE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.UsbMassStorage),
@@ -1023,7 +1040,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.MeMode != DasharoFeaturesData.MeMode) {
     Status = gRT->SetVariable (
-        mMeModeEfiVar,
+        DASHARO_VAR_ME_MODE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.MeMode),
@@ -1036,7 +1053,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.Ps2Controller != DasharoFeaturesData.Ps2Controller) {
     Status = gRT->SetVariable (
-        mPs2ControllerEfiVar,
+        DASHARO_VAR_PS2_CONTROLLER,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.Ps2Controller),
@@ -1049,7 +1066,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.FanCurveOption != DasharoFeaturesData.FanCurveOption) {
     Status = gRT->SetVariable (
-        mFanCurveOptionEfiVar,
+        DASHARO_VAR_FAN_CURVE_OPTION,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.FanCurveOption),
@@ -1062,7 +1079,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.BootManagerEnabled != DasharoFeaturesData.BootManagerEnabled) {
     Status = gRT->SetVariable (
-        mBootManagerEnabledEfiVar,
+        DASHARO_VAR_BOOT_MANAGER_ENABLED,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.BootManagerEnabled),
@@ -1078,7 +1095,7 @@ DasharoSystemFeaturesRouteConfig (
       Private->DasharoFeaturesData.WatchdogConfig.WatchdogTimeout !=
         DasharoFeaturesData.WatchdogConfig.WatchdogTimeout) {
     Status = gRT->SetVariable (
-        mWatchdogEfiVar,
+        DASHARO_VAR_WATCHDOG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.WatchdogConfig),
@@ -1092,7 +1109,7 @@ DasharoSystemFeaturesRouteConfig (
   if (Private->DasharoFeaturesData.IommuConfig.IommuEnable != DasharoFeaturesData.IommuConfig.IommuEnable ||
       Private->DasharoFeaturesData.IommuConfig.IommuHandoff != DasharoFeaturesData.IommuConfig.IommuHandoff) {
     Status = gRT->SetVariable (
-        mIommuConfigEfiVar,
+        DASHARO_VAR_IOMMU_CONFIG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.IommuConfig),
@@ -1105,7 +1122,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.SleepType != DasharoFeaturesData.SleepType) {
     Status = gRT->SetVariable (
-        mSleepTypeEfiVar,
+        DASHARO_VAR_SLEEP_TYPE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SleepType),
@@ -1118,7 +1135,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.PowerFailureState != DasharoFeaturesData.PowerFailureState) {
     Status = gRT->SetVariable (
-        mPowerFailureStateEfiVar,
+        DASHARO_VAR_POWER_FAILURE_STATE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.PowerFailureState),
@@ -1131,7 +1148,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.EnableWifiBt != DasharoFeaturesData.EnableWifiBt) {
     Status = gRT->SetVariable (
-        mEnableWifiBtEfiVar,
+        DASHARO_VAR_ENABLE_WIFI_BT,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.EnableWifiBt),
@@ -1144,7 +1161,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.ResizeableBarsEnabled != DasharoFeaturesData.ResizeableBarsEnabled) {
     Status = gRT->SetVariable (
-        mResizeableBarsEnabledEfiVar,
+        DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.ResizeableBarsEnabled),
@@ -1157,7 +1174,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.OptionRomExecution != DasharoFeaturesData.OptionRomExecution) {
     Status = gRT->SetVariable (
-        mOptionRomPolicyEfiVar,
+        DASHARO_VAR_OPTION_ROM_POLICY,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.OptionRomExecution),
@@ -1170,7 +1187,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if(Private->DasharoFeaturesData.EnableCamera != DasharoFeaturesData.EnableCamera) {
     Status = gRT->SetVariable (
-        mEnableCameraEfiVar,
+        DASHARO_VAR_ENABLE_CAMERA,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.EnableCamera),
@@ -1186,7 +1203,7 @@ DasharoSystemFeaturesRouteConfig (
       Private->DasharoFeaturesData.BatteryConfig.StopThreshold !=
         DasharoFeaturesData.BatteryConfig.StopThreshold) {
     Status = gRT->SetVariable (
-        mBatteryConfigEfiVar,
+        DASHARO_VAR_BATTERY_CONFIG,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.BatteryConfig),
@@ -1199,7 +1216,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.MemoryProfile != DasharoFeaturesData.MemoryProfile) {
     Status = gRT->SetVariable (
-        mMemoryProfileEfiVar,
+        DASHARO_VAR_MEMORY_PROFILE,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.MemoryProfile),
@@ -1212,7 +1229,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.SerialPortRedirection != DasharoFeaturesData.SerialPortRedirection) {
     Status = gRT->SetVariable (
-        mSerialRedirectionEfiVar,
+        DASHARO_VAR_SERIAL_REDIRECTION,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SerialPortRedirection),
@@ -1225,7 +1242,7 @@ DasharoSystemFeaturesRouteConfig (
 
   if (Private->DasharoFeaturesData.SerialPort2Redirection != DasharoFeaturesData.SerialPort2Redirection) {
     Status = gRT->SetVariable (
-        mSerialRedirection2EfiVar,
+        DASHARO_VAR_SERIAL_REDIRECTION2,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.SerialPort2Redirection),
@@ -1239,7 +1256,7 @@ DasharoSystemFeaturesRouteConfig (
   if (Private->DasharoFeaturesData.CpuThrottlingThreshold !=
         DasharoFeaturesData.CpuThrottlingThreshold) {
     Status = gRT->SetVariable (
-        mCpuThrottlingThresholdEfiVar,
+        DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
         &gDasharoSystemFeaturesGuid,
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (DasharoFeaturesData.CpuThrottlingThreshold),
@@ -1421,7 +1438,7 @@ DasharoSystemFeaturesCallback (
 
         if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
           Status = gRT->SetVariable (
-              mFirmwareUpdateModeEfiVar,
+              DASHARO_VAR_FIRMWARE_UPDATE_MODE,
               &gDasharoSystemFeaturesGuid,
               EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
               sizeof (Enable),
