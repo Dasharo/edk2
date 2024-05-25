@@ -207,255 +207,45 @@ DasharoSystemFeaturesUiLibConstructor (
                                                                       PcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
                                                                       (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
 
-  // Setup feature state
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_LOCK_BIOS,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.LockBios
-      );
-  ASSERT_EFI_ERROR (Status);
+#define LOAD_VAR(var, field) do {                                                   \
+    BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field);  \
+    Status = gRT->GetVariable (                                                     \
+        (var),                                                                      \
+        &gDasharoSystemFeaturesGuid,                                                \
+        NULL,                                                                       \
+        &BufferSize,                                                                \
+        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field                    \
+        );                                                                          \
+    ASSERT_EFI_ERROR (Status);                                                      \
+  } while (FALSE)
 
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_NETWORK_BOOT,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.NetworkBoot
-      );
-  ASSERT_EFI_ERROR (Status);
+  LOAD_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
+  LOAD_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
+  LOAD_VAR (DASHARO_VAR_CPU_MAX_TEMPERATURE, CpuMaxTemperature);
+  LOAD_VAR (DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD, CpuMinThrottlingThreshold);
+  LOAD_VAR (DASHARO_VAR_CPU_THROTTLING_THRESHOLD, CpuThrottlingThreshold);
+  LOAD_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
+  LOAD_VAR (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt);
+  LOAD_VAR (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption);
+  LOAD_VAR (DASHARO_VAR_IOMMU_CONFIG, IommuConfig);
+  LOAD_VAR (DASHARO_VAR_LOCK_BIOS, LockBios);
+  LOAD_VAR (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile);
+  LOAD_VAR (DASHARO_VAR_ME_MODE, MeMode);
+  LOAD_VAR (DASHARO_VAR_NETWORK_BOOT, NetworkBoot);
+  LOAD_VAR (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution);
+  LOAD_VAR (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState);
+  LOAD_VAR (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller);
+  LOAD_VAR (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled);
+  LOAD_VAR (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection);
+  LOAD_VAR (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection);
+  LOAD_VAR (DASHARO_VAR_SLEEP_TYPE, SleepType);
+  LOAD_VAR (DASHARO_VAR_SMM_BWP, SmmBwp);
+  LOAD_VAR (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage);
+  LOAD_VAR (DASHARO_VAR_USB_STACK, UsbStack);
+  LOAD_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
+  LOAD_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
 
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_USB_STACK,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbStack
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_USB_MASS_STORAGE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.UsbMassStorage
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_SMM_BWP,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SmmBwp
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_ME_MODE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeMode
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_OPTION_ROM_POLICY,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.OptionRomExecution
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_PS2_CONTROLLER,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Ps2Controller
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_WATCHDOG_AVAILABLE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogAvailable
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_WATCHDOG,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.WatchdogConfig
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled);
-  Status = gRT->GetVariable(
-      DASHARO_VAR_BOOT_MANAGER_ENABLED,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BootManagerEnabled
-      );
-  ASSERT_EFI_ERROR(Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_FAN_CURVE_OPTION,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.FanCurveOption
-      );
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_IOMMU_CONFIG,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.IommuConfig
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_SLEEP_TYPE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SleepType
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_POWER_FAILURE_STATE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerFailureState
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ResizeableBarsEnabled
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera);
-  Status = gRT->GetVariable (
-    DASHARO_VAR_ENABLE_CAMERA,
-    &gDasharoSystemFeaturesGuid,
-    NULL,
-    &BufferSize,
-    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableCamera
-  );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_ENABLE_WIFI_BT,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.EnableWifiBt
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig);
-  Status = gRT->GetVariable (
-    DASHARO_VAR_BATTERY_CONFIG,
-    &gDasharoSystemFeaturesGuid,
-    NULL,
-    &BufferSize,
-    &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.BatteryConfig
-  );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_MEMORY_PROFILE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MemoryProfile
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_SERIAL_REDIRECTION,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPortRedirection
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_SERIAL_REDIRECTION2,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SerialPort2Redirection
-      );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold
-  );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_CPU_MAX_TEMPERATURE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature
-  );
-  ASSERT_EFI_ERROR (Status);
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold);
-  Status = gRT->GetVariable (
-      DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold
-  );
-  ASSERT_EFI_ERROR (Status);
+#undef LOAD_VAR
 
   return EFI_SUCCESS;
 }
