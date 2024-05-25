@@ -29,31 +29,31 @@ SPDX-License-Identifier: BSD-2-Clause
 
 typedef struct {
   // Feature visibility
-  BOOLEAN            ShowSecurityMenu;
-  BOOLEAN            ShowIntelMeMenu;
-  BOOLEAN            ShowUsbMenu;
-  BOOLEAN            ShowNetworkMenu;
-  BOOLEAN            ShowChipsetMenu;
-  BOOLEAN            ShowPowerMenu;
-  BOOLEAN            ShowPciMenu;
-  BOOLEAN            ShowMemoryMenu;
-  BOOLEAN            ShowSerialPortMenu;
-  BOOLEAN            ShowLockBios;
-  BOOLEAN            ShowSmmBwp;
-  BOOLEAN            ShowFum;
-  BOOLEAN            ShowPs2Option;
-  BOOLEAN            PowerMenuShowFanCurve;
-  BOOLEAN            PowerMenuShowSleepType;
-  BOOLEAN            PowerMenuShowBatteryThresholds;
-  BOOLEAN            DasharoEnterprise;
-  BOOLEAN            SecurityMenuShowIommu;
-  BOOLEAN            PciMenuShowResizeableBars;
-  BOOLEAN            SecurityMenuShowWiFiBt;
-  BOOLEAN            SecurityMenuShowCamera;
-  BOOLEAN            MeHapAvailable;
-  BOOLEAN            S3SupportExperimental;
-  BOOLEAN            Have2ndUart;
-  BOOLEAN            ShowCpuThrottlingThreshold;
+  BOOLEAN  ShowSecurityMenu;
+  BOOLEAN  ShowIntelMeMenu;
+  BOOLEAN  ShowUsbMenu;
+  BOOLEAN  ShowNetworkMenu;
+  BOOLEAN  ShowChipsetMenu;
+  BOOLEAN  ShowPowerMenu;
+  BOOLEAN  ShowPciMenu;
+  BOOLEAN  ShowMemoryMenu;
+  BOOLEAN  ShowSerialPortMenu;
+  BOOLEAN  ShowLockBios;
+  BOOLEAN  ShowSmmBwp;
+  BOOLEAN  ShowFum;
+  BOOLEAN  ShowPs2Option;
+  BOOLEAN  PowerMenuShowFanCurve;
+  BOOLEAN  PowerMenuShowSleepType;
+  BOOLEAN  PowerMenuShowBatteryThresholds;
+  BOOLEAN  DasharoEnterprise;
+  BOOLEAN  SecurityMenuShowIommu;
+  BOOLEAN  PciMenuShowResizeableBars;
+  BOOLEAN  SecurityMenuShowWiFiBt;
+  BOOLEAN  SecurityMenuShowCamera;
+  BOOLEAN  MeHapAvailable;
+  BOOLEAN  S3SupportExperimental;
+  BOOLEAN  Have2ndUart;
+  BOOLEAN  ShowCpuThrottlingThreshold;
 
   // Feature data
   BOOLEAN                  LockBios;
@@ -115,8 +115,14 @@ typedef struct {
 #define MEMORY_PROFILE_XMP2            DASHARO_MEMORY_PROFILE_XMP2
 #define MEMORY_PROFILE_XMP3            DASHARO_MEMORY_PROFILE_XMP3
 
+//
+// Question IDs are used in VFR file to let the code in
+// DasharoSystemFeaturesCallback() know what form element caused
+// invocation of the callback.
+//
+
 #define NETWORK_BOOT_QUESTION_ID             0x8000
-#define WATCHDOG_ENABLE_QUESTION_ID         0x8001
+#define WATCHDOG_ENABLE_QUESTION_ID          0x8001
 #define WATCHDOG_TIMEOUT_QUESTION_ID         0x8002
 #define FIRMWARE_UPDATE_MODE_QUESTION_ID     0x8003
 #define POWER_FAILURE_STATE_QUESTION_ID      0x8004
@@ -127,7 +133,5 @@ typedef struct {
 #define INTEL_ME_MODE_QUESTION_ID            0x8009
 #define SLEEP_TYPE_QUESTION_ID               0x800A
 #define SERIAL_PORT2_REDIR_QUESTION_ID       0x800B
-
-extern EFI_GUID gDasharoSystemFeaturesGuid;
 
 #endif
