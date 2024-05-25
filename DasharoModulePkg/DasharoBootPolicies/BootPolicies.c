@@ -59,7 +59,7 @@ InitializeBootPolicies (
   mSerialRedirectionPolicy.SerialRedirectionEnabled = FALSE;
 
   Status = GetVariable2 (
-             L"NetworkBoot",
+             DASHARO_VAR_NETWORK_BOOT,
              &gDasharoSystemFeaturesGuid,
              (VOID **) &EfiVar,
              &VarSize
@@ -82,7 +82,7 @@ InitializeBootPolicies (
   }
 
   Status = GetVariable2 (
-             L"UsbDriverStack",
+             DASHARO_VAR_USB_STACK,
              &gDasharoSystemFeaturesGuid,
              (VOID **) &EfiVar,
              &VarSize
@@ -106,7 +106,7 @@ InitializeBootPolicies (
   }
 
   Status = GetVariable2 (
-             L"UsbMassStorage",
+             DASHARO_VAR_USB_MASS_STORAGE,
              &gDasharoSystemFeaturesGuid,
              (VOID **) &EfiVar,
              &VarSize
@@ -130,7 +130,7 @@ InitializeBootPolicies (
   }
 
   Status = GetVariable2 (
-             L"Ps2Controller",
+             DASHARO_VAR_PS2_CONTROLLER,
              &gDasharoSystemFeaturesGuid,
              (VOID **) &EfiVar,
              &VarSize
@@ -153,7 +153,7 @@ InitializeBootPolicies (
 
   VarSize = sizeof(*IommuConfig);
   Status = GetVariable2 (
-           L"IommuConfig",
+           DASHARO_VAR_IOMMU_CONFIG,
            &gDasharoSystemFeaturesGuid,
            (VOID **) &IommuConfig,
            &VarSize
@@ -183,7 +183,7 @@ InitializeBootPolicies (
 
   VarSize = sizeof(BOOLEAN);
   Status = GetVariable2 (
-             L"SerialRedirection",
+             DASHARO_VAR_SERIAL_REDIRECTION,
              &gDasharoSystemFeaturesGuid,
              (VOID **) &EfiVar,
              &VarSize
@@ -199,7 +199,7 @@ InitializeBootPolicies (
   if (FixedPcdGetBool (PcdHave2ndUart)) {
     VarSize = sizeof(BOOLEAN);
     Status = GetVariable2 (
-               L"SerialRedirection2",
+               DASHARO_VAR_SERIAL_REDIRECTION2,
                &gDasharoSystemFeaturesGuid,
                (VOID **) &EfiVar,
                &VarSize
