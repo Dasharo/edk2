@@ -25,4 +25,17 @@ DasharoGetVariableDefault (
   CHAR16  *VarName
   );
 
+/**
+  Query attributes of a specified variable.
+
+  @param VarName  Name of the variable.
+
+  @retval EFI variable attributes (the value is sensible for unknown ones).
+**/
+UINT32
+EFIAPI
+DasharoGetVariableAttributes (
+  CHAR16  *VarName
+  );
+
 #endif
