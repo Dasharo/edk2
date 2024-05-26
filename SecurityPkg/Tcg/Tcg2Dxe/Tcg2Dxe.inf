@@ -45,6 +45,7 @@
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
   CryptoPkg/CryptoPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -64,6 +65,7 @@
   ReportStatusCodeLib
   Tcg2PhysicalPresenceLib
   PeCoffLib
+  DasharoVariablesLib
 
 [Guids]
   ## SOMETIMES_CONSUMES     ## Variable:L"SecureBoot"

@@ -233,6 +233,8 @@
 !endif
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
 
+  DasharoVariablesLib|DasharoModulePkg/Library/DasharoVariablesLib/DasharoVariablesLib.inf
+
 
   #
   # Network libraries
