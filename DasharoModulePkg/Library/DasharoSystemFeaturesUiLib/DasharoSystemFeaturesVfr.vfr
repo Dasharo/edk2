@@ -243,7 +243,7 @@ formset
                questionid = WATCHDOG_ENABLE_QUESTION_ID,
                prompt  = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
                help    = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
-               flags   = RESET_REQUIRED,
+               flags   = RESET_REQUIRED | INTERACTIVE,
       endcheckbox;
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
