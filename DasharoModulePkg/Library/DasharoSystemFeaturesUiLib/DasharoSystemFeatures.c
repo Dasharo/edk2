@@ -433,299 +433,52 @@ DasharoSystemFeaturesRouteConfig (
       );
   ASSERT_EFI_ERROR (Status);
 
-  if (Private->DasharoFeaturesData.LockBios != DasharoFeaturesData.LockBios) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_LOCK_BIOS,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.LockBios),
-        &DasharoFeaturesData.LockBios
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
+  // Can use CompareMem() on structures instead of a per-field comparison as
+  // long as they are packed.
+#define STORE_VAR(var, field) do {                               \
+    if (CompareMem (&Private->DasharoFeaturesData.field,         \
+                    &DasharoFeaturesData.field,                  \
+                    sizeof (DasharoFeaturesData.field)) != 0) {  \
+      Status = gRT->SetVariable (                                \
+          (var),                                                 \
+          &gDasharoSystemFeaturesGuid,                           \
+          DasharoGetVariableAttributes (var),                    \
+          sizeof (DasharoFeaturesData.field),                    \
+          &DasharoFeaturesData.field                             \
+          );                                                     \
+      if (EFI_ERROR (Status)) {                                  \
+        return Status;                                           \
+      }                                                          \
+    }                                                            \
+  } while (FALSE)
 
-  if (Private->DasharoFeaturesData.SmmBwp != DasharoFeaturesData.SmmBwp) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_SMM_BWP,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.SmmBwp),
-        &DasharoFeaturesData.SmmBwp
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
+  STORE_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
+  STORE_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
+  STORE_VAR (DASHARO_VAR_CPU_MAX_TEMPERATURE, CpuMaxTemperature);
+  STORE_VAR (DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD, CpuMinThrottlingThreshold);
+  STORE_VAR (DASHARO_VAR_CPU_THROTTLING_THRESHOLD, CpuThrottlingThreshold);
+  STORE_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
+  STORE_VAR (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt);
+  STORE_VAR (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption);
+  STORE_VAR (DASHARO_VAR_IOMMU_CONFIG, IommuConfig);
+  STORE_VAR (DASHARO_VAR_LOCK_BIOS, LockBios);
+  STORE_VAR (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile);
+  STORE_VAR (DASHARO_VAR_ME_MODE, MeMode);
+  STORE_VAR (DASHARO_VAR_NETWORK_BOOT, NetworkBoot);
+  STORE_VAR (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution);
+  STORE_VAR (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState);
+  STORE_VAR (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller);
+  STORE_VAR (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled);
+  STORE_VAR (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection);
+  STORE_VAR (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection);
+  STORE_VAR (DASHARO_VAR_SLEEP_TYPE, SleepType);
+  STORE_VAR (DASHARO_VAR_SMM_BWP, SmmBwp);
+  STORE_VAR (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage);
+  STORE_VAR (DASHARO_VAR_USB_STACK, UsbStack);
+  STORE_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
+  STORE_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
 
-  if (Private->DasharoFeaturesData.NetworkBoot != DasharoFeaturesData.NetworkBoot) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_NETWORK_BOOT,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.NetworkBoot),
-        &DasharoFeaturesData.NetworkBoot
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.UsbStack != DasharoFeaturesData.UsbStack) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_USB_STACK,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.UsbStack),
-        &DasharoFeaturesData.UsbStack
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.UsbMassStorage != DasharoFeaturesData.UsbMassStorage) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_USB_MASS_STORAGE,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.UsbMassStorage),
-        &DasharoFeaturesData.UsbMassStorage
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.MeMode != DasharoFeaturesData.MeMode) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_ME_MODE,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.MeMode),
-        &DasharoFeaturesData.MeMode
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.Ps2Controller != DasharoFeaturesData.Ps2Controller) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_PS2_CONTROLLER,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.Ps2Controller),
-        &DasharoFeaturesData.Ps2Controller
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.FanCurveOption != DasharoFeaturesData.FanCurveOption) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_FAN_CURVE_OPTION,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.FanCurveOption),
-        &DasharoFeaturesData.FanCurveOption
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.BootManagerEnabled != DasharoFeaturesData.BootManagerEnabled) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_BOOT_MANAGER_ENABLED,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.BootManagerEnabled),
-        &DasharoFeaturesData.BootManagerEnabled
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.WatchdogConfig.WatchdogEnable !=
-        DasharoFeaturesData.WatchdogConfig.WatchdogEnable ||
-      Private->DasharoFeaturesData.WatchdogConfig.WatchdogTimeout !=
-        DasharoFeaturesData.WatchdogConfig.WatchdogTimeout) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_WATCHDOG,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.WatchdogConfig),
-        &DasharoFeaturesData.WatchdogConfig
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.IommuConfig.IommuEnable != DasharoFeaturesData.IommuConfig.IommuEnable ||
-      Private->DasharoFeaturesData.IommuConfig.IommuHandoff != DasharoFeaturesData.IommuConfig.IommuHandoff) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_IOMMU_CONFIG,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.IommuConfig),
-        &DasharoFeaturesData.IommuConfig
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.SleepType != DasharoFeaturesData.SleepType) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_SLEEP_TYPE,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.SleepType),
-        &DasharoFeaturesData.SleepType
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.PowerFailureState != DasharoFeaturesData.PowerFailureState) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_POWER_FAILURE_STATE,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.PowerFailureState),
-        &DasharoFeaturesData.PowerFailureState
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.EnableWifiBt != DasharoFeaturesData.EnableWifiBt) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_ENABLE_WIFI_BT,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.EnableWifiBt),
-        &DasharoFeaturesData.EnableWifiBt
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.ResizeableBarsEnabled != DasharoFeaturesData.ResizeableBarsEnabled) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.ResizeableBarsEnabled),
-        &DasharoFeaturesData.ResizeableBarsEnabled
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.OptionRomExecution != DasharoFeaturesData.OptionRomExecution) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_OPTION_ROM_POLICY,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.OptionRomExecution),
-        &DasharoFeaturesData.OptionRomExecution
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if(Private->DasharoFeaturesData.EnableCamera != DasharoFeaturesData.EnableCamera) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_ENABLE_CAMERA,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.EnableCamera),
-        &DasharoFeaturesData.EnableCamera
-        );
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.BatteryConfig.StartThreshold !=
-        DasharoFeaturesData.BatteryConfig.StartThreshold ||
-      Private->DasharoFeaturesData.BatteryConfig.StopThreshold !=
-        DasharoFeaturesData.BatteryConfig.StopThreshold) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_BATTERY_CONFIG,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.BatteryConfig),
-        &DasharoFeaturesData.BatteryConfig
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.MemoryProfile != DasharoFeaturesData.MemoryProfile) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_MEMORY_PROFILE,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.MemoryProfile),
-        &DasharoFeaturesData.MemoryProfile
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.SerialPortRedirection != DasharoFeaturesData.SerialPortRedirection) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_SERIAL_REDIRECTION,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.SerialPortRedirection),
-        &DasharoFeaturesData.SerialPortRedirection
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.SerialPort2Redirection != DasharoFeaturesData.SerialPort2Redirection) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_SERIAL_REDIRECTION2,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.SerialPort2Redirection),
-        &DasharoFeaturesData.SerialPort2Redirection
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
-
-  if (Private->DasharoFeaturesData.CpuThrottlingThreshold !=
-        DasharoFeaturesData.CpuThrottlingThreshold) {
-    Status = gRT->SetVariable (
-        DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (DasharoFeaturesData.CpuThrottlingThreshold),
-        &DasharoFeaturesData.CpuThrottlingThreshold
-        );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-  }
+#undef STORE_VAR
 
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
