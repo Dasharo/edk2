@@ -28,15 +28,19 @@
 
 [Packages]
   DasharoModulePkg/DasharoModulePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   DebugLib
+  TpmMeasurementLib
   PcdLib
+  UefiLib
 
 [Guids]
   gDasharoSystemFeaturesGuid           ### CONSUMES
+  gApuConfigurationFormsetGuid         ### SOMETIMES CONSUMES
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature

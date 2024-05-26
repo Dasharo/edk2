@@ -11,9 +11,18 @@
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
+#include <Library/MemoryAllocationLib.h>
+#include <Library/TpmMeasurementLib.h>
+#include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <DasharoOptions.h>
+
+// PCR number for Dasharo variables.
+#define DASHARO_VAR_PCR  1
+
+// Event type for Dasharo variables.
+#define EV_DASHARO_VAR  0x00DA0000
 
 // Description of a single variable.
 typedef struct {
@@ -262,6 +271,216 @@ InitVariable (
     Status = ResetVariable (VarName);
     ASSERT_EFI_ERROR (Status);
   }
+}
+
+/**
+  Measure a single variable into DASHARO_VAR_PCR with EV_DASHARO_VAR event type.
+
+  @param VarName  Name of the variable.
+  @param Vendor   Namespace of the variable.
+
+  @retval EFI_SUCCESS  If the variable was read and measured without errors.
+  @retval EFI_OUT_OF_RESOURCES  On memory allocation failure.
+**/
+STATIC
+EFI_STATUS
+MeasureVariable (
+  CHAR16    *VarName,
+  EFI_GUID  *Vendor
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       PrefixSize;
+  VOID        *VarData;
+  UINTN       VarSize;
+  CHAR8       *EventData;
+
+  DEBUG ((EFI_D_VERBOSE, "%a(): %g:%s.\r\n", __FUNCTION__, Vendor, VarName));
+
+  PrefixSize = StrLen (VarName) + 1;
+
+  Status = GetVariable2 (VarName, Vendor, &VarData, &VarSize);
+  ASSERT_EFI_ERROR (Status);
+
+  EventData = AllocatePool (PrefixSize + VarSize);
+  if (EventData == NULL) {
+    FreePool (VarData);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  UnicodeStrToAsciiStrS (VarName, EventData, PrefixSize);
+  CopyMem (EventData + PrefixSize, VarData, VarSize);
+
+  Status = TpmMeasureAndLogData (
+      DASHARO_VAR_PCR,
+      EV_DASHARO_VAR,
+      EventData,
+      PrefixSize + VarSize,
+      VarData,
+      VarSize
+      );
+
+  FreePool (EventData);
+  FreePool (VarData);
+
+  return Status;
+}
+
+/**
+  A comparison function for sorting an array of variable names.
+
+  @param Buffer1  Pointer to pointer of the first variable name.
+  @param Buffer2  Pointer to pointer of the second variable name.
+
+  @retval <0  The first variable name is less than the second one.
+  @retval =0  The names are equal.
+  @retval >0  The first variable name is greater than the second one.
+**/
+STATIC
+INTN
+EFIAPI
+CompareVariableNames (
+  IN CONST VOID  *Buffer1,
+  IN CONST VOID  *Buffer2
+  )
+{
+  return StrCmp (*(CONST CHAR16 **) Buffer1, *(CONST CHAR16 **) Buffer2);
+}
+
+/**
+  Measures single all existing variables with the specified GUID.
+
+  @param Vendor   Namespace of the variable.
+
+  @retval EFI_SUCCESS  If the variable was read and measured without errors.
+**/
+STATIC
+EFI_STATUS
+MeasureVariables (
+  EFI_GUID  *Vendor
+  )
+{
+  EFI_STATUS  Status;
+  CHAR16      *Name;
+  CHAR16      *NewBuf;
+  UINTN       MaxNameSize;
+  UINTN       NameSize;
+  EFI_GUID    Guid;
+  CHAR16      **Names;
+  UINTN       NameCount;
+  CHAR16      SortBuf;
+  UINTN       MaxNameCount;
+  UINTN       Index;
+
+  MaxNameSize = 32 * sizeof (CHAR16);
+  Name = AllocateZeroPool (MaxNameSize);
+  if (Name == NULL)
+    return EFI_OUT_OF_RESOURCES;
+
+  MaxNameCount = 32;
+  NameCount = 0;
+  Names = AllocatePool (MaxNameCount * sizeof (*Names));
+  if (Names == NULL) {
+    FreePool(Name);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  while (TRUE) {
+    NameSize = MaxNameSize;
+    Status = gRT->GetNextVariableName (&NameSize, Name, &Guid);
+    if (Status == EFI_BUFFER_TOO_SMALL) {
+      NewBuf = AllocatePool (NameSize);
+      if (NewBuf == NULL) {
+        Status = EFI_OUT_OF_RESOURCES;
+        break;
+      }
+
+      StrnCpyS (NewBuf, NameSize / sizeof (CHAR16), Name, MaxNameSize / sizeof (CHAR16));
+      FreePool (Name);
+
+      Name = NewBuf;
+      MaxNameSize = NameSize;
+
+      Status = gRT->GetNextVariableName (&NameSize, Name, &Guid);
+    }
+
+    if (Status == EFI_NOT_FOUND) {
+      Status = EFI_SUCCESS;
+      break;
+    }
+
+    if (EFI_ERROR (Status))
+      break;
+
+    if (!CompareGuid (&Guid, Vendor))
+      continue;
+
+    if (NameCount == MaxNameCount - 1) {
+      Names = ReallocatePool (
+          MaxNameCount * sizeof (*Names),
+          2 * MaxNameCount * sizeof (*Names),
+          Names
+          );
+      if (Names == NULL) {
+        Status = EFI_OUT_OF_RESOURCES;
+        break;
+      }
+
+      MaxNameCount *= 2;
+    }
+
+    Names[NameCount] = AllocateCopyPool (NameSize, Name);
+    if (Names[NameCount] == NULL) {
+      Status = EFI_OUT_OF_RESOURCES;
+      break;
+    }
+
+    NameCount++;
+  }
+
+  if (Status == EFI_SUCCESS) {
+    //
+    // Achieve predictable ordering of variables by sorting them by name within
+    // a particular vendor.
+    //
+    QuickSort (
+        Names,
+        NameCount,
+        sizeof (*Names),
+        CompareVariableNames,
+        &SortBuf
+        );
+
+    for (Index = 0; Index < NameCount; Index++) {
+      Status = MeasureVariable (Names[Index], Vendor);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_WARN, "%a(): Failed to measure variable: %g:%s.\n",
+                __FUNCTION__, Vendor, Name));
+      }
+    }
+  }
+
+  for (Index = 0; Index < NameCount; Index++)
+    FreePool (Names[Index]);
+
+  FreePool (Name);
+  FreePool (Names);
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+DasharoMeasureVariables (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+
+  Status = MeasureVariables (&gDasharoSystemFeaturesGuid);
+  if (Status == EFI_SUCCESS)
+    Status = MeasureVariables (&gApuConfigurationFormsetGuid);
+
+  return Status;
 }
 
 EFI_STATUS
