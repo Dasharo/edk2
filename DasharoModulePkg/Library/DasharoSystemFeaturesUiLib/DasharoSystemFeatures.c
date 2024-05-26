@@ -8,6 +8,8 @@ SPDX-License-Identifier: BSD-2-Clause
 
 #include "DasharoSystemFeatures.h"
 
+#include <Library/DasharoVariablesLib.h>
+
 #define PCH_OC_WDT_CTL				0x54
 #define   PCH_OC_WDT_CTL_EN			BIT14
 #define   PCH_OC_WDT_CTL_TOV_MASK		0x3FF
@@ -185,8 +187,6 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Have2ndUart = PcdGetBool (PcdHave2ndUart);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowCpuThrottlingThreshold= PcdGetBool (PcdShowCpuThrottlingThreshold);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature = FixedPcdGet8(PcdCpuMaxTemperature);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold = FixedPcdGet8(PcdCpuMaxTemperature) - 63;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
@@ -769,103 +769,43 @@ DasharoSystemFeaturesCallback (
   case EFI_BROWSER_ACTION_DEFAULT_STANDARD:
   case EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING:
     {
+      if (Value == NULL)
+        return EFI_INVALID_PARAMETER;
+
       switch (QuestionId) {
       case NETWORK_BOOT_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->b = PcdGetBool (PcdDefaultNetworkBootEnable);
-          break;
-        }
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_NETWORK_BOOT).Boolean;
+        break;
       case WATCHDOG_ENABLE_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->b = PcdGetBool (PcdOcWdtEnableDefault);
-          break;
-        }
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_WATCHDOG).Watchdog.WatchdogEnable;
+        break;
       case WATCHDOG_TIMEOUT_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u16 = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
-          break;
-        }
+        Value->u16 = DasharoGetVariableDefault (DASHARO_VAR_WATCHDOG).Watchdog.WatchdogTimeout;
+        break;
       case POWER_FAILURE_STATE_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u8 = FixedPcdGet8 (PcdDefaultPowerFailureState);
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_POWER_FAILURE_STATE).Boolean;
+        break;
       case OPTION_ROM_STATE_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u8 = PcdGetBool (PcdLoadOptionRoms) ? OPTION_ROM_POLICY_ENABLE_ALL
-                                                          : OPTION_ROM_POLICY_DISABLE_ALL;
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_OPTION_ROM_POLICY).Uint8;
+        break;
       case SERIAL_PORT_REDIR_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->b = PcdGetBool (PcdSerialRedirectionDefaultState);
-          break;
-        }
-        case SERIAL_PORT2_REDIR_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          if (PcdGetBool (PcdHave2ndUart))
-            Value->b = PcdGetBool (PcdSerialRedirection2DefaultState);
-          else
-            Value->b = FALSE;
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_SERIAL_REDIRECTION).Boolean;
+        break;
+      case SERIAL_PORT2_REDIR_QUESTION_ID:
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_SERIAL_REDIRECTION2).Boolean;
+        break;
       case BATTERY_START_THRESHOLD_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u8 = 95;
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_BATTERY_CONFIG).Battery.StartThreshold;
+        break;
       case BATTERY_STOP_THRESHOLD_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u8 = 98;
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_BATTERY_CONFIG).Battery.StopThreshold;
+        break;
       case INTEL_ME_MODE_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          Value->u8 = FixedPcdGet8(PcdIntelMeDefaultState);
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_ME_MODE).Uint8;
+        break;
       case SLEEP_TYPE_QUESTION_ID:
-        {
-          if (Value == NULL)
-            return EFI_INVALID_PARAMETER;
-
-          if (PcdGetBool (PcdSleepTypeDefaultS3))
-            Value->u8 = SLEEP_TYPE_S3;
-          else
-            Value->u8 = SLEEP_TYPE_S0IX;
-
-          break;
-        }
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_SLEEP_TYPE).Uint8;
+        break;
       default:
         Status = EFI_UNSUPPORTED;
         break;
