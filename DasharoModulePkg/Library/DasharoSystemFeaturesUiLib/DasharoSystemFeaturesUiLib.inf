@@ -47,6 +47,7 @@
   PrintLib
   HiiLib
   UefiHiiServicesLib
+  DasharoVariablesLib
 
 [Guids]
   gEfiHiiPlatformSetupFormsetGuid               ## CONSUMES ## GUID (Indicate the formset class guid to be displayed)
@@ -71,29 +72,20 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
-
-  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
