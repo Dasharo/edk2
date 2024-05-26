@@ -14,7 +14,7 @@
   FILE_GUID                      = F7C51973-0F61-4955-87D2-710FD578D161
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = DasharoVariablesLib|DXE_DRIVER
+  LIBRARY_CLASS                  = DasharoVariablesLib|DXE_DRIVER UEFI_APPLICATION
   CONSTRUCTOR                    = DasharoVariablesLibConstructor
 
 #
@@ -39,6 +39,7 @@
   gDasharoSystemFeaturesGuid           ### CONSUMES
 
 [Pcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
