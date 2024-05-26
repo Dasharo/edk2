@@ -186,6 +186,22 @@ DasharoGetVariableDefault (
   return VarInfo.Data;
 }
 
+UINT32
+EFIAPI
+DasharoGetVariableAttributes (
+  CHAR16  *VarName
+  )
+{
+  VAR_INFO  VarInfo;
+
+  VarInfo = GetVariableInfo (VarName);
+  if (VarInfo.Size == 0) {
+    DEBUG ((EFI_D_VERBOSE, "%a(): Failed to look up attributes of %s.\n", __FUNCTION__, VarName));
+  }
+
+  return VarInfo.Attributes;
+}
+
 /**
   Reset a single Dasharo EFI variable to its default value.
 
