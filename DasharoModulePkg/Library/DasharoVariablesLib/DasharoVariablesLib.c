@@ -6,6 +6,8 @@
 
 **/
 
+#include "Library/DasharoVariablesLib.h"
+
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
@@ -166,6 +168,22 @@ GetVariableInfo (
   Value.Attributes = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE | ExtraAttrs;
 
   return Value;
+}
+
+DASHARO_VAR_DATA
+EFIAPI
+DasharoGetVariableDefault (
+  CHAR16  *VarName
+  )
+{
+  VAR_INFO  VarInfo;
+
+  VarInfo = GetVariableInfo (VarName);
+  if (VarInfo.Size == 0) {
+    DEBUG ((EFI_D_VERBOSE, "%a(): Failed to look up default for %s.\n", __FUNCTION__, VarName));
+  }
+
+  return VarInfo.Data;
 }
 
 /**
