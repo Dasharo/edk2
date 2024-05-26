@@ -38,4 +38,18 @@ DasharoGetVariableAttributes (
   CHAR16  *VarName
   );
 
+/**
+  Measure EFI variables specific to Dasharo.
+
+  This function should be called before booting into an OS or a UEFI
+  application.
+
+  @retval RETURN_SUCCESS  Successfully measured all variables.
+**/
+EFI_STATUS
+EFIAPI
+DasharoMeasureVariables (
+  VOID
+  );
+
 #endif

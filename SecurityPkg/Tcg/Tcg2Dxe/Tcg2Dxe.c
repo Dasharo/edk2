@@ -45,6 +45,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/PerformanceLib.h>
 #include <Library/ReportStatusCodeLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
+#include <Library/DasharoVariablesLib.h>
 
 typedef struct {
   CHAR16      *VariableName;
@@ -2502,6 +2503,11 @@ OnReadyToBoot (
 
   PERF_FUNCTION_BEGIN ();
   if (mBootAttempts == 0) {
+    Status = DasharoMeasureVariables ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "Dasharo variables not Measured. Error: %r!\n", Status));
+    }
+
     //
     // Measure handoff tables.
     //
