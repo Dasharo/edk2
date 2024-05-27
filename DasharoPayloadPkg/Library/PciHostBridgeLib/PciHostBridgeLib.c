@@ -128,6 +128,33 @@ InitRootBridge (
   CopyMem (&RootBus->PMem, PMem, sizeof (*PMem));
   CopyMem (&RootBus->PMemAbove4G, PMemAbove4G, sizeof (*PMemAbove4G));
 
+  //
+  // Handle overlaps between Mem and PMem, Mem takes precedence
+  //
+  if (!(RootBus->Mem.Limit < RootBus->PMem.Base ||
+        RootBus->Mem.Base > RootBus->PMem.Limit)
+     ) {
+    DEBUG ((DEBUG_INFO, "%a: PMem overlaps with Mem, trimming PMem\n",
+            __FUNCTION__));
+    if (RootBus->Mem.Base <= RootBus->PMem.Base) {
+      RootBus->PMem.Base = RootBus->Mem.Limit + 1;
+    } else {
+      RootBus->PMem.Limit = RootBus->Mem.Base - 1;
+    }
+  }
+  if (!(RootBus->MemAbove4G.Limit < RootBus->PMemAbove4G.Base ||
+        RootBus->MemAbove4G.Base > RootBus->PMemAbove4G.Limit)
+     ) {
+    DEBUG ((DEBUG_INFO,
+            "%a: PMemAbove4G overlaps with MemAbove4G, trimming PMemAbove4G\n",
+            __FUNCTION__));
+    if (RootBus->MemAbove4G.Base <= RootBus->PMemAbove4G.Base) {
+      RootBus->PMemAbove4G.Base = RootBus->MemAbove4G.Limit + 1;
+    } else {
+      RootBus->PMemAbove4G.Limit = RootBus->MemAbove4G.Base - 1;
+    }
+  }
+
   RootBus->NoExtendedConfigSpace = FALSE;
 
   DevicePath = AllocateCopyPool (sizeof (mRootBridgeDevicePathTemplate),
