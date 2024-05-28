@@ -16,6 +16,7 @@
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
 #include <Guid/TtyTerm.h>
+#include <DasharoOptions.h>
 
 #include <Library/QemuFwCfgSimpleParserLib.h>
 #include <Library/PlatformBootManagerCommonLib.h>
@@ -2012,7 +2013,7 @@ PlatformBootManagerAfterConsole (
 
   VarSize = sizeof (NetBootEnabled);
   Status = gRT->GetVariable (
-      L"NetworkBoot",
+      DASHARO_VAR_NETWORK_BOOT,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
