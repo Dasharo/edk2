@@ -15,6 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
 #include <Coreboot.h>
+#include <DasharoOptions.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -651,7 +652,7 @@ PlatformBootManagerBeforeConsole (
 
   VarSize = sizeof (BootMenuEnable);
   Status = gRT->GetVariable (
-          L"BootManagerEnabled",
+          DASHARO_VAR_BOOT_MANAGER_ENABLED,
           &gDasharoSystemFeaturesGuid,
           NULL,
           &VarSize,
@@ -1101,7 +1102,7 @@ WarnIfFirmwareUpdateMode (
   VarSize = sizeof (FUMEnabled);
 
   Status = gRT->GetVariable (
-      L"FirmwareUpdateMode",
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
@@ -1116,7 +1117,7 @@ WarnIfFirmwareUpdateMode (
   // Remove variable to disable FUM on next boot
   //
   Status = gRT->SetVariable (
-      L"FirmwareUpdateMode",
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
       &gDasharoSystemFeaturesGuid,
       EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
       0,
@@ -1127,7 +1128,7 @@ WarnIfFirmwareUpdateMode (
   // Create volatile runtime variable so applications can detect FUM
   //
   Status = gRT->SetVariable (
-      L"FirmwareUpdateMode",
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
       &gDasharoSystemFeaturesGuid,
       EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
       VarSize,
@@ -1462,7 +1463,7 @@ SaveSMBIOSFields (
   while (!EFI_ERROR(Status)) {
     if (Record->Type == SMBIOS_TYPE_SYSTEM_INFORMATION) {
       Type1Record = (SMBIOS_TABLE_TYPE1 *) Record;
-      SaveSmBiosFieldToEfiVar((VOID *)&Type1Record->Uuid, sizeof(Type1Record->Uuid), L"Type1UUID");
+      SaveSmBiosFieldToEfiVar((VOID *)&Type1Record->Uuid, sizeof(Type1Record->Uuid), DASHARO_VAR_SMBIOS_UUID);
       GotType1 = TRUE;
     }
 
@@ -1480,7 +1481,7 @@ SaveSMBIOSFields (
       if ((StrIndex != 0) || (StrSize == 1))
         DEBUG((EFI_D_INFO, "SMBIOS Type2 Serial Number missing\n"));
       else
-        SaveSmBiosFieldToEfiVar((VOID *)OptionalStrStart, StrSize, L"Type2SN");
+        SaveSmBiosFieldToEfiVar((VOID *)OptionalStrStart, StrSize, DASHARO_VAR_SMBIOS_SN);
 
       GotType2 = TRUE;
     }
@@ -1575,7 +1576,7 @@ PlatformBootManagerAfterConsole (
 
   VarSize = sizeof (NetBootEnabled);
   Status = gRT->GetVariable (
-      L"NetworkBoot",
+      DASHARO_VAR_NETWORK_BOOT,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
@@ -1630,7 +1631,7 @@ PlatformBootManagerAfterConsole (
 
   VarSize = sizeof (BootMenuEnable);
   Status = gRT->GetVariable (
-          L"BootManagerEnabled",
+          DASHARO_VAR_BOOT_MANAGER_ENABLED,
           &gDasharoSystemFeaturesGuid,
           NULL,
           &VarSize,
