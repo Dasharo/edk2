@@ -409,6 +409,10 @@ GraphicsOutputDriverBindingStart (
               if (Resources->AddrRangeMin == GraphicsInfo->FrameBufferBase) {
                 FrameBufferBase = Resources->AddrRangeMin;
                 break;
+              } else if (Resources->AddrRangeMin <= GraphicsInfo->FrameBufferBase
+                      && Resources->AddrRangeMin + Resources->AddrLen >= GraphicsInfo->FrameBufferBase + GraphicsInfo->FrameBufferSize ) {
+                FrameBufferBase = GraphicsInfo->FrameBufferBase;
+                break;
               }
             } else {
               break;
