@@ -15,6 +15,7 @@
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
 #include <Guid/TtyTerm.h>
+#include <DasharoOptions.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -2077,7 +2078,7 @@ PlatformBootManagerAfterConsole (
 
   VarSize = sizeof (NetBootEnabled);
   Status = gRT->GetVariable (
-      L"NetworkBoot",
+      DASHARO_VAR_NETWORK_BOOT,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,

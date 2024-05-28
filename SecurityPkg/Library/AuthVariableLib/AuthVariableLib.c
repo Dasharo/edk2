@@ -17,6 +17,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "AuthServiceInternal.h"
+#include <DasharoOptions.h>
 
 ///
 /// Global database array for scratch
@@ -230,12 +231,12 @@ AuthVariableLibInitialize (
     }
   }
 
-  Status = AuthServiceInternalFindVariable (L"FirmwareUpdateMode", &gDasharoSystemFeaturesGuid,
+  Status = AuthServiceInternalFindVariable (DASHARO_VAR_FIRMWARE_UPDATE_MODE, &gDasharoSystemFeaturesGuid,
                                             (VOID **) &Data, &DataSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", L"FirmwareUpdateMode"));
+    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
   } else {
-    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", L"FirmwareUpdateMode"));
+    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
   }
 
   //
