@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/PeImage.h>
 #include <IndustryStandard/TcpaAcpi.h>
+#include <IndustryStandard/Tpm2Acpi.h>
 
 #include <Guid/GlobalVariable.h>
 #include <Guid/HobList.h>
@@ -20,6 +21,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/ImageAuthentication.h>
 #include <Guid/TpmInstance.h>
 
+#include <Protocol/AcpiTable.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/MpService.h>
 #include <Protocol/VariableWrite.h>
@@ -45,6 +47,40 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/ReportStatusCodeLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/DasharoVariablesLib.h>
+#include <Library/TpmMeasurementLib.h>
+
+#pragma pack(1)
+
+typedef struct {
+  EFI_ACPI_DESCRIPTION_HEADER Header;
+  // Flags field is replaced in version 4 and above
+  //    BIT0~15:  PlatformClass      This field is only valid for version 4 and above
+  //    BIT16~31: Reserved
+  UINT32                      Flags;
+  UINT64                      AddressOfControlArea;
+  UINT32                      StartMethod;
+  UINT8                       PlatformSpecificParameters[12];  // size up to 12
+  UINT32                      Laml;                          // Optional
+  UINT64                      Lasa;                          // Optional
+} EFI_TPM2_ACPI_TABLE_V4;
+
+EFI_TPM2_ACPI_TABLE_V4  mTpm2AcpiTemplate = {
+  {
+    EFI_ACPI_5_0_TRUSTED_COMPUTING_PLATFORM_2_TABLE_SIGNATURE,
+    sizeof (mTpm2AcpiTemplate),
+    EFI_TPM2_ACPI_TABLE_REVISION,
+    //
+    // Compiler initializes the remaining bytes to 0
+    // These fields should be filled in in production
+    //
+  },
+  0, // BIT0~15:  PlatformClass
+     // BIT16~31: Reserved
+  0, // Control Area
+  EFI_TPM2_ACPI_TABLE_START_METHOD_TIS, // StartMethod
+};
+
+#pragma pack()
 
 #define PERF_ID_TCG2_DXE  0x3120
 
@@ -2711,6 +2747,106 @@ InstallTcg2 (
 }
 
 /**
+  Publish TPM2 ACPI table
+
+  @retval   EFI_SUCCESS     The TPM2 ACPI table is published successfully.
+  @retval   Others          The TPM2 ACPI table is not published.
+
+**/
+EFI_STATUS
+PublishTpm2 (
+  VOID
+  )
+{
+  EFI_STATUS                     Status;
+  EFI_ACPI_TABLE_PROTOCOL        *AcpiTable;
+  UINTN                          TableKey;
+  UINT64                         OemTableId;
+  EFI_TPM2_ACPI_CONTROL_AREA     *ControlArea;
+  TPM2_PTP_INTERFACE_TYPE        InterfaceType;
+
+  //
+  // Measure to PCR[0] with event EV_POST_CODE ACPI DATA.
+  // The measurement has to be done before any update.
+  // Otherwise, the PCR record would be different after event log update
+  // or the PCD configuration change.
+  //
+  TpmMeasureAndLogData(
+    0,
+    EV_POST_CODE,
+    EV_POSTCODE_INFO_ACPI_DATA,
+    ACPI_DATA_LEN,
+    &mTpm2AcpiTemplate,
+    mTpm2AcpiTemplate.Header.Length
+    );
+
+  mTpm2AcpiTemplate.Header.Revision = PcdGet8(PcdTpm2AcpiTableRev);
+  DEBUG((DEBUG_INFO, "Tpm2 ACPI table revision is %d\n", mTpm2AcpiTemplate.Header.Revision));
+
+  //
+  // PlatformClass is only valid for version 4 and above
+  //    BIT0~15:  PlatformClass
+  //    BIT16~31: Reserved
+  //
+  if (mTpm2AcpiTemplate.Header.Revision >= EFI_TPM2_ACPI_TABLE_REVISION_4) {
+    mTpm2AcpiTemplate.Flags = (mTpm2AcpiTemplate.Flags & 0xFFFF0000) | PcdGet8(PcdTpmPlatformClass);
+    DEBUG((DEBUG_INFO, "Tpm2 ACPI table PlatformClass is %d\n", (mTpm2AcpiTemplate.Flags & 0x0000FFFF)));
+  }
+
+  mTpm2AcpiTemplate.Laml = PcdGet32(PcdTpm2AcpiTableLaml);
+  mTpm2AcpiTemplate.Lasa = PcdGet64(PcdTpm2AcpiTableLasa);
+  if ((mTpm2AcpiTemplate.Header.Revision < EFI_TPM2_ACPI_TABLE_REVISION_4) ||
+      (mTpm2AcpiTemplate.Laml == 0) || (mTpm2AcpiTemplate.Lasa == 0)) {
+    //
+    // If version is smaller than 4 or Laml/Lasa is not valid, rollback to original Length.
+    //
+    mTpm2AcpiTemplate.Header.Length = sizeof(EFI_TPM2_ACPI_TABLE);
+  }
+
+  InterfaceType = PcdGet8(PcdActiveTpmInterfaceType);
+  switch (InterfaceType) {
+  case Tpm2PtpInterfaceCrb:
+    mTpm2AcpiTemplate.StartMethod = EFI_TPM2_ACPI_TABLE_START_METHOD_COMMAND_RESPONSE_BUFFER_INTERFACE;
+    mTpm2AcpiTemplate.AddressOfControlArea = PcdGet64 (PcdTpmBaseAddress) + 0x40;
+    ControlArea = (EFI_TPM2_ACPI_CONTROL_AREA *)(UINTN)mTpm2AcpiTemplate.AddressOfControlArea;
+    ControlArea->CommandSize  = 0xF80;
+    ControlArea->ResponseSize = 0xF80;
+    ControlArea->Command      = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    ControlArea->Response     = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    break;
+  case Tpm2PtpInterfaceFifo:
+  case Tpm2PtpInterfaceTis:
+    break;
+  default:
+    DEBUG((EFI_D_ERROR, "TPM2 InterfaceType get error! %d\n", InterfaceType));
+    break;
+  }
+
+  CopyMem (mTpm2AcpiTemplate.Header.OemId, PcdGetPtr (PcdAcpiDefaultOemId), sizeof (mTpm2AcpiTemplate.Header.OemId));
+  OemTableId = PcdGet64 (PcdAcpiDefaultOemTableId);
+  CopyMem (&mTpm2AcpiTemplate.Header.OemTableId, &OemTableId, sizeof (UINT64));
+  mTpm2AcpiTemplate.Header.OemRevision      = PcdGet32 (PcdAcpiDefaultOemRevision);
+  mTpm2AcpiTemplate.Header.CreatorId        = PcdGet32 (PcdAcpiDefaultCreatorId);
+  mTpm2AcpiTemplate.Header.CreatorRevision  = PcdGet32 (PcdAcpiDefaultCreatorRevision);
+
+  //
+  // Construct ACPI table
+  //
+  Status = gBS->LocateProtocol (&gEfiAcpiTableProtocolGuid, NULL, (VOID **) &AcpiTable);
+  ASSERT_EFI_ERROR (Status);
+
+  Status = AcpiTable->InstallAcpiTable (
+                        AcpiTable,
+                        &mTpm2AcpiTemplate,
+                        mTpm2AcpiTemplate.Header.Length,
+                        &TableKey
+                        );
+  ASSERT_EFI_ERROR (Status);
+
+  return Status;
+}
+
+/**
   The driver's entry point. It publishes EFI Tcg2 Protocol.
 
   @param[in] ImageHandle  The firmware allocated handle for the EFI image.
@@ -2894,6 +3030,12 @@ DriverEntry (
   //
   Status = InstallTcg2 ();
   DEBUG ((DEBUG_INFO, "InstallTcg2 - %r\n", Status));
+
+  //
+  // Set TPM2 ACPI table
+  //
+  Status = PublishTpm2 ();
+  ASSERT_EFI_ERROR (Status);
 
   return Status;
 }
