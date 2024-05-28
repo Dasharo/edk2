@@ -96,7 +96,7 @@ ShouldLoadOptionRom (
 
   BufferSize = sizeof (OptionRomPolicy);
   Status = gRT->GetVariable (
-      L"OptionRomPolicy",
+      DASHARO_VAR_OPTION_ROM_POLICY,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &BufferSize,

@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/SerialPortLibVendor.h>
 #include <Guid/PcAnsi.h>
 #include <Guid/TtyTerm.h>
+#include <DasharoOptions.h>
 
 #define PCI_DEVICE_PATH_NODE(Func, Dev) \
   { \
@@ -248,7 +249,7 @@ RegisterUartConsole (
 
   VarSize = sizeof (UartEnabled);
   Status = gRT->GetVariable (
-      UartNumber == 1 ? L"SerialRedirection2" : L"SerialRedirection",
+      UartNumber == 1 ? DASHARO_VAR_SERIAL_REDIRECTION2 : DASHARO_VAR_SERIAL_REDIRECTION,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
@@ -340,7 +341,7 @@ PrepareLpcBridgeDevicePath (
 
     VarSize = sizeof (Ps2Enabled);
     Status = gRT->GetVariable (
-        L"Ps2Controller",
+        DASHARO_VAR_PS2_CONTROLLER,
         &gDasharoSystemFeaturesGuid,
         NULL,
         &VarSize,
@@ -454,7 +455,7 @@ PreparePciSerialDevicePath (
 
   VarSize = sizeof (PciSerialEnabled);
   Status = gRT->GetVariable (
-      L"SerialRedirection",
+      DASHARO_VAR_SERIAL_REDIRECTION,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
