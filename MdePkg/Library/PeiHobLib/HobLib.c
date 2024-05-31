@@ -42,7 +42,11 @@ GetHobList (
 
   Status = PeiServicesGetHobList (&HobList);
   ASSERT_EFI_ERROR (Status);
+  // Workaround for when AcpiTimerLibConstructor() is invoked before loading
+  // BlSupportPei.
+#if 0
   ASSERT (HobList != NULL);
+#endif
 
   return HobList;
 }
