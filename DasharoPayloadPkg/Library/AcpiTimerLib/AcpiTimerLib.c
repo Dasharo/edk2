@@ -38,6 +38,18 @@ AcpiTimerLibConstructor (
   EFI_HOB_GUID_TYPE  *GuidHob;
   ACPI_BOARD_INFO    *pAcpiBoardInfo;
 
+  if (GetHobList () == NULL) {
+    // When this library is used by PEI_CORE and HOBs are created by one of
+    // PEIMs (e.g., BlSupportPei) doing nothing is the best we can do.  An
+    // alternative is to crash in GetFirstGuidHob () because it assumes there
+    // is at least on HOB.
+    //
+    // This function will get called later by InternalAcpiGetTimerTick () until
+    // a successful initialization which practically means several times and
+    // a non-working timer doesn't cause an infinite loop at that point.
+    return EFI_SUCCESS;
+  }
+
   //
   // Find the acpi board information guid hob
   //
@@ -66,6 +78,10 @@ InternalAcpiGetTimerTick (
 {
   if (mPmTimerReg == 0) {
     AcpiTimerLibConstructor ();
+    if (mPmTimerReg == 0) {
+      // Must be too early, avoid IoRead32 () call below.
+      return 0;
+    }
   }
   return IoRead32 (mPmTimerReg);
 }
