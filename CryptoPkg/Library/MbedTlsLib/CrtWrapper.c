@@ -18,7 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 int
 my_snprintf (
   char        *str,
-  size_t      size,
+  long long   size,
   const char  *format,
   ...
   )
