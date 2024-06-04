@@ -266,7 +266,7 @@ formset
     goto FORMID_SECURE_BOOT_OPTION_FORM,
       prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
       help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
-      flags  = INTERACTIVE,
+      flags  = INTERACTIVE | RESET_REQUIRED,
       key    = KEY_VALUE_SAVE_AND_EXIT_KEK;
 
     goto FORMID_SECURE_BOOT_OPTION_FORM,
@@ -470,7 +470,7 @@ formset
     goto FORMID_SECURE_BOOT_OPTION_FORM,
          prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
          help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
-         flags  = INTERACTIVE,
+         flags  = INTERACTIVE | RESET_REQUIRED,
          key    = KEY_VALUE_SAVE_AND_EXIT_DB;
 
     goto FORMID_SECURE_BOOT_OPTION_FORM,
@@ -564,7 +564,7 @@ formset
     goto FORMID_SECURE_BOOT_OPTION_FORM,
          prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
          help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
-         flags  = INTERACTIVE,
+         flags  = INTERACTIVE | RESET_REQUIRED,
          key    = KEY_VALUE_SAVE_AND_EXIT_DBX;
 
     goto FORMID_SECURE_BOOT_OPTION_FORM,
@@ -609,7 +609,7 @@ formset
     goto FORMID_SECURE_BOOT_OPTION_FORM,
          prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
          help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
-         flags  = INTERACTIVE,
+         flags  = INTERACTIVE | RESET_REQUIRED,
          key    = KEY_VALUE_SAVE_AND_EXIT_DBT;
 
     goto FORMID_SECURE_BOOT_OPTION_FORM,
