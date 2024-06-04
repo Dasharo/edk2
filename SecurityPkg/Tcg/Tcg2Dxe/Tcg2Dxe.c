@@ -1046,13 +1046,37 @@ GetDigestListBinSize (
   return TotalSize;
 }
 
+STATIC VOID *
+FindHashInDigestListBin (
+  IN VOID        *DigestListBin,
+  TPMI_ALG_HASH  HashAlg
+  )
+{
+  UINTN          Index;
+  UINT32         Count;
+  TPMI_ALG_HASH  Alg;
+
+  Count = ReadUnaligned32 (DigestListBin);
+  DigestListBin = (UINT8 *)DigestListBin + sizeof(Count);
+  for (Index = 0; Index < Count; Index++) {
+    Alg = ReadUnaligned16 (DigestListBin);
+    DigestListBin = (UINT8 *)DigestListBin + sizeof(Alg);
+
+    if (Alg == HashAlg)
+      return DigestListBin;
+
+    DigestListBin = (UINT8 *)DigestListBin + GetHashSizeFromAlgo (Alg);
+  }
+
+  return NULL;
+}
+
 /**
   Copy TPML_DIGEST_VALUES compact binary into a buffer
 
   @param[in,out]    Buffer                  Buffer to hold copied TPML_DIGEST_VALUES compact binary.
   @param[in]        DigestListBin           TPML_DIGEST_VALUES compact binary buffer.
   @param[in]        HashAlgorithmMask       HASH bits corresponding to the desired digests to copy.
-  @param[out]       HashAlgorithmMaskCopied Pointer to HASH bits corresponding to the digests copied.
 
   @return The end of buffer to hold TPML_DIGEST_VALUES compact binary.
 **/
@@ -1060,41 +1084,64 @@ VOID *
 CopyDigestListBinToBuffer (
   IN OUT VOID  *Buffer,
   IN VOID      *DigestListBin,
-  IN UINT32    HashAlgorithmMask,
-  OUT UINT32   *HashAlgorithmMaskCopied
+  IN UINT32    HashAlgorithmMask
   )
 {
   UINTN          Index;
   UINT16         DigestSize;
-  UINT32         Count;
   TPMI_ALG_HASH  HashAlg;
   UINT32         DigestListCount;
   UINT32         *DigestListCountPtr;
+  TPMI_ALG_HASH HashAlgs[5];
+  VOID          *Digest;
+
+  HashAlgs[0] = TPM_ALG_SHA1;
+  HashAlgs[1] = TPM_ALG_SHA256;
+  HashAlgs[2] = TPM_ALG_SM3_256;
+  HashAlgs[3] = TPM_ALG_SHA384;
+  HashAlgs[4] = TPM_ALG_SHA512;
 
   DigestListCountPtr         = (UINT32 *)Buffer;
+  Buffer = (UINT8 *)Buffer + sizeof(UINT32);
+
   DigestListCount            = 0;
-  (*HashAlgorithmMaskCopied) = 0;
+  //
+  // Make sure output buffer conforms to HashAlgorithmMask.
+  //
+  // Copy digests from the entry if they are present, otherwise add missing
+  // digests filled as what's called "OneDigest" in TXT Software
+  // Development Guide (not really related, but alternatives are zeroes or
+  // 0xFFs, might as well use a value documented somewhere).
+  //
+  for (Index = 0; Index < ARRAY_SIZE (HashAlgs); Index++) {
+    HashAlg = HashAlgs[Index];
+    Digest = FindHashInDigestListBin (DigestListBin, HashAlg);
+    DigestSize = GetHashSizeFromAlgo (HashAlg);
 
-  Count         = ReadUnaligned32 (DigestListBin);
-  Buffer        = (UINT8 *)Buffer + sizeof (Count);
-  DigestListBin = (UINT8 *)DigestListBin + sizeof (Count);
-  for (Index = 0; Index < Count; Index++) {
-    HashAlg       = ReadUnaligned16 (DigestListBin);
-    DigestListBin = (UINT8 *)DigestListBin + sizeof (HashAlg);
-    DigestSize    = GetHashSizeFromAlgo (HashAlg);
-
-    if (IsHashAlgSupportedInHashAlgorithmMask (HashAlg, HashAlgorithmMask)) {
-      CopyMem (Buffer, &HashAlg, sizeof (HashAlg));
-      Buffer = (UINT8 *)Buffer + sizeof (HashAlg);
-      CopyMem (Buffer, DigestListBin, DigestSize);
-      Buffer = (UINT8 *)Buffer + DigestSize;
-      DigestListCount++;
-      (*HashAlgorithmMaskCopied) |= GetHashMaskFromAlgo (HashAlg);
-    } else {
-      DEBUG ((DEBUG_ERROR, "WARNING: CopyDigestListBinToBuffer Event log has HashAlg unsupported by PCR bank (0x%x)\n", HashAlg));
+    if (!(HashAlgorithmMask & GetHashMaskFromAlgo (HashAlg))) {
+      // Not active.
+      if (Digest != NULL)
+        DEBUG ((DEBUG_WARN, "%a(): Event log entry includes HashAlg (0x%x) unsupported by PCR bank\n",
+                __FUNCTION__, HashAlg));
+      continue;
     }
 
-    DigestListBin = (UINT8 *)DigestListBin + DigestSize;
+    CopyMem (Buffer, &HashAlg, sizeof(HashAlg));
+    Buffer = (UINT8 *)Buffer + sizeof(HashAlg);
+
+    if (Digest == NULL) {
+      // Missing, use "OneDigest".
+      ZeroMem (Buffer, DigestSize);
+      *(UINT8 *)Buffer = 1;
+      DEBUG ((DEBUG_WARN, "%a(): Event log entry is missing HashAlg (0x%x) supported by PCR bank\n",
+              __FUNCTION__, HashAlg));
+    } else {
+      CopyMem (Buffer, Digest, DigestSize);
+    }
+
+    Buffer = (UINT8 *)Buffer + DigestSize;
+
+    DigestListCount++;
   }
 
   WriteUnaligned32 (DigestListCountPtr, DigestListCount);
@@ -1554,12 +1601,10 @@ SetupEventLog (
   EFI_PHYSICAL_ADDRESS             Lasa;
   UINTN                            Index;
   VOID                             *DigestListBin;
-  TPML_DIGEST_VALUES               TempDigestListBin;
   UINT32                           DigestListBinSize;
   UINT8                            *Event;
   UINT32                           EventSize;
   UINT32                           *EventSizePtr;
-  UINT32                           HashAlgorithmMaskCopied;
   TCG_EfiSpecIDEventStruct         *TcgEfiSpecIdEventStruct;
   UINT8                            TempBuf[sizeof (TCG_EfiSpecIDEventStruct) + sizeof (UINT32) + (HASH_COUNT * sizeof (TCG_EfiSpecIdEventAlgorithmSize)) + sizeof (UINT8)];
   TCG_PCR_EVENT_HDR                SpecIdEvent;
@@ -1825,11 +1870,11 @@ SetupEventLog (
       while (!EFI_ERROR (Status) &&
              (GuidHob.Raw = GetNextGuidHob (mTcg2EventInfo[Index].EventGuid, GuidHob.Raw)) != NULL)
       {
-        TcgEvent = AllocateCopyPool (GET_GUID_HOB_DATA_SIZE (GuidHob.Guid), GET_GUID_HOB_DATA (GuidHob.Guid));
-        ASSERT (TcgEvent != NULL);
-        GuidHob.Raw = GET_NEXT_HOB (GuidHob);
         switch (mTcg2EventInfo[Index].LogFormat) {
           case EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2:
+            TcgEvent = AllocateCopyPool (GET_GUID_HOB_DATA_SIZE (GuidHob.Guid), GET_GUID_HOB_DATA (GuidHob.Guid));
+            ASSERT (TcgEvent != NULL);
+
             Status = TcgDxeLogEvent (
                        mTcg2EventInfo[Index].LogFormat,
                        TcgEvent,
@@ -1839,8 +1884,15 @@ SetupEventLog (
                        );
             break;
           case EFI_TCG2_EVENT_LOG_FORMAT_TCG_2:
-            DigestListBin     = (UINT8 *)TcgEvent + sizeof (TCG_PCRINDEX) + sizeof (TCG_EVENTTYPE);
+            //
+            // This is a storage for new header.
+            //
+            TcgEvent = AllocatePool (sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE) + sizeof(TPML_DIGEST_VALUES) + sizeof(UINT32));
+            ASSERT (TcgEvent != NULL);
+
+            DigestListBin = (UINT8 *)GET_GUID_HOB_DATA (GuidHob.Guid) + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE);
             DigestListBinSize = GetDigestListBinSize (DigestListBin);
+            CopyMem (TcgEvent, GET_GUID_HOB_DATA (GuidHob.Guid), sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE));
             //
             // Save event size.
             //
@@ -1849,27 +1901,19 @@ SetupEventLog (
             //
             // Filter inactive digest in the event2 log from PEI HOB.
             //
-            CopyMem (&TempDigestListBin, DigestListBin, GetDigestListBinSize (DigestListBin));
             EventSizePtr = CopyDigestListBinToBuffer (
+                             TcgEvent + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE),
                              DigestListBin,
-                             &TempDigestListBin,
-                             mTcgDxeData.BsCap.ActivePcrBanks,
-                             &HashAlgorithmMaskCopied
+                             mTcgDxeData.BsCap.ActivePcrBanks
                              );
-            if (HashAlgorithmMaskCopied != mTcgDxeData.BsCap.ActivePcrBanks) {
-              DEBUG ((
-                DEBUG_ERROR,
-                "ERROR: The event2 log includes digest hash mask 0x%x, but required digest hash mask is 0x%x\n",
-                HashAlgorithmMaskCopied,
-                mTcgDxeData.BsCap.ActivePcrBanks
-                ));
-            }
 
             //
             // Restore event size.
             //
             CopyMem (EventSizePtr, &EventSize, sizeof (UINT32));
-            DigestListBinSize = GetDigestListBinSize (DigestListBin);
+            DigestListBinSize = GetDigestListBinSize (TcgEvent + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE));
+
+            DEBUG ((DEBUG_INFO, "%a: DigestListBinSize = %d\n", __FUNCTION__, DigestListBinSize));
 
             Status = TcgDxeLogEvent (
                        mTcg2EventInfo[Index].LogFormat,
@@ -1882,6 +1926,7 @@ SetupEventLog (
         }
 
         FreePool (TcgEvent);
+        GuidHob.Raw = GET_NEXT_HOB (GuidHob);
       }
     }
   }
@@ -2783,13 +2828,10 @@ DriverEntry (
     }
   }
 
-  mTcgDxeData.BsCap.SupportedEventLogs = EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2 | EFI_TCG2_EVENT_LOG_FORMAT_TCG_2;
-  if ((mTcgDxeData.BsCap.ActivePcrBanks & EFI_TCG2_BOOT_HASH_ALG_SHA1) == 0) {
-    //
-    // No need to expose TCG1.2 event log if SHA1 bank does not exist.
-    //
-    mTcgDxeData.BsCap.SupportedEventLogs &= ~EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2;
-  }
+  //
+  // Only expose TCG2 event log for TPM2.
+  //
+  mTcgDxeData.BsCap.SupportedEventLogs = EFI_TCG2_EVENT_LOG_FORMAT_TCG_2;
 
   DEBUG ((DEBUG_INFO, "Tcg2.SupportedEventLogs - 0x%08x\n", mTcgDxeData.BsCap.SupportedEventLogs));
   DEBUG ((DEBUG_INFO, "Tcg2.HashAlgorithmBitmap - 0x%08x\n", mTcgDxeData.BsCap.HashAlgorithmBitmap));

@@ -34,6 +34,7 @@
   EmbeddedPkg/EmbeddedPkg.dec
   IntelFsp2Pkg/IntelFsp2Pkg.dec
   IntelFsp2WrapperPkg/IntelFsp2WrapperPkg.dec
+  SecurityPkg/SecurityPkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
 
@@ -64,6 +65,8 @@
   gEfiVariableGuid
   gEfiAuthenticatedVariableGuid
   gEdkiiNvVarStoreFormattedGuid
+  gTcgEventEntryHobGuid
+  gTcgEvent2EntryHobGuid
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid

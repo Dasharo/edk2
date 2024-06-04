@@ -240,6 +240,42 @@ FindCbTag (
 
 
 /**
+  Find location and size of a coreboot record of the given type.
+
+  @param  Tag               The tag id to be found
+  @param  Size              Optionally (if not NULL) set to size of the tag
+
+  @retval NULL              The Tag is not found.
+  @retval Others            The pointer to the record found.
+
+**/
+STATIC
+struct cb_cbmem_entry *
+FindCbEntry (
+  IN  UINT32  Id
+  )
+{
+  struct cb_header       *Header;
+  struct cb_cbmem_entry  *Entry;
+  UINT8                  *TmpPtr;
+  UINTN                  Idx;
+
+  Header = (struct cb_header *) GetParameterBase ();
+
+  TmpPtr = (UINT8 *)Header + Header->header_bytes;
+  for (Idx = 0; Idx < Header->table_entries; Idx++) {
+    Entry = (struct cb_cbmem_entry *)TmpPtr;
+    if (Entry->tag == CB_TAG_CBMEM_ENTRY && Entry->id == Id) {
+      return Entry;
+    }
+    TmpPtr += Entry->size;
+  }
+
+  return NULL;
+}
+
+
+/**
   Find the given table with TableId from the given coreboot memory Root.
 
   @param  Root               The coreboot memory table to be searched in
@@ -690,6 +726,49 @@ ParseTPMPPIInfo (
     PPIInfo->PpiVersion = UEFIPAYLOAD_TPM_PPI_VERSION_1_30;
   }
 
+  return RETURN_SUCCESS;
+}
+
+/**
+  Find TPM log in TCG format if any.
+
+  The caller is expected to parse the first event of the log to determine its
+  version.
+
+  @param  Base          Pointer the start of the log
+  @param  Size          Size of the log
+
+  @retval RETURN_SUCCESS     Successfully found TPM log.
+  @retval RETURN_NOT_FOUND   Failed to find TPM log.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseTPMLog (
+  OUT VOID   **Base,
+  OUT UINTN  *Size
+  )
+{
+  struct cb_cbmem_entry  *Entry;
+
+  //
+  // TPM2 format is the more capable "agile" format, so start with it like some
+  // other parts of EDK test for TPM2 before testing for TPM1.
+  //
+  // Could return log version, but the caller should probably validate that the
+  // buffer isn't empty and checking for correct Spec ID Event is a good way of
+  // going about it.
+  //
+
+  Entry = FindCbEntry (CBMEM_ID_TPM2_TCG_LOG);
+  if (Entry == NULL)
+    Entry = FindCbEntry (CBMEM_ID_TCPA_TCG_LOG);
+
+  if (Entry == NULL)
+    return RETURN_NOT_FOUND;
+
+  *Base = (void *)(UINTN) Entry->address;
+  *Size = Entry->entry_size;
   return RETURN_SUCCESS;
 }
 

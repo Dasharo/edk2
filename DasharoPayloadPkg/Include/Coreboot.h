@@ -264,6 +264,7 @@ struct cb_smmstorev2 {
 	UINT8 unused[3];	/* Set to zero */
 };
 
+#define CB_TAG_CBMEM_ENTRY      0x0031
 #define CB_TAG_VBOOT_WORKBUF    0x0034
 
 struct cb_cbmem_entry {
@@ -761,5 +762,68 @@ struct cb_range {
 	UINT64 range_start;
 	UINT32 range_size;
 } __attribute__((packed));
+
+#define CBMEM_ID_TCPA_TCG_LOG 0x54445041 /* TPM log per TPM 1.2 specification */
+#define CBMEM_ID_TPM2_TCG_LOG 0x54504d32 /* TPM log per TPM 2.0 specification */
+
+#define TCPA_SPEC_ID_EVENT_SIGNATURE    "Spec ID Event00"
+#define TCG_EFI_SPEC_ID_EVENT_SIGNATURE "Spec ID Event03"
+
+struct tcpa_log_entry {
+  UINT32 pcr;
+  UINT32 event_type;
+  UINT8 digest[20];
+  UINT32 event_data_size;
+  UINT8 event[0];
+} __attribute__ ((packed));
+
+struct tcpa_spec_entry {
+  struct tcpa_log_entry entry;
+  UINT8 signature[16];
+  UINT32 platform_class;
+  UINT8 spec_version_minor;
+  UINT8 spec_version_major;
+  UINT8 spec_errata;
+  UINT8 reserved;
+  UINT8 vendor_info_size;
+  UINT8 vendor_info[0];
+} __attribute__ ((packed));
+
+#define TPM2_ALG_SHA1    0x0004
+#define TPM2_ALG_SHA256  0x000B
+#define TPM2_ALG_SHA384  0x000C
+#define TPM2_ALG_SHA512  0x000D
+#define TPM2_ALG_SM3_256 0x0012
+
+struct tcg_pcr_event2_header {
+  UINT32 pcr_index;
+  UINT32 event_type;
+  UINT32 digest_count;
+  UINT8 digests[0];
+  /* UINT32 event_size; */
+  /* UINT8 event[0]; */
+} __attribute__ ((packed));
+
+struct tpm_digest_sizes {
+  UINT16 alg_id;
+  UINT16 digest_size;
+} __attribute__ ((packed));
+
+struct tcg_efi_spec_id_event {
+  UINT32 pcr_index;
+  UINT32 event_type;
+  UINT8 digest[20];
+  UINT32 event_size;
+  UINT8 signature[16];
+  UINT32 platform_class;
+  UINT8 spec_version_minor;
+  UINT8 spec_version_major;
+  UINT8 spec_errata;
+  UINT8 uintn_size;
+  UINT32 num_of_algorithms;
+  struct tpm_digest_sizes digest_sizes[0]; /* variable number of members */
+  /* UINT8 vendor_info_size; */
+  /* UINT8 vendor_info[vendor_info_size]; */
+} __attribute__ ((packed));
 
 #endif // _COREBOOT_PEI_H_INCLUDED_

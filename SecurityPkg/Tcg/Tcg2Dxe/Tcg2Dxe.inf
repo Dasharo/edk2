@@ -66,6 +66,7 @@
   Tcg2PhysicalPresenceLib
   PeCoffLib
   DasharoVariablesLib
+  TpmMeasurementLib
 
 [Guids]
   ## SOMETIMES_CONSUMES     ## Variable:L"SecureBoot"
