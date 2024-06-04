@@ -154,6 +154,26 @@ ParseTPMPPIInfo (
   );
 
 /**
+  Find TPM log in TCG format if any.
+
+  The caller is expected to parse the first event of the log to determine its
+  version.
+
+  @param  Base          Pointer the start of the log
+  @param  Size          Size of the log
+
+  @retval RETURN_SUCCESS     Successfully found TPM log.
+  @retval RETURN_NOT_FOUND   Failed to find TPM log.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseTPMLog (
+  OUT VOID   **Base,
+  OUT UINTN  *Size
+  );
+
+/**
   Acquire Vboot recovery information from coreboot
 
   @param  RecoveryCode        Recovery reason code, zero if not in recovery mode.
