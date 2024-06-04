@@ -8,8 +8,8 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = DasharoBootPolicies
-  FILE_GUID                      = ca90493e-1a22-4d09-9c78-3894507eb646
+  BASE_NAME                      = DasharoBootPoliciesVTd
+  FILE_GUID                      = ca90493f-1a22-4d09-9c78-3894507eb646
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = InitializeBootPolicies
@@ -26,6 +26,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
+  IntelSiliconPkg/IntelSiliconPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -39,18 +40,8 @@
 [Guids]
   gDasharoSystemFeaturesGuid           ### CONSUMES
 
-[Protocols]
-  gDasharoNetworkBootPolicyGuid        ### PROVIDES
-  gDasharoUsbDriverPolicyGuid          ### PROVIDES
-  gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
-  gDasharoPs2ControllerPolicyGuid      ### PROVIDES
-  gDasharoSerialRedirectionPolicyGuid  ### PROVIDES
-
 [Pcd]
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
-  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
 
 [Depex]
   gEfiVariableArchProtocolGuid
