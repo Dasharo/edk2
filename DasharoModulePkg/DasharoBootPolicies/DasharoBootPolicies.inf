@@ -26,7 +26,6 @@
 [Packages]
   MdePkg/MdePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
-  IntelSiliconPkg/IntelSiliconPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -52,8 +51,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
-  gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask
-
 
 [Depex]
   gEfiVariableArchProtocolGuid
