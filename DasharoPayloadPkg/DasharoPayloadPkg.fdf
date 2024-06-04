@@ -310,6 +310,10 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 
 INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
+!if $(USE_EDK2_PLATFORMS) == TRUE
+INF DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
+!endif
+
 #
 # Random Number Generator
 #

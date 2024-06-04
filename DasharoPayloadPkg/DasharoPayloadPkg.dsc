@@ -578,7 +578,9 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|0
+!if $(USE_EDK2_PLATFORMS) == TRUE
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
+!endif
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
@@ -840,6 +842,10 @@
 !endif
 
   DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
+
+!if $(USE_EDK2_PLATFORMS) == TRUE
+  DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
+!endif
 
   #
   # Random Number Generator
