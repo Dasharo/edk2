@@ -2661,7 +2661,7 @@ UpdateDeletePage (
         0,
         GuidID,
         Help,
-        EFI_IFR_FLAG_CALLBACK,
+        EFI_IFR_FLAG_CALLBACK | EFI_IFR_FLAG_RESET_REQUIRED,
         0,
         NULL
         );
@@ -3756,7 +3756,7 @@ LoadSignatureList (
     DstFormId,
     STRING_TOKEN (STR_SECURE_BOOT_DELETE_ALL_LIST),
     STRING_TOKEN (STR_SECURE_BOOT_DELETE_ALL_LIST),
-    EFI_IFR_FLAG_CALLBACK,
+    EFI_IFR_FLAG_CALLBACK | EFI_IFR_FLAG_RESET_REQUIRED,
     KEY_SECURE_BOOT_DELETE_ALL_LIST
     );
 
@@ -3835,7 +3835,7 @@ LoadSignatureList (
       SECUREBOOT_DELETE_SIGNATURE_DATA_FORM,
       HiiSetString (PrivateData->HiiHandle, 0, NameBuffer, NULL),
       HiiSetString (PrivateData->HiiHandle, 0, HelpBuffer, NULL),
-      EFI_IFR_FLAG_CALLBACK,
+      EFI_IFR_FLAG_CALLBACK | EFI_IFR_FLAG_RESET_REQUIRED,
       QuestionIdBase + Index++
       );
 
