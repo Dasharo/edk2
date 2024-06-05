@@ -39,8 +39,6 @@ STATIC CHAR16 mMemoryProfileEfiVar[] = L"MemoryProfile";
 STATIC CHAR16 mSerialRedirectionEfiVar[] = L"SerialRedirection";
 STATIC CHAR16 mSerialRedirection2EfiVar[] = L"SerialRedirection2";
 STATIC CHAR16 mCpuThrottlingThresholdEfiVar[] = L"CpuThrottlingThreshold";
-STATIC CHAR16 mCpuMaxTemperatureEfiVar[] = L"CpuMaxTemperature";
-STATIC CHAR16 mCpuMinThrottlingThresholdEfiVar[] = L"CpuMinThrottlingThreshold";
 
 STATIC BOOLEAN   mUsbStackDefault = TRUE;
 STATIC BOOLEAN   mUsbMassStorageDefault = TRUE;
@@ -247,6 +245,8 @@ DasharoSystemFeaturesUiLibConstructor (
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Have2ndUart = PcdGetBool (PcdHave2ndUart);
   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowCpuThrottlingThreshold= PcdGetBool (PcdShowCpuThrottlingThreshold);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature = FixedPcdGet8(PcdCpuMaxTemperature);
+  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold = FixedPcdGet8(PcdCpuMaxTemperature) - 63;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
@@ -765,48 +765,6 @@ DasharoSystemFeaturesUiLibConstructor (
         EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
         sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold),
         &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuThrottlingThreshold
-        );
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature);
-  Status = gRT->GetVariable (
-      mCpuMaxTemperatureEfiVar,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature
-  );
-
-  if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature = FixedPcdGet8(PcdCpuMaxTemperature);
-    Status = gRT->SetVariable (
-        mCpuMaxTemperatureEfiVar,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature),
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMaxTemperature
-        );
-    ASSERT_EFI_ERROR (Status);
-  }
-
-  BufferSize = sizeof(mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold);
-  Status = gRT->GetVariable (
-      mCpuMinThrottlingThresholdEfiVar,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &BufferSize,
-      &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold
-  );
-
-  if (Status == EFI_NOT_FOUND) {
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold = FixedPcdGet8(PcdCpuMaxTemperature) - 63;
-    Status = gRT->SetVariable (
-        mCpuMinThrottlingThresholdEfiVar,
-        &gDasharoSystemFeaturesGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold),
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.CpuMinThrottlingThreshold
         );
     ASSERT_EFI_ERROR (Status);
   }
