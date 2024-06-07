@@ -989,7 +989,7 @@ WrapPkcs7Data (
     // Wrap PKCS#7 signeddata to a ContentInfo structure - add a header in 19 bytes.
     //
     *WrapDataSize = P7Length + 19;
-    *WrapData     = AllocateZeroPool (*WrapDataSize);
+    *WrapData     = calloc (*WrapDataSize, 1);
     if (*WrapData == NULL) {
       *WrapFlag = Wrapped;
       return FALSE;
@@ -1116,6 +1116,10 @@ Pkcs7Verify (
   Status = MbedTlsPkcs7SignedDataVerify (&Pkcs7, &Crt, InData, (INT32)DataLength);
 
 Cleanup:
+  if (!Wrapped) {
+    free (WrapData);
+  }
+
   if (&Crt != NULL) {
     mbedtls_x509_crt_free (&Crt);
   }
@@ -1144,7 +1148,7 @@ Pkcs7FreeSigners (
     return;
   }
 
-  FreePool (Certs);
+  free (Certs);
 }
 
 /**
@@ -1255,14 +1259,14 @@ Pkcs7GetSigners (
     OldBuf     = CertBuf;
     BufferSize = OldSize + CertSize + sizeof (UINT32);
 
-    CertBuf = AllocateZeroPool (BufferSize);
+    CertBuf = calloc (BufferSize, 1);
     if (CertBuf == NULL) {
       goto _Exit;
     }
 
     if (OldBuf != NULL) {
       CopyMem (CertBuf, OldBuf, OldSize);
-      FreePool (OldBuf);
+      free (OldBuf);
       OldBuf = NULL;
     }
 
@@ -1282,7 +1286,7 @@ Pkcs7GetSigners (
     CertBuf[0] = Index;
 
     *CertLength  = BufferSize - OldSize - sizeof (UINT32);
-    *TrustedCert = AllocateZeroPool (*CertLength);
+    *TrustedCert = calloc (*CertLength, 1);
     if (*TrustedCert == NULL) {
       goto _Exit;
     }
@@ -1294,11 +1298,15 @@ Pkcs7GetSigners (
   }
 
 _Exit:
+  if (!Wrapped) {
+    free (WrapData);
+  }
+
   //
   // Release Resources
   //
   if (!Status && (CertBuf != NULL)) {
-    FreePool (CertBuf);
+    free (CertBuf);
     *CertStack = NULL;
   }
 
@@ -1310,7 +1318,7 @@ _Exit:
   }
 
   if (OldBuf != NULL) {
-    FreePool (OldBuf);
+    free (OldBuf);
   }
 
   return Status;
