@@ -166,6 +166,12 @@ realloc    (
   size_t
   );
 
+void           *
+calloc     (
+  size_t,
+  size_t
+  );
+
 void
 free        (
   void *
