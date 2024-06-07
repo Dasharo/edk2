@@ -79,6 +79,16 @@ mbedtls_calloc (
   }
 }
 
+/* Allocates zero-initialized memory blocks */
+void *
+calloc (
+  size_t  num,
+  size_t  size
+  )
+{
+  return mbedtls_calloc (num, size);
+}
+
 /* De-allocates or frees a memory block */
 void
 mbedtls_free (
