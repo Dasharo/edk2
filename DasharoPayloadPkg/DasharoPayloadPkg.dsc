@@ -297,6 +297,7 @@
 !include NetworkPkg/NetworkLibs.dsc.inc
 
   MbedTlsLib|CryptoPkg/Library/MbedTlsLib/MbedTlsLib.inf
+  MbedTlsCrtLib|CryptoPkg/Library/MbedTlsCrtLib/MbedTlsCrtLib.inf
 !if $(NETWORK_TLS_ENABLE) == TRUE
   TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
 !endif
@@ -405,6 +406,7 @@
   BaseCryptLib|CryptoPkg/Library/BaseCryptLibMbedTls/RuntimeCryptLib.inf
   DebugLib|MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode/PeiDxeDebugLibReportStatusCode.inf
   PerformanceLib|MdeModulePkg/Library/DxePerformanceLib/DxePerformanceLib.inf
+  MbedTlsCrtLib|CryptoPkg/Library/MbedTlsCrtRuntimeLib/MbedTlsCrtRuntimeLib.inf
 
 [LibraryClasses.common.UEFI_DRIVER,LibraryClasses.common.UEFI_APPLICATION]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
