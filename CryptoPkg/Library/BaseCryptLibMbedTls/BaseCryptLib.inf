@@ -17,7 +17,7 @@
   FILE_GUID                      = 693C5308-AF95-4CE5-ADE9-CA011C2FC642
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = BaseCryptLib|DXE_DRIVER DXE_CORE UEFI_APPLICATION UEFI_DRIVER
+  LIBRARY_CLASS                  = BaseCryptLib|DXE_DRIVER DXE_CORE DXE_SMM_DRIVER UEFI_APPLICATION UEFI_DRIVER
   DEFINE BASE_CRYPT_PATH         = ../BaseCryptLib
 
 #
@@ -79,6 +79,7 @@
   IntrinsicLib
   RngLib
   SynchronizationLib
+  MbedTlsCrtLib
 [Protocols]
   gEfiMpServiceProtocolGuid
 #

@@ -76,6 +76,16 @@ mbedtls_calloc (
   }
 }
 
+/* Allocates zero-initialized memory blocks */
+void *
+calloc (
+  size_t  num,
+  size_t  size
+  )
+{
+  return mbedtls_calloc (num, size);
+}
+
 /* De-allocates or frees a memory block */
 void
 mbedtls_free (
@@ -93,4 +103,13 @@ mbedtls_free (
     ASSERT (PoolHdr->Signature == CRYPTMEM_HEAD_SIGNATURE);
     FreePool (PoolHdr);
   }
+}
+
+/* De-allocates or frees a memory block */
+void
+free (
+  void  *ptr
+  )
+{
+  mbedtls_free (ptr);
 }
