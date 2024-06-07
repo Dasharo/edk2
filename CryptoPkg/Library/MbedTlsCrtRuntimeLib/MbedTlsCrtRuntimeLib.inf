@@ -1,0 +1,42 @@
+## @file
+#  Runtime library with basic functions needed by the MbedTls.
+#
+#  After ExitBootServices() gBS used by memory allocation libraries is no
+#  longer available because and EDK can no longer take any more RAM for itself.
+#  The only way of having dynamic memory allocation is to have a heap like in C
+#  backed up by a pre-allocated memory.  This library redirects MbedTls to such
+#  a heap.
+#
+#  Copyright (c) 2023, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MbedTlsCrtRuntimeLib
+  FILE_GUID                      = 7F586875-08E6-4F95-A9C2-125F74993A86
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MbedTlsCrtLib|DXE_RUNTIME_DRIVER
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+#
+
+[Sources]
+  # Actual implementation of malloc() and free() are already available in
+  # BaseCryptLibMbedTls, the CrtWrapper.c basically just redirects to them.
+  CrtWrapper.c
+
+[Packages]
+  CryptoPkg/CryptoPkg.dec
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib

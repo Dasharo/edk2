@@ -97,7 +97,6 @@
   mbedtls/library/x509_csr.c
   mbedtls/library/pkcs7.c
   mbedtls/library/platform_util.c
-  CrtWrapper.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -107,6 +106,7 @@
   BaseLib
   BaseMemoryLib
   DebugLib
+  MbedTlsCrtLib
   MemoryAllocationLib
 
 [BuildOptions]
