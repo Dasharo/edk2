@@ -6,7 +6,7 @@
 	url = https://github.com/ucb-bar/berkeley-softfloat-3.git
 [submodule "UnitTestFrameworkPkg/Library/CmockaLib/cmocka"]
 	path = UnitTestFrameworkPkg/Library/CmockaLib/cmocka
-	url = https://git.cryptomilk.org/projects/cmocka.git
+	url = https://gitlab.com/cmocka/cmocka.git
 [submodule "DasharoModulePkg"]
 	path = DasharoModulePkg
 	url = https://github.com/Dasharo/DasharoModulePkg.git
