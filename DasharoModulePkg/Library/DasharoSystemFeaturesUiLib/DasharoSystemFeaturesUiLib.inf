@@ -25,6 +25,7 @@
   DasharoSystemFeatures.h
   DasharoSystemFeaturesHii.h
   DasharoSystemFeatures.c
+  CpuTopology.c
   DasharoSystemFeaturesVfr.vfr
   DasharoSystemFeaturesStrings.uni
 
@@ -44,6 +45,7 @@
   DebugLib
   IoLib
   PcdLib
+  PciLib
   PrintLib
   HiiLib
   UefiHiiServicesLib
@@ -89,3 +91,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuCoreDisable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading

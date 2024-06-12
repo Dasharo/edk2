@@ -75,6 +75,10 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault|FALSE|BOOLEAN|0x000000022
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold|TRUE|BOOLEAN|0x00000023
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature|100|UINT8|0x00000024
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuMenu|FALSE|BOOLEAN|0x000000025
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuCoreDisable|FALSE|BOOLEAN|0x000000026
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading|FALSE|BOOLEAN|0x000000027
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault|TRUE|BOOLEAN|0x000000028
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
