@@ -61,6 +61,9 @@ STATIC CHAR16 *mAutoCreatedVariables[] = {
   DASHARO_VAR_USB_STACK,
   DASHARO_VAR_WATCHDOG,
   DASHARO_VAR_WATCHDOG_AVAILABLE,
+  DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
+  DASHARO_VAR_CORE_ACTIVE_COUNT,
+  DASHARO_VAR_HYPER_THREADING,
 };
 
 /**
@@ -166,6 +169,15 @@ GetVariableInfo (
     Size = sizeof (Data.Watchdog);
   } else if (StrCmp (VarName, DASHARO_VAR_WATCHDOG_AVAILABLE) == 0) {
     Data.Boolean = PcdGetBool (PcdShowOcWdtOptions);
+    Size = sizeof (Data.Boolean);
+  } else if (StrCmp (VarName, DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT) == 0) {
+    Data.Uint8 = DASHARO_CPU_CORES_ENABLE_ALL;
+    Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_CORE_ACTIVE_COUNT) == 0) {
+    Data.Uint8 = DASHARO_CPU_CORES_ENABLE_ALL;
+    Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_HYPER_THREADING) == 0) {
+    Data.Boolean = PcdGetBool (PcdCpuHyperThreadingDefault);
     Size = sizeof (Data.Boolean);
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));

@@ -76,6 +76,12 @@ formset
               help   = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP);
     endif;
 
+    suppressif ideqval FeaturesData.ShowCpuMenu == 0;
+         goto DASHARO_CPU_CONFIGURATION_FORM_ID,
+              prompt = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_TITLE),
+              help   = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_HELP);
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
@@ -437,5 +443,187 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
   endform;
+
+
+  form formid = DASHARO_CPU_CONFIGURATION_FORM_ID,
+       title  = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    suppressif ideqval FeaturesData.ShowCpuCoreDisable == 0;
+
+      disableif ideqval FeaturesData.HybridCpuArchitecture == 0;
+
+        suppressif ideqval FeaturesData.SmallCoreMaxCount == 0;
+          oneof varid = FeaturesData.SmallCoreActiveCount,
+                prompt  = STRING_TOKEN(STR_SMALL_CORE_COUNT_PROMPT),
+                help    = STRING_TOKEN(STR_SMALL_CORE_COUNT_HELP),
+                flags   = RESET_REQUIRED,
+
+                option text = STRING_TOKEN (STR_CPU_CORES_ENABLE_ALL), value = CPU_CORES_ENABLE_ALL, flags = DEFAULT;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 16;
+                  option text = STRING_TOKEN (STR_15), value = 15, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 15;
+                  option text = STRING_TOKEN (STR_14), value = 14, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 14;
+                  option text = STRING_TOKEN (STR_13), value = 13, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 13;
+                  option text = STRING_TOKEN (STR_12), value = 12, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 12;
+                  option text = STRING_TOKEN (STR_11), value = 11, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 11;
+                  option text = STRING_TOKEN (STR_10), value = 10, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 10;
+                  option text = STRING_TOKEN (STR_9), value = 9, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 9;
+                  option text = STRING_TOKEN (STR_8), value = 8, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 8;
+                  option text = STRING_TOKEN (STR_7), value = 7, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 7;
+                  option text = STRING_TOKEN (STR_6), value = 6, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 6;
+                  option text = STRING_TOKEN (STR_5), value = 5, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 5;
+                  option text = STRING_TOKEN (STR_4), value = 4, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 4;
+                  option text = STRING_TOKEN (STR_3), value = 3, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 3;
+                  option text = STRING_TOKEN (STR_2), value = 2, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.SmallCoreMaxCount < 2;
+                  option text = STRING_TOKEN (STR_1), value = 1, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount == 0;
+                  option text = STRING_TOKEN (STR_0), value = 0, flags = 0;
+                endif;
+          endoneof;
+        endif;
+
+        suppressif ideqval FeaturesData.BigCoreMaxCount == 0;
+          oneof varid   = FeaturesData.BigCoreActiveCount,
+                prompt  = STRING_TOKEN(STR_BIG_CORE_COUNT_PROMPT),
+                help    = STRING_TOKEN(STR_BIG_CORE_COUNT_HELP),
+                flags   = RESET_REQUIRED,
+
+                option text = STRING_TOKEN (STR_CPU_CORES_ENABLE_ALL), value = CPU_CORES_ENABLE_ALL, flags = DEFAULT;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 8;
+                  option text = STRING_TOKEN (STR_7), value = 7, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 7;
+                  option text = STRING_TOKEN (STR_6), value = 6, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 6;
+                  option text = STRING_TOKEN (STR_5), value = 5, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 5;
+                  option text = STRING_TOKEN (STR_4), value = 4, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 4;
+                  option text = STRING_TOKEN (STR_3), value = 3, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 3;
+                  option text = STRING_TOKEN (STR_2), value = 2, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.BigCoreMaxCount < 2;
+                  option text = STRING_TOKEN (STR_1), value = 1, flags = 0;
+                endif;
+          endoneof;
+        endif; // suppressif FeaturesData.BigCoreMaxCount == 0
+
+      endif; // disableif HybridCpuArchitecture == 0
+
+      disableif ideqval FeaturesData.HybridCpuArchitecture == 1;
+
+        suppressif ideqval FeaturesData.CoreMaxCount == 1;
+          oneof varid   = FeaturesData.CoreActiveCount,
+                prompt  = STRING_TOKEN(STR_CORE_COUNT_PROMPT),
+                help    = STRING_TOKEN(STR_CORE_COUNT_HELP),
+                flags   = RESET_REQUIRED,
+
+                option text   = STRING_TOKEN (STR_CPU_CORES_ENABLE_ALL), value = CPU_CORES_ENABLE_ALL, flags = DEFAULT;
+                suppressif ideqval FeaturesData.CoreMaxCount < 16;
+                  option text = STRING_TOKEN (STR_15), value = 15, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 15;
+                  option text = STRING_TOKEN (STR_14), value = 14, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 14;
+                  option text = STRING_TOKEN (STR_13), value = 13, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 13;
+                  option text = STRING_TOKEN (STR_12), value = 12, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 12;
+                  option text = STRING_TOKEN (STR_11), value = 11, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 11;
+                  option text = STRING_TOKEN (STR_10), value = 10, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 10;
+                  option text = STRING_TOKEN (STR_9), value = 9, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 9;
+                  option text = STRING_TOKEN (STR_8), value = 8, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 8;
+                  option text = STRING_TOKEN (STR_7), value = 7, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 7;
+                  option text = STRING_TOKEN (STR_6), value = 6, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 6;
+                  option text = STRING_TOKEN (STR_5), value = 5, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 5;
+                  option text = STRING_TOKEN (STR_4), value = 4, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 4;
+                  option text = STRING_TOKEN (STR_3), value = 3, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 3;
+                  option text = STRING_TOKEN (STR_2), value = 2, flags = 0;
+                endif;
+                suppressif ideqval FeaturesData.CoreMaxCount < 2;
+                  option text = STRING_TOKEN (STR_1), value = 1, flags = 0;
+                endif;
+                // Not really valid value, but allowed if system has only E-cores
+                suppressif TRUE;
+                  option text = STRING_TOKEN (STR_0), value = 0, flags = 0;
+                endif;
+          endoneof;
+        endif; // suppressif FeaturesData.CoreMaxCount == 1;
+
+      endif; // disableif HybridCpuArchitecture == 1
+
+    endif; // suppressif ShowCpuCoreDisable == 0
+
+    suppressif ideqval FeaturesData.ShowCpuHyperThreading == 0;
+      suppressif ideqval FeaturesData.HyperThreadingSupported == 0;
+        checkbox varid  = FeaturesData.HyperThreading,
+                 questionid = HYPER_THREADING_QUESTION_ID,
+                 prompt = STRING_TOKEN(STR_HYPER_THREADING_PROMPT),
+                 help   = STRING_TOKEN(STR_HYPER_THREADING_HELP),
+                 flags  = INTERACTIVE | RESET_REQUIRED,
+        endcheckbox;
+      endif;
+    endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EXIT_STRING);
+  endform; // CPU configuration form
 
 endformset;
