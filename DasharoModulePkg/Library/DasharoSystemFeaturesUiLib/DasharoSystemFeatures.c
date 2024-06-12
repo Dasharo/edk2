@@ -14,6 +14,8 @@ SPDX-License-Identifier: BSD-2-Clause
 #define   PCH_OC_WDT_CTL_EN			BIT14
 #define   PCH_OC_WDT_CTL_TOV_MASK		0x3FF
 
+#define PRIVATE_DATA(field)   mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field
+
 // Feature state
 STATIC CHAR16 mVarStoreName[] = L"FeaturesData";
 
@@ -161,51 +163,70 @@ DasharoSystemFeaturesUiLibConstructor (
       );
   ASSERT (mDasharoSystemFeaturesPrivate.HiiHandle != NULL);
 
+  // Set menu visibility
+  PRIVATE_DATA(ShowSecurityMenu) = PcdGetBool (PcdShowSecurityMenu);
+  PRIVATE_DATA(ShowIntelMeMenu) = PcdGetBool (PcdShowIntelMeMenu);
+  PRIVATE_DATA(ShowUsbMenu) = PcdGetBool (PcdShowUsbMenu);
+  PRIVATE_DATA(ShowNetworkMenu) = PcdGetBool (PcdShowNetworkMenu);
+  PRIVATE_DATA(ShowChipsetMenu) = PcdGetBool (PcdShowChipsetMenu);
+  PRIVATE_DATA(ShowPowerMenu) = PcdGetBool (PcdShowPowerMenu);
+  PRIVATE_DATA(ShowPciMenu) = PcdGetBool (PcdShowPciMenu);
+  PRIVATE_DATA(ShowMemoryMenu) = PcdGetBool (PcdShowMemoryMenu);
+  PRIVATE_DATA(ShowSerialPortMenu) = PcdGetBool (PcdShowSerialPortMenu);
+  PRIVATE_DATA(ShowCpuMenu) = PcdGetBool (PcdShowCpuMenu);
   // Set feature visibility
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu = PcdGetBool (PcdShowSecurityMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowIntelMeMenu = PcdGetBool (PcdShowIntelMeMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowUsbMenu = PcdGetBool (PcdShowUsbMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowNetworkMenu = PcdGetBool (PcdShowNetworkMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowChipsetMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu = PcdGetBool (PcdShowPowerMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPciMenu = PcdGetBool (PcdShowPciMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowMemoryMenu = PcdGetBool (PcdShowMemoryMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowFanCurve = PcdGetBool (PcdPowerMenuShowFanCurve);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowSleepType = PcdGetBool (PcdPowerMenuShowSleepType);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PowerMenuShowBatteryThresholds = PcdGetBool (PcdPowerMenuShowBatteryThresholds);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.DasharoEnterprise = PcdGetBool (PcdDasharoEnterprise);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowIommu = PcdGetBool (PcdShowIommuOptions);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.PciMenuShowResizeableBars = PcdGetBool (PcdPciMenuShowResizeableBars);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSerialPortMenu = PcdGetBool (PcdShowSerialPortMenu);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowWiFiBt = PcdGetBool (PcdSecurityShowWiFiBtOption);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.SecurityMenuShowCamera = PcdGetBool (PcdSecurityShowCameraOption);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.MeHapAvailable = PcdGetBool (PcdIntelMeHapAvailable);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.S3SupportExperimental = PcdGetBool (PcdS3SupportExperimental);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowLockBios = PcdGetBool (PcdShowLockBios);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSmmBwp = PcdGetBool (PcdShowSmmBwp);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowFum = PcdGetBool (PcdShowFum);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPs2Option = PcdGetBool (PcdShowPs2Option);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.Have2ndUart = PcdGetBool (PcdHave2ndUart);
-  mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowCpuThrottlingThreshold= PcdGetBool (PcdShowCpuThrottlingThreshold);
+  PRIVATE_DATA(PowerMenuShowFanCurve) = PcdGetBool (PcdPowerMenuShowFanCurve);
+  PRIVATE_DATA(PowerMenuShowSleepType) = PcdGetBool (PcdPowerMenuShowSleepType);
+  PRIVATE_DATA(PowerMenuShowBatteryThresholds) = PcdGetBool (PcdPowerMenuShowBatteryThresholds);
+  PRIVATE_DATA(DasharoEnterprise) = PcdGetBool (PcdDasharoEnterprise);
+  PRIVATE_DATA(SecurityMenuShowIommu) = PcdGetBool (PcdShowIommuOptions);
+  PRIVATE_DATA(PciMenuShowResizeableBars) = PcdGetBool (PcdPciMenuShowResizeableBars);
+  PRIVATE_DATA(ShowSerialPortMenu) = PcdGetBool (PcdShowSerialPortMenu);
+  PRIVATE_DATA(SecurityMenuShowWiFiBt) = PcdGetBool (PcdSecurityShowWiFiBtOption);
+  PRIVATE_DATA(SecurityMenuShowCamera) = PcdGetBool (PcdSecurityShowCameraOption);
+  PRIVATE_DATA(MeHapAvailable) = PcdGetBool (PcdIntelMeHapAvailable);
+  PRIVATE_DATA(S3SupportExperimental) = PcdGetBool (PcdS3SupportExperimental);
+  PRIVATE_DATA(ShowLockBios) = PcdGetBool (PcdShowLockBios);
+  PRIVATE_DATA(ShowSmmBwp) = PcdGetBool (PcdShowSmmBwp);
+  PRIVATE_DATA(ShowFum) = PcdGetBool (PcdShowFum);
+  PRIVATE_DATA(ShowPs2Option) = PcdGetBool (PcdShowPs2Option);
+  PRIVATE_DATA(Have2ndUart) = PcdGetBool (PcdHave2ndUart);
+  PRIVATE_DATA(ShowCpuThrottlingThreshold) = PcdGetBool (PcdShowCpuThrottlingThreshold);
+  PRIVATE_DATA(ShowCpuCoreDisable) = PcdGetBool(PcdShowCpuCoreDisable);
+  PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
-  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu)
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowSecurityMenu = PcdGetBool (PcdDasharoEnterprise) ||
-                                                                         PcdGetBool (PcdShowIommuOptions) ||
-                                                                         PcdGetBool (PcdSecurityShowWiFiBtOption) ||
-                                                                         PcdGetBool (PcdSecurityShowCameraOption) ||
-                                                                         PcdGetBool (PcdShowLockBios) ||
-                                                                         PcdGetBool (PcdShowSmmBwp) ||
-                                                                         PcdGetBool (PcdShowFum);
+  if (PRIVATE_DATA(ShowSecurityMenu))
+    PRIVATE_DATA(ShowSecurityMenu) = PcdGetBool (PcdDasharoEnterprise) ||
+                                     PcdGetBool (PcdShowIommuOptions) ||
+                                     PcdGetBool (PcdSecurityShowWiFiBtOption) ||
+                                     PcdGetBool (PcdSecurityShowCameraOption) ||
+                                     PcdGetBool (PcdShowLockBios) ||
+                                     PcdGetBool (PcdShowSmmBwp) ||
+                                     PcdGetBool (PcdShowFum);
 
-  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu)
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowChipsetMenu = PcdGetBool (PcdShowOcWdtOptions) ||
-                                                                        PcdGetBool (PcdShowPs2Option);
-  if (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu)
-    mDasharoSystemFeaturesPrivate.DasharoFeaturesData.ShowPowerMenu = PcdGetBool (PcdPowerMenuShowFanCurve) ||
-                                                                      PcdGetBool (PcdPowerMenuShowSleepType) ||
-                                                                      PcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
-                                                                      (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
+  if (PRIVATE_DATA(ShowChipsetMenu))
+    PRIVATE_DATA(ShowChipsetMenu) = PcdGetBool (PcdShowOcWdtOptions) ||
+                                    PcdGetBool (PcdShowPs2Option);
+
+  if (PRIVATE_DATA(ShowPowerMenu))
+    PRIVATE_DATA(ShowPowerMenu) = PcdGetBool (PcdPowerMenuShowFanCurve) ||
+                                  PcdGetBool (PcdPowerMenuShowSleepType) ||
+                                  PcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
+                                  PcdGetBool (PcdShowCpuThrottlingThreshold) ||
+                                  (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
+
+  if (PRIVATE_DATA(ShowCpuMenu))
+    PRIVATE_DATA(ShowCpuMenu) = PcdGetBool(PcdShowCpuCoreDisable) ||
+                                PcdGetBool(PcdShowCpuHyperThreading);
+
+  GetCpuInfo(&PRIVATE_DATA(BigCoreMaxCount),
+             &PRIVATE_DATA(SmallCoreMaxCount),
+             &PRIVATE_DATA(HybridCpuArchitecture),
+             &PRIVATE_DATA(HyperThreadingSupported));
+
+  if (!PRIVATE_DATA(HybridCpuArchitecture))
+    PRIVATE_DATA(CoreMaxCount) = PRIVATE_DATA(BigCoreMaxCount);
 
 #define LOAD_VAR(var, field) do {                                                   \
     BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field);  \
@@ -244,8 +265,39 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_USB_STACK, UsbStack);
   LOAD_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
   LOAD_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
+  LOAD_VAR (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount);
+  LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
+  LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
+  LOAD_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
 
 #undef LOAD_VAR
+
+  if (PRIVATE_DATA(HybridCpuArchitecture) &&
+      PRIVATE_DATA(SmallCoreActiveCount) == 0 &&
+      PRIVATE_DATA(BigCoreActiveCount) == 0) {
+    /*
+     * Invalid setting, which causes a brick, enable all cores. coreboot will
+     * not allow to disable all cores and revert to default: enabling all
+     * cores. Match the behavior here, so the variables are not stuck in this
+     * state and showing variable state not matching the reality.
+     */
+    PRIVATE_DATA(SmallCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
+    PRIVATE_DATA(BigCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
+    gRT->SetVariable (
+          DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
+          &gDasharoSystemFeaturesGuid,
+          DasharoGetVariableAttributes (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT),
+          sizeof (PRIVATE_DATA(SmallCoreActiveCount)),
+          &PRIVATE_DATA(SmallCoreActiveCount)
+          );
+    gRT->SetVariable (
+          DASHARO_VAR_CORE_ACTIVE_COUNT,
+          &gDasharoSystemFeaturesGuid,
+          DasharoGetVariableAttributes (DASHARO_VAR_CORE_ACTIVE_COUNT),
+          sizeof (PRIVATE_DATA(BigCoreActiveCount)),
+          &PRIVATE_DATA(BigCoreActiveCount)
+          );
+  }
 
   return EFI_SUCCESS;
 }
@@ -406,6 +458,7 @@ DasharoSystemFeaturesRouteConfig (
   UINTN                                 BufferSize;
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA  *Private;
   DASHARO_FEATURES_DATA                 DasharoFeaturesData;
+  DASHARO_FEATURES_DATA                 *PrivateData;
 
   if (Progress == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -421,6 +474,7 @@ DasharoSystemFeaturesRouteConfig (
   }
 
   Private = DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_FROM_THIS (This);
+  PrivateData = &Private->DasharoFeaturesData;
 
   // Construct data structure from configuration string.
   BufferSize = sizeof (DasharoFeaturesData);
@@ -432,6 +486,14 @@ DasharoSystemFeaturesRouteConfig (
       Progress
       );
   ASSERT_EFI_ERROR (Status);
+
+  if (PrivateData->HybridCpuArchitecture) {
+    if (DasharoFeaturesData.SmallCoreActiveCount == 0 && PrivateData->BigCoreMaxCount == 0)
+      return EFI_INVALID_PARAMETER;
+
+    if (DasharoFeaturesData.BigCoreActiveCount == 0 && PrivateData->SmallCoreMaxCount == 0)
+      return EFI_INVALID_PARAMETER;
+  }
 
   // Can use CompareMem() on structures instead of a per-field comparison as
   // long as they are packed.
@@ -477,6 +539,15 @@ DasharoSystemFeaturesRouteConfig (
   STORE_VAR (DASHARO_VAR_USB_STACK, UsbStack);
   STORE_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
   STORE_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
+  STORE_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
+
+  if (PrivateData->HybridCpuArchitecture) {
+    STORE_VAR (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount);
+    STORE_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
+  } else {
+    // CoreActiveCount used for P-cores and non-hybrid CPU architectures to match FSP
+    STORE_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
+  }
 
 #undef STORE_VAR
 
@@ -558,6 +629,9 @@ DasharoSystemFeaturesCallback (
         break;
       case SLEEP_TYPE_QUESTION_ID:
         Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_SLEEP_TYPE).Uint8;
+        break;
+      case HYPER_THREADING_QUESTION_ID:
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_HYPER_THREADING).Boolean;
         break;
       default:
         Status = EFI_UNSUPPORTED;
