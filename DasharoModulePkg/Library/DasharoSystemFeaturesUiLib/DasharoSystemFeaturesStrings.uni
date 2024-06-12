@@ -41,6 +41,9 @@
 #string STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE   #language en-US  "Serial Port Configuration"
 #string STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP    #language en-US  "Serial port options"
 
+#string STR_DASHARO_CPU_CONFIGURATION_TITLE   #language en-US "CPU Configuration"
+#string STR_DASHARO_CPU_CONFIGURATION_HELP    #language en-US "CPU related configuration options"
+
 #string STR_FUM_PROMPT   #language en-US  "> Enter Firmware Update Mode"
 #string STR_FUM_HELP     #language en-US  "Disables all firmware protections for the duration of next boot."
 
@@ -171,3 +174,40 @@
 #string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "CPU Throttling Threshold"
 #string STR_CPU_THROTTLING_THRESHOLD_HELP        #language en-US  "The temperature above which the CPU will start throttling itself."
 #string STR_CPU_THROTTLING_THRESHOLD_RANGE_ERROR #language en-US  "The throttling threshold must be between TjMax - 63 and TjMax!!"
+
+#string STR_BIG_CORE_COUNT_PROMPT   #language en-US  "Number of active P-cores"
+#string STR_BIG_CORE_COUNT_HELP     #language en-US  "Specify the number of Performance cores that should remain active.\n\n"
+                                                     "Minimum is one, maximum is processor dependent."
+
+#string STR_SMALL_CORE_COUNT_PROMPT   #language en-US  "Number of active E-cores"
+#string STR_SMALL_CORE_COUNT_HELP     #language en-US  "Specify the number of Efficient cores that should remain active.\n\n"
+                                                       "Minimum is zero (or one if there are no Performance cores in the system), "
+                                                       "maximum is processor dependent."
+
+#string STR_CORE_COUNT_PROMPT   #language en-US  "Number of active CPU cores"
+#string STR_CORE_COUNT_HELP     #language en-US  "Specify the number of CPU cores that should remain active.\n\n"
+                                                 "Minimum is one, maximum is processor dependent."
+
+#string STR_HYPER_THREADING_PROMPT      #language en-US "Hyper-Threading"
+#string STR_HYPER_THREADING_HELP        #language en-US "Enable/disable CPU Hyper-Threading feature.\n\n"
+                                                        "All cores supporting Hyper-Threading will have their second logical thread enabled or disabled."
+
+#string STR_CPU_CORES_ENABLE_ALL        #language en-US  "All active"
+
+#string STR_0     #language en-US "0"
+#string STR_1     #language en-US "1"
+#string STR_2     #language en-US "2"
+#string STR_3     #language en-US "3"
+#string STR_4     #language en-US "4"
+#string STR_5     #language en-US "5"
+#string STR_6     #language en-US "6"
+#string STR_7     #language en-US "7"
+#string STR_8     #language en-US "8"
+#string STR_9     #language en-US "9"
+#string STR_10    #language en-US "10"
+#string STR_11    #language en-US "11"
+#string STR_12    #language en-US "12"
+#string STR_13    #language en-US "13"
+#string STR_14    #language en-US "14"
+#string STR_15    #language en-US "15"
+#string STR_16    #language en-US "16"

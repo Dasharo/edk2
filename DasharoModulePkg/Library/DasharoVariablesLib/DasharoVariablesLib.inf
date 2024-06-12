@@ -55,5 +55,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms

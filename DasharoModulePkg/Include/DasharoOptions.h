@@ -41,6 +41,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_USB_STACK                     L"UsbDriverStack"
 #define DASHARO_VAR_WATCHDOG                      L"WatchdogConfig"
 #define DASHARO_VAR_WATCHDOG_AVAILABLE            L"WatchdogAvailable"
+#define DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT       L"SmallCoreActiveCount"
+#define DASHARO_VAR_CORE_ACTIVE_COUNT             L"CoreActiveCount"
+#define DASHARO_VAR_HYPER_THREADING               L"HyperThreading"
 
 // Other
 #define DASHARO_VAR_SMBIOS_UUID  L"Type1UUID"
@@ -76,6 +79,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_MEMORY_PROFILE_XMP2            3
 #define DASHARO_MEMORY_PROFILE_XMP3            4
 
+#define DASHARO_CPU_CORES_ENABLE_ALL           0xff
 //
 // Structures describing format of some of the above EFI variables.  Must be
 // packed.

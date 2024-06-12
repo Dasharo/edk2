@@ -24,6 +24,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #define DASHARO_PCI_CONFIGURATION_FORM_ID           0x1007
 #define DASHARO_MEMORY_CONFIGURATION_FORM_ID        0x1008
 #define DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID   0x1009
+#define DASHARO_CPU_CONFIGURATION_FORM_ID           0x100a
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
@@ -38,6 +39,7 @@ typedef struct {
   BOOLEAN  ShowPciMenu;
   BOOLEAN  ShowMemoryMenu;
   BOOLEAN  ShowSerialPortMenu;
+  BOOLEAN  ShowCpuMenu;
   BOOLEAN  ShowLockBios;
   BOOLEAN  ShowSmmBwp;
   BOOLEAN  ShowFum;
@@ -54,7 +56,8 @@ typedef struct {
   BOOLEAN  S3SupportExperimental;
   BOOLEAN  Have2ndUart;
   BOOLEAN  ShowCpuThrottlingThreshold;
-
+  BOOLEAN  ShowCpuCoreDisable;
+  BOOLEAN  ShowCpuHyperThreading;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
@@ -81,6 +84,15 @@ typedef struct {
   UINT8                    CpuThrottlingThreshold;
   UINT8                    CpuMaxTemperature;
   UINT8                    CpuMinThrottlingThreshold;
+  BOOLEAN                  HybridCpuArchitecture;
+  BOOLEAN                  HyperThreadingSupported;
+  BOOLEAN                  HyperThreading;
+  UINT8                    BigCoreActiveCount;
+  UINT8                    BigCoreMaxCount;
+  UINT8                    SmallCoreActiveCount;
+  UINT8                    SmallCoreMaxCount;
+  UINT8                    CoreActiveCount;
+  UINT8                    CoreMaxCount;
 } DASHARO_FEATURES_DATA;
 
 //
@@ -115,6 +127,8 @@ typedef struct {
 #define MEMORY_PROFILE_XMP2            DASHARO_MEMORY_PROFILE_XMP2
 #define MEMORY_PROFILE_XMP3            DASHARO_MEMORY_PROFILE_XMP3
 
+#define CPU_CORES_ENABLE_ALL           DASHARO_CPU_CORES_ENABLE_ALL
+
 //
 // Question IDs are used in VFR file to let the code in
 // DasharoSystemFeaturesCallback() know what form element caused
@@ -133,5 +147,6 @@ typedef struct {
 #define INTEL_ME_MODE_QUESTION_ID            0x8009
 #define SLEEP_TYPE_QUESTION_ID               0x800A
 #define SERIAL_PORT2_REDIR_QUESTION_ID       0x800B
+#define HYPER_THREADING_QUESTION_ID          0x800C
 
 #endif
