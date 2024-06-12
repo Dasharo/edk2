@@ -158,4 +158,12 @@ DasharoSystemFeaturesCallback (
   OUT EFI_BROWSER_ACTION_REQUEST             *ActionRequest
   );
 
+VOID
+GetCpuInfo (
+  IN OUT UINT8      *MaxBigCoreCount,
+  IN OUT UINT8      *MaxSmallCoreCount,
+  IN OUT BOOLEAN    *IsHybrid,
+  IN OUT BOOLEAN    *HyperThreadingSupported
+  );
+
 #endif
