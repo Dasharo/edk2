@@ -162,10 +162,10 @@
 #string STR_MEMORY_PROFILE_XMP2    #language en-US  "XMP#2 (predefined extreme memory profile)"
 #string STR_MEMORY_PROFILE_XMP3    #language en-US  "XMP#3 (predefined extreme memory profile)"
 
-#string STR_SERIAL_CONSOLE_REDIRECTION_PROMPT   #language en-US  "Enable Serial Port Console Redirection"
+#string STR_SERIAL_CONSOLE_REDIRECTION_PROMPT   #language en-US  "Enable COM0 Serial Console Redirection"
 #string STR_SERIAL_CONSOLE_REDIRECTION_HELP     #language en-US  "Redirect the firmware console to the serial port."
 
-#string STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT   #language en-US  "Enable COM2 Port Console Redirection"
+#string STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT   #language en-US  "Enable COM1 Serial Console Redirection"
 #string STR_SERIAL_CONSOLE_REDIRECTION2_HELP     #language en-US  "Redirect the firmware console to the second serial port."
 
 #string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "CPU Throttling Threshold"
