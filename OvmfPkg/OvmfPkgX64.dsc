@@ -755,7 +755,9 @@
 
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
 
+!if $(USE_EDK2_PLATFORMS) == TRUE
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
+!endif
 
 [PcdsDynamicHii]
 !include OvmfPkg/Include/Dsc/OvmfTpmPcdsHii.dsc.inc
@@ -1027,6 +1029,9 @@
 
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
   DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
+!if $(USE_EDK2_PLATFORMS) == TRUE
+  DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
+!endif
 !endif
 
   #

@@ -393,6 +393,10 @@ INF OvmfPkg/TdxDxe/TdxDxe.inf
 
 INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
+!if $(USE_EDK2_PLATFORMS) == TRUE
+INF DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
+!endif
+
 #
 # Hash2
 #
