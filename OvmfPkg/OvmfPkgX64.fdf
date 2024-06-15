@@ -398,6 +398,10 @@ INF SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
 
 INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
 
+!if $(USE_EDK2_PLATFORMS) == TRUE
+INF DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
+!endif
+
 #
 # PKCS7 Verification
 #
