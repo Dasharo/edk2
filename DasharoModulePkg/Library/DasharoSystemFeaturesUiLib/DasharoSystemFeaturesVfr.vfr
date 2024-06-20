@@ -23,63 +23,63 @@ formset
        title  = STRING_TOKEN(STR_EDKII_MENU_TITLE);
 
     suppressif ideqval FeaturesData.ShowSecurityMenu == 0;
-         goto DASHARO_SECURITY_OPTIONS_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_HELP);
+      goto DASHARO_SECURITY_OPTIONS_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_SECURITY_OPTIONS_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowNetworkMenu == 0;
-         goto DASHARO_NETWORK_OPTIONS_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_HELP);
+      goto DASHARO_NETWORK_OPTIONS_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_NETWORKING_OPTIONS_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowUsbMenu == 0;
-         goto DASHARO_USB_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_HELP);
+      goto DASHARO_USB_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_USB_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowIntelMeMenu == 0;
-         goto DASHARO_INTEL_ME_OPTIONS_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_HELP);
+      goto DASHARO_INTEL_ME_OPTIONS_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_INTEL_ME_OPTIONS_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowChipsetMenu == 0;
-         goto DASHARO_CHIPSET_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_HELP);
+      goto DASHARO_CHIPSET_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_CHIPSET_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowPowerMenu == 0;
-         goto DASHARO_POWER_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_HELP);
+      goto DASHARO_POWER_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowPciMenu == 0;
-         goto DASHARO_PCI_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_HELP);
+      goto DASHARO_PCI_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowMemoryMenu == 0;
-         goto DASHARO_MEMORY_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_HELP);
+      goto DASHARO_MEMORY_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_MEMORY_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowSerialPortMenu == 0;
-         goto DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP);
+      goto DASHARO_SERIAL_PORT_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP);
     endif;
 
     suppressif ideqval FeaturesData.ShowCpuMenu == 0;
-         goto DASHARO_CPU_CONFIGURATION_FORM_ID,
-              prompt = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_TITLE),
-              help   = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_HELP);
+      goto DASHARO_CPU_CONFIGURATION_FORM_ID,
+        prompt = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_TITLE),
+        help   = STRING_TOKEN(STR_DASHARO_CPU_CONFIGURATION_HELP);
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -92,40 +92,40 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    suppressif ideqval FeaturesData.ShowLockBios == 0;
-          checkbox varid  = FeaturesData.LockBios,
-                   prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
-                   help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
-                   flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
-          endcheckbox;
+    disableif ideqval FeaturesData.ShowLockBios == 0;
+      checkbox varid  = FeaturesData.LockBios,
+               prompt = STRING_TOKEN(STR_LOCK_BIOS_PROMPT),
+               help   = STRING_TOKEN(STR_LOCK_BIOS_HELP),
+               flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+      endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.ShowSmmBwp == 0;
-          checkbox varid  = FeaturesData.SmmBwp,
-                   prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
-                   help   = STRING_TOKEN(STR_SMM_BWP_HELP),
-                   flags  = RESET_REQUIRED,
-          endcheckbox;
+    disableif ideqval FeaturesData.ShowSmmBwp == 0;
+      checkbox varid  = FeaturesData.SmmBwp,
+               prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
+               help   = STRING_TOKEN(STR_SMM_BWP_HELP),
+               flags  = RESET_REQUIRED,
+      endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.SecurityMenuShowIommu == 0;
+    disableif ideqval FeaturesData.SecurityMenuShowIommu == 0;
       checkbox name   = IommuEnable,
                varid  = FeaturesData.IommuConfig.IommuEnable,
                prompt = STRING_TOKEN(STR_DMA_PROTECTION_PROMPT),
                help   = STRING_TOKEN(STR_DMA_PROTECTION_HELP),
                flags  = RESET_REQUIRED,
       endcheckbox;
+
+      suppressif questionref(IommuEnable) == FALSE;
+        checkbox varid  = FeaturesData.IommuConfig.IommuHandoff,
+                 prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_PROMPT),
+                 help   = STRING_TOKEN(STR_IOMMU_HANDOFF_HELP),
+                 flags  = RESET_REQUIRED,
+        endcheckbox;
+      endif;
     endif;
 
-    suppressif questionref(IommuEnable) == FALSE;
-      checkbox varid  = FeaturesData.IommuConfig.IommuHandoff,
-               prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_PROMPT),
-               help   = STRING_TOKEN(STR_IOMMU_HANDOFF_HELP),
-               flags  = RESET_REQUIRED,
-      endcheckbox;
-    endif;
-
-    suppressif ideqval FeaturesData.DasharoEnterprise == 0;
+    disableif ideqval FeaturesData.DasharoEnterprise == 0;
       checkbox varid  = FeaturesData.BootManagerEnabled,
                prompt = STRING_TOKEN(STR_BOOT_MENU_ENABLED_PROMPT),
                help   = STRING_TOKEN(STR_BOOT_MENU_ENABLED_HELP),
@@ -133,7 +133,7 @@ formset
       endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.SecurityMenuShowWiFiBt == 0;
+    disableif ideqval FeaturesData.SecurityMenuShowWiFiBt == 0;
       checkbox varid  = FeaturesData.EnableWifiBt,
                prompt = STRING_TOKEN(STR_WIFI_BT_ENABLE_PROMPT),
                help   = STRING_TOKEN(STR_WIFI_BT_ENABLE_HELP),
@@ -141,7 +141,7 @@ formset
       endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.SecurityMenuShowCamera == 0;
+    disableif ideqval FeaturesData.SecurityMenuShowCamera == 0;
       checkbox varid  = FeaturesData.EnableCamera,
                prompt = STRING_TOKEN(STR_ENABLE_CAMERA_PROMPT),
                help   = STRING_TOKEN(STR_ENABLE_CAMERA_HELP),
@@ -149,16 +149,16 @@ formset
       endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.ShowFum == 0;
-        subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
-        subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    disableif ideqval FeaturesData.ShowFum == 0;
+      subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+      subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-        text
-            help  = STRING_TOKEN(STR_FUM_HELP),
-            text  = STRING_TOKEN(STR_FUM_PROMPT),
-            flags = INTERACTIVE,
-            key   = FIRMWARE_UPDATE_MODE_QUESTION_ID;
-     endif;
+      text
+        help  = STRING_TOKEN(STR_FUM_HELP),
+        text  = STRING_TOKEN(STR_FUM_PROMPT),
+        flags = INTERACTIVE,
+        key   = FIRMWARE_UPDATE_MODE_QUESTION_ID;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -171,12 +171,14 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox varid  = FeaturesData.NetworkBoot,
-             questionid = NETWORK_BOOT_QUESTION_ID,
-             prompt = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_PROMPT),
-             help   = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_HELP),
-             flags  = INTERACTIVE | RESET_REQUIRED,
-    endcheckbox;
+    disableif ideqval FeaturesData.ShowNetworkMenu == 0;
+      checkbox varid  = FeaturesData.NetworkBoot,
+               questionid = NETWORK_BOOT_QUESTION_ID,
+               prompt = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_PROMPT),
+               help   = STRING_TOKEN(STR_NETWORK_BOOT_ENABLE_HELP),
+               flags  = INTERACTIVE | RESET_REQUIRED,
+      endcheckbox;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -188,19 +190,21 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    checkbox name   = UsbStack,
-             varid  = FeaturesData.UsbStack,
-             prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
-             help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
-             flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
-    endcheckbox;
-
-    suppressif  questionref(UsbStack) == FALSE;
-      checkbox varid  = FeaturesData.UsbMassStorage,
-               prompt = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_PROMPT),
-               help   = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_HELP),
-               flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+    disableif ideqval FeaturesData.ShowUsbMenu == 0;
+      checkbox name   = UsbStack,
+              varid  = FeaturesData.UsbStack,
+              prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
+              help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
+              flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
       endcheckbox;
+
+      suppressif  questionref(UsbStack) == FALSE;
+        checkbox varid  = FeaturesData.UsbMassStorage,
+                prompt = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_PROMPT),
+                help   = STRING_TOKEN(STR_USB_MASS_STORAGE_ENABLE_HELP),
+                flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+        endcheckbox;
+      endif;
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -213,18 +217,20 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    oneof varid  = FeaturesData.MeMode,
-             questionid = INTEL_ME_MODE_QUESTION_ID,
-             prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
-             help   = STRING_TOKEN(STR_ME_MODE_HELP),
-             flags  = RESET_REQUIRED | INTERACTIVE,
+    disableif ideqval FeaturesData.ShowIntelMeMenu == 0;
+      oneof varid  = FeaturesData.MeMode,
+            questionid = INTEL_ME_MODE_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
+            help   = STRING_TOKEN(STR_ME_MODE_HELP),
+            flags  = RESET_REQUIRED | INTERACTIVE,
 
              option text = STRING_TOKEN(STR_ME_MODE_ENABLE), value = ME_MODE_ENABLE, flags = 0;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HECI), value = ME_MODE_DISABLE_HECI, flags = 0;
           suppressif ideqval FeaturesData.MeHapAvailable == 0;
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
           endif;
-    endoneof;
+      endoneof;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -236,20 +242,20 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    suppressif ideqval FeaturesData.ShowPs2Option == 0;
-        checkbox varid   = FeaturesData.Ps2Controller,
-                 prompt  = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
-                 help    = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
-                 flags   = CHECKBOX_DEFAULT | RESET_REQUIRED,
+    disableif ideqval FeaturesData.ShowPs2Option == 0;
+        checkbox varid  = FeaturesData.Ps2Controller,
+                 prompt = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_PROMPT),
+                 help   = STRING_TOKEN(STR_PS2_CONTROLLER_ENABLE_HELP),
+                 flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
         endcheckbox;
     endif;
 
-    suppressif ideqval FeaturesData.WatchdogAvailable == 0;
-      checkbox varid   = FeaturesData.WatchdogConfig.WatchdogEnable,
+    disableif ideqval FeaturesData.WatchdogAvailable == 0;
+      checkbox varid  = FeaturesData.WatchdogConfig.WatchdogEnable,
                questionid = WATCHDOG_ENABLE_QUESTION_ID,
-               prompt  = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
-               help    = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
-               flags   = RESET_REQUIRED | INTERACTIVE,
+               prompt = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
+               help   = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
+               flags  = RESET_REQUIRED | INTERACTIVE,
       endcheckbox;
 
       suppressif ideqval FeaturesData.WatchdogConfig.WatchdogEnable == 0;
@@ -276,101 +282,102 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    suppressif ideqval FeaturesData.PowerMenuShowFanCurve == 0;
-         oneof varid  = FeaturesData.FanCurveOption,
-                  prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
-                  help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
-                  flags  = RESET_REQUIRED,
+    disableif ideqval FeaturesData.PowerMenuShowFanCurve == 0;
+      oneof varid  = FeaturesData.FanCurveOption,
+            prompt = STRING_TOKEN(STR_FAN_CURVE_PROMPT),
+            help   = STRING_TOKEN(STR_FAN_CURVE_HELP),
+            flags  = RESET_REQUIRED,
 
-                  option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = DEFAULT;
-                  option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
-         endoneof;
+            option text = STRING_TOKEN(STR_FAN_CURVE_SILENT), value = FAN_CURVE_OPTION_SILENT, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_FAN_CURVE_PERFORMANCE), value = FAN_CURVE_OPTION_PERFORMANCE, flags = 0;
+      endoneof;
     endif;
 
-    suppressif ideqval FeaturesData.PowerMenuShowSleepType == 0;
-         oneof varid = FeaturesData.SleepType,
-                  questionid = SLEEP_TYPE_QUESTION_ID,
-                  prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
-                  help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
-                  flags  = RESET_REQUIRED | INTERACTIVE,
+    disableif ideqval FeaturesData.PowerMenuShowSleepType == 0;
+      oneof varid = FeaturesData.SleepType,
+            questionid = SLEEP_TYPE_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_SLEEP_TYPE_PROMPT),
+            help   = STRING_TOKEN(STR_SLEEP_TYPE_HELP),
+            flags  = RESET_REQUIRED | INTERACTIVE,
 
-                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = 0;
-               suppressif ideqval FeaturesData.S3SupportExperimental == 1;
-                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
-               endif;
-               suppressif ideqval FeaturesData.S3SupportExperimental == 0;
-                  option text = STRING_TOKEN(STR_SLEEP_TYPE_S3_EXPERIMENTAL), value = SLEEP_TYPE_S3, flags = 0;
-               endif;
-         endoneof;
+            option text = STRING_TOKEN(STR_SLEEP_TYPE_S0IX), value = SLEEP_TYPE_S0IX, flags = 0;
+            suppressif ideqval FeaturesData.S3SupportExperimental == 1;
+              option text = STRING_TOKEN(STR_SLEEP_TYPE_S3), value = SLEEP_TYPE_S3, flags = 0;
+            endif;
+            suppressif ideqval FeaturesData.S3SupportExperimental == 0;
+              option text = STRING_TOKEN(STR_SLEEP_TYPE_S3_EXPERIMENTAL), value = SLEEP_TYPE_S3, flags = 0;
+            endif;
+      endoneof;
     endif;
 
-    suppressif ideqval FeaturesData.PowerFailureState == POWER_FAILURE_STATE_HIDDEN;
-         oneof varid = FeaturesData.PowerFailureState,
-                  questionid = POWER_FAILURE_STATE_QUESTION_ID,
-                  prompt = STRING_TOKEN(STR_POWER_FAILURE_STATE_PROMPT),
-                  help   = STRING_TOKEN(STR_POWER_FAILURE_STATE_HELP),
-                  flags  = INTERACTIVE | RESET_REQUIRED,
+    disableif ideqval FeaturesData.ShowPowerFailureState == 0;
+      oneof varid  = FeaturesData.PowerFailureState,
+            questionid = POWER_FAILURE_STATE_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_POWER_FAILURE_STATE_PROMPT),
+            help   = STRING_TOKEN(STR_POWER_FAILURE_STATE_HELP),
+            flags  = INTERACTIVE | RESET_REQUIRED,
 
-                  option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_OFF), value = POWER_FAILURE_STATE_OFF, flags = 0;
-                  option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_ON), value = POWER_FAILURE_STATE_ON, flags = 0;
-                  option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_KEEP), value = POWER_FAILURE_STATE_KEEP, flags = 0;
-         endoneof;
+            option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_OFF), value = POWER_FAILURE_STATE_OFF, flags = 0;
+            option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_ON), value = POWER_FAILURE_STATE_ON, flags = 0;
+            option text = STRING_TOKEN(STR_POWER_FAILURE_STATE_KEEP), value = POWER_FAILURE_STATE_KEEP, flags = 0;
+      endoneof;
     endif;
 
-    suppressif ideqval FeaturesData.PowerMenuShowBatteryThresholds == 0;
-        numeric varid   = FeaturesData.BatteryConfig.StartThreshold,
-                questionid = BATTERY_START_THRESHOLD_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_PROMPT),
-                help    = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_HELP),
-                flags   = RESET_REQUIRED | INTERACTIVE,
+    disableif ideqval FeaturesData.PowerMenuShowBatteryThresholds == 0;
+      numeric varid   = FeaturesData.BatteryConfig.StartThreshold,
+              questionid = BATTERY_START_THRESHOLD_QUESTION_ID,
+              prompt  = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_PROMPT),
+              help    = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_HELP),
+              flags   = RESET_REQUIRED | INTERACTIVE,
+              minimum = 0,
+              maximum = 100,
+              step    = 1,
+
+              nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                  ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
+              endif
+      endnumeric;
+
+      numeric varid   = FeaturesData.BatteryConfig.StopThreshold,
+              questionid = BATTERY_STOP_THRESHOLD_QUESTION_ID,
+              prompt  = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_PROMPT),
+              help    = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_HELP),
+              flags   = RESET_REQUIRED | INTERACTIVE,
+              minimum = 0,
+              maximum = 100,
+              step    = 1,
+
+              nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                  ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
+              endif
+      endnumeric;
+    endif;
+
+    disableif ideqval FeaturesData.ShowCpuThrottlingThreshold == 0;
+      numeric varid   = FeaturesData.CpuThrottlingOffset,
+              questionid = CPU_THROTTLING_OFFSET_QUESTION_ID,
+              prompt  = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_PROMPT),
+              help    = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_HELP),
+              flags   = RESET_REQUIRED | INTERACTIVE,
+              minimum = 0,
+              maximum = 63,
+              step    = 1,
+
+              write   set(FeaturesData.CpuThrottlingThreshold, get(FeaturesData.CpuMaxTemperature) - pushthis);
+
+      endnumeric;
+
+      grayoutif TRUE;
+        numeric varid   = FeaturesData.CpuThrottlingThreshold,
+                prompt  = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_PROMPT),
+                help    = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_HELP),
                 minimum = 0,
-                maximum = 100,
-                step    = 1,
+                maximum = 255,
 
-                nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
-                    ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
-                endif
-        endnumeric;
-        numeric varid   = FeaturesData.BatteryConfig.StopThreshold,
-                questionid = BATTERY_STOP_THRESHOLD_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_PROMPT),
-                help    = STRING_TOKEN(STR_BATTERY_STOP_THRESHOLD_HELP),
-                flags   = RESET_REQUIRED | INTERACTIVE,
-                minimum = 0,
-                maximum = 100,
-                step    = 1,
-
-                nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
-                    ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
-                endif
-        endnumeric;
-    endif;
-
-    suppressif ideqval FeaturesData.ShowCpuThrottlingThreshold == 0;
-        numeric varid   = FeaturesData.CpuThrottlingOffset,
-                questionid = CPU_THROTTLING_OFFSET_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_PROMPT),
-                help    = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_HELP),
-                flags   = RESET_REQUIRED | INTERACTIVE,
-                minimum = 0,
-                maximum = 63,
-                step    = 1,
-
-                write   set(FeaturesData.CpuThrottlingThreshold, get(FeaturesData.CpuMaxTemperature) - pushthis);
+                read   get(FeaturesData.CpuMaxTemperature) - get(FeaturesData.CpuThrottlingOffset);
 
         endnumeric;
-
-        grayoutif TRUE;
-          numeric varid   = FeaturesData.CpuThrottlingThreshold,
-                  prompt  = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_PROMPT),
-                  help    = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_HELP),
-                  minimum = 0,
-                  maximum = 255,
-
-                  read   get(FeaturesData.CpuMaxTemperature) - get(FeaturesData.CpuThrottlingOffset);
-
-          endnumeric;
-        endif;
+      endif;
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -383,24 +390,26 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    suppressif ideqval FeaturesData.PciMenuShowResizeableBars == 0;
-         checkbox varid  = FeaturesData.ResizeableBarsEnabled,
-                  prompt = STRING_TOKEN(STR_RESIZEABLE_BARS_PROMPT),
-                  help   = STRING_TOKEN(STR_RESIZEABLE_BARS_HELP),
-                  flags  = RESET_REQUIRED,
-         endcheckbox;
+    disableif ideqval FeaturesData.ShowPciMenu == 0;
+      disableif ideqval FeaturesData.PciMenuShowResizeableBars == 0;
+          checkbox varid  = FeaturesData.ResizeableBarsEnabled,
+                    prompt = STRING_TOKEN(STR_RESIZEABLE_BARS_PROMPT),
+                    help   = STRING_TOKEN(STR_RESIZEABLE_BARS_HELP),
+                    flags  = RESET_REQUIRED,
+          endcheckbox;
+      endif;
+
+      oneof varid  = FeaturesData.OptionRomExecution,
+            questionid = OPTION_ROM_STATE_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_OPTION_ROM_PROMPT),
+            help   = STRING_TOKEN(STR_OPTION_ROM_HELP),
+            flags  = INTERACTIVE | RESET_REQUIRED,
+
+            option text = STRING_TOKEN(STR_OPTION_ROM_DISABLE), value = OPTION_ROM_POLICY_DISABLE_ALL, flags = 0;
+            option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE), value = OPTION_ROM_POLICY_ENABLE_ALL, flags = 0;
+            option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE_VGA), value = OPTION_ROM_POLICY_VGA_ONLY, flags = 0;
+      endoneof;
     endif;
-
-    oneof varid  = FeaturesData.OptionRomExecution,
-             questionid = OPTION_ROM_STATE_QUESTION_ID,
-             prompt = STRING_TOKEN(STR_OPTION_ROM_PROMPT),
-             help   = STRING_TOKEN(STR_OPTION_ROM_HELP),
-             flags  = INTERACTIVE | RESET_REQUIRED,
-
-             option text = STRING_TOKEN(STR_OPTION_ROM_DISABLE), value = OPTION_ROM_POLICY_DISABLE_ALL, flags = 0;
-             option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE), value = OPTION_ROM_POLICY_ENABLE_ALL, flags = 0;
-             option text = STRING_TOKEN(STR_OPTION_ROM_ENABLE_VGA), value = OPTION_ROM_POLICY_VGA_ONLY, flags = 0;
-    endoneof;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -412,16 +421,18 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    oneof varid = FeaturesData.MemoryProfile,
-             prompt = STRING_TOKEN(STR_MEMORY_PROFILE_PROMPT),
-             help   = STRING_TOKEN(STR_MEMORY_PROFILE_HELP),
-             flags  = RESET_REQUIRED,
+    disableif ideqval FeaturesData.ShowMemoryMenu == 0;
+      oneof varid  = FeaturesData.MemoryProfile,
+            prompt = STRING_TOKEN(STR_MEMORY_PROFILE_PROMPT),
+            help   = STRING_TOKEN(STR_MEMORY_PROFILE_HELP),
+            flags  = RESET_REQUIRED,
 
-             option text = STRING_TOKEN(STR_MEMORY_PROFILE_JEDEC), value = MEMORY_PROFILE_JEDEC, flags = DEFAULT;
-             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP1), value = MEMORY_PROFILE_XMP1, flags = 0;
-             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP2), value = MEMORY_PROFILE_XMP2, flags = 0;
-             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP3), value = MEMORY_PROFILE_XMP3, flags = 0;
-    endoneof;
+            option text = STRING_TOKEN(STR_MEMORY_PROFILE_JEDEC), value = MEMORY_PROFILE_JEDEC, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP1), value = MEMORY_PROFILE_XMP1, flags = 0;
+            option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP2), value = MEMORY_PROFILE_XMP2, flags = 0;
+            option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP3), value = MEMORY_PROFILE_XMP3, flags = 0;
+      endoneof;
+    endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -433,20 +444,22 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-     checkbox varid   = FeaturesData.SerialPortRedirection,
-              questionid = SERIAL_PORT_REDIR_QUESTION_ID,
-              prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_PROMPT),
-              help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_HELP),
-              flags   = INTERACTIVE | RESET_REQUIRED,
-     endcheckbox;
+    suppressif ideqval FeaturesData.ShowSerialPortMenu == 0;
+      checkbox varid   = FeaturesData.SerialPortRedirection,
+               questionid = SERIAL_PORT_REDIR_QUESTION_ID,
+               prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_PROMPT),
+               help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION_HELP),
+               flags   = INTERACTIVE | RESET_REQUIRED,
+      endcheckbox;
 
-    suppressif ideqval FeaturesData.Have2ndUart == 0;
-        checkbox varid   = FeaturesData.SerialPort2Redirection,
+      disableif ideqval FeaturesData.Have2ndUart == 0;
+        checkbox varid  = FeaturesData.SerialPort2Redirection,
                  questionid = SERIAL_PORT2_REDIR_QUESTION_ID,
-                 prompt  = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT),
-                 help    = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_HELP),
-                 flags   = INTERACTIVE | RESET_REQUIRED,
+                 prompt = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT),
+                 help   = STRING_TOKEN(STR_SERIAL_CONSOLE_REDIRECTION2_HELP),
+                 flags  = INTERACTIVE | RESET_REQUIRED,
         endcheckbox;
+      endif;
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -460,15 +473,15 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    suppressif ideqval FeaturesData.ShowCpuCoreDisable == 0;
+    disableif ideqval FeaturesData.ShowCpuCoreDisable == 0;
 
       disableif ideqval FeaturesData.HybridCpuArchitecture == 0;
 
         suppressif ideqval FeaturesData.SmallCoreMaxCount == 0;
-          oneof varid = FeaturesData.SmallCoreActiveCount,
-                prompt  = STRING_TOKEN(STR_SMALL_CORE_COUNT_PROMPT),
-                help    = STRING_TOKEN(STR_SMALL_CORE_COUNT_HELP),
-                flags   = RESET_REQUIRED,
+          oneof varid  = FeaturesData.SmallCoreActiveCount,
+                prompt = STRING_TOKEN(STR_SMALL_CORE_COUNT_PROMPT),
+                help   = STRING_TOKEN(STR_SMALL_CORE_COUNT_HELP),
+                flags  = RESET_REQUIRED,
 
                 option text = STRING_TOKEN (STR_CPU_CORES_ENABLE_ALL), value = CPU_CORES_ENABLE_ALL, flags = DEFAULT;
                 suppressif ideqval FeaturesData.SmallCoreMaxCount < 16;
@@ -609,18 +622,14 @@ formset
                 suppressif ideqval FeaturesData.CoreMaxCount < 2;
                   option text = STRING_TOKEN (STR_1), value = 1, flags = 0;
                 endif;
-                // Not really valid value, but allowed if system has only E-cores
-                suppressif TRUE;
-                  option text = STRING_TOKEN (STR_0), value = 0, flags = 0;
-                endif;
           endoneof;
         endif; // suppressif FeaturesData.CoreMaxCount == 1;
 
       endif; // disableif HybridCpuArchitecture == 1
 
-    endif; // suppressif ShowCpuCoreDisable == 0
+    endif; // disableif ShowCpuCoreDisable == 0
 
-    suppressif ideqval FeaturesData.ShowCpuHyperThreading == 0;
+    disableif ideqval FeaturesData.ShowCpuHyperThreading == 0;
       suppressif ideqval FeaturesData.HyperThreadingSupported == 0;
         checkbox varid  = FeaturesData.HyperThreading,
                  questionid = HYPER_THREADING_QUESTION_ID,
