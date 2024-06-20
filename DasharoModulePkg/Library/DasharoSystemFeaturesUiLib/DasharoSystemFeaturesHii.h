@@ -82,8 +82,8 @@ typedef struct {
   BOOLEAN                  SerialPortRedirection;
   BOOLEAN                  SerialPort2Redirection;
   UINT8                    CpuThrottlingThreshold;
+  UINT8                    CpuThrottlingOffset;
   UINT8                    CpuMaxTemperature;
-  UINT8                    CpuMinThrottlingThreshold;
   BOOLEAN                  HybridCpuArchitecture;
   BOOLEAN                  HyperThreadingSupported;
   BOOLEAN                  HyperThreading;
@@ -148,5 +148,6 @@ typedef struct {
 #define SLEEP_TYPE_QUESTION_ID               0x800A
 #define SERIAL_PORT2_REDIR_QUESTION_ID       0x800B
 #define HYPER_THREADING_QUESTION_ID          0x800C
+#define CPU_THROTTLING_OFFSET_QUESTION_ID    0x800D
 
 #endif
