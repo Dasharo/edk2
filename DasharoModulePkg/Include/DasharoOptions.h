@@ -17,9 +17,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // Settings
 #define DASHARO_VAR_BATTERY_CONFIG                L"BatteryConfig"
 #define DASHARO_VAR_BOOT_MANAGER_ENABLED          L"BootManagerEnabled"
-#define DASHARO_VAR_CPU_MAX_TEMPERATURE           L"CpuMaxTemperature"
-#define DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD  L"CpuMinThrottlingThreshold"
-#define DASHARO_VAR_CPU_THROTTLING_THRESHOLD      L"CpuThrottlingThreshold"
+#define DASHARO_VAR_CPU_THROTTLING_OFFSET         L"CpuThrottlingOffset"
 #define DASHARO_VAR_ENABLE_CAMERA                 L"EnableCamera"
 #define DASHARO_VAR_ENABLE_WIFI_BT                L"EnableWifiBt"
 #define DASHARO_VAR_FAN_CURVE_OPTION              L"FanCurveOption"

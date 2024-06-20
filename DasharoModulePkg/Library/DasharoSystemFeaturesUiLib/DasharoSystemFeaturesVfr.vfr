@@ -347,20 +347,30 @@ formset
     endif;
 
     suppressif ideqval FeaturesData.ShowCpuThrottlingThreshold == 0;
-        numeric varid   = FeaturesData.CpuThrottlingThreshold,
-                prompt  = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_PROMPT),
-                help    = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_HELP),
+        numeric varid   = FeaturesData.CpuThrottlingOffset,
+                questionid = CPU_THROTTLING_OFFSET_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_PROMPT),
+                help    = STRING_TOKEN(STR_CPU_THROTTLING_OFFSET_HELP),
                 flags   = RESET_REQUIRED | INTERACTIVE,
-                minimum = 0, // Minimum threshold placeholder
-                maximum = 200, // Maximum threshold placeholder
+                minimum = 0,
+                maximum = 63,
                 step    = 1,
-                nosubmitif prompt = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_RANGE_ERROR),
-                    ideqid FeaturesData.CpuThrottlingThreshold > FeaturesData.CpuMaxTemperature
-                endif
-                nosubmitif prompt = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_RANGE_ERROR),
-                    ideqid FeaturesData.CpuThrottlingThreshold < FeaturesData.CpuMinThrottlingThreshold
-                endif
+
+                write   set(FeaturesData.CpuThrottlingThreshold, get(FeaturesData.CpuMaxTemperature) - pushthis);
+
         endnumeric;
+
+        grayoutif TRUE;
+          numeric varid   = FeaturesData.CpuThrottlingThreshold,
+                  prompt  = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_PROMPT),
+                  help    = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_HELP),
+                  minimum = 0,
+                  maximum = 255,
+
+                  read   get(FeaturesData.CpuMaxTemperature) - get(FeaturesData.CpuThrottlingOffset);
+
+          endnumeric;
+        endif;
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);

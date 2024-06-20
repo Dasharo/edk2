@@ -192,7 +192,9 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowPs2Option) = PcdGetBool (PcdShowPs2Option);
   PRIVATE_DATA(Have2ndUart) = PcdGetBool (PcdHave2ndUart);
   PRIVATE_DATA(ShowCpuThrottlingThreshold) = PcdGetBool (PcdShowCpuThrottlingThreshold);
+  PRIVATE_DATA(CpuMaxTemperature) = FixedPcdGet8 (PcdCpuMaxTemperature);
   PRIVATE_DATA(ShowCpuCoreDisable) = PcdGetBool(PcdShowCpuCoreDisable);
+  PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
   PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
@@ -242,9 +244,7 @@ DasharoSystemFeaturesUiLibConstructor (
 
   LOAD_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
   LOAD_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
-  LOAD_VAR (DASHARO_VAR_CPU_MAX_TEMPERATURE, CpuMaxTemperature);
-  LOAD_VAR (DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD, CpuMinThrottlingThreshold);
-  LOAD_VAR (DASHARO_VAR_CPU_THROTTLING_THRESHOLD, CpuThrottlingThreshold);
+  LOAD_VAR (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset);
   LOAD_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
   LOAD_VAR (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt);
   LOAD_VAR (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption);
@@ -516,9 +516,7 @@ DasharoSystemFeaturesRouteConfig (
 
   STORE_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
   STORE_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
-  STORE_VAR (DASHARO_VAR_CPU_MAX_TEMPERATURE, CpuMaxTemperature);
-  STORE_VAR (DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD, CpuMinThrottlingThreshold);
-  STORE_VAR (DASHARO_VAR_CPU_THROTTLING_THRESHOLD, CpuThrottlingThreshold);
+  STORE_VAR (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset);
   STORE_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
   STORE_VAR (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt);
   STORE_VAR (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption);
@@ -632,6 +630,9 @@ DasharoSystemFeaturesCallback (
         break;
       case HYPER_THREADING_QUESTION_ID:
         Value->b = DasharoGetVariableDefault (DASHARO_VAR_HYPER_THREADING).Boolean;
+        break;
+      case CPU_THROTTLING_OFFSET_QUESTION_ID:
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_CPU_THROTTLING_OFFSET).Uint8;
         break;
       default:
         Status = EFI_UNSUPPORTED;
