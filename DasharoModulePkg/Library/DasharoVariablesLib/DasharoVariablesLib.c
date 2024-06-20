@@ -38,9 +38,7 @@ typedef struct {
 STATIC CHAR16 *mAutoCreatedVariables[] = {
   DASHARO_VAR_BATTERY_CONFIG,
   DASHARO_VAR_BOOT_MANAGER_ENABLED,
-  DASHARO_VAR_CPU_MAX_TEMPERATURE,
-  DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD,
-  DASHARO_VAR_CPU_THROTTLING_THRESHOLD,
+  DASHARO_VAR_CPU_THROTTLING_OFFSET,
   DASHARO_VAR_ENABLE_CAMERA,
   DASHARO_VAR_ENABLE_WIFI_BT,
   DASHARO_VAR_FAN_CURVE_OPTION,
@@ -95,14 +93,8 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_BOOT_MANAGER_ENABLED) == 0) {
     Data.Boolean = TRUE;
     Size = sizeof (Data.Boolean);
-  } else if (StrCmp (VarName, DASHARO_VAR_CPU_MAX_TEMPERATURE) == 0) {
-    Data.Uint8 = FixedPcdGet8 (PcdCpuMaxTemperature);
-    Size = sizeof (Data.Uint8);
-  } else if (StrCmp (VarName, DASHARO_VAR_CPU_MIN_THROTTLING_THRESHOLD) == 0) {
-    Data.Uint8 = FixedPcdGet8 (PcdCpuMaxTemperature) - 63;
-    Size = sizeof (Data.Uint8);
-  } else if (StrCmp (VarName, DASHARO_VAR_CPU_THROTTLING_THRESHOLD) == 0) {
-    Data.Uint8 = 80;
+  } else if (StrCmp (VarName, DASHARO_VAR_CPU_THROTTLING_OFFSET) == 0) {
+    Data.Uint8 = FixedPcdGet8 (PcdCpuThrottlingOffsetDefault);
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_ENABLE_CAMERA) == 0) {
     Data.Boolean = TRUE;
