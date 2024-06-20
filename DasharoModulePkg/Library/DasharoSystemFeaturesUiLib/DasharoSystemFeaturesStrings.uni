@@ -171,9 +171,12 @@
 #string STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT   #language en-US  "Enable COM1 Serial Console Redirection"
 #string STR_SERIAL_CONSOLE_REDIRECTION2_HELP     #language en-US  "Redirect the firmware console to the second serial port."
 
-#string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "CPU Throttling Threshold"
+#string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "Current CPU Throttling Threshold Temperature"
 #string STR_CPU_THROTTLING_THRESHOLD_HELP        #language en-US  "The temperature above which the CPU will start throttling itself."
-#string STR_CPU_THROTTLING_THRESHOLD_RANGE_ERROR #language en-US  "The throttling threshold must be between TjMax - 63 and TjMax!!"
+
+#string STR_CPU_THROTTLING_OFFSET_PROMPT      #language en-US  "CPU Throttling Temperature Offset"
+#string STR_CPU_THROTTLING_OFFSET_HELP        #language en-US  "The temperature offset from TjMax (maximum CPU temperature) above which the CPU will start throttling itself.\n\n"
+                                                                  "The value is also known as TCC offset."
 
 #string STR_BIG_CORE_COUNT_PROMPT   #language en-US  "Number of active P-cores"
 #string STR_BIG_CORE_COUNT_HELP     #language en-US  "Specify the number of Performance cores that should remain active.\n\n"

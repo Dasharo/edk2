@@ -56,5 +56,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
