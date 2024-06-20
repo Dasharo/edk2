@@ -195,7 +195,8 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(CpuMaxTemperature) = FixedPcdGet8 (PcdCpuMaxTemperature);
   PRIVATE_DATA(ShowCpuCoreDisable) = PcdGetBool(PcdShowCpuCoreDisable);
   PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
-  PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
+  PRIVATE_DATA(WatchdogAvailable) = PcdGetBool (PcdShowOcWdtOptions);
+  PRIVATE_DATA(ShowPowerFailureState) = FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
@@ -230,16 +231,22 @@ DasharoSystemFeaturesUiLibConstructor (
   if (!PRIVATE_DATA(HybridCpuArchitecture))
     PRIVATE_DATA(CoreMaxCount) = PRIVATE_DATA(BigCoreMaxCount);
 
-#define LOAD_VAR(var, field) do {                                                   \
-    BufferSize = sizeof (mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field);  \
-    Status = gRT->GetVariable (                                                     \
-        (var),                                                                      \
-        &gDasharoSystemFeaturesGuid,                                                \
-        NULL,                                                                       \
-        &BufferSize,                                                                \
-        &mDasharoSystemFeaturesPrivate.DasharoFeaturesData.field                    \
-        );                                                                          \
-    ASSERT_EFI_ERROR (Status);                                                      \
+#define LOAD_VAR(var, field) do {                                               \
+    BufferSize = sizeof (PRIVATE_DATA(field));                                  \
+    Status = gRT->GetVariable (                                                 \
+        (var),                                                                  \
+        &gDasharoSystemFeaturesGuid,                                            \
+        NULL,                                                                   \
+        &BufferSize,                                                            \
+        &PRIVATE_DATA(field)                                                    \
+        );                                                                      \
+    if (EFI_ERROR (Status))                                                     \
+      PRIVATE_DATA(field) = _Generic(PRIVATE_DATA(field),                       \
+                                UINT8: DasharoGetVariableDefault(var).Uint8,    \
+              DASHARO_WATCHDOG_CONFIG: DasharoGetVariableDefault(var).Watchdog, \
+                 DASHARO_IOMMU_CONFIG: DasharoGetVariableDefault(var).Iommu,    \
+               DASHARO_BATTERY_CONFIG: DasharoGetVariableDefault(var).Battery   \
+    );                                                                          \
   } while (FALSE)
 
   LOAD_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
@@ -264,13 +271,15 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage);
   LOAD_VAR (DASHARO_VAR_USB_STACK, UsbStack);
   LOAD_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
-  LOAD_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
   LOAD_VAR (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount);
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
   LOAD_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
 
 #undef LOAD_VAR
+
+  PRIVATE_DATA(CpuThrottlingThreshold) =
+    PRIVATE_DATA(CpuMaxTemperature) - PRIVATE_DATA(CpuThrottlingOffset);
 
   if (PRIVATE_DATA(HybridCpuArchitecture) &&
       PRIVATE_DATA(SmallCoreActiveCount) == 0 &&
@@ -283,20 +292,23 @@ DasharoSystemFeaturesUiLibConstructor (
      */
     PRIVATE_DATA(SmallCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
     PRIVATE_DATA(BigCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
-    gRT->SetVariable (
-          DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
-          &gDasharoSystemFeaturesGuid,
-          DasharoGetVariableAttributes (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT),
-          sizeof (PRIVATE_DATA(SmallCoreActiveCount)),
-          &PRIVATE_DATA(SmallCoreActiveCount)
-          );
-    gRT->SetVariable (
-          DASHARO_VAR_CORE_ACTIVE_COUNT,
-          &gDasharoSystemFeaturesGuid,
-          DasharoGetVariableAttributes (DASHARO_VAR_CORE_ACTIVE_COUNT),
-          sizeof (PRIVATE_DATA(BigCoreActiveCount)),
-          &PRIVATE_DATA(BigCoreActiveCount)
-          );
+
+    if (PcdGetBool(PcdShowCpuCoreDisable)) {
+      gRT->SetVariable (
+            DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
+            &gDasharoSystemFeaturesGuid,
+            DasharoGetVariableAttributes (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT),
+            sizeof (PRIVATE_DATA(SmallCoreActiveCount)),
+            &PRIVATE_DATA(SmallCoreActiveCount)
+            );
+      gRT->SetVariable (
+            DASHARO_VAR_CORE_ACTIVE_COUNT,
+            &gDasharoSystemFeaturesGuid,
+            DasharoGetVariableAttributes (DASHARO_VAR_CORE_ACTIVE_COUNT),
+            sizeof (PRIVATE_DATA(BigCoreActiveCount)),
+            &PRIVATE_DATA(BigCoreActiveCount)
+            );
+    }
   }
 
   return EFI_SUCCESS;
@@ -487,7 +499,7 @@ DasharoSystemFeaturesRouteConfig (
       );
   ASSERT_EFI_ERROR (Status);
 
-  if (PrivateData->HybridCpuArchitecture) {
+  if (PrivateData->HybridCpuArchitecture && PcdGetBool (PcdShowCpuCoreDisable)) {
     if (DasharoFeaturesData.SmallCoreActiveCount == 0 && PrivateData->BigCoreMaxCount == 0)
       return EFI_INVALID_PARAMETER;
 
@@ -497,54 +509,78 @@ DasharoSystemFeaturesRouteConfig (
 
   // Can use CompareMem() on structures instead of a per-field comparison as
   // long as they are packed.
-#define STORE_VAR(var, field) do {                               \
-    if (CompareMem (&Private->DasharoFeaturesData.field,         \
-                    &DasharoFeaturesData.field,                  \
-                    sizeof (DasharoFeaturesData.field)) != 0) {  \
-      Status = gRT->SetVariable (                                \
-          (var),                                                 \
-          &gDasharoSystemFeaturesGuid,                           \
-          DasharoGetVariableAttributes (var),                    \
-          sizeof (DasharoFeaturesData.field),                    \
-          &DasharoFeaturesData.field                             \
-          );                                                     \
-      if (EFI_ERROR (Status)) {                                  \
-        return Status;                                           \
-      }                                                          \
-    }                                                            \
+#define STORE_VAR_IF(var, field, cond) do {                        \
+    if (cond) {                                                    \
+      if (CompareMem (&Private->DasharoFeaturesData.field,         \
+                      &DasharoFeaturesData.field,                  \
+                      sizeof (DasharoFeaturesData.field)) != 0) {  \
+        Status = gRT->SetVariable (                                \
+            (var),                                                 \
+            &gDasharoSystemFeaturesGuid,                           \
+            DasharoGetVariableAttributes (var),                    \
+            sizeof (DasharoFeaturesData.field),                    \
+            &DasharoFeaturesData.field                             \
+            );                                                     \
+        if (EFI_ERROR (Status)) {                                  \
+          return Status;                                           \
+        }                                                          \
+      }                                                            \
+    }                                                              \
   } while (FALSE)
 
-  STORE_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
-  STORE_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
-  STORE_VAR (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset);
-  STORE_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
-  STORE_VAR (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt);
-  STORE_VAR (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption);
-  STORE_VAR (DASHARO_VAR_IOMMU_CONFIG, IommuConfig);
-  STORE_VAR (DASHARO_VAR_LOCK_BIOS, LockBios);
-  STORE_VAR (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile);
-  STORE_VAR (DASHARO_VAR_ME_MODE, MeMode);
-  STORE_VAR (DASHARO_VAR_NETWORK_BOOT, NetworkBoot);
-  STORE_VAR (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution);
-  STORE_VAR (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState);
-  STORE_VAR (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller);
-  STORE_VAR (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled);
-  STORE_VAR (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection);
-  STORE_VAR (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection);
-  STORE_VAR (DASHARO_VAR_SLEEP_TYPE, SleepType);
-  STORE_VAR (DASHARO_VAR_SMM_BWP, SmmBwp);
-  STORE_VAR (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage);
-  STORE_VAR (DASHARO_VAR_USB_STACK, UsbStack);
-  STORE_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
-  STORE_VAR (DASHARO_VAR_WATCHDOG_AVAILABLE, WatchdogAvailable);
-  STORE_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
+  if (PcdGetBool (PcdShowSecurityMenu)) {
+      STORE_VAR_IF (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled, PcdGetBool (PcdDasharoEnterprise));
+      STORE_VAR_IF (DASHARO_VAR_ENABLE_CAMERA, EnableCamera, PcdGetBool (PcdSecurityShowCameraOption));
+      STORE_VAR_IF (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt, PcdGetBool (PcdSecurityShowWiFiBtOption));
+      STORE_VAR_IF (DASHARO_VAR_IOMMU_CONFIG, IommuConfig, PcdGetBool (PcdShowIommuOptions));
+      STORE_VAR_IF (DASHARO_VAR_LOCK_BIOS, LockBios, PcdGetBool (PcdShowLockBios));
+      STORE_VAR_IF (DASHARO_VAR_SMM_BWP, SmmBwp, PcdGetBool (PcdShowSmmBwp));
+  }
 
-  if (PrivateData->HybridCpuArchitecture) {
-    STORE_VAR (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount);
-    STORE_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
-  } else {
-    // CoreActiveCount used for P-cores and non-hybrid CPU architectures to match FSP
-    STORE_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
+  STORE_VAR_IF (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile, PcdGetBool (PcdShowMemoryMenu));
+  STORE_VAR_IF (DASHARO_VAR_ME_MODE, MeMode, PcdGetBool (PcdShowIntelMeMenu));
+  STORE_VAR_IF (DASHARO_VAR_NETWORK_BOOT, NetworkBoot, PcdGetBool (PcdShowNetworkMenu));
+
+  if (PcdGetBool (PcdShowPowerMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_SLEEP_TYPE, SleepType, PcdGetBool (PcdPowerMenuShowSleepType));
+    STORE_VAR_IF (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState,
+                  FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
+    STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, PcdGetBool (PcdPowerMenuShowFanCurve));
+    STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, PcdGetBool (PcdPowerMenuShowBatteryThresholds));
+    STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, PcdGetBool (PcdShowCpuThrottlingThreshold));
+  }
+
+  if (PcdGetBool (PcdShowPciMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution, TRUE);
+    STORE_VAR_IF (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled, PcdGetBool (PcdPciMenuShowResizeableBars));
+  }
+
+  if (PcdGetBool (PcdShowSerialPortMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection, TRUE);
+    STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection, PcdGetBool (PcdHave2ndUart));
+  }
+
+  if (PcdGetBool (PcdShowUsbMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage, TRUE);
+    STORE_VAR_IF (DASHARO_VAR_USB_STACK, UsbStack, TRUE);
+  }
+
+  if (PcdGetBool (PcdShowChipsetMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_WATCHDOG, WatchdogConfig, PcdGetBool (PcdShowOcWdtOptions));
+    STORE_VAR_IF (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller, PcdGetBool (PcdShowPs2Option));
+  }
+
+  if (PcdGetBool (PcdShowCpuMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_HYPER_THREADING, HyperThreading, PcdGetBool (PcdShowCpuHyperThreading));
+
+    if (PrivateData->HybridCpuArchitecture) {
+      STORE_VAR_IF (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
+      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
+    } else {
+      // CoreActiveCount used for P-cores and non-hybrid CPU architectures to match FSP
+      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
+    }
+
   }
 
 #undef STORE_VAR
