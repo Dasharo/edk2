@@ -17,17 +17,22 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/DxeServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/BlParseLib.h>
 #include <Library/UefiLib.h>
 #include <Library/IoLib.h>
 #include <Library/HobLib.h>
+#include <Library/MemoryAllocationLib.h>
 
 #include <Guid/Acpi.h>
 #include <Guid/SmBios.h>
+#include <Guid/SystemResourceTable.h>
 #include <Guid/SystemTableInfoGuid.h>
 #include <Guid/AcpiBoardInfoGuid.h>
 #include <Guid/GraphicsInfoHob.h>
 
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/SmBios.h>
+
+#include <Coreboot.h>
 
 #endif
