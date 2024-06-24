@@ -12,6 +12,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PcdLib.h>
 #include <Library/TpmMeasurementLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -33,35 +34,42 @@ typedef struct {
   UINT32  Attributes;  // EFI variable attributes for this variable.
 } VAR_INFO;
 
+typedef struct {
+   CHAR16   *Name;
+   BOOLEAN  Condition;
+} AUTO_VARIABLE;
+
 // List of Dasharo EFI variables in gDasharoSystemFeaturesGuid namespace that
-// are created if missing.
-STATIC CHAR16 *mAutoCreatedVariables[] = {
-  DASHARO_VAR_BATTERY_CONFIG,
-  DASHARO_VAR_BOOT_MANAGER_ENABLED,
-  DASHARO_VAR_CPU_THROTTLING_OFFSET,
-  DASHARO_VAR_ENABLE_CAMERA,
-  DASHARO_VAR_ENABLE_WIFI_BT,
-  DASHARO_VAR_FAN_CURVE_OPTION,
-  DASHARO_VAR_IOMMU_CONFIG,
-  DASHARO_VAR_LOCK_BIOS,
-  DASHARO_VAR_MEMORY_PROFILE,
-  DASHARO_VAR_ME_MODE,
-  DASHARO_VAR_NETWORK_BOOT,
-  DASHARO_VAR_OPTION_ROM_POLICY,
-  DASHARO_VAR_POWER_FAILURE_STATE,
-  DASHARO_VAR_PS2_CONTROLLER,
-  DASHARO_VAR_RESIZEABLE_BARS_ENABLED,
-  DASHARO_VAR_SERIAL_REDIRECTION,
-  DASHARO_VAR_SERIAL_REDIRECTION2,
-  DASHARO_VAR_SLEEP_TYPE,
-  DASHARO_VAR_SMM_BWP,
-  DASHARO_VAR_USB_MASS_STORAGE,
-  DASHARO_VAR_USB_STACK,
-  DASHARO_VAR_WATCHDOG,
-  DASHARO_VAR_WATCHDOG_AVAILABLE,
-  DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
-  DASHARO_VAR_CORE_ACTIVE_COUNT,
-  DASHARO_VAR_HYPER_THREADING,
+// are created if missing. Each variable should have a FixedAtBuild PCD which
+// controls the visibility/activity of the variable in the project and must be
+// used to determine whether the variable should be created or not.
+
+STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
+  { DASHARO_VAR_BATTERY_CONFIG, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds) },
+  { DASHARO_VAR_BOOT_MANAGER_ENABLED, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdDasharoEnterprise) },
+  { DASHARO_VAR_CPU_THROTTLING_OFFSET, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdShowCpuThrottlingThreshold) },
+  { DASHARO_VAR_ENABLE_CAMERA, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowCameraOption) },
+  { DASHARO_VAR_ENABLE_WIFI_BT, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowWiFiBtOption) },
+  { DASHARO_VAR_FAN_CURVE_OPTION, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) },
+  { DASHARO_VAR_IOMMU_CONFIG, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowIommuOptions) },
+  { DASHARO_VAR_LOCK_BIOS, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowLockBios) },
+  { DASHARO_VAR_MEMORY_PROFILE, FixedPcdGetBool (PcdShowMemoryMenu) },
+  { DASHARO_VAR_ME_MODE, FixedPcdGetBool (PcdShowIntelMeMenu) },
+  { DASHARO_VAR_NETWORK_BOOT, FixedPcdGetBool (PcdShowNetworkMenu) },
+  { DASHARO_VAR_OPTION_ROM_POLICY, FixedPcdGetBool (PcdShowPciMenu) },
+  { DASHARO_VAR_POWER_FAILURE_STATE, FixedPcdGetBool (PcdShowPowerMenu) && (FixedPcdGet8 (PcdDefaultPowerFailureState) != DASHARO_POWER_FAILURE_STATE_HIDDEN) },
+  { DASHARO_VAR_PS2_CONTROLLER, FixedPcdGetBool (PcdShowChipsetMenu) && FixedPcdGetBool (PcdShowPs2Option) },
+  { DASHARO_VAR_RESIZEABLE_BARS_ENABLED, FixedPcdGetBool (PcdShowPciMenu) && FixedPcdGetBool (PcdPciMenuShowResizeableBars) },
+  { DASHARO_VAR_SERIAL_REDIRECTION, FixedPcdGetBool (PcdShowSerialPortMenu) },
+  { DASHARO_VAR_SERIAL_REDIRECTION2, FixedPcdGetBool (PcdShowSerialPortMenu) && FixedPcdGetBool (PcdHave2ndUart) },
+  { DASHARO_VAR_SLEEP_TYPE, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowSleepType) },
+  { DASHARO_VAR_SMM_BWP, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowSmmBwp) },
+  { DASHARO_VAR_USB_MASS_STORAGE, FixedPcdGetBool (PcdShowUsbMenu) },
+  { DASHARO_VAR_USB_STACK, FixedPcdGetBool (PcdShowUsbMenu) },
+  { DASHARO_VAR_WATCHDOG, FixedPcdGetBool (PcdShowChipsetMenu) && FixedPcdGetBool (PcdShowOcWdtOptions) },
+  { DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
+  { DASHARO_VAR_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
+  { DASHARO_VAR_HYPER_THREADING, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuHyperThreading) },
 };
 
 /**
@@ -416,8 +424,10 @@ DasharoVariablesLibConstructor (
 
   // Create Dasharo-specific variables that are missing by initializing
   // them with default values.
-  for (Idx = 0; Idx < ARRAY_SIZE (mAutoCreatedVariables); Idx++)
-    InitVariable (mAutoCreatedVariables[Idx]);
+  for (Idx = 0; Idx < ARRAY_SIZE (mAutoCreatedVariables); Idx++) {
+    if (mAutoCreatedVariables[Idx].Condition)
+      InitVariable (mAutoCreatedVariables[Idx].Name);
+  }
 
   return EFI_SUCCESS;
 }
