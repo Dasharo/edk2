@@ -40,6 +40,8 @@
   BaseMemoryLib
   UefiLib
   HobLib
+  BlParseLib
+  MemoryAllocationLib
 
 [Guids]
   gEfiAcpiTableGuid
@@ -47,6 +49,7 @@
   gUefiSystemTableInfoGuid
   gUefiAcpiBoardInfoGuid
   gEfiGraphicsInfoHobGuid
+  gEfiSystemResourceTableGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoHorizontalResolution
