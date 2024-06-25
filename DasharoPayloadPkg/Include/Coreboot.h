@@ -753,7 +753,7 @@ struct cb_tpm_physical_presence {
 	UINT8 ppi_version;	/* BCD encoded */
 };
 
-#define CB_TAG_CAPSULE  0x00b0
+#define CB_TAG_CAPSULE  0x0046
 
 struct cb_range {
 	UINT32 tag;
