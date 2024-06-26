@@ -139,7 +139,7 @@ DasharoSystemFeaturesUiLibConstructor (
   EFI_STATUS  Status;
   UINTN       BufferSize;
 
-  if (!PcdGetBool (PcdShowMenu))
+  if (!FixedPcdGetBool (PcdShowMenu))
     return EFI_SUCCESS;
 
   mDasharoSystemFeaturesPrivate.DriverHandle = NULL;
@@ -164,64 +164,64 @@ DasharoSystemFeaturesUiLibConstructor (
   ASSERT (mDasharoSystemFeaturesPrivate.HiiHandle != NULL);
 
   // Set menu visibility
-  PRIVATE_DATA(ShowSecurityMenu) = PcdGetBool (PcdShowSecurityMenu);
-  PRIVATE_DATA(ShowIntelMeMenu) = PcdGetBool (PcdShowIntelMeMenu);
-  PRIVATE_DATA(ShowUsbMenu) = PcdGetBool (PcdShowUsbMenu);
-  PRIVATE_DATA(ShowNetworkMenu) = PcdGetBool (PcdShowNetworkMenu);
-  PRIVATE_DATA(ShowChipsetMenu) = PcdGetBool (PcdShowChipsetMenu);
-  PRIVATE_DATA(ShowPowerMenu) = PcdGetBool (PcdShowPowerMenu);
-  PRIVATE_DATA(ShowPciMenu) = PcdGetBool (PcdShowPciMenu);
-  PRIVATE_DATA(ShowMemoryMenu) = PcdGetBool (PcdShowMemoryMenu);
-  PRIVATE_DATA(ShowSerialPortMenu) = PcdGetBool (PcdShowSerialPortMenu);
-  PRIVATE_DATA(ShowCpuMenu) = PcdGetBool (PcdShowCpuMenu);
+  PRIVATE_DATA(ShowSecurityMenu) = FixedPcdGetBool (PcdShowSecurityMenu);
+  PRIVATE_DATA(ShowIntelMeMenu) = FixedPcdGetBool (PcdShowIntelMeMenu);
+  PRIVATE_DATA(ShowUsbMenu) = FixedPcdGetBool (PcdShowUsbMenu);
+  PRIVATE_DATA(ShowNetworkMenu) = FixedPcdGetBool (PcdShowNetworkMenu);
+  PRIVATE_DATA(ShowChipsetMenu) = FixedPcdGetBool (PcdShowChipsetMenu);
+  PRIVATE_DATA(ShowPowerMenu) = FixedPcdGetBool (PcdShowPowerMenu);
+  PRIVATE_DATA(ShowPciMenu) = FixedPcdGetBool (PcdShowPciMenu);
+  PRIVATE_DATA(ShowMemoryMenu) = FixedPcdGetBool (PcdShowMemoryMenu);
+  PRIVATE_DATA(ShowSerialPortMenu) = FixedPcdGetBool (PcdShowSerialPortMenu);
+  PRIVATE_DATA(ShowCpuMenu) = FixedPcdGetBool (PcdShowCpuMenu);
   // Set feature visibility
-  PRIVATE_DATA(PowerMenuShowFanCurve) = PcdGetBool (PcdPowerMenuShowFanCurve);
-  PRIVATE_DATA(PowerMenuShowSleepType) = PcdGetBool (PcdPowerMenuShowSleepType);
-  PRIVATE_DATA(PowerMenuShowBatteryThresholds) = PcdGetBool (PcdPowerMenuShowBatteryThresholds);
-  PRIVATE_DATA(DasharoEnterprise) = PcdGetBool (PcdDasharoEnterprise);
-  PRIVATE_DATA(SecurityMenuShowIommu) = PcdGetBool (PcdShowIommuOptions);
-  PRIVATE_DATA(PciMenuShowResizeableBars) = PcdGetBool (PcdPciMenuShowResizeableBars);
-  PRIVATE_DATA(ShowSerialPortMenu) = PcdGetBool (PcdShowSerialPortMenu);
-  PRIVATE_DATA(SecurityMenuShowWiFiBt) = PcdGetBool (PcdSecurityShowWiFiBtOption);
-  PRIVATE_DATA(SecurityMenuShowCamera) = PcdGetBool (PcdSecurityShowCameraOption);
-  PRIVATE_DATA(MeHapAvailable) = PcdGetBool (PcdIntelMeHapAvailable);
-  PRIVATE_DATA(S3SupportExperimental) = PcdGetBool (PcdS3SupportExperimental);
-  PRIVATE_DATA(ShowLockBios) = PcdGetBool (PcdShowLockBios);
-  PRIVATE_DATA(ShowSmmBwp) = PcdGetBool (PcdShowSmmBwp);
-  PRIVATE_DATA(ShowFum) = PcdGetBool (PcdShowFum);
-  PRIVATE_DATA(ShowPs2Option) = PcdGetBool (PcdShowPs2Option);
-  PRIVATE_DATA(Have2ndUart) = PcdGetBool (PcdHave2ndUart);
-  PRIVATE_DATA(ShowCpuThrottlingThreshold) = PcdGetBool (PcdShowCpuThrottlingThreshold);
+  PRIVATE_DATA(PowerMenuShowFanCurve) = FixedPcdGetBool (PcdPowerMenuShowFanCurve);
+  PRIVATE_DATA(PowerMenuShowSleepType) = FixedPcdGetBool (PcdPowerMenuShowSleepType);
+  PRIVATE_DATA(PowerMenuShowBatteryThresholds) = FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds);
+  PRIVATE_DATA(DasharoEnterprise) = FixedPcdGetBool (PcdDasharoEnterprise);
+  PRIVATE_DATA(SecurityMenuShowIommu) = FixedPcdGetBool (PcdShowIommuOptions);
+  PRIVATE_DATA(PciMenuShowResizeableBars) = FixedPcdGetBool (PcdPciMenuShowResizeableBars);
+  PRIVATE_DATA(ShowSerialPortMenu) = FixedPcdGetBool (PcdShowSerialPortMenu);
+  PRIVATE_DATA(SecurityMenuShowWiFiBt) = FixedPcdGetBool (PcdSecurityShowWiFiBtOption);
+  PRIVATE_DATA(SecurityMenuShowCamera) = FixedPcdGetBool (PcdSecurityShowCameraOption);
+  PRIVATE_DATA(MeHapAvailable) = FixedPcdGetBool (PcdIntelMeHapAvailable);
+  PRIVATE_DATA(S3SupportExperimental) = FixedPcdGetBool (PcdS3SupportExperimental);
+  PRIVATE_DATA(ShowLockBios) = FixedPcdGetBool (PcdShowLockBios);
+  PRIVATE_DATA(ShowSmmBwp) = FixedPcdGetBool (PcdShowSmmBwp);
+  PRIVATE_DATA(ShowFum) = FixedPcdGetBool (PcdShowFum);
+  PRIVATE_DATA(ShowPs2Option) = FixedPcdGetBool (PcdShowPs2Option);
+  PRIVATE_DATA(Have2ndUart) = FixedPcdGetBool (PcdHave2ndUart);
+  PRIVATE_DATA(ShowCpuThrottlingThreshold) = FixedPcdGetBool (PcdShowCpuThrottlingThreshold);
   PRIVATE_DATA(CpuMaxTemperature) = FixedPcdGet8 (PcdCpuMaxTemperature);
-  PRIVATE_DATA(ShowCpuCoreDisable) = PcdGetBool(PcdShowCpuCoreDisable);
-  PRIVATE_DATA(ShowCpuHyperThreading) = PcdGetBool(PcdShowCpuHyperThreading);
-  PRIVATE_DATA(WatchdogAvailable) = PcdGetBool (PcdShowOcWdtOptions);
+  PRIVATE_DATA(ShowCpuCoreDisable) = FixedPcdGetBool(PcdShowCpuCoreDisable);
+  PRIVATE_DATA(ShowCpuHyperThreading) = FixedPcdGetBool(PcdShowCpuHyperThreading);
+  PRIVATE_DATA(WatchdogAvailable) = FixedPcdGetBool (PcdShowOcWdtOptions);
   PRIVATE_DATA(ShowPowerFailureState) = FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
-    PRIVATE_DATA(ShowSecurityMenu) = PcdGetBool (PcdDasharoEnterprise) ||
-                                     PcdGetBool (PcdShowIommuOptions) ||
-                                     PcdGetBool (PcdSecurityShowWiFiBtOption) ||
-                                     PcdGetBool (PcdSecurityShowCameraOption) ||
-                                     PcdGetBool (PcdShowLockBios) ||
-                                     PcdGetBool (PcdShowSmmBwp) ||
-                                     PcdGetBool (PcdShowFum);
+    PRIVATE_DATA(ShowSecurityMenu) = FixedPcdGetBool (PcdDasharoEnterprise) ||
+                                     FixedPcdGetBool (PcdShowIommuOptions) ||
+                                     FixedPcdGetBool (PcdSecurityShowWiFiBtOption) ||
+                                     FixedPcdGetBool (PcdSecurityShowCameraOption) ||
+                                     FixedPcdGetBool (PcdShowLockBios) ||
+                                     FixedPcdGetBool (PcdShowSmmBwp) ||
+                                     FixedPcdGetBool (PcdShowFum);
 
   if (PRIVATE_DATA(ShowChipsetMenu))
-    PRIVATE_DATA(ShowChipsetMenu) = PcdGetBool (PcdShowOcWdtOptions) ||
-                                    PcdGetBool (PcdShowPs2Option);
+    PRIVATE_DATA(ShowChipsetMenu) = FixedPcdGetBool (PcdShowOcWdtOptions) ||
+                                    FixedPcdGetBool (PcdShowPs2Option);
 
   if (PRIVATE_DATA(ShowPowerMenu))
-    PRIVATE_DATA(ShowPowerMenu) = PcdGetBool (PcdPowerMenuShowFanCurve) ||
-                                  PcdGetBool (PcdPowerMenuShowSleepType) ||
-                                  PcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
-                                  PcdGetBool (PcdShowCpuThrottlingThreshold) ||
+    PRIVATE_DATA(ShowPowerMenu) = FixedPcdGetBool (PcdPowerMenuShowFanCurve) ||
+                                  FixedPcdGetBool (PcdPowerMenuShowSleepType) ||
+                                  FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
+                                  FixedPcdGetBool (PcdShowCpuThrottlingThreshold) ||
                                   (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
 
   if (PRIVATE_DATA(ShowCpuMenu))
-    PRIVATE_DATA(ShowCpuMenu) = PcdGetBool(PcdShowCpuCoreDisable) ||
-                                PcdGetBool(PcdShowCpuHyperThreading);
+    PRIVATE_DATA(ShowCpuMenu) = FixedPcdGetBool(PcdShowCpuCoreDisable) ||
+                                FixedPcdGetBool(PcdShowCpuHyperThreading);
 
   GetCpuInfo(&PRIVATE_DATA(BigCoreMaxCount),
              &PRIVATE_DATA(SmallCoreMaxCount),
@@ -293,7 +293,7 @@ DasharoSystemFeaturesUiLibConstructor (
     PRIVATE_DATA(SmallCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
     PRIVATE_DATA(BigCoreActiveCount) = DASHARO_CPU_CORES_ENABLE_ALL;
 
-    if (PcdGetBool(PcdShowCpuCoreDisable)) {
+    if (FixedPcdGetBool(PcdShowCpuCoreDisable)) {
       gRT->SetVariable (
             DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT,
             &gDasharoSystemFeaturesGuid,
@@ -499,7 +499,7 @@ DasharoSystemFeaturesRouteConfig (
       );
   ASSERT_EFI_ERROR (Status);
 
-  if (PrivateData->HybridCpuArchitecture && PcdGetBool (PcdShowCpuCoreDisable)) {
+  if (PrivateData->HybridCpuArchitecture && FixedPcdGetBool (PcdShowCpuCoreDisable)) {
     if (DasharoFeaturesData.SmallCoreActiveCount == 0 && PrivateData->BigCoreMaxCount == 0)
       return EFI_INVALID_PARAMETER;
 
@@ -528,57 +528,57 @@ DasharoSystemFeaturesRouteConfig (
     }                                                              \
   } while (FALSE)
 
-  if (PcdGetBool (PcdShowSecurityMenu)) {
-      STORE_VAR_IF (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled, PcdGetBool (PcdDasharoEnterprise));
-      STORE_VAR_IF (DASHARO_VAR_ENABLE_CAMERA, EnableCamera, PcdGetBool (PcdSecurityShowCameraOption));
-      STORE_VAR_IF (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt, PcdGetBool (PcdSecurityShowWiFiBtOption));
-      STORE_VAR_IF (DASHARO_VAR_IOMMU_CONFIG, IommuConfig, PcdGetBool (PcdShowIommuOptions));
-      STORE_VAR_IF (DASHARO_VAR_LOCK_BIOS, LockBios, PcdGetBool (PcdShowLockBios));
-      STORE_VAR_IF (DASHARO_VAR_SMM_BWP, SmmBwp, PcdGetBool (PcdShowSmmBwp));
+  if (FixedPcdGetBool (PcdShowSecurityMenu)) {
+      STORE_VAR_IF (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled, FixedPcdGetBool (PcdDasharoEnterprise));
+      STORE_VAR_IF (DASHARO_VAR_ENABLE_CAMERA, EnableCamera, FixedPcdGetBool (PcdSecurityShowCameraOption));
+      STORE_VAR_IF (DASHARO_VAR_ENABLE_WIFI_BT, EnableWifiBt, FixedPcdGetBool (PcdSecurityShowWiFiBtOption));
+      STORE_VAR_IF (DASHARO_VAR_IOMMU_CONFIG, IommuConfig, FixedPcdGetBool (PcdShowIommuOptions));
+      STORE_VAR_IF (DASHARO_VAR_LOCK_BIOS, LockBios, FixedPcdGetBool (PcdShowLockBios));
+      STORE_VAR_IF (DASHARO_VAR_SMM_BWP, SmmBwp, FixedPcdGetBool (PcdShowSmmBwp));
   }
 
-  STORE_VAR_IF (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile, PcdGetBool (PcdShowMemoryMenu));
-  STORE_VAR_IF (DASHARO_VAR_ME_MODE, MeMode, PcdGetBool (PcdShowIntelMeMenu));
-  STORE_VAR_IF (DASHARO_VAR_NETWORK_BOOT, NetworkBoot, PcdGetBool (PcdShowNetworkMenu));
+  STORE_VAR_IF (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile, FixedPcdGetBool (PcdShowMemoryMenu));
+  STORE_VAR_IF (DASHARO_VAR_ME_MODE, MeMode, FixedPcdGetBool (PcdShowIntelMeMenu));
+  STORE_VAR_IF (DASHARO_VAR_NETWORK_BOOT, NetworkBoot, FixedPcdGetBool (PcdShowNetworkMenu));
 
-  if (PcdGetBool (PcdShowPowerMenu)) {
-    STORE_VAR_IF (DASHARO_VAR_SLEEP_TYPE, SleepType, PcdGetBool (PcdPowerMenuShowSleepType));
+  if (FixedPcdGetBool (PcdShowPowerMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_SLEEP_TYPE, SleepType, FixedPcdGetBool (PcdPowerMenuShowSleepType));
     STORE_VAR_IF (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState,
                   FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
-    STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, PcdGetBool (PcdPowerMenuShowFanCurve));
-    STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, PcdGetBool (PcdPowerMenuShowBatteryThresholds));
-    STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, PcdGetBool (PcdShowCpuThrottlingThreshold));
+    STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, FixedPcdGetBool (PcdPowerMenuShowFanCurve));
+    STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds));
+    STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, FixedPcdGetBool (PcdShowCpuThrottlingThreshold));
   }
 
-  if (PcdGetBool (PcdShowPciMenu)) {
+  if (FixedPcdGetBool (PcdShowPciMenu)) {
     STORE_VAR_IF (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution, TRUE);
-    STORE_VAR_IF (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled, PcdGetBool (PcdPciMenuShowResizeableBars));
+    STORE_VAR_IF (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled, FixedPcdGetBool (PcdPciMenuShowResizeableBars));
   }
 
-  if (PcdGetBool (PcdShowSerialPortMenu)) {
+  if (FixedPcdGetBool (PcdShowSerialPortMenu)) {
     STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection, TRUE);
-    STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection, PcdGetBool (PcdHave2ndUart));
+    STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection, FixedPcdGetBool (PcdHave2ndUart));
   }
 
-  if (PcdGetBool (PcdShowUsbMenu)) {
+  if (FixedPcdGetBool (PcdShowUsbMenu)) {
     STORE_VAR_IF (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage, TRUE);
     STORE_VAR_IF (DASHARO_VAR_USB_STACK, UsbStack, TRUE);
   }
 
-  if (PcdGetBool (PcdShowChipsetMenu)) {
-    STORE_VAR_IF (DASHARO_VAR_WATCHDOG, WatchdogConfig, PcdGetBool (PcdShowOcWdtOptions));
-    STORE_VAR_IF (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller, PcdGetBool (PcdShowPs2Option));
+  if (FixedPcdGetBool (PcdShowChipsetMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_WATCHDOG, WatchdogConfig, FixedPcdGetBool (PcdShowOcWdtOptions));
+    STORE_VAR_IF (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller, FixedPcdGetBool (PcdShowPs2Option));
   }
 
-  if (PcdGetBool (PcdShowCpuMenu)) {
-    STORE_VAR_IF (DASHARO_VAR_HYPER_THREADING, HyperThreading, PcdGetBool (PcdShowCpuHyperThreading));
+  if (FixedPcdGetBool (PcdShowCpuMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_HYPER_THREADING, HyperThreading, FixedPcdGetBool (PcdShowCpuHyperThreading));
 
     if (PrivateData->HybridCpuArchitecture) {
-      STORE_VAR_IF (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
-      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
+      STORE_VAR_IF (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount, FixedPcdGetBool (PcdShowCpuCoreDisable));
+      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount, FixedPcdGetBool (PcdShowCpuCoreDisable));
     } else {
       // CoreActiveCount used for P-cores and non-hybrid CPU architectures to match FSP
-      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount, PcdGetBool (PcdShowCpuCoreDisable));
+      STORE_VAR_IF (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount, FixedPcdGetBool (PcdShowCpuCoreDisable));
     }
 
   }
@@ -679,7 +679,7 @@ DasharoSystemFeaturesCallback (
   case EFI_BROWSER_ACTION_CHANGED:
     {
       if (QuestionId == FIRMWARE_UPDATE_MODE_QUESTION_ID) {
-        if (!PcdGetBool(PcdShowFum))
+        if (!FixedPcdGetBool(PcdShowFum))
           return EFI_UNSUPPORTED;
 
         do {
