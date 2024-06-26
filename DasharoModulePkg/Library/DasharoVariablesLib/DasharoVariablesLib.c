@@ -127,10 +127,10 @@ GetVariableInfo (
     Data.Uint8 = FixedPcdGet8 (PcdIntelMeDefaultState);
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_NETWORK_BOOT) == 0) {
-    Data.Boolean = PcdGetBool (PcdDefaultNetworkBootEnable);
+    Data.Boolean = FixedPcdGetBool (PcdDefaultNetworkBootEnable);
     Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_OPTION_ROM_POLICY) == 0) {
-    Data.Uint8 = PcdGetBool (PcdLoadOptionRoms)
+    Data.Uint8 = FixedPcdGetBool (PcdLoadOptionRoms)
       ? DASHARO_OPTION_ROM_POLICY_ENABLE_ALL
       : DASHARO_OPTION_ROM_POLICY_DISABLE_ALL;
     Size = sizeof (Data.Uint8);
@@ -144,15 +144,15 @@ GetVariableInfo (
     Data.Boolean = FALSE;
     Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_SERIAL_REDIRECTION) == 0) {
-    Data.Boolean = PcdGetBool (PcdSerialRedirectionDefaultState);
+    Data.Boolean = FixedPcdGetBool (PcdSerialRedirectionDefaultState);
     Size = sizeof (Data.Boolean);
     ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_SERIAL_REDIRECTION2) == 0) {
-    Data.Boolean = PcdGetBool (PcdHave2ndUart) ? PcdGetBool (PcdSerialRedirection2DefaultState) : FALSE;
+    Data.Boolean = FixedPcdGetBool (PcdHave2ndUart) ? FixedPcdGetBool (PcdSerialRedirection2DefaultState) : FALSE;
     Size = sizeof (Data.Boolean);
     ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_SLEEP_TYPE) == 0) {
-    Data.Uint8 = PcdGetBool (PcdSleepTypeDefaultS3) ? DASHARO_SLEEP_TYPE_S3 : DASHARO_SLEEP_TYPE_S0IX;
+    Data.Uint8 = FixedPcdGetBool (PcdSleepTypeDefaultS3) ? DASHARO_SLEEP_TYPE_S3 : DASHARO_SLEEP_TYPE_S0IX;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_SMM_BWP) == 0) {
     Data.Boolean = FALSE;
@@ -164,11 +164,11 @@ GetVariableInfo (
     Data.Boolean = TRUE;
     Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_WATCHDOG) == 0) {
-    Data.Watchdog.WatchdogEnable = PcdGetBool (PcdOcWdtEnableDefault);
+    Data.Watchdog.WatchdogEnable = FixedPcdGetBool (PcdOcWdtEnableDefault);
     Data.Watchdog.WatchdogTimeout = FixedPcdGet16 (PcdOcWdtTimeoutDefault);
     Size = sizeof (Data.Watchdog);
   } else if (StrCmp (VarName, DASHARO_VAR_WATCHDOG_AVAILABLE) == 0) {
-    Data.Boolean = PcdGetBool (PcdShowOcWdtOptions);
+    Data.Boolean = FixedPcdGetBool (PcdShowOcWdtOptions);
     Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT) == 0) {
     Data.Uint8 = DASHARO_CPU_CORES_ENABLE_ALL;
@@ -177,7 +177,7 @@ GetVariableInfo (
     Data.Uint8 = DASHARO_CPU_CORES_ENABLE_ALL;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_HYPER_THREADING) == 0) {
-    Data.Boolean = PcdGetBool (PcdCpuHyperThreadingDefault);
+    Data.Boolean = FixedPcdGetBool (PcdCpuHyperThreadingDefault);
     Size = sizeof (Data.Boolean);
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));
