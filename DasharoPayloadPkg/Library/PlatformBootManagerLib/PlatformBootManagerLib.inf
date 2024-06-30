@@ -55,6 +55,8 @@
   CustomizedDisplayLib
   LaptopBatteryLib
   BlParseLib
+  CapsuleLib
+  HobLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
