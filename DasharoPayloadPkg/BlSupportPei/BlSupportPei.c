@@ -761,6 +761,11 @@ BlPeiEntryPoint (
     return Status;
   }
 
+  if (GetFirstHob (EFI_HOB_TYPE_UEFI_CAPSULE) != NULL) {
+    Status = PeiServicesSetBootMode (BOOT_ON_FLASH_UPDATE);
+    ASSERT_EFI_ERROR (Status);
+  }
+
   //
   // Mask off all legacy 8259 interrupt sources
   //
