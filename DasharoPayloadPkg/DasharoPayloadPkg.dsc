@@ -111,6 +111,7 @@
   DEFINE APU_CONFIG_ENABLE              = FALSE
   DEFINE USE_PLATFORM_GOP               = FALSE
   DEFINE USE_LAPTOP_LID_LIB             = FALSE
+  DEFINE CAPSULE_SUPPORT                = FALSE
 
   #
   # Network definition
@@ -214,13 +215,23 @@
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
   UefiScsiLib|MdePkg/Library/UefiScsiLib/UefiScsiLib.inf
   OemHookStatusCodeLib|MdeModulePkg/Library/OemHookStatusCodeLibNull/OemHookStatusCodeLibNull.inf
-  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   SecurityManagementLib|MdeModulePkg/Library/DxeSecurityManagementLib/DxeSecurityManagementLib.inf
   UefiBootManagerLib|MdeModulePkg/Library/UefiBootManagerLib/UefiBootManagerLib.inf
   BootLogoLib|MdeModulePkg/Library/BootLogoLib/BootLogoLib.inf
   BmpSupportLib|MdeModulePkg/Library/BaseBmpSupportLib/BaseBmpSupportLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FrameBufferBltLib|MdeModulePkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
+
+  #
+  # Capsule Updates
+  #
+!if $(CAPSULE_SUPPORT) == TRUE
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeCapsuleLib.inf
+  DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibText/DisplayUpdateProgressLibText.inf
+  FmpAuthenticationLib|SecurityPkg/Library/FmpAuthenticationLibPkcs7/FmpAuthenticationLibPkcs7.inf
+!else
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
+!endif
 
   #
   # CPU
@@ -419,6 +430,9 @@
   DebugLib|MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode/PeiDxeDebugLibReportStatusCode.inf
   PerformanceLib|MdeModulePkg/Library/DxePerformanceLib/DxePerformanceLib.inf
   MbedTlsCrtLib|CryptoPkg/Library/MbedTlsCrtRuntimeLib/MbedTlsCrtRuntimeLib.inf
+!if $(CAPSULE_SUPPORT) == TRUE
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeRuntimeCapsuleLib.inf
+!endif
 
 [LibraryClasses.common.UEFI_DRIVER,LibraryClasses.common.UEFI_APPLICATION]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -442,6 +456,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwarePerformanceDataTableS3Support|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdInstallAcpiSdtProtocol|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdPs2KbdExtendedVerification|TRUE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSupportUpdateCapsuleReset|$(CAPSULE_SUPPORT)
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
@@ -460,6 +475,7 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport|$(CAPSULE_SUPPORT)
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
 
@@ -711,6 +727,10 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
+!if $(CAPSULE_SUPPORT) == TRUE
+  MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
+  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+!endif
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
