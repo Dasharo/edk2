@@ -54,6 +54,8 @@
   Tcg2PhysicalPresenceLib
   CustomizedDisplayLib
   LaptopBatteryLib
+  CapsuleLib
+  HobLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
