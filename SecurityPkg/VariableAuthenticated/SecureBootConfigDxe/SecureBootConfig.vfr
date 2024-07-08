@@ -146,6 +146,15 @@ formset
     subtitle text = STRING_TOKEN(STR_NULL);
 
     //
+    // Display of 'Currently enrolled PK'
+    //
+    suppressif NOT ideqval SECUREBOOT_CONFIGURATION.HasPk == 1;
+      subtitle text = STRING_TOKEN(STR_PK_INFO);
+      subtitle text = STRING_TOKEN(STR_PK_NAME);
+      subtitle text = STRING_TOKEN(STR_NULL);
+    endif;
+
+    //
     // Display of 'Enroll PK'
     //
     grayoutif ideqval SECUREBOOT_CONFIGURATION.HasPk == 1;
