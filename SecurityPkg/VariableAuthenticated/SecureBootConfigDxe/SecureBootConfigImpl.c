@@ -2654,10 +2654,6 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
-
-      // GuidToString (&Cert->SignatureOwner, GuidStr, 100);   
-      UINTN size = 100;
-      X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr, &size);
       StrCpyS(GuidStr, size, L"Hello Certyfikat!");
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
 
