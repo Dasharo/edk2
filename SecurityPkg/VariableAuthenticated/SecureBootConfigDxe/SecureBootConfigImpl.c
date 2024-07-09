@@ -2654,7 +2654,7 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
-      StrCpyS(GuidStr, size, L"Hello Certyfikat!");
+      StrCpyS(GuidStr, 100, L"Hello Certyfikat!");
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
 
       HiiCreateCheckBoxOpCode (
