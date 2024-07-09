@@ -2540,7 +2540,7 @@ UpdateDeletePage (
   EFI_SIGNATURE_LIST  *CertList;
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
-  CHAR16               *GuidStr;
+  CHAR16              *GuidStr;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
 
@@ -2657,11 +2657,7 @@ UpdateDeletePage (
 
       // GuidToString (&Cert->SignatureOwner, GuidStr, 100);   
       UINTN size = 100;
-      CHAR8 CommonName8;
-
       X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr, &size);
-
-
       StrCpyS(GuidStr, size, L"Hello Certyfikat!");
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
 
