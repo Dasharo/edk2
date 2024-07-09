@@ -212,4 +212,25 @@ ParseBootLogo (
   OUT UINT32 *BmpSize
   );
 
+/**
+  Parse firmware information passed in by coreboot
+
+  @param  Guid     Kind of the firmware.
+  @param  Version  Current version.
+  @param  Lsv      Lowest supported version.
+  @param  Size     Firmware size in bytes.
+
+  @retval RETURN_INVALID_PARAMETER  At least one of the parameters is NULL.
+  @retval RETURN_SUCCESS            Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND          coreboot table is missing.
+**/
+RETURN_STATUS
+EFIAPI
+ParseFwInfo (
+  OUT EFI_GUID  *Guid,
+  OUT UINT32    *Version,
+  OUT UINT32    *Lsv,
+  OUT UINT32    *Size
+  );
+
 #endif
