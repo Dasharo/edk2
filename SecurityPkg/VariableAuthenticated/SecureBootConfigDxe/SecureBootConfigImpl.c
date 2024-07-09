@@ -2541,6 +2541,7 @@ UpdateDeletePage (
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
   CHAR16              *GuidStr;
+  CHAR8               *GuidStr8;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
 
@@ -2607,6 +2608,11 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
+  GuidStr8 = AllocateZeroPool (100);
+  if (GuidStr == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  } 
   GuidStr = AllocateZeroPool (100);
   if (GuidStr == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
@@ -2654,7 +2660,19 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
-      StrCpyS(GuidStr, 100, L"Hello Certyfikat!");
+ 
+      UINTN size = 100;
+      X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size);
+
+      // X509GetCommonName gets the name in 8b chars, we need to convert it
+      // to 16b
+      CHAR8* guidIter8 = GuidStr8;
+      CHAR16* guidIter = GuidStr;
+      for(int i = 0; i < size; i++)
+      {
+        guidIter[i] = guidIter8[i];
+      }
+
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
 
       HiiCreateCheckBoxOpCode (
