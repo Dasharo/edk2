@@ -2662,15 +2662,19 @@ UpdateDeletePage (
 
  
       UINTN size = 100;
-      X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size);
-
-      // X509GetCommonName gets the name in 8b chars, we need to convert it
-      // to 16b
-      CHAR8* guidIter8 = GuidStr8;
-      CHAR16* guidIter = GuidStr;
-      for(int i = 0; i < size; i++)
+      if(RETURN_SUCCESS == X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size) ||
+        RETURN_SUCCESS == X509GetIssuerName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size))
       {
-        guidIter[i] = guidIter8[i];
+        // X509GetCommonName gets the name in 8b chars, we need to convert it
+        // to 16b
+        for(int i = 0; i < size; i++)
+        {
+          GuidStr[i] = GuidStr8[i];
+        }
+      }
+      else
+      {
+        StrCpyS(GuidStr, size, L"Unknown Certificate: No Common Name, No Issuer");
       }
 
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
