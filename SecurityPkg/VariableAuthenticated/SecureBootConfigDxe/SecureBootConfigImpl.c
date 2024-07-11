@@ -2665,7 +2665,7 @@ UpdateDeletePage (
       if(
           RETURN_SUCCESS == X509GetSubjectName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, (UINT8*)GuidStr8, &size) 
           ||
-          RETURN_SUCCESS == X509GetSubjectName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size)
+          RETURN_SUCCESS == X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size)
       )
       {
         // X509GetCommonName gets the name in 8b chars, we need to convert it
