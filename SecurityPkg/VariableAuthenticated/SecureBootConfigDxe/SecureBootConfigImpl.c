@@ -2666,7 +2666,7 @@ UpdateDeletePage (
       {
         // X509GetCommonName gets the name in 8b chars, we need to convert it
         // to 16b chars, possibly in place
-        INT32 len = AsciiStrnLenS(GuidStr, size);
+        INT32 len = AsciiStrnLenS((CHAR8*)GuidStr, size);
         CHAR8* iter8 = GuidStr + len;
         CHAR16* iter16 = GuidStr + len;
         for(int i = 0; i < size; i++)
