@@ -2541,7 +2541,6 @@ UpdateDeletePage (
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
   CHAR16              *GuidStr;
-  CHAR8               *GuidStr8;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
 
@@ -2608,11 +2607,6 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
-  GuidStr8 = AllocateZeroPool (100);
-  if (GuidStr == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ON_EXIT;
-  } 
   GuidStr = AllocateZeroPool (100);
   if (GuidStr == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
@@ -2662,17 +2656,31 @@ UpdateDeletePage (
 
  
       UINTN size = 100;
+      UINTN size8 = size/2;
       if(
-          RETURN_SUCCESS == X509GetSubjectName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, (UINT8*)GuidStr8, &size) 
+          RETURN_SUCCESS == X509GetSubjectName(
+            (UINT8*)Cert->SignatureData,
+            (UINTN)CertList->SignatureSize,
+            (UINT8*)GuidStr,
+            &size8
+          ) 
           ||
-          RETURN_SUCCESS == X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, GuidStr8, &size)
+          RETURN_SUCCESS == X509GetCommonName(
+            (UINT8*)Cert->SignatureData,
+            (UINTN)CertList->SignatureSize,
+            (CHAR8*) GuidStr,
+            &size8
+          )
       )
       {
         // X509GetCommonName gets the name in 8b chars, we need to convert it
-        // to 16b
+        // to 16b chars, possibly in place
+        INT32 len = AsciiStrnLenS((CHAR8*)GuidStr, size);
+        CHAR8* iter8 = (CHAR8*)GuidStr + len;
+        CHAR16* iter16 = GuidStr + len;
         for(int i = 0; i < size; i++)
         {
-          GuidStr[i] = GuidStr8[i];
+          iter16[len-i] = iter8[len-i];
         }
         
         if(StrLen(GuidStr) < 2)
