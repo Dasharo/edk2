@@ -205,9 +205,13 @@ AuthVariableLibInitialize (
     }
   } else if (mPlatformMode == USER_MODE) {
     //
-    // "SecureBootEnable" not exist, initialize it in USER_MODE.
+    // "SecureBootEnable" not exist, initialize it in USER_MODE. Can't use
+    // PcdSecureBootDefaultEnable here, because it will prevent enabling
+    // Secure Boot from OS when transitioning from SETUP_MODE to USER_MODE.
+    // PcdSecureBootDefaultEnable is used when settings are reset in UI and in
+    // the SecureBootDefaultKeysDxe where the default keys are being restored.
     //
-    SecureBootEnable = FixedPcdGet8 (PcdSecureBootDefaultEnable);
+    SecureBootEnable = SECURE_BOOT_ENABLE;
     Status = AuthServiceInternalUpdateVariable (
                EFI_SECURE_BOOT_ENABLE_NAME,
                &gEfiSecureBootEnableDisableGuid,
