@@ -2543,8 +2543,8 @@ UpdateDeletePage (
   CHAR16              *CertificateInfoStr;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
-  const UINTN CertificateInfoStrSize = 100;
-  const UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
+  UINTN CertificateInfoStrSize = 100;
+  UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
   INT16 CertificateInfoStrLen;
   CHAR8* CertificateInfoStrIterator8;
   CHAR16* CertificateInfoStrIterator16;
