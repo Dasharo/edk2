@@ -335,12 +335,6 @@ IsPasswordStrong (
   IN UINTN   PasswordSize
   )
 {
-  UINTN   Index;
-  BOOLEAN HasLowerCase;
-  BOOLEAN HasUpperCase;
-  BOOLEAN HasNumber;
-  BOOLEAN HasSymbol;
-
   if (PasswordSize < PASSWORD_MIN_SIZE) {
     return FALSE;
   }
