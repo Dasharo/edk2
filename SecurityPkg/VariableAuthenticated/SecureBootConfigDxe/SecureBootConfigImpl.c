@@ -2540,16 +2540,23 @@ UpdateDeletePage (
   EFI_SIGNATURE_LIST  *CertList;
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
-  CHAR16              *GuidStr;
+  CHAR16              *CertificateInfoStr;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
+  const UINTN CertificateInfoStrSize = 100;
+  const UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
+  INT16 CertificateInfoStrLen;
+  CHAR8* CertificateInfoStrIterator8;
+  CHAR16* CertificateInfoStrIterator16;
+  const CHAR16* UNKNOWN_CERT_PLACEHOLDER = L"Unknown Certificate: No Common Name, No Issuer";
 
-  Data              = NULL;
-  CertList          = NULL;
-  Cert              = NULL;
-  GuidStr           = NULL;
-  StartOpCodeHandle = NULL;
-  EndOpCodeHandle   = NULL;
+
+  Data                = NULL;
+  CertList            = NULL;
+  Cert                = NULL;
+  CertificateInfoStr  = NULL;
+  StartOpCodeHandle   = NULL;
+  EndOpCodeHandle     = NULL;
 
   //
   // Initialize the container for dynamic opcodes.
@@ -2607,8 +2614,8 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
-  GuidStr = AllocateZeroPool (100);
-  if (GuidStr == NULL) {
+  CertificateInfoStr = AllocateZeroPool (100);
+  if (CertificateInfoStr == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_EXIT;
   }
@@ -2654,44 +2661,48 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
- 
-      UINTN size = 100;
-      UINTN size8 = size/2;
+
+      // Only half of the buffer size may be used for the names
+      // Because it needs to be resized to 16b which
+      // will cause it to grow in size 2x
       if(
           RETURN_SUCCESS == X509GetSubjectName(
             (UINT8*)Cert->SignatureData,
             (UINTN)CertList->SignatureSize,
-            (UINT8*)GuidStr,
-            &size8
-          ) 
+            (UINT8*)CertificateInfoStr,
+            &CertificateInfoStrSizeHalf
+          )
           ||
           RETURN_SUCCESS == X509GetCommonName(
             (UINT8*)Cert->SignatureData,
             (UINTN)CertList->SignatureSize,
-            (CHAR8*) GuidStr,
-            &size8
+            (CHAR8*) CertificateInfoStr,
+            &CertificateInfoStrSizeHalf
           )
       )
       {
-        // X509GetCommonName gets the name in 8b chars, we need to convert it
-        // to 16b chars, possibly in place
-        INT32 len = AsciiStrnLenS((CHAR8*)GuidStr, size);
-        CHAR8* iter8 = (CHAR8*)GuidStr + len;
-        CHAR16* iter16 = GuidStr + len;
-        for(int i = 0; i < size; i++)
+        // X509 functions get the name in 8b chars, we need to convert it
+        // to 16b chars
+
+        // There is AsciiStrnToUnicodeStrS function to do that but it
+        // can't be used in place and allocating another  
+        // AllocateZeroPool(100) fails with EFI_OUT_OF_RESOURCES
+
+        CertificateInfoStrLen = AsciiStrnLenS((CHAR8*)CertificateInfoStr, CertificateInfoStrSize);
+        CertificateInfoStrIterator8 = (CHAR8*)CertificateInfoStr + CertificateInfoStrLen;
+        CertificateInfoStrIterator16 = CertificateInfoStr + CertificateInfoStrLen;
+        for(int i = 0; i < CertificateInfoStrSize; i++)
         {
-          iter16[len-i] = iter8[len-i];
+          CertificateInfoStrIterator16[CertificateInfoStrLen-i] = CertificateInfoStrIterator8[CertificateInfoStrLen-i];
         }
-        
-        if(StrLen(GuidStr) < 2)
+
+        if(StrLen(CertificateInfoStr) < 2)
         {
-          const CHAR16* UNKNOWN_CERT_PLACEHOLDER = L"Unknown Certificate: No Common Name, No Issuer";
-          StrCatS(GuidStr, size, UNKNOWN_CERT_PLACEHOLDER);
+          StrCatS(CertificateInfoStr, CertificateInfoStrSize, UNKNOWN_CERT_PLACEHOLDER);
         }
       }
 
-
-      GuidID  = HiiSetString (PrivateData->HiiHandle, 0, GuidStr, NULL);
+      GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
 
       HiiCreateCheckBoxOpCode (
         StartOpCodeHandle,
@@ -2731,8 +2742,8 @@ ON_EXIT:
     FreePool (Data);
   }
 
-  if (GuidStr != NULL) {
-    FreePool (GuidStr);
+  if (CertificateInfoStr != NULL) {
+    FreePool (CertificateInfoStr);
   }
 
   return EFI_SUCCESS;
