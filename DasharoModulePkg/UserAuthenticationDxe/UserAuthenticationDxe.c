@@ -173,7 +173,7 @@ PrintSetPasswordStatus (
 
   if (ReturnStatus == EFI_UNSUPPORTED) {
     DisplayString  = L"New password is not strong enough!";
-    DisplayString2 = L"Password must at least 8 chars and include lowercase, uppercase alphabetic, number and symbol";
+    DisplayString2 = L"Password must at least 8 chars";
 
     do {
       CreatePopUp (
