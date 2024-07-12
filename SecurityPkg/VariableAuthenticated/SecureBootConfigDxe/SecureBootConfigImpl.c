@@ -2541,7 +2541,6 @@ UpdateDeletePage (
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
   CHAR16              *GuidStr;
-  CHAR8               *GuidStr8;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
 
