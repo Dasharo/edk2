@@ -2659,15 +2659,25 @@ UpdateDeletePage (
       UINTN size = 100;
       UINTN size8 = size/2;
       if(
-          RETURN_SUCCESS == X509GetSubjectName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, (UINT8*)GuidStr, &size8) 
+          RETURN_SUCCESS == X509GetSubjectName(
+            (UINT8*)Cert->SignatureData,
+            (UINTN)CertList->SignatureSize,
+            (UINT8*)GuidStr,
+            &size8
+          ) 
           ||
-          RETURN_SUCCESS == X509GetCommonName((UINT8*)Cert->SignatureData, (UINTN)CertList->SignatureSize, (CHAR8*) GuidStr, &size8)
+          RETURN_SUCCESS == X509GetCommonName(
+            (UINT8*)Cert->SignatureData,
+            (UINTN)CertList->SignatureSize,
+            (CHAR8*) GuidStr,
+            &size8
+          )
       )
       {
         // X509GetCommonName gets the name in 8b chars, we need to convert it
         // to 16b chars, possibly in place
         INT32 len = AsciiStrnLenS((CHAR8*)GuidStr, size);
-        CHAR8* iter8 = GuidStr + len;
+        CHAR8* iter8 = (CHAR8*)GuidStr + len;
         CHAR16* iter16 = GuidStr + len;
         for(int i = 0; i < size; i++)
         {
