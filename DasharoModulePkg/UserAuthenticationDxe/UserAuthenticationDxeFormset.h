@@ -17,7 +17,7 @@
 
 #define ADMIN_PASSWORD_KEY_ID       0x2001
 
-#define MAX_PASSWORD_LEN  32
+#define MAX_PASSWORD_LEN  64
 #define MIN_PASSWORD_LEN  0
 
 #endif
