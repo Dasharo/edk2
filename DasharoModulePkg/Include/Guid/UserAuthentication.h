@@ -10,7 +10,7 @@
 #define __USER_AUTHENTICATION_GUID_H__
 
 #define PASSWORD_MIN_SIZE    9  // MIN number of chars of password, including NULL.
-#define PASSWORD_MAX_SIZE    33 // MAX number of chars of password, including NULL.
+#define PASSWORD_MAX_SIZE    65 // MAX number of chars of password, including NULL.
 
 #define PASSWORD_SALT_SIZE   32
 #define PASSWORD_HASH_SIZE   32 // SHA256_DIGEST_SIZE
