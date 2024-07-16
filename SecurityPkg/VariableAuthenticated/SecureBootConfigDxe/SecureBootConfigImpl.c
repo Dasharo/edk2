@@ -2672,24 +2672,27 @@ UpdateDeletePage (
         (UINT8*)CertificateInfoStr8,
         &CertificateInfoStrSize
       );
+      DEBUG(("CertinfoSize: %d", CertificateInfoStrSize));
 
-      if (!CertificateInfoReadSuccess) {
-        CertificateInfoReadSuccess = X509GetCommonName (
-          (UINT8*)Cert->SignatureData,
-          (UINTN)CertList->SignatureSize,
-          CertificateInfoStr8,
-          &CertificateInfoStrSize
-        );
-      }
+      // if (!CertificateInfoReadSuccess) {
+      // CertificateInfoReadSuccess = X509GetCommonName (
+      //   (UINT8*)Cert->SignatureData,
+      //   (UINTN)CertList->SignatureSize,
+      //   CertificateInfoStr8,
+      //   &CertificateInfoStrSize
+      // );
+      // // }
 
       CertificateInfoReadSuccess = CertificateInfoReadSuccess && (AsciiStrLen(CertificateInfoStr8) >= 2);
 
       if(CertificateInfoReadSuccess) {
         CertificateInfoStr8[CertificateInfoStrSizeHalf] = '\0';
+        DEBUG(("cert8: %s", CertificateInfoStr8));
         AsciiStrToUnicodeStrS(CertificateInfoStr8, CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16));
       } else {
       StrCpyS(CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16), UNKNOWN_CERT_PLACEHOLDER);
       }
+      DEBUG(("cert: %s", CertificateInfoStr));
 
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
 
