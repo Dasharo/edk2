@@ -2541,15 +2541,13 @@ UpdateDeletePage (
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
   CHAR16              *CertificateInfoStr;
+  CHAR8               *CertificateInfoStr8;
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
   UINTN CertificateInfoStrSize = 100;
   UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
-  INT16 CertificateInfoStrLen;
-  CHAR8* CertificateInfoStrIterator8;
-  CHAR16* CertificateInfoStrIterator16;
   const CHAR16* UNKNOWN_CERT_PLACEHOLDER = L"Unknown Certificate: No Common Name, No Issuer";
-  BOOL CertificateInfoReadStatus;
+  BOOLEAN CertificateInfoReadSuccess;
 
   Data                = NULL;
   CertList            = NULL;
@@ -2615,8 +2613,14 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
-  CertificateInfoStr = AllocateZeroPool (100);
+  CertificateInfoStr = AllocateZeroPool (CertificateInfoStrSize);
   if (CertificateInfoStr == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  CertificateInfoStr8 = AllocateZeroPool (CertificateInfoStrSize);
+  if (CertificateInfoStr8 == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_EXIT;
   }
@@ -2662,47 +2666,29 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
-
-      // Only half of the buffer size may be used for the names
-      // Because it needs to be resized to 16b which
-      // will cause it to grow in size 2x
-
-      CertificateInfoReadSuccess = X509GetSubjectName(
+      CertificateInfoReadSuccess = X509GetSubjectName (
         (UINT8*)Cert->SignatureData,
         (UINTN)CertList->SignatureSize,
-        (UINT8*)CertificateInfoStr,
-        &CertificateInfoStrSizeHalf
-      )
+        (UINT8*)CertificateInfoStr8,
+        &CertificateInfoStrSize
+      );
 
-      if (!CertificateInfoReadSuccess)   {
-        CertificateInfoReadSuccess = X509GetCommonName(
+      if (!CertificateInfoReadSuccess) {
+        CertificateInfoReadSuccess = X509GetCommonName (
           (UINT8*)Cert->SignatureData,
           (UINTN)CertList->SignatureSize,
-          (UINT8*)CertificateInfoStr,
-          &CertificateInfoStrSizeHalf
-        )
+          CertificateInfoStr8,
+          &CertificateInfoStrSize
+        );
       }
 
-      CertificateInfoReadSuccess = CertificateInfoReadStatus && (StrLen(CertificateInfoStr) < 2)
+      CertificateInfoReadSuccess = CertificateInfoReadSuccess && (AsciiStrLen(CertificateInfoStr8) >= 2);
 
-      if(!CertificateInfoReadSuccess)
-      {
-        StrCatS(CertificateInfoStr, CertificateInfoStrSize, UNKNOWN_CERT_PLACEHOLDER);
-      }
-
-      // X509 functions get the name in 8b chars, we need to convert it
-      // to 16b chars
-
-      // There is AsciiStrnToUnicodeStrS function to do that but it
-      // can't be used in place and allocating another
-      // AllocateZeroPool(100) fails with EFI_OUT_OF_RESOURCES
-
-      CertificateInfoStrLen = AsciiStrnLenS((CHAR8*)CertificateInfoStr, CertificateInfoStrSize);
-      CertificateInfoStrIterator8 = (CHAR8*)CertificateInfoStr + CertificateInfoStrLen;
-      CertificateInfoStrIterator16 = CertificateInfoStr + CertificateInfoStrLen;
-      for(int i = 0; i < CertificateInfoStrSize; i++)
-      {
-        CertificateInfoStrIterator16[CertificateInfoStrLen-i] = CertificateInfoStrIterator8[CertificateInfoStrLen-i];
+      if(CertificateInfoReadSuccess) {
+        CertificateInfoStr8[CertificateInfoStrSizeHalf] = '\0';
+        AsciiStrToUnicodeStrS(CertificateInfoStr8, CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16));
+      } else {
+      StrCpyS(CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16), UNKNOWN_CERT_PLACEHOLDER);
       }
 
       GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
@@ -2747,6 +2733,10 @@ ON_EXIT:
 
   if (CertificateInfoStr != NULL) {
     FreePool (CertificateInfoStr);
+  }
+
+  if (CertificateInfoStr8 != NULL) {
+    FreePool (CertificateInfoStr8);
   }
 
   return EFI_SUCCESS;
