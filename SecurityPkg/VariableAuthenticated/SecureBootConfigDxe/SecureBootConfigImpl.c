@@ -2674,8 +2674,7 @@ UpdateDeletePage (
         &CertificateInfoStrSizeHalf
       )
 
-      if(!CertificateInfoReadSuccess)
-      {
+      if (!CertificateInfoReadSuccess)   {
         CertificateInfoReadSuccess = X509GetCommonName(
           (UINT8*)Cert->SignatureData,
           (UINTN)CertList->SignatureSize,
