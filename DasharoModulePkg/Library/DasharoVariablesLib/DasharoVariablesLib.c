@@ -339,6 +339,27 @@ MeasureVariable (
 }
 
 /**
+  A comparison function for sorting an array of variable names.
+
+  @param Buffer1  Pointer to pointer of the first variable name.
+  @param Buffer2  Pointer to pointer of the second variable name.
+
+  @retval <0  The first variable name is less than the second one.
+  @retval =0  The names are equal.
+  @retval >0  The first variable name is greater than the second one.
+**/
+STATIC
+INTN
+EFIAPI
+CompareVariableNames (
+  IN CONST VOID  *Buffer1,
+  IN CONST VOID  *Buffer2
+  )
+{
+  return StrCmp (*(CONST CHAR16 **) Buffer1, *(CONST CHAR16 **) Buffer2);
+}
+
+/**
   Measures single all existing variables with the specified GUID.
 
   @param Vendor   Namespace of the variable.
@@ -357,11 +378,24 @@ MeasureVariables (
   UINTN       MaxNameSize;
   UINTN       NameSize;
   EFI_GUID    Guid;
+  CHAR16      **Names;
+  UINTN       NameCount;
+  CHAR16      SortBuf;
+  UINTN       MaxNameCount;
+  UINTN       Index;
 
-  MaxNameSize = 32*sizeof (CHAR16);
+  MaxNameSize = 32 * sizeof (CHAR16);
   Name = AllocateZeroPool (MaxNameSize);
   if (Name == NULL)
     return EFI_OUT_OF_RESOURCES;
+
+  MaxNameCount = 32;
+  NameCount = 0;
+  Names = AllocatePool (MaxNameCount * sizeof (*Names));
+  if (Names == NULL) {
+    FreePool(Name);
+    return EFI_OUT_OF_RESOURCES;
+  }
 
   while (TRUE) {
     NameSize = MaxNameSize;
@@ -373,7 +407,7 @@ MeasureVariables (
         break;
       }
 
-      StrnCpyS (NewBuf, NameSize/sizeof (CHAR16), Name, MaxNameSize/sizeof (CHAR16));
+      StrnCpyS (NewBuf, NameSize / sizeof (CHAR16), Name, MaxNameSize / sizeof (CHAR16));
       FreePool (Name);
 
       Name = NewBuf;
@@ -390,11 +424,59 @@ MeasureVariables (
     if (EFI_ERROR (Status))
       break;
 
-    if (CompareGuid (&Guid, Vendor))
-      MeasureVariable (Name, Vendor);
+    if (!CompareGuid (&Guid, Vendor))
+      continue;
+
+    if (NameCount == MaxNameCount - 1) {
+      Names = ReallocatePool (
+          MaxNameCount * sizeof (*Names),
+          2 * MaxNameCount * sizeof (*Names),
+          Names
+          );
+      if (Names == NULL) {
+        Status = EFI_OUT_OF_RESOURCES;
+        break;
+      }
+
+      MaxNameCount *= 2;
+    }
+
+    Names[NameCount] = AllocateCopyPool (NameSize, Name);
+    if (Names[NameCount] == NULL) {
+      Status = EFI_OUT_OF_RESOURCES;
+      break;
+    }
+
+    NameCount++;
   }
 
+  if (Status == EFI_SUCCESS) {
+    //
+    // Achieve predictable ordering of variables by sorting them by name within
+    // a particular vendor.
+    //
+    QuickSort (
+        Names,
+        NameCount,
+        sizeof (*Names),
+        CompareVariableNames,
+        &SortBuf
+        );
+
+    for (Index = 0; Index < NameCount; Index++) {
+      Status = MeasureVariable (Names[Index], Vendor);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_WARN, "%a(): Failed to measure variable: %g:%s.\n",
+                __FUNCTION__, Vendor, Name));
+      }
+    }
+  }
+
+  for (Index = 0; Index < NameCount; Index++)
+    FreePool (Names[Index]);
+
   FreePool (Name);
+  FreePool (Names);
   return Status;
 }
 
