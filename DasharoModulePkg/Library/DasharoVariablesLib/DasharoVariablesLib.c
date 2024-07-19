@@ -413,6 +413,32 @@ DasharoMeasureVariables (
   return Status;
 }
 
+/**
+  Enable firmware update mode (FUM) for the next boot.
+
+  @retval RETURN_SUCCESS  FUM was successfully enabled.
+**/
+EFI_STATUS
+EFIAPI
+DasharoEnableFUM (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  BOOLEAN     Enable;
+
+  Enable = TRUE;
+  Status = gRT->SetVariable (
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      &gDasharoSystemFeaturesGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      sizeof (Enable),
+      &Enable
+      );
+
+  return Status;
+}
+
 EFI_STATUS
 EFIAPI
 DasharoVariablesLibConstructor (
