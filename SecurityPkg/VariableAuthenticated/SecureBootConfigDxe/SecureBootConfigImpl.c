@@ -4165,13 +4165,28 @@ ON_EXIT:
 STATIC EFI_STATUS
 EFIAPI
 KeyEnrollReset (
-  VOID
+  IN SECUREBOOT_CONFIGURATION        *ConfigData
   )
 {
   EFI_STATUS  Status;
   UINT8       SetupMode;
+  BOOLEAN     SecureBootEnable;
+  UINTN       DataSize;
 
-  Status = EFI_SUCCESS;
+  DataSize = sizeof (SecureBootEnable);
+  Status = gRT->GetVariable(
+                EFI_SECURE_BOOT_ENABLE_NAME,
+                &gEfiSecureBootEnableDisableGuid,
+                NULL,
+                &DataSize,
+                &SecureBootEnable
+                );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot read SecureBootEnable variable: %r\n", Status));
+    /* Get the state from the from data if we failed to read the variable */
+    SecureBootEnable = ConfigData->AttemptSecureBoot;
+  }
 
   Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
   if (EFI_ERROR(Status)) {
@@ -4256,6 +4271,20 @@ KeyEnrollReset (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Cannot enroll PK: %r\n", Status));
     goto clearKEK;
+  }
+
+  /* 
+   * If Secure Boot was disabled before resetting the keys, don't change its state.
+   * Enrolling PK would enable Secure Boot automatically.
+   */
+  if (SecureBootEnable == SECURE_BOOT_DISABLE) {
+    Status = SaveSecureBootVariable (SECURE_BOOT_DISABLE);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "Cannot set Secure Boot state to SECURE_BOOT_DISABLE\n"
+        ));
+    }
   }
 
   Status = SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
@@ -4969,7 +4998,7 @@ SecureBootCallback (
                            &UserSelection
                            );
       if (UserSelection == EfiHiiPopupSelectionYes) {
-        Status = KeyEnrollReset ();
+        Status = KeyEnrollReset (IfrNvData);
       }
       //
       // Update secure boot strings after key reset
