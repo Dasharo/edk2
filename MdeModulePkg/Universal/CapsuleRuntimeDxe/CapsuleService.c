@@ -183,6 +183,16 @@ UpdateCapsule (
     return EFI_UNSUPPORTED;
   }
 
+  if (NeedReset) {
+    //
+    // Request going into update mode after reboot to have full access to flash.
+    //
+    Status = DasharoEnableFUM ();
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
   CapsuleCacheWriteBack (ScatterGatherList);
 
   //
