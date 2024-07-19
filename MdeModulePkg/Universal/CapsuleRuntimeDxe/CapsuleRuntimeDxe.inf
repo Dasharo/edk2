@@ -51,6 +51,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   UefiBootServicesTableLib
@@ -65,6 +66,7 @@
   BaseMemoryLib
   CacheMaintenanceLib
   VariablePolicyHelperLib
+  DasharoVariablesLib
 
 [LibraryClasses.X64]
   UefiLib
