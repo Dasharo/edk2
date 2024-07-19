@@ -52,4 +52,15 @@ DasharoMeasureVariables (
   VOID
   );
 
+/**
+  Enable firmware update mode (FUM) for the duration of the next boot.
+
+  @retval RETURN_SUCCESS  FUM was successfully enabled.
+**/
+EFI_STATUS
+EFIAPI
+DasharoEnableFUM (
+  VOID
+  );
+
 #endif
