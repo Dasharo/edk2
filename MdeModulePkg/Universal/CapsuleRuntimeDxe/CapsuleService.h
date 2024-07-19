@@ -30,6 +30,7 @@
 #include <Library/BaseLib.h>
 #include <Library/PrintLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/DasharoVariablesLib.h>
 
 /**
   Create the variable to save the base address of page table and stack
