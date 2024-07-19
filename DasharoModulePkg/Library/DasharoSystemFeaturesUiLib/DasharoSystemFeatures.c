@@ -618,9 +618,7 @@ DasharoSystemFeaturesCallback (
 {
   EFI_STATUS                                 Status;
   EFI_INPUT_KEY                              Key;
-  BOOLEAN                                    Enable;
 
-  Enable = TRUE;
   Status = EFI_SUCCESS;
 
   switch (Action) {
@@ -701,13 +699,7 @@ DasharoSystemFeaturesCallback (
         } while ((Key.ScanCode != SCAN_ESC) && (Key.UnicodeChar != CHAR_CARRIAGE_RETURN));
 
         if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-          Status = gRT->SetVariable (
-              DASHARO_VAR_FIRMWARE_UPDATE_MODE,
-              &gDasharoSystemFeaturesGuid,
-              EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-              sizeof (Enable),
-              &Enable
-              );
+          Status = DasharoEnableFUM ();
           if (EFI_ERROR (Status)) {
             return Status;
           }
