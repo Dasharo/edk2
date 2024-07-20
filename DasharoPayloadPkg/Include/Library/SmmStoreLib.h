@@ -96,6 +96,16 @@ SmmStoreLibEraseBlock (
   );
 
 /**
+  Function to update a pointer on virtual address change.  Matches the signature
+  and operation of EfiConvertPointer.
+
+**/
+typedef EFI_STATUS EFIAPI (*ConvertPointerFunc) (
+  IN UINTN     DebugDisposition,
+  IN OUT VOID  **Address
+  );
+
+/**
   Initializes SmmStore support
 
   @retval EFI_WRITE_PROTECTED   The SmmStore is not present.
@@ -106,6 +116,21 @@ SmmStoreLibEraseBlock (
 EFI_STATUS
 SmmStoreLibInitialize (
   VOID
+  );
+
+/**
+  Fixup internal data so that EFI can be called in virtual mode.
+  Converts any pointers in lib to virtual mode. This function is meant to
+  be invoked on gEfiEventVirtualAddressChangeGuid event when the library is
+  used at run-time.
+
+  @param[in] ConvertPointer  Function to switch virtual address space.
+
+**/
+VOID
+EFIAPI
+SmmStoreLibVirtualAddressChange (
+  IN ConvertPointerFunc  ConvertPointer
   );
 
 /**
