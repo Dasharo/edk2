@@ -13,7 +13,6 @@
 #include <Library/DxeServicesTableLib.h>
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/UefiRuntimeLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/SmmStoreLib.h>
 #include "SmmStore.h"
@@ -28,8 +27,6 @@ STATIC EFI_PHYSICAL_ADDRESS  mArgComBufPhys;
  * Metadata provided by the first stage bootloader.
  */
 STATIC SMMSTORE_INFO  *mSmmStoreInfo;
-
-STATIC EFI_EVENT  mSmmStoreLibVirtualAddrChangeEvent;
 
 /**
   Calls into SMM to use the SMMSTOREv2 implementation for persistent storage.
@@ -255,25 +252,24 @@ SmmStoreLibEraseBlock (
 }
 
 /**
-  Fixup internal data so that EFI can be call in virtual mode.
-  Call the passed in Child Notify event and convert any pointers in
-  lib to virtual mode.
+  Fixup internal data so that EFI can be called in virtual mode.
+  Converts any pointers in lib to virtual mode. This function is meant to
+  be invoked on gEfiEventVirtualAddressChangeGuid event when the library is
+  used at run-time.
 
-  @param[in]    Event   The Event that is being processed
-  @param[in]    Context Event Context
+  @param[in] ConvertPointer  Function to switch virtual address space.
+
 **/
-STATIC
 VOID
 EFIAPI
-SmmStoreLibVirtualNotifyEvent (
-  IN EFI_EVENT  Event,
-  IN VOID       *Context
+SmmStoreLibVirtualAddressChange (
+  IN ConvertPointerFunc  ConvertPointer
   )
 {
-  EfiConvertPointer (0x0, (VOID **)&mArgComBuf);
+  ConvertPointer (0x0, (VOID **)&mArgComBuf);
   if (mSmmStoreInfo != NULL) {
-    EfiConvertPointer (0x0, (VOID **)&mSmmStoreInfo->ComBuffer);
-    EfiConvertPointer (0x0, (VOID **)&mSmmStoreInfo);
+    ConvertPointer (0x0, (VOID **)&mSmmStoreInfo->ComBuffer);
+    ConvertPointer (0x0, (VOID **)&mSmmStoreInfo);
   }
 
   return;
@@ -361,19 +357,6 @@ SmmStoreLibInitialize (
   mArgComBuf = (VOID *)mArgComBufPhys;
 
   //
-  // Register for the virtual address change event
-  //
-  Status = gBS->CreateEventEx (
-                  EVT_NOTIFY_SIGNAL,
-                  TPL_NOTIFY,
-                  SmmStoreLibVirtualNotifyEvent,
-                  NULL,
-                  &gEfiEventVirtualAddressChangeGuid,
-                  &mSmmStoreLibVirtualAddrChangeEvent
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  //
   // Finally mark the SMM communication buffer provided by CB or SBL as runtime memory
   //
   Status = gDS->GetMemorySpaceDescriptor (mSmmStoreInfo->ComBuffer, &GcdDescriptor);
@@ -447,8 +430,7 @@ SmmStoreLibInitialize (
 }
 
 /**
-  Denitializes SmmStore support by freeing allocated memory and unregistering
-  the virtual address change event.
+  Denitializes SmmStore support by freeing allocated memory.
 **/
 VOID
 EFIAPI
@@ -464,10 +446,5 @@ SmmStoreLibDeinitialize (
   if (mSmmStoreInfo != NULL) {
     FreePool (mSmmStoreInfo);
     mSmmStoreInfo = NULL;
-  }
-
-  if (mSmmStoreLibVirtualAddrChangeEvent != NULL) {
-    gBS->CloseEvent (mSmmStoreLibVirtualAddrChangeEvent);
-    mSmmStoreLibVirtualAddrChangeEvent = NULL;
   }
 }

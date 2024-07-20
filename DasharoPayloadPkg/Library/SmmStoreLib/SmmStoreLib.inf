@@ -29,7 +29,6 @@
   HobLib
   MemoryAllocationLib
   UefiBootServicesTableLib
-  UefiRuntimeLib
 
 [Guids]
   gEfiSmmStoreInfoHobGuid           ## CONSUMES

@@ -137,6 +137,8 @@ SmmStoreVirtualNotifyEvent (
   IN VOID       *Context
   )
 {
+  SmmStoreLibVirtualAddressChange (EfiConvertPointer);
+
   // Convert Fvb
   EfiConvertPointer (0x0, (VOID **)&mSmmStoreInstance->FvbProtocol.EraseBlocks);
   EfiConvertPointer (0x0, (VOID **)&mSmmStoreInstance->FvbProtocol.GetAttributes);
