@@ -11,6 +11,15 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
 #define LEGACY_8259_MASK_REGISTER_SLAVE   0xA1
 
+#define E820_RAM        1
+#define E820_RESERVED   2
+#define E820_ACPI       3
+#define E820_NVS        4
+#define E820_UNUSABLE   5
+#define E820_DISABLED   6
+#define E820_PMEM       7
+#define E820_UNDEFINED  8
+
 EFI_MEMORY_TYPE_INFORMATION mDefaultMemoryTypeInformation[] = {
   { EfiACPIReclaimMemory,   FixedPcdGet32 (PcdMemoryTypeEfiACPIReclaimMemory) },
   { EfiACPIMemoryNVS,       FixedPcdGet32 (PcdMemoryTypeEfiACPIMemoryNVS) },
@@ -31,6 +40,8 @@ EFI_PEI_PPI_DESCRIPTOR   mPpiBootMode[] = {
 EFI_PEI_GRAPHICS_DEVICE_INFO_HOB mDefaultGraphicsDeviceInfo = {
   MAX_UINT16, MAX_UINT16, MAX_UINT16, MAX_UINT16, MAX_UINT8,  MAX_UINT8
 };
+
+STATIC UINT32  mTopOfLowerUsableDram = 0;
 
 /**
   Create memory mapped io resource hob.
@@ -298,21 +309,66 @@ Done:
   return RETURN_SUCCESS;
 }
 
+/**
+   Callback function to build resource descriptor HOB
+
+   This function build a HOB based on the memory map entry info.
+   It creates only EFI_RESOURCE_MEMORY_MAPPED_IO and EFI_RESOURCE_MEMORY_RESERVED
+   resources.
+
+   @param MemoryMapEntry         Memory map entry info got from bootloader.
+   @param Params                 A pointer to ACPI_BOARD_INFO.
+
+  @retval EFI_SUCCESS            Successfully build a HOB.
+  @retval EFI_INVALID_PARAMETER  Invalid parameter provided.
+**/
 EFI_STATUS
-MemInfoCallback (
-  IN MEMROY_MAP_ENTRY             *MemoryMapEntry,
-  IN VOID                         *Params
+MemInfoCallbackMmio (
+  IN MEMORY_MAP_ENTRY  *MemoryMapEntry,
+  IN VOID              *Params
   )
 {
-  PAYLOAD_MEM_INFO        *MemInfo;
-  UINTN                   Attribute;
-  EFI_PHYSICAL_ADDRESS    Base;
-  EFI_RESOURCE_TYPE       Type;
-  UINT64                  Size;
-  UINT32                  SystemLowMemTop;
-  UINT8                   Flag;
+  EFI_PHYSICAL_ADDRESS         Base;
+  EFI_RESOURCE_TYPE            Type;
+  UINT64                       Size;
+  EFI_RESOURCE_ATTRIBUTE_TYPE  Attribue;
+  ACPI_BOARD_INFO              *AcpiBoardInfo;
 
-  Attribute = EFI_RESOURCE_ATTRIBUTE_PRESENT |
+  AcpiBoardInfo = (ACPI_BOARD_INFO *)Params;
+  if (AcpiBoardInfo == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Skip types already handled in MemInfoCallback
+  //
+  if ((MemoryMapEntry->Type == E820_RAM) || (MemoryMapEntry->Type == E820_ACPI)) {
+    return EFI_SUCCESS;
+  }
+
+  if (MemoryMapEntry->Base == AcpiBoardInfo->PcieBaseAddress) {
+    //
+    // MMCONF is always MMIO
+    //
+    Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+  } else if (MemoryMapEntry->Base < mTopOfLowerUsableDram) {
+    //
+    // It's in DRAM and thus must be reserved
+    //
+    Type = EFI_RESOURCE_MEMORY_RESERVED;
+  } else if ((MemoryMapEntry->Base < 0x100000000ULL) && (MemoryMapEntry->Base >= mTopOfLowerUsableDram)) {
+    //
+    // It's not in DRAM, must be MMIO
+    //
+    Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+  } else {
+    Type = EFI_RESOURCE_MEMORY_RESERVED;
+  }
+
+  Base = MemoryMapEntry->Base;
+  Size = MemoryMapEntry->Size;
+
+  Attribue = EFI_RESOURCE_ATTRIBUTE_PRESENT |
              EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
              EFI_RESOURCE_ATTRIBUTE_TESTED |
              EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
@@ -320,76 +376,148 @@ MemInfoCallback (
              EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
              EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
 
-  MemInfo = (PAYLOAD_MEM_INFO *)Params;
-  Type    = MemoryMapEntry->Type;
-  Base    = MemoryMapEntry->Base;
-  Size    = MemoryMapEntry->Size;
-  Flag    = MemoryMapEntry->Flag;
+  BuildResourceDescriptorHob (Type, Attribue, (EFI_PHYSICAL_ADDRESS)Base, Size);
+  DEBUG ((DEBUG_INFO, "buildhob: base = 0x%lx, size = 0x%lx, type = 0x%x\n", Base, Size, Type));
 
-  if ((Base  < 0x100000) && ((Base + Size) > 0x100000)) {
-    Size -= (0x100000 - Base);
-    Base  = 0x100000;
+  if ((MemoryMapEntry->Type == E820_UNUSABLE) ||
+      (MemoryMapEntry->Type == E820_DISABLED))
+  {
+    BuildMemoryAllocationHob (Base, Size, EfiUnusableMemory);
+  } else if (MemoryMapEntry->Type == E820_PMEM) {
+    BuildMemoryAllocationHob (Base, Size, EfiPersistentMemory);
   }
 
-  if (Base >= 0x100000) {
-    if (!(Flag & EFI_RESOURCE_ATTRIBUTE_PRESENT)) {
-      BuildResourceDescriptorHob (
-        Type,
-        0,
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size
-        );
-    } else if (Type == EFI_RESOURCE_SYSTEM_MEMORY) {
-      if (Base < 0x100000000ULL) {
-        MemInfo->UsableLowMemTop = (UINT32)(Base + Size);
-      } else {
-        Attribute &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
-      }
-      BuildResourceDescriptorHob (
-        EFI_RESOURCE_SYSTEM_MEMORY,
-        Attribute,
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size
-        );
-    } else if (Type == EFI_RESOURCE_MEMORY_RESERVED) {
-      BuildResourceDescriptorHob (
-        EFI_RESOURCE_MEMORY_RESERVED,
-        Attribute,
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size
-        );
-      BuildMemoryAllocationHob (
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size,
-        EfiACPIReclaimMemory
-        );
-      if (Base < 0x100000000ULL) {
-        SystemLowMemTop = ((UINT32)(Base + Size) + 0x0FFFFFFF) & 0xF0000000;
-        if (SystemLowMemTop > MemInfo->SystemLowMemTop) {
-          MemInfo->SystemLowMemTop = SystemLowMemTop;
-        }
-      }
-    } else if (Type == EFI_RESOURCE_MEMORY_MAPPED_IO) {
-      BuildMemoryMappedIoRangeHob((EFI_PHYSICAL_ADDRESS)Base, Size);
-    } else if (Type == EFI_RESOURCE_FIRMWARE_DEVICE) {
-      BuildResourceDescriptorHob (
-          EFI_RESOURCE_FIRMWARE_DEVICE,
-          (EFI_RESOURCE_ATTRIBUTE_PRESENT    |
-          EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-          EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-          EFI_RESOURCE_ATTRIBUTE_TESTED),
-          (EFI_PHYSICAL_ADDRESS)Base,
-          Size
-          );
-      BuildMemoryAllocationHob (
-        (EFI_PHYSICAL_ADDRESS)Base,
-        Size,
-        EfiACPIMemoryNVS
-        );
+  return EFI_SUCCESS;
+}
+
+/**
+   Callback function to find TOLUD (Top of Lower Usable DRAM)
+
+   Estimate where TOLUD (Top of Lower Usable DRAM) resides. The exact position
+   would require platform specific code.
+
+   @param MemoryMapEntry         Memory map entry info got from bootloader.
+   @param Params                 Not used for now.
+
+  @retval EFI_SUCCESS            Successfully updated mTopOfLowerUsableDram.
+**/
+EFI_STATUS
+FindToludCallback (
+  IN MEMORY_MAP_ENTRY  *MemoryMapEntry,
+  IN VOID              *Params
+  )
+{
+  //
+  // This code assumes that the memory map on this x86 machine below 4GiB is continous
+  // until TOLUD. In addition it assumes that the bootloader provided memory tables have
+  // no "holes" and thus the first memory range not covered by e820 marks the end of
+  // usable DRAM. In addition it's assumed that every reserved memory region touching
+  // usable RAM is also covering DRAM, everything else that is marked reserved thus must be
+  // MMIO not detectable by bootloader/OS
+  //
+
+  //
+  // Skip memory types not RAM or reserved
+  //
+  if ((MemoryMapEntry->Type == E820_UNUSABLE) || (MemoryMapEntry->Type == E820_DISABLED) ||
+      (MemoryMapEntry->Type == E820_PMEM))
+  {
+    return EFI_SUCCESS;
+  }
+
+  //
+  // Skip resources above 4GiB
+  //
+  if ((MemoryMapEntry->Base + MemoryMapEntry->Size) > 0x100000000ULL) {
+    return EFI_SUCCESS;
+  }
+
+  if ((MemoryMapEntry->Type == E820_RAM) || (MemoryMapEntry->Type == E820_ACPI) ||
+      (MemoryMapEntry->Type == E820_NVS))
+  {
+    //
+    // It's usable DRAM. Update TOLUD.
+    //
+    if (mTopOfLowerUsableDram < (MemoryMapEntry->Base + MemoryMapEntry->Size)) {
+      mTopOfLowerUsableDram = (UINT32)(MemoryMapEntry->Base + MemoryMapEntry->Size);
+    }
+  } else {
+    //
+    // It might be 'reserved DRAM' or 'MMIO'.
+    //
+    // If it touches usable DRAM at Base assume it's DRAM as well,
+    // as it could be bootloader installed tables, TSEG, GTT, ...
+    //
+    if (mTopOfLowerUsableDram == MemoryMapEntry->Base) {
+      mTopOfLowerUsableDram = (UINT32)(MemoryMapEntry->Base + MemoryMapEntry->Size);
     }
   }
 
   return EFI_SUCCESS;
+}
+
+/**
+   Callback function to build resource descriptor HOB
+
+   This function build a HOB based on the memory map entry info.
+   Only add EFI_RESOURCE_SYSTEM_MEMORY.
+
+   @param MemoryMapEntry         Memory map entry info got from bootloader.
+   @param Params                 Not used for now.
+
+  @retval RETURN_SUCCESS        Successfully build a HOB.
+**/
+EFI_STATUS
+MemInfoCallback (
+  IN MEMORY_MAP_ENTRY  *MemoryMapEntry,
+  IN VOID              *Params
+  )
+{
+  EFI_PHYSICAL_ADDRESS         Base;
+  EFI_RESOURCE_TYPE            Type;
+  UINT64                       Size;
+  EFI_RESOURCE_ATTRIBUTE_TYPE  Attribue;
+  PAYLOAD_MEM_INFO             *PldMemInfo;
+
+  //
+  // Skip everything not known to be usable DRAM.
+  // It will be added later.
+  //
+  if ((MemoryMapEntry->Type != E820_RAM) && (MemoryMapEntry->Type != E820_ACPI) &&
+      (MemoryMapEntry->Type != E820_NVS))
+  {
+    return RETURN_SUCCESS;
+  }
+
+  PldMemInfo = (PAYLOAD_MEM_INFO *)Params;
+
+  Type = EFI_RESOURCE_SYSTEM_MEMORY;
+  Base = MemoryMapEntry->Base;
+  Size = MemoryMapEntry->Size;
+
+  Attribue = EFI_RESOURCE_ATTRIBUTE_PRESENT |
+             EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+             EFI_RESOURCE_ATTRIBUTE_TESTED |
+             EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
+             EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
+             EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
+             EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
+
+  BuildResourceDescriptorHob (Type, Attribue, (EFI_PHYSICAL_ADDRESS)Base, Size);
+  DEBUG ((DEBUG_INFO, "buildhob: base = 0x%lx, size = 0x%lx, type = 0x%x\n", Base, Size, Type));
+
+  if (MemoryMapEntry->Type == E820_ACPI) {
+    BuildMemoryAllocationHob (Base, Size, EfiACPIReclaimMemory);
+  } else if (MemoryMapEntry->Type == E820_NVS) {
+    BuildMemoryAllocationHob (Base, Size, EfiACPIMemoryNVS);
+  }
+
+  if (MemoryMapEntry->Type == E820_RAM && MemoryMapEntry->Base < mTopOfLowerUsableDram) {
+    if (MemoryMapEntry->Base > PldMemInfo->UsableLowMemTop)
+      PldMemInfo->UsableLowMemTop = MemoryMapEntry->Base + MemoryMapEntry->Size;
+  }
+
+  return RETURN_SUCCESS;
 }
 
 /**
@@ -531,60 +659,24 @@ BlPeiEntryPoint (
   EFI_PEI_GRAPHICS_DEVICE_INFO_HOB *NewGfxDeviceInfo;
   FIRMWARE_SEC_PERFORMANCE         Performance;
 
-  // Report lower 640KB of RAM.
-  // Mark memory as reserved to keep coreboot header in place.
   //
-  BuildResourceDescriptorHob (
-    EFI_RESOURCE_MEMORY_RESERVED,
-    (
-    EFI_RESOURCE_ATTRIBUTE_PRESENT |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_TESTED |
-    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-    ),
-    (EFI_PHYSICAL_ADDRESS)(0),
-    (UINT64)(0x1000)
-    );
+  // First find TOLUD
+  //
+  DEBUG ((DEBUG_INFO, "Guessing Top of Lower Usable DRAM:\n"));
+  Status = ParseMemoryInfo (FindToludCallback, NULL);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
-  BuildResourceDescriptorHob (
-    EFI_RESOURCE_SYSTEM_MEMORY,
-    (
-    EFI_RESOURCE_ATTRIBUTE_PRESENT |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-    ),
-    (EFI_PHYSICAL_ADDRESS)(0x1000),
-    (UINT64)(0x9F000)
-    );
-
-  BuildResourceDescriptorHob (
-    EFI_RESOURCE_MEMORY_RESERVED,
-    (
-    EFI_RESOURCE_ATTRIBUTE_PRESENT |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_TESTED |
-    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_COMBINEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
-    EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE
-    ),
-    (EFI_PHYSICAL_ADDRESS)(0xA0000),
-    (UINT64)(0x60000)
-    );
-
+  DEBUG ((DEBUG_INFO, "Assuming TOLUD = 0x%x\n", mTopOfLowerUsableDram));
 
   //
-  // Parse memory info
+  // Parse memory info and build memory HOBs for Usable RAM
   //
+  DEBUG ((DEBUG_INFO, "Building ResourceDescriptorHobs for usable memory:\n"));
   ZeroMem (&PldMemInfo, sizeof(PldMemInfo));
   Status = ParseMemoryInfo (MemInfoCallback, &PldMemInfo);
-  if (EFI_ERROR(Status)) {
+  if (EFI_ERROR (Status)) {
     return Status;
   }
 
@@ -594,7 +686,6 @@ BlPeiEntryPoint (
   LowMemorySize = PldMemInfo.UsableLowMemTop;
   PeiMemBase = (LowMemorySize - PeiMemSize) & (~(BASE_64KB - 1));
   DEBUG ((DEBUG_INFO, "Low memory 0x%lx\n", LowMemorySize));
-  DEBUG ((DEBUG_INFO, "SystemLowMemTop 0x%x\n", PldMemInfo.SystemLowMemTop));
   DEBUG ((DEBUG_INFO, "PeiMemBase: 0x%lx.\n", PeiMemBase));
   DEBUG ((DEBUG_INFO, "PeiMemSize: 0x%lx.\n", PeiMemSize));
   Status = PeiServicesInstallPeiMemory (PeiMemBase, PeiMemSize);
@@ -732,6 +823,15 @@ BlPeiEntryPoint (
     ASSERT (NewAcpiBoardInfo != NULL);
     CopyMem (NewAcpiBoardInfo, &AcpiBoardInfo, sizeof (ACPI_BOARD_INFO));
     DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
+  }
+
+  //
+  // Parse memory info and build memory HOBs for reserved DRAM and MMIO
+  //
+  DEBUG ((DEBUG_INFO, "Building ResourceDescriptorHobs for reserved memory:\n"));
+  Status = ParseMemoryInfo (MemInfoCallbackMmio, &AcpiBoardInfo);
+  if (EFI_ERROR (Status)) {
+    return Status;
   }
 
   // Build SEC Performance Data Hob

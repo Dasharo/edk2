@@ -22,6 +22,7 @@
 #include <Protocol/HiiDatabase.h>
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/Pci22.h>
+#include <Guid/MemoryMapInfoGuid.h>
 #include <Coreboot.h>
 
 /**
@@ -365,8 +366,6 @@ ParseCbMemTable (
   return Status;
 }
 
-
-
 /**
   Acquire the memory information from the coreboot table in memory.
 
@@ -384,73 +383,40 @@ ParseMemoryInfo (
   IN  VOID                  *Params
   )
 {
-  struct cb_memory         *rec;
-  struct cb_memory_range   *Range;
-  UINTN                    Index;
-  MEMROY_MAP_ENTRY         MemoryMap;
-  UINT32                   Tolud;
-
-  Tolud = PciRead32(PCI_LIB_ADDRESS(0,0,0,0xbc)) & 0xFFF00000;
+  struct cb_memory        *Rec;
+  struct cb_memory_range  *Range;
+  UINTN                   Index;
+  MEMORY_MAP_ENTRY        MemoryMap;
 
   //
   // Get the coreboot memory table
   //
-  rec = (struct cb_memory *)FindCbTag (CB_TAG_MEMORY);
-  if (rec == NULL) {
+  Rec = (struct cb_memory *)FindCbTag (CB_TAG_MEMORY);
+  if (Rec == NULL) {
     return RETURN_NOT_FOUND;
   }
 
-  for (Index = 0; Index < MEM_RANGE_COUNT(rec); Index++) {
-    Range = MEM_RANGE_PTR(rec, Index);
-    MemoryMap.Base = cb_unpack64(Range->start);
-    MemoryMap.Size = cb_unpack64(Range->size);
+  for (Index = 0; Index < MEM_RANGE_COUNT (Rec); Index++) {
+    Range          = MEM_RANGE_PTR (Rec, Index);
+    MemoryMap.Base = cb_unpack64 (Range->start);
+    MemoryMap.Size = cb_unpack64 (Range->size);
     MemoryMap.Type = (UINT8)Range->type;
-
-    switch (Range->type) {
-      case CB_MEM_RAM:
-        MemoryMap.Type = EFI_RESOURCE_SYSTEM_MEMORY;
-        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
-        break;
-      /* Only MMIO is marked reserved */
-      case CB_MEM_RESERVED:
-        /*
-         * Reserved memory Below TOLUD can't be MMIO except legacy VGA which
-         * is reported elsewhere as reserved.
-         */
-        if (MemoryMap.Base < Tolud) {
-          MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
-          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
-        } else {
-          MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
-          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
-        }
-        break;
-      case CB_MEM_UNUSABLE:
-        MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
-        MemoryMap.Flag = 0;
-        break;
-      case CB_MEM_VENDOR_RSVD:
-        MemoryMap.Type = EFI_RESOURCE_FIRMWARE_DEVICE;
-        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
-        break;
-      /* ACPI/SMBIOS/CBMEM has it's own tag */
-      case CB_MEM_ACPI:
-      case CB_MEM_TABLE:
-        MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
-        MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
-        break;
-      default:
-        continue;
-    }
-
-    DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
-            Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
+    MemoryMap.Flag = 0;
+    DEBUG ((
+      DEBUG_INFO,
+      "%d. %016lx - %016lx [%02x]\n",
+      Index,
+      MemoryMap.Base,
+      MemoryMap.Base + MemoryMap.Size - 1,
+      MemoryMap.Type
+      ));
 
     MemInfoCallback (&MemoryMap, Params);
   }
 
   return RETURN_SUCCESS;
 }
+
 
 
 /**

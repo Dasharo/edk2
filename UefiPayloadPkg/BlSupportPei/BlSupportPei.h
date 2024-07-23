@@ -26,6 +26,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/VariableFormat.h>
 #include <Guid/SystemNvDataGuid.h>
 #include <Guid/NvVarStoreFormatted.h>
+#include <Guid/MemoryMapInfoGuid.h>
 #include <Guid/MemoryTypeInformation.h>
 #include <Guid/FirmwareFileSystem2.h>
 #include <Guid/SystemTableInfoGuid.h>

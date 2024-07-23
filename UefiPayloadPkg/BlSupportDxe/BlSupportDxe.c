@@ -237,6 +237,9 @@ BlDxeEntryPoint (
   Status = ReserveResourceInGcd (TRUE, EfiGcdMemoryTypeMemoryMappedIo, 0xFED00000, SIZE_1KB, 0, ImageHandle); // HPET
   ASSERT_EFI_ERROR (Status);
 
+  Status = ReserveResourceInGcd (FALSE, EfiGcdIoTypeIo, 0x0000, SIZE_4KB, 0, ImageHandle); // Southbridge I/O
+  ASSERT_EFI_ERROR (Status);
+
   //
   // Find the system table information guid hob
   //
