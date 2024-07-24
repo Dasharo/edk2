@@ -218,6 +218,9 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     disableif ideqval FeaturesData.ShowIntelMeMenu == 0;
+      disableif ideqval FeaturesData.MeHapAvailable == 0;
+        subtitle text = STRING_TOKEN(STR_CAPSULE_UPDATE_MSG);
+      endif;
       oneof varid  = FeaturesData.MeMode,
             questionid = INTEL_ME_MODE_QUESTION_ID,
             prompt = STRING_TOKEN(STR_ME_MODE_PROMPT),
