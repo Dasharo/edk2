@@ -24,5 +24,9 @@ IsPersistAcrossResetCapsuleSupported (
   VOID
   )
 {
+  if (!DasharoCapsulesCanPersistAcrossReset()) {
+    return FALSE;
+  }
+
   return FeaturePcdGet (PcdSupportUpdateCapsuleReset);
 }

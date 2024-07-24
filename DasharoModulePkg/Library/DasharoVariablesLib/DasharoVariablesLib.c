@@ -521,6 +521,64 @@ DasharoEnableFUM (
   return Status;
 }
 
+/**
+  Check whether capsule updates which survive a warm system reset are permitted
+  by current configuration.
+
+  @retval TRUE   Persistent capsules can be accepted by UpdateCapsule().
+  @retval FALSE  UpdateCapsule() must fail with an error for such a capsule.
+**/
+BOOLEAN
+EFIAPI
+DasharoCapsulesCanPersistAcrossReset (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       MeMode;
+  UINTN       VarSize;
+
+  //
+  // Assuming there is no ME if the corresponding menu is not enabled.
+  //
+  if (!FixedPcdGetBool (PcdShowIntelMeMenu)) {
+    return TRUE;
+  }
+
+  //
+  // Guard against variable's value obviously lying about the state.
+  //
+  if (!FixedPcdGetBool (PcdIntelMeHapAvailable)) {
+    return FALSE;
+  }
+
+  MeMode = DASHARO_ME_MODE_ENABLE;
+  VarSize = sizeof (MeMode);
+
+  Status = gRT->GetVariable (
+      DASHARO_VAR_ME_MODE,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &MeMode
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // HAP-disabled ME doesn't do anything, including writing to system flash,
+  // which is what we need for a firmware update that relies on a warm reset.
+  // coreboot assumes that HECI/soft-disabled state of ME isn't as good as
+  // HMRFPO and switches to HMRFPO doing a global reset which loses in-RAM
+  // capsules.
+  //
+  // Checking variable's value should be enough, if somebody manually set it to
+  // an invalid value, the update there will be a reboot without a capsule
+  // update.  A more reliable solution would be to pass this information from
+  // coreboot.
+  //
+  return MeMode == DASHARO_ME_MODE_DISABLE_HAP;
+}
+
 EFI_STATUS
 EFIAPI
 DasharoVariablesLibConstructor (
