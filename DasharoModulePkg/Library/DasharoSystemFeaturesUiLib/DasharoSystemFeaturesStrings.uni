@@ -65,6 +65,8 @@
 #string STR_DASHARO_INTEL_ME_OPTIONS_TITLE   #language en-US  "Intel Management Engine Options"
 #string STR_DASHARO_INTEL_ME_OPTIONS_HELP    #language en-US  "Configuration for Intel Management Engine"
 
+#string STR_CAPSULE_UPDATE_MSG   #language en-US  "Setting 'Intel ME mode' to 'Disabled (HAP)' allows updating system firmware via a UEFI capsule."
+
 #string STR_ME_MODE_PROMPT   #language en-US  "Intel ME mode"
 #string STR_ME_MODE_HELP     #language en-US  "Operation mode of the Intel Management Engine. The ME can be enabled, or disabled using various methods.\n\n"
                                                 "Enabled: Enable the Intel Management Engine.\n\n"
