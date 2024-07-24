@@ -67,6 +67,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option

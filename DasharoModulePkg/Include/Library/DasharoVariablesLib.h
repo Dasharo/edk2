@@ -63,4 +63,17 @@ DasharoEnableFUM (
   VOID
   );
 
+/**
+  Check whether capsule updates which survive a warm system reset are permitted
+  by current configuration.
+
+  @retval TRUE   Persistent capsules can be accepted by UpdateCapsule().
+  @retval FALSE  UpdateCapsule() must fail with an error for such a capsule.
+**/
+BOOLEAN
+EFIAPI
+DasharoCapsulesCanPersistAcrossReset (
+  VOID
+  );
+
 #endif
