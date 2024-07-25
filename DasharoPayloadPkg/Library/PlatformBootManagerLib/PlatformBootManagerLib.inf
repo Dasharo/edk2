@@ -54,6 +54,7 @@
   Tcg2PhysicalPresenceLib
   CustomizedDisplayLib
   LaptopBatteryLib
+  BlParseLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
