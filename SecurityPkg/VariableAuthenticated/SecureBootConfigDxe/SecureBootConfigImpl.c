@@ -2540,19 +2540,18 @@ UpdateDeletePage (
   EFI_SIGNATURE_LIST  *CertList;
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
-  CHAR16              *CertificateInfoStr;
-  CHAR8               *CertificateInfoStr8;
+  CHAR16              CertificateInfoStr[100];
+  CHAR8               CertificateInfoStr8[100];
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
   UINTN CertificateInfoStrSize = 100;
-  UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
-  const CHAR16* UNKNOWN_CERT_PLACEHOLDER = L"Unknown Certificate: No Common Name, No Issuer";
+  UINTN CertificateInfoStr8Bytes = CertificateInfoStrSize*sizeof(CHAR8);
+  CHAR16* UNKNOWN_CERT = L"Unknown Certificate: No Common Name, No Issuer";
   BOOLEAN CertificateInfoReadSuccess;
 
   Data                = NULL;
   CertList            = NULL;
   Cert                = NULL;
-  CertificateInfoStr  = NULL;
   StartOpCodeHandle   = NULL;
   EndOpCodeHandle     = NULL;
 
@@ -2613,18 +2612,6 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
-  CertificateInfoStr = AllocateZeroPool (CertificateInfoStrSize);
-  if (CertificateInfoStr == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ON_EXIT;
-  }
-
-  CertificateInfoStr8 = AllocateZeroPool (CertificateInfoStrSize);
-  if (CertificateInfoStr8 == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ON_EXIT;
-  }
-
   //
   // Enumerate all KEK pub data.
   //
@@ -2670,31 +2657,23 @@ UpdateDeletePage (
         (UINT8*)Cert->SignatureData,
         (UINTN)CertList->SignatureSize,
         (UINT8*)CertificateInfoStr8,
-        &CertificateInfoStrSize
+        &CertificateInfoStr8Bytes
       );
-      DEBUG(("CertinfoSize: %d", CertificateInfoStrSize));
 
-      // if (!CertificateInfoReadSuccess) {
-      // CertificateInfoReadSuccess = X509GetCommonName (
-      //   (UINT8*)Cert->SignatureData,
-      //   (UINTN)CertList->SignatureSize,
-      //   CertificateInfoStr8,
-      //   &CertificateInfoStrSize
-      // );
-      // // }
+      for(int i = 0; i < CertificateInfoStr8Bytes; i++)
+        if(CertificateInfoStr8[i] > 127)
+          CertificateInfoStr8[i] = '!';
 
-      CertificateInfoReadSuccess = CertificateInfoReadSuccess && (AsciiStrLen(CertificateInfoStr8) >= 2);
+      DEBUG((DEBUG_INFO, "Received CertinfoSize: %d", CertificateInfoStr8Bytes));
 
       if(CertificateInfoReadSuccess) {
-        CertificateInfoStr8[CertificateInfoStrSizeHalf] = '\0';
-        DEBUG(("cert8: %s", CertificateInfoStr8));
-        AsciiStrToUnicodeStrS(CertificateInfoStr8, CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16));
+        //DEBUG(("cert8: %s", CertificateInfoStr8));
+        AsciiStrToUnicodeStrS(CertificateInfoStr8, CertificateInfoStr, CertificateInfoStrSize);
+        GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
       } else {
-      StrCpyS(CertificateInfoStr, CertificateInfoStrSize/sizeof(CHAR16), UNKNOWN_CERT_PLACEHOLDER);
+        GuidID  = HiiSetString (PrivateData->HiiHandle, 0, UNKNOWN_CERT, NULL);
       }
-      DEBUG(("cert: %s", CertificateInfoStr));
-
-      GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
+      DEBUG((DEBUG_INFO, "cert: %s", CertificateInfoStr));
 
       HiiCreateCheckBoxOpCode (
         StartOpCodeHandle,
