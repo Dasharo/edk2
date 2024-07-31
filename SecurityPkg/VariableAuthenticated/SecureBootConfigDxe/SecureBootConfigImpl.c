@@ -2544,12 +2544,10 @@ UpdateDeletePage (
   EFI_STRING_ID       GuidID;
   EFI_STRING_ID       Help;
   UINTN CertificateInfoStrSize = 100;
-  UINTN CertificateInfoStrSizeHalf = CertificateInfoStrSize/2;
-  INT16 CertificateInfoStrLen;
+  UINTN CertificateInfoStrLen;
   CHAR8* CertificateInfoStrIterator8;
   CHAR16* CertificateInfoStrIterator16;
-  const CHAR16* UNKNOWN_CERT_PLACEHOLDER = L"Unknown Certificate: No Common Name, No Issuer";
-
+  const CHAR16* UNKNOWN_CERT = L"Unknown Certificate: No Common Name, No Issuer";
 
   Data                = NULL;
   CertList            = NULL;
@@ -2614,7 +2612,7 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
-  CertificateInfoStr = AllocateZeroPool (100);
+  CertificateInfoStr = AllocateZeroPool (CertificateInfoStrSize * sizeof(CHAR16));
   if (CertificateInfoStr == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_EXIT;
@@ -2661,44 +2659,27 @@ UpdateDeletePage (
       // Display GUID and help
       //
 
-
-      // Only half of the buffer size may be used for the names
-      // Because it needs to be resized to 16b which
-      // will cause it to grow in size 2x
-      if(
-          RETURN_SUCCESS == X509GetSubjectName(
-            (UINT8*)Cert->SignatureData,
-            (UINTN)CertList->SignatureSize,
-            (UINT8*)CertificateInfoStr,
-            &CertificateInfoStrSizeHalf
-          )
-          ||
-          RETURN_SUCCESS == X509GetCommonName(
+      CertificateInfoStrLen = CertificateInfoStrSize;
+      if (
+        X509GetCommonName (
             (UINT8*)Cert->SignatureData,
             (UINTN)CertList->SignatureSize,
             (CHAR8*) CertificateInfoStr,
-            &CertificateInfoStrSizeHalf
-          )
-      )
-      {
-        // X509 functions get the name in 8b chars, we need to convert it
-        // to 16b chars
-
-        // There is AsciiStrnToUnicodeStrS function to do that but it
-        // can't be used in place and allocating another  
-        // AllocateZeroPool(100) fails with EFI_OUT_OF_RESOURCES
-
-        CertificateInfoStrLen = AsciiStrnLenS((CHAR8*)CertificateInfoStr, CertificateInfoStrSize);
-        CertificateInfoStrIterator8 = (CHAR8*)CertificateInfoStr + CertificateInfoStrLen;
+            &CertificateInfoStrLen
+        )
+      ) {
+        CertificateInfoStrIterator8 = ((CHAR8*)CertificateInfoStr) + CertificateInfoStrLen;
         CertificateInfoStrIterator16 = CertificateInfoStr + CertificateInfoStrLen;
-        for(int i = 0; i < CertificateInfoStrSize; i++)
+        int i = 0;
+        for (; i < CertificateInfoStrSize; i++)
         {
           CertificateInfoStrIterator16[CertificateInfoStrLen-i] = CertificateInfoStrIterator8[CertificateInfoStrLen-i];
+          if(CertificateInfoStrIterator8[CertificateInfoStrLen-i] == '\0') break;
         }
 
-        if(StrLen(CertificateInfoStr) < 2)
+        if (i < 2)
         {
-          StrCatS(CertificateInfoStr, CertificateInfoStrSize, UNKNOWN_CERT_PLACEHOLDER);
+          StrCatS (CertificateInfoStr, CertificateInfoStrSize, UNKNOWN_CERT);
         }
       }
 
