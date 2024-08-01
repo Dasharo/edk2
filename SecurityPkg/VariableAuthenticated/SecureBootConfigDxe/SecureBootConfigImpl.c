@@ -2541,18 +2541,18 @@ UpdateDeletePage (
   EFI_SIGNATURE_DATA  *Cert;
   UINT32              ItemDataSize;
   CHAR16              *CertificateInfoStr;
-  EFI_STRING_ID       GuidID;
+  CHAR8               *CertificateInfoStr8;
+  EFI_STRING_ID       CertificateInfoID;
   EFI_STRING_ID       Help;
   UINTN CertificateInfoStrSize = 100;
   UINTN CertificateInfoStrLen;
-  CHAR8* CertificateInfoStrIterator8;
-  CHAR16* CertificateInfoStrIterator16;
-  const CHAR16* UNKNOWN_CERT = L"Unknown Certificate: No Common Name, No Issuer";
+  CHAR16* UNKNOWN_CERT = L"Unknown Certificate: No Common Name, No Issuer";
 
   Data                = NULL;
   CertList            = NULL;
   Cert                = NULL;
   CertificateInfoStr  = NULL;
+  CertificateInfoStr8 = NULL;
   StartOpCodeHandle   = NULL;
   EndOpCodeHandle     = NULL;
 
@@ -2612,6 +2612,11 @@ UpdateDeletePage (
     goto ON_EXIT;
   }
 
+  CertificateInfoStr8 = AllocateZeroPool (CertificateInfoStrSize * sizeof(CHAR8));
+  if (CertificateInfoStr8 == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
   CertificateInfoStr = AllocateZeroPool (CertificateInfoStrSize * sizeof(CHAR16));
   if (CertificateInfoStr == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
@@ -2664,33 +2669,23 @@ UpdateDeletePage (
         X509GetCommonName (
             (UINT8*)Cert->SignatureData,
             (UINTN)CertList->SignatureSize,
-            (CHAR8*) CertificateInfoStr,
+            CertificateInfoStr8,
             &CertificateInfoStrLen
-        )
+        ) == RETURN_SUCCESS
       ) {
-        CertificateInfoStrIterator8 = ((CHAR8*)CertificateInfoStr) + CertificateInfoStrLen;
-        CertificateInfoStrIterator16 = CertificateInfoStr + CertificateInfoStrLen;
-        int i = 0;
-        for (; i < CertificateInfoStrSize; i++)
-        {
-          CertificateInfoStrIterator16[CertificateInfoStrLen-i] = CertificateInfoStrIterator8[CertificateInfoStrLen-i];
-          if(CertificateInfoStrIterator8[CertificateInfoStrLen-i] == '\0') break;
-        }
-
-        if (i < 2)
-        {
-          StrCatS (CertificateInfoStr, CertificateInfoStrSize, UNKNOWN_CERT);
-        }
+        AsciiStrToUnicodeStrS (CertificateInfoStr8, CertificateInfoStr, CertificateInfoStrSize);
+        CertificateInfoID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
+      } else {
+        CertificateInfoID  = HiiSetString (PrivateData->HiiHandle, 0, UNKNOWN_CERT, NULL);
       }
 
-      GuidID  = HiiSetString (PrivateData->HiiHandle, 0, CertificateInfoStr, NULL);
 
       HiiCreateCheckBoxOpCode (
         StartOpCodeHandle,
         (EFI_QUESTION_ID)(QuestionIdBase + GuidIndex++),
         0,
         0,
-        GuidID,
+        CertificateInfoID,
         Help,
         EFI_IFR_FLAG_CALLBACK | EFI_IFR_FLAG_RESET_REQUIRED,
         0,
@@ -2725,6 +2720,10 @@ ON_EXIT:
 
   if (CertificateInfoStr != NULL) {
     FreePool (CertificateInfoStr);
+  }
+
+  if (CertificateInfoStr8 != NULL) {
+    FreePool (CertificateInfoStr8);
   }
 
   return EFI_SUCCESS;
