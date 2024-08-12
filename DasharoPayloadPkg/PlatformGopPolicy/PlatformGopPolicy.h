@@ -28,12 +28,6 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 #pragma pack(1)
 
 typedef enum {
-  LidClosed,
-  LidOpen,
-  LidStatusMax
-} LID_STATUS;
-
-typedef enum {
   Docked,
   UnDocked,
   DockStatusMax

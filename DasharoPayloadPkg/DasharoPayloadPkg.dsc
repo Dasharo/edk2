@@ -110,6 +110,7 @@
   DEFINE RAM_DISK_ENABLE                = FALSE
   DEFINE APU_CONFIG_ENABLE              = FALSE
   DEFINE USE_PLATFORM_GOP               = FALSE
+  DEFINE USE_LAPTOP_LID_LIB             = FALSE
 
   #
   # Network definition
@@ -332,6 +333,14 @@
 !else
   TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
   Tcg2PhysicalPresenceLib|OvmfPkg/Library/Tcg2PhysicalPresenceLibNull/DxeTcg2PhysicalPresenceLib.inf
+!endif
+
+!if $(USE_PLATFORM_GOP) == TRUE
+!if $(USE_LAPTOP_LID_LIB) == TRUE
+  LaptopLidLib|DasharoPayloadPkg/Library/LaptopLidLib/LaptopLidLib.inf
+!else
+  LaptopLidLib|DasharoPayloadPkg/Library/LaptopLidLib/LaptopLidLibNull.inf
+!endif
 !endif
 
 [LibraryClasses.IA32.SEC]
