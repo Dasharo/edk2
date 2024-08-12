@@ -15,6 +15,7 @@ Copyright (c)  1999  - 2014, Intel Corporation. All rights reserved
 
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
+#include <Library/LaptopLidLib.h>
 #include <Protocol/FirmwareVolume2.h>
 #include "PlatformGopPolicy.h"
 
@@ -43,7 +44,12 @@ GetPlatformLidStatus (
    OUT LID_STATUS *CurrentLidStatus
 )
 {
-  *CurrentLidStatus = LidOpen;
+  EFI_STATUS Status;
+
+  Status = LaptopGetLidState (CurrentLidStatus);
+
+  if (EFI_ERROR (Status))
+    *CurrentLidStatus = LidOpen;
 
   return EFI_SUCCESS;
 }

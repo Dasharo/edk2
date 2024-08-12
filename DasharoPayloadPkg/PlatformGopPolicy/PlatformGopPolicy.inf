@@ -32,6 +32,7 @@
   DebugLib
   UefiDriverEntryPoint
   UefiRuntimeServicesTableLib
+  LaptopLidLib
 
 [Guids]
   gBmpImageGuid
