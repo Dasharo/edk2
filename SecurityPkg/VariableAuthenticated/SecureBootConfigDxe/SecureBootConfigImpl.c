@@ -4691,17 +4691,17 @@ SecureBootCallback (
               );
         GetVariable2 (EFI_PLATFORM_KEY_NAME, &gEfiGlobalVariableGuid, (VOID **)&Pk, NULL);
         if (Pk != NULL) {
-          PkCN8 = AllocateZeroPool(100*sizeof(CHAR8));
+          UINTN cnSize = 100;
+          PkCN8 = AllocateZeroPool(cnSize*sizeof(CHAR8));
           if (PkCN8 == NULL) {
             return EFI_OUT_OF_RESOURCES;
           }
-          PkCN16 = AllocateZeroPool(100*sizeof(CHAR16));
+          PkCN16 = AllocateZeroPool(cnSize*sizeof(CHAR16));
           if (PkCN16 == NULL) {
             return EFI_OUT_OF_RESOURCES;
           }
-
-          X509GetCommonName((UINT8*)Pk, 512, PkCN8, 100);
-          AsciiStrToUnicodeStrS(PkCN8, PkCN16, 100);
+          X509GetCommonName((UINT8*)Pk, 512, PkCN8, &cnSize);
+          AsciiStrToUnicodeStrS(PkCN8, PkCN16, cnSize);
           HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), PkCN16, NULL);
         } else {
           HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), L"*NO COMMON NAME*", NULL);
