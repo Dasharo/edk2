@@ -3423,7 +3423,6 @@ SecureBootExtractConfigFromVariable (
   //
   ConfigData->AttemptSecureBoot = FALSE;
   GetVariable2 (EFI_SECURE_BOOT_ENABLE_NAME, &gEfiSecureBootEnableDisableGuid, (VOID **)&SecureBootEnable, NULL);
-
   //
   // Fix Pk and SecureBootEnable inconsistency
   //
@@ -4641,6 +4640,8 @@ SecureBootCallback (
   ENROLL_KEY_ERROR                EnrollKeyErrorCode;
   EFI_HII_POPUP_PROTOCOL          *HiiPopup;
   EFI_HII_POPUP_SELECTION         UserSelection;
+  CHAR8                           *PkCN8;
+  CHAR16                          *PkCN16;
 
   Status             = EFI_SUCCESS;
   SecureBootEnable   = NULL;
@@ -4688,7 +4689,23 @@ SecureBootCallback (
               L"TEST POPUP enroll key",
               NULL
               );
-        HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), L"Changed PK CN Info String", NULL);
+        GetVariable2 (EFI_PLATFORM_KEY_NAME, &gEfiGlobalVariableGuid, (VOID **)&Pk, NULL);
+        if (Pk != NULL) {
+          PkCN8 = AllocateZeroPool(100*sizeof(CHAR8));
+          if (PkCN8 == NULL) {
+            return EFI_OUT_OF_RESOURCES;
+          }
+          PkCN16 = AllocateZeroPool(100*sizeof(CHAR16));
+          if (PkCN16 == NULL) {
+            return EFI_OUT_OF_RESOURCES;
+          }
+
+          X509GetCommonName((UINT8*)Pk, 512, PkCN8, 100);
+          AsciiStrToUnicodeStrS(PkCN8, PkCN16, 100);
+          HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), PkCN16, NULL);
+        } else {
+          HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), L"*NO COMMON NAME*", NULL);
+        } 
       }
       if ((QuestionId == KEY_SECURE_BOOT_PK_OPTION) ||
           (QuestionId == KEY_SECURE_BOOT_KEK_OPTION) ||
@@ -5341,6 +5358,8 @@ EXIT:
   }
 
   FreePool (IfrNvData);
+  FreePool (PkCN8);
+  FreePool (PkCN16);
 
   if (File != NULL) {
     FreePool (File);
