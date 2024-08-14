@@ -4681,13 +4681,14 @@ SecureBootCallback (
       // When entering SecureBoot OPTION Form
       // always close opened file & free resource
       //
-      if (QuestionId == KEY_SECURE_BOOT_PK_OPTION) {
+      if (QuestionId == KEY_ENROLL_PK) {
         CreatePopUp (
               EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
               &Key,
-              L"TEST POPUP",
+              L"TEST POPUP enroll key",
               NULL
               );
+        HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_INFO), L"Changed PK CN Info String", NULL);
       }
       if ((QuestionId == KEY_SECURE_BOOT_PK_OPTION) ||
           (QuestionId == KEY_SECURE_BOOT_KEK_OPTION) ||
