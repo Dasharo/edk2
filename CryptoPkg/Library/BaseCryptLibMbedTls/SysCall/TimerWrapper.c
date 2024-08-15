@@ -113,7 +113,8 @@ gmtime (
   const time_t  *timer
   )
 {
-  struct tm  *GmTime;
+  STATIC struct tm  GmTime;
+
   UINT16     DayNo;
   UINT16     DayRemainder;
   time_t     Year;
@@ -125,20 +126,15 @@ gmtime (
     return NULL;
   }
 
-  GmTime = AllocateZeroPool (sizeof (struct tm));
-  if (GmTime == NULL) {
-    return NULL;
-  }
-
-  ZeroMem ((VOID *)GmTime, (UINTN)sizeof (struct tm));
+  ZeroMem ((VOID *)&GmTime, (UINTN)sizeof (GmTime));
 
   DayNo        = (UINT16)(*timer / SECSPERDAY);
   DayRemainder = (UINT16)(*timer % SECSPERDAY);
 
-  GmTime->tm_sec  = (int)(DayRemainder % SECSPERMIN);
-  GmTime->tm_min  = (int)((DayRemainder % SECSPERHOUR) / SECSPERMIN);
-  GmTime->tm_hour = (int)(DayRemainder / SECSPERHOUR);
-  GmTime->tm_wday = (int)((DayNo + 4) % 7);
+  GmTime.tm_sec  = (int)(DayRemainder % SECSPERMIN);
+  GmTime.tm_min  = (int)((DayRemainder % SECSPERHOUR) / SECSPERMIN);
+  GmTime.tm_hour = (int)(DayRemainder / SECSPERHOUR);
+  GmTime.tm_wday = (int)((DayNo + 4) % 7);
 
   for (Year = 1970, YearNo = 0; DayNo > 0; Year++) {
     TotalDays = (UINT16)(IsLeap (Year) ? 366 : 365);
@@ -150,8 +146,8 @@ gmtime (
     }
   }
 
-  GmTime->tm_year = (int)(YearNo + (1970 - 1900));
-  GmTime->tm_yday = (int)DayNo;
+  GmTime.tm_year = (int)(YearNo + (1970 - 1900));
+  GmTime.tm_yday = (int)DayNo;
 
   for (MonthNo = 12; MonthNo > 1; MonthNo--) {
     if (DayNo >= CumulativeDays[IsLeap (Year)][MonthNo]) {
@@ -160,14 +156,14 @@ gmtime (
     }
   }
 
-  GmTime->tm_mon  = (int)MonthNo - 1;
-  GmTime->tm_mday = (int)DayNo + 1;
+  GmTime.tm_mon  = (int)MonthNo - 1;
+  GmTime.tm_mday = (int)DayNo + 1;
 
-  GmTime->tm_isdst  = 0;
-  GmTime->tm_gmtoff = 0;
-  GmTime->tm_zone   = NULL;
+  GmTime.tm_isdst  = 0;
+  GmTime.tm_gmtoff = 0;
+  GmTime.tm_zone   = NULL;
 
-  return GmTime;
+  return &GmTime;
 }
 
 /**_time64 function. **/
