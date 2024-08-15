@@ -82,7 +82,7 @@ X509ConstructCertificate (
     return FALSE;
   }
 
-  MbedTlsCert = AllocateZeroPool (sizeof (mbedtls_x509_crt));
+  MbedTlsCert = calloc (sizeof (mbedtls_x509_crt), 1);
   if (MbedTlsCert == NULL) {
     return FALSE;
   }
@@ -95,7 +95,7 @@ X509ConstructCertificate (
     return TRUE;
   } else {
     mbedtls_x509_crt_free (MbedTlsCert);
-    FreePool (MbedTlsCert);
+    free (MbedTlsCert);
     return FALSE;
   }
 }
@@ -139,7 +139,7 @@ X509ConstructCertificateStackV (
   Ret = 0;
   Crt = NULL;
   if (*X509Stack == NULL) {
-    Crt = AllocateZeroPool (sizeof (mbedtls_x509_crt));
+    Crt = calloc (sizeof (mbedtls_x509_crt), 1);
     if (Crt == NULL) {
       return FALSE;
     }
@@ -174,7 +174,7 @@ X509ConstructCertificateStackV (
   } else {
     if (Crt != NULL) {
       mbedtls_x509_crt_free (Crt);
-      FreePool (Crt);
+      free (Crt);
       *X509Stack = NULL;
     }
 
@@ -230,7 +230,7 @@ X509Free (
 {
   if (X509Cert != NULL) {
     mbedtls_x509_crt_free (X509Cert);
-    FreePool (X509Cert);
+    free (X509Cert);
   }
 }
 
