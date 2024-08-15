@@ -33,7 +33,7 @@ RsaNew (
 {
   VOID  *RsaContext;
 
-  RsaContext = AllocateZeroPool (sizeof (mbedtls_rsa_context));
+  RsaContext = calloc (sizeof (mbedtls_rsa_context), 1);
   if (RsaContext == NULL) {
     return RsaContext;
   }
@@ -59,9 +59,7 @@ RsaFree (
   )
 {
   mbedtls_rsa_free (RsaContext);
-  if (RsaContext != NULL) {
-    FreePool (RsaContext);
-  }
+  free (RsaContext);
 }
 
 /**
