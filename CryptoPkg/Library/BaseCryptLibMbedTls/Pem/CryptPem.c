@@ -52,7 +52,7 @@ RsaGetPrivateKeyFromPem (
 
   NewPemData = NULL;
   if (PemData[PemSize - 1] != 0) {
-    NewPemData = AllocateZeroPool (PemSize + 1);
+    NewPemData = calloc (PemSize + 1, 1);
     if (NewPemData == NULL) {
       return FALSE;
     }
@@ -73,10 +73,8 @@ RsaGetPrivateKeyFromPem (
 
   Ret = mbedtls_pk_parse_key (&Pk, PemData, PemSize, (CONST UINT8 *)Password, PasswordLen, NULL, NULL);
 
-  if (NewPemData != NULL) {
-    FreePool (NewPemData);
-    NewPemData = NULL;
-  }
+  free (NewPemData);
+  NewPemData = NULL;
 
   if (Ret != 0) {
     mbedtls_pk_free (&Pk);
