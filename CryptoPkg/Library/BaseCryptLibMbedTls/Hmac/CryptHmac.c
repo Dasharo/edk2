@@ -24,10 +24,13 @@ HmacMdNew (
 {
   VOID  *HmacMdCtx;
 
-  HmacMdCtx = AllocateZeroPool (sizeof (mbedtls_md_context_t));
+  HmacMdCtx = calloc (sizeof (mbedtls_md_context_t), 1);
   if (HmacMdCtx == NULL) {
     return NULL;
   }
+
+  // XXX: No mbedtls_md_init()?  mbedtls_md_free() shouldn't be called in this
+  //      case.  `HmacMdFree (HmacMdNew ())` can cause problems.
 
   return HmacMdCtx;
 }
@@ -44,9 +47,7 @@ HmacMdFree (
   )
 {
   mbedtls_md_free (HmacMdCtx);
-  if (HmacMdCtx != NULL) {
-    FreePool (HmacMdCtx);
-  }
+  free (HmacMdCtx);
 }
 
 /**
