@@ -34,6 +34,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/UefiBootManagerLib.h>
+#include <Library/CacheMaintenanceLib.h>
 
 #include <Library/Tcg2PhysicalPresenceLib.h>
 
@@ -137,6 +138,7 @@ QemuTpmInitPPI (
     mPpi->NextStep    = TCG2_PHYSICAL_PRESENCE_NO_ACTION;
   }
 
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
   return EFI_SUCCESS;
 
 InvalidPpiAddress:
@@ -746,6 +748,8 @@ Tcg2ExecutePendingTpmRequest (
     mPpi->LastRequest      = mPpi->Request;
     mPpi->Request          = TCG2_PHYSICAL_PRESENCE_NO_ACTION;
     mPpi->RequestParameter = 0;
+
+    WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
     return;
   }
 
@@ -776,6 +780,7 @@ Tcg2ExecutePendingTpmRequest (
   mPpi->RequestParameter = 0;
 
   if (mPpi->Response == TCG_PP_OPERATION_RESPONSE_USER_ABORT) {
+    WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
     return;
   }
 
@@ -800,11 +805,13 @@ Tcg2ExecutePendingTpmRequest (
       if (mPpi->Request != TCG2_PHYSICAL_PRESENCE_NO_ACTION) {
         break;
       }
-
+      WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
       return;
   }
 
   Print (L"Rebooting system to make TPM2 settings in effect\n");
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
+  gBS->Stall(500000);
   gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
   ASSERT (FALSE);
 }
@@ -914,6 +921,7 @@ Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
 
   mPpi->Request          = OperationRequest;
   mPpi->RequestParameter = RequestParameter;
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
 
   return TCG_PP_SUBMIT_REQUEST_TO_PREOS_SUCCESS;
 }
