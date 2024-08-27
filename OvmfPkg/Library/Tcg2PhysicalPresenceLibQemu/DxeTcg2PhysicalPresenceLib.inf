@@ -62,6 +62,7 @@
   UefiLib
   UefiRuntimeServicesTableLib
   Tcg2PhysicalPresencePlatformLib
+  CacheMaintenanceLib
 
 [Protocols]
   gEfiTcg2ProtocolGuid                 ## SOMETIMES_CONSUMES

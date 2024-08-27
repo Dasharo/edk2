@@ -32,6 +32,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/CacheMaintenanceLib.h>
 
 #include <Library/Tcg2PhysicalPresenceLib.h>
 
@@ -902,6 +903,7 @@ Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
 
   mPpi->Request = OperationRequest;
   mPpi->RequestParameter = RequestParameter;
+  WriteBackDataCache();
 
   return TCG_PP_SUBMIT_REQUEST_TO_PREOS_SUCCESS;
 }
