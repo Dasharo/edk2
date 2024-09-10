@@ -747,6 +747,8 @@ Tcg2ExecutePendingTpmRequest (
     mPpi->LastRequest      = mPpi->Request;
     mPpi->Request          = TCG2_PHYSICAL_PRESENCE_NO_ACTION;
     mPpi->RequestParameter = 0;
+
+    WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
     return;
   }
 
@@ -777,6 +779,7 @@ Tcg2ExecutePendingTpmRequest (
   mPpi->RequestParameter = 0;
 
   if (mPpi->Response == TCG_PP_OPERATION_RESPONSE_USER_ABORT) {
+    WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
     return;
   }
 
@@ -806,6 +809,7 @@ Tcg2ExecutePendingTpmRequest (
   }
 
   Print (L"Rebooting system to make TPM2 settings in effect\n");
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
   gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
   ASSERT (FALSE);
 }
@@ -915,7 +919,7 @@ Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
 
   mPpi->Request          = OperationRequest;
   mPpi->RequestParameter = RequestParameter;
-  WriteBackDataCache();
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
 
   return TCG_PP_SUBMIT_REQUEST_TO_PREOS_SUCCESS;
 }
