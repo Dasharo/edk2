@@ -944,6 +944,7 @@ FmpDeviceSetImageWithStatus (
   UINTN       Step;
   BOOLEAN     ShouldReportProgress;
   UINT8       *CurrentImage;
+  UINT8       *UpdatedImage;
   UINTN       Offset;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
@@ -985,13 +986,24 @@ FmpDeviceSetImageWithStatus (
 
   IncrementProgress (Progress, TotalSteps, ReadSteps, &Step, &ShouldReportProgress);
 
+  UpdatedImage = MergeFirmwareImages (CurrentImage, Image);
+  if (UpdatedImage == NULL) {
+    FreePool (CurrentImage);
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to migrate data into new firmware image\n",
+      __FUNCTION__
+      ));
+    return EFI_ABORTED;
+  }
+
   Offset = 0;
   for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
     //
     // Save the flash and time by only writing a block if new contents differs
     // from the old one.
     //
-    if (CompareMem (CurrentImage + Offset, (UINT8 *) Image + Offset, BlockSize) == 0) {
+    if (CompareMem (CurrentImage + Offset, UpdatedImage + Offset, BlockSize) == 0) {
       // Erase and write steps.
       IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
       continue;
@@ -1004,7 +1016,7 @@ FmpDeviceSetImageWithStatus (
     IncrementProgress (Progress, TotalSteps, 1, &Step, &ShouldReportProgress);
 
     NumBytes = BlockSize;
-    Status = SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, (UINT8 *) Image + Offset);
+    Status = SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, UpdatedImage + Offset);
     if (EFI_ERROR (Status) || NumBytes != BlockSize)
       goto IoError;
 
@@ -1012,6 +1024,7 @@ FmpDeviceSetImageWithStatus (
   }
 
   FreePool (CurrentImage);
+  FreePool (UpdatedImage);
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_SUCCESS;
 
@@ -1047,6 +1060,7 @@ IoError:
   // a recovery.  Doesn't seem that the calling code will do any of it.
   //
   FreePool (CurrentImage);
+  FreePool (UpdatedImage);
   DEBUG ((DEBUG_ERROR, "%a(): flashing has failed at block 0x%x/0x%x: %r\n",
           __FUNCTION__, Block, BlockCount, EFI_DEVICE_ERROR));
   return EFI_DEVICE_ERROR;
