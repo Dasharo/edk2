@@ -20,6 +20,7 @@
   CONSTRUCTOR     = FmpDeviceSmmLibConstructor
 
 [Sources]
+  Flashing.c
   FmpDeviceSmmLib.c
 
 [LibraryClasses]
