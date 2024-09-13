@@ -33,6 +33,7 @@
   BaseMemoryLib
   BlParseLib
   DebugLib
+  FmapLib
   MemoryAllocationLib
   PrintLib
   SmmStoreLib
