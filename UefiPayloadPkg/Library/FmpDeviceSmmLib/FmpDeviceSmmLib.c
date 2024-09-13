@@ -34,6 +34,8 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Coreboot.h>
 
+#include "Flashing.h"
+
 /**
   This function requests firmware information on the first call, caches it and
   returns on all calls afterwards.
@@ -726,6 +728,7 @@ FmpDeviceSetImage (
   @param[in]      Callback              External callback for progress reporting
                                         or NULL if there is none.
   @param[in]      TotalSteps            Total number of flashing steps.
+  @param[in]      By                    How many steps to advance.
   @param[in, out] Step                  Current step number.
   @param[in, out] ShouldReportProgress  A flag indicating whether progress needs
                                         to be reported.
@@ -735,6 +738,7 @@ VOID
 IncrementProgress (
   IN      EFI_FIRMWARE_MANAGEMENT_UPDATE_IMAGE_PROGRESS  Callback OPTIONAL,
   IN      UINTN                                          TotalSteps,
+  IN      UINTN                                          By,
   IN OUT  UINTN                                          *Step,
   IN OUT  BOOLEAN                                        *ShouldReportProgress
   )
@@ -751,7 +755,7 @@ IncrementProgress (
     return;
   }
 
-  ++*Step;
+  *Step += By;
   Progress = (*Step * 100) / TotalSteps;
 
   //
@@ -964,16 +968,17 @@ FmpDeviceSetImageWithStatus (
   OUT UINT32                                         *LastAttemptStatus
   )
 {
-  EFI_STATUS   Status;
-  UINTN        BlockSize;
-  UINTN        BlockCount;
-  UINTN        Block;
-  UINTN        NumBytes;
-  UINTN        TotalSteps;
-  UINTN        Step;
-  BOOLEAN      ShouldReportProgress;
-  VOID         *ReadBuffer;
-  CONST UINT8  *WriteNext;
+  EFI_STATUS  Status;
+  UINTN       BlockSize;
+  UINTN       BlockCount;
+  UINTN       Block;
+  UINTN       NumBytes;
+  UINTN       TotalSteps;
+  UINTN       ReadSteps;
+  UINTN       Step;
+  BOOLEAN     ShouldReportProgress;
+  UINT8       *CurrentImage;
+  UINTN       Offset;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
 
@@ -994,12 +999,6 @@ FmpDeviceSetImageWithStatus (
     return Status;
   }
 
-  ReadBuffer = AllocatePool (BlockSize);
-  if (ReadBuffer == NULL) {
-    DEBUG ((DEBUG_ERROR, "%a(): failed to allocate read buffer\n", __func__));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
   BlockCount = ImageSize / BlockSize;
   DEBUG ((
     DEBUG_INFO,
@@ -1012,26 +1011,33 @@ FmpDeviceSetImageWithStatus (
   ShouldReportProgress = TRUE;
   TotalSteps           = BlockCount * 2; // Erase and write of each block.
   Step                 = 0;
-  WriteNext            = Image;
 
-  for (Block = 0; Block < BlockCount; Block++, WriteNext += BlockSize) {
+  // Allocate 5% of progress for reading the flash.
+  ReadSteps = (TotalSteps * 5) / 100;
+  TotalSteps += ReadSteps;
+
+  CurrentImage = ReadCurrentFirmware ();
+  if (CurrentImage == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to read current firmware\n",
+      __FUNCTION__
+      ));
+    return EFI_END_OF_MEDIA;
+  }
+
+  IncrementProgress (Progress, TotalSteps, ReadSteps, &Step, &ShouldReportProgress);
+
+  Offset = 0;
+  for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
     //
     // Save the flash and time by only writing a block if new contents differs
     // from the old one.
     //
-    // This is an optimization, so ignore read errors (if they are indicative of
-    // a serious problem, erasing or writing will fail as well).
-    //
-    NumBytes = BlockSize;
-    Status   = SmmStoreLibReadAnyBlock (Block, 0, &NumBytes, ReadBuffer);
-    if (!EFI_ERROR (Status) && (NumBytes == BlockSize)) {
-      if (CompareMem (ReadBuffer, WriteNext, BlockSize) == 0) {
-        // Erase step.
-        IncrementProgress (Progress, TotalSteps, &Step, &ShouldReportProgress);
-        // Write step.
-        IncrementProgress (Progress, TotalSteps, &Step, &ShouldReportProgress);
-        continue;
-      }
+    if (CompareMem (CurrentImage + Offset, (UINT8 *)Image + Offset, BlockSize) == 0) {
+      // Erase and write steps.
+      IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
+      continue;
     }
 
     Status = SmmStoreLibEraseAnyBlock (Block);
@@ -1039,18 +1045,18 @@ FmpDeviceSetImageWithStatus (
       goto IoError;
     }
 
-    IncrementProgress (Progress, TotalSteps, &Step, &ShouldReportProgress);
+    IncrementProgress (Progress, TotalSteps, 1, &Step, &ShouldReportProgress);
 
     NumBytes = BlockSize;
-    Status   = SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, (VOID *)WriteNext);
+    Status   = SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, (UINT8 *)Image + Offset);
     if (EFI_ERROR (Status) || (NumBytes != BlockSize)) {
       goto IoError;
     }
 
-    IncrementProgress (Progress, TotalSteps, &Step, &ShouldReportProgress);
+    IncrementProgress (Progress, TotalSteps, 1, &Step, &ShouldReportProgress);
   }
 
-  FreePool (ReadBuffer);
+  FreePool (CurrentImage);
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_SUCCESS;
 
@@ -1111,7 +1117,7 @@ IoError:
   // If the firmware ends up unbootable, then, in general, external flashing
   // via a programmer needs to be employed to recover the device.
   //
-  FreePool (ReadBuffer);
+  FreePool (CurrentImage);
   DEBUG ((
     DEBUG_ERROR,
     "%a(): flashing has failed at block 0x%x/0x%x: %r\n",
