@@ -80,3 +80,48 @@ ReadCurrentFirmware (
 
   return Image;
 }
+
+/**
+  Migrates data from current firmware to new image before it's written.
+
+  @param[in] Current  Current image used as a source of data.
+  @param[in] New      New image which gets patched.
+
+  @return NULL  On error.
+**/
+VOID *
+EFIAPI
+MergeFirmwareImages (
+  IN CONST VOID  *Current,
+  IN CONST VOID  *New
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       *Merged;
+  UINTN       FwSize;
+
+  Status = FmpDeviceGetSize (&FwSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): FmpDeviceGetSize() failed with: %r\n",
+      __FUNCTION__,
+      Status
+      ));
+    return NULL;
+  }
+
+  Merged = AllocateCopyPool (FwSize, New);
+  if (Merged == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to allocate merged image buffer\n",
+      __FUNCTION__
+      ));
+    return NULL;
+  }
+
+  // TODO: perform data migration here.
+
+  return Merged;
+}
