@@ -27,6 +27,7 @@
   BaseMemoryLib
   BlParseLib
   DebugLib
+  FmapLib
   HobLib
   MemoryAllocationLib
   PrintLib
