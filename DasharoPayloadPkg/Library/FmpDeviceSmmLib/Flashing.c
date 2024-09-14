@@ -249,6 +249,21 @@ MigrateRomhole (
       || Status == REGION_NOT_IN_DST;
 }
 
+STATIC
+BOOLEAN
+MigrateBootLogo (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("BOOTSPLASH", Data, FALSE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
 /**
   Migrates data from current firmware to new image before it's written.
 
@@ -328,6 +343,11 @@ MergeFirmwareImages (
 
   if (!MigrateRomhole (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateRomhole () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateBootLogo (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateBootLogo () failed\n", __FUNCTION__));
     goto Fail;
   }
 
