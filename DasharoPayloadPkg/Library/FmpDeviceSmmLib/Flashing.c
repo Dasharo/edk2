@@ -11,6 +11,7 @@ typedef enum {
   REGION_MIGRATED,
   REGION_NOT_IN_SRC,
   REGION_NOT_IN_DST,
+  REGION_AT_DIFFERENT_OFFSET,
   REGION_OF_DIFFERENT_SIZE,
 } RegionMigrationStatus;
 
@@ -146,8 +147,9 @@ ReadCurrentFirmware (
 /**
   Migrates a flash map region from current firmware to a new one.
 
-  @param[in] RegionName  Name of the region to migrate.
-  @param[in] Data        New image which gets patched.
+  @param[in] RegionName       Name of the region to migrate.
+  @param[in] Data             New image which gets patched.
+  @param[in] OffsetSensitive  Whether mismatched offset is a fatal error.
 
   @return RegionMigrationStatus  Status which might not be considered an error
                                  depending on the region.
@@ -156,7 +158,8 @@ STATIC
 RegionMigrationStatus
 MigrateRegion (
   IN CONST CHAR8          *RegionName,
-  IN CONST MigrationData  *Data
+  IN CONST MigrationData  *Data,
+  IN BOOLEAN              OffsetSensitive
   )
 {
   CONST FmapArea  *CurrentRegion;
@@ -182,6 +185,18 @@ MigrateRegion (
       RegionName
       ));
     return REGION_NOT_IN_DST;
+  }
+
+  if (OffsetSensitive && CurrentRegion->offset != UpdatedRegion->offset) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): %a regions' offsets don't match (current: 0x%x, updated: 0x%x)\n",
+      __FUNCTION__,
+      RegionName,
+      CurrentRegion->offset,
+      UpdatedRegion->offset
+      ));
+    return REGION_AT_DIFFERENT_OFFSET;
   }
 
   if (CurrentRegion->size != UpdatedRegion->size) {
@@ -213,9 +228,24 @@ MigrateVariables (
 {
   RegionMigrationStatus  Status;
 
-  Status = MigrateRegion ("SMMSTORE", Data);
+  Status = MigrateRegion ("SMMSTORE", Data, FALSE);
 
   return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
+MigrateRomhole (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("ROMHOLE", Data, TRUE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
       || Status == REGION_NOT_IN_DST;
 }
 
@@ -293,6 +323,11 @@ MergeFirmwareImages (
 
   if (!MigrateVariables (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateVariables() failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateRomhole (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateRomhole () failed\n", __FUNCTION__));
     goto Fail;
   }
 
