@@ -95,20 +95,19 @@ GetImage (
             (UINTN*) &(Image->Height),
             (UINTN*) &(Image->Width));
 
-    if (EFI_ERROR (Status)) {
+    if (!EFI_ERROR (Status)) {
+      Image->Bitmap = Blt;
       return Status;
     }
 
-    Image->Bitmap = Blt;
-
-    return Status;
-  } else {
-    // No logo in CBMEM, fallback to builtin
-    *Attribute = mLogos[Current].Attribute;
-    *OffsetX   = mLogos[Current].OffsetX;
-    *OffsetY   = mLogos[Current].OffsetY;
-    return mHiiImageEx->GetImageEx (mHiiImageEx, mHiiHandle, mLogos[Current].ImageId, Image);
+    DEBUG ((DEBUG_ERROR, "Failed to translate logo image: %r\n", Status));
   }
+
+  // No or bad logo in CBMEM, fallback to builtin
+  *Attribute = mLogos[Current].Attribute;
+  *OffsetX   = mLogos[Current].OffsetX;
+  *OffsetY   = mLogos[Current].OffsetY;
+  return mHiiImageEx->GetImageEx (mHiiImageEx, mHiiHandle, mLogos[Current].ImageId, Image);
 }
 
 EDKII_PLATFORM_LOGO_PROTOCOL  mPlatformLogo = {
