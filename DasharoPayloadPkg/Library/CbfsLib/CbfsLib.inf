@@ -1,0 +1,34 @@
+## @file
+#  coreboot file-system management library.
+#
+#  Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = CbfsLib
+  FILE_GUID                      = B531AC59-411A-4359-B60E-610E28DADF70
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = CbfsLib
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  cbfs_image.c
+  common.c
+  xdr.c
+
+[Packages]
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
