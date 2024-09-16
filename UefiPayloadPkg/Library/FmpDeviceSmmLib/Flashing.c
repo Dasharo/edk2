@@ -1,6 +1,7 @@
 #include "Flashing.h"
 
 #include <Library/BaseMemoryLib.h>
+#include <Library/CbfsLib.h>
 #include <Library/DebugLib.h>
 #include <Library/FmapLib.h>
 #include <Library/FmpDeviceLib.h>
@@ -264,6 +265,166 @@ MigrateBootLogo (
       || Status == REGION_NOT_IN_DST;
 }
 
+STATIC
+BOOLEAN
+MigrateFile (
+  CONST CHAR8        *Name,
+  struct cbfs_image  *CurrentCbfs,
+  struct cbfs_image  *UpdatedCbfs
+  )
+{
+  struct buffer     Buf;
+  struct cbfs_file  *Entry;
+  struct cbfs_file  *Header;
+
+  Entry = cbfs_get_entry (CurrentCbfs, Name);
+  if (Entry == NULL) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): failed to find %a in current CBFS\n",
+      __FUNCTION__,
+      Name
+      ));
+    return FALSE;
+  }
+
+  buffer_init (
+    &Buf,
+    Entry->filename,
+    CBFS_SUBHEADER (Entry),
+    ntohl (Entry->len)
+    );
+
+  Header = cbfs_create_file_header (ntohl (Entry->type), Buf.size, Name);
+  if (Header == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to allocate header for %a file\n",
+      __FUNCTION__,
+      Name
+      ));
+    return FALSE;
+  }
+
+  //
+  // An unlikely situation, but won't hurt to handle it.
+  //
+  if (cbfs_get_entry (UpdatedCbfs, Name) != NULL) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a(): found %a in updated CBFS\n",
+      __FUNCTION__,
+      Name
+      ));
+    if (cbfs_remove_entry (UpdatedCbfs, Name) != 0) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a(): failed to remove %a from updated CBFS\n",
+        __FUNCTION__,
+        Name
+        ));
+      return FALSE;
+    }
+  }
+
+  if (cbfs_add_entry (UpdatedCbfs, &Buf, 0, Header, 0) != 0) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to add %a to updated CBFS\n",
+      __FUNCTION__,
+      Name
+      ));
+    FreePool (Header);
+    return FALSE;
+  }
+
+  FreePool (Header);
+  return TRUE;
+}
+
+STATIC
+BOOLEAN
+GetCbfs (
+  IN CONST UINT8         *Image,
+  IN CONST Fmap          *Fmap,
+  OUT struct cbfs_image  *Cbfs
+  )
+{
+  struct buffer   Buf;
+  CONST FmapArea  *CbRegion;
+
+  CbRegion = FmapFindArea (Fmap, "COREBOOT");
+  if (CbRegion == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to find COREBOOT region\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  buffer_init (&Buf, NULL, (UINT8 *) Image + CbRegion->offset, CbRegion->size);
+  if (cbfs_image_from_buffer (Cbfs, &Buf, ~0U) != 0) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+  Migrates data from current firmware to new image before it's written.
+
+  @param[in] Data  Description of old and new firmware images.
+
+  @return TRUE     On successful migration of data that was found.
+  @return FALSE    On error.
+**/
+STATIC
+BOOLEAN
+MigrateSmbiosData (
+  IN CONST MigrationData  *Data
+  )
+{
+  struct cbfs_image  CurrentCbfs;
+  struct cbfs_image  UpdatedCbfs;
+
+  if (!GetCbfs (Data->Current, Data->CurrentFmap, &CurrentCbfs)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load current CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Data->Updated, Data->UpdatedFmap, &UpdatedCbfs)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load updated CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  //
+  // Not considering these errors fatal.
+  //
+  if (!MigrateFile ("serial_number", &CurrentCbfs, &UpdatedCbfs)) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): failed to migrate 'serial_number' CBFS file\n",
+      __FUNCTION__
+      ));
+  }
+  if (!MigrateFile ("system_uuid", &CurrentCbfs, &UpdatedCbfs)) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): failed to migrate 'system_uuid' CBFS file\n",
+      __FUNCTION__
+      ));
+  }
+
+  //
+  // TODO: if CONFIG_CBFS_VERIFICATION is on, need to update CBFS hash here
+  //       (file can have hashes too, but they seem optional)
+  //
+
+  return TRUE;
+}
+
 /**
   Migrates data from current firmware to new image before it's written.
 
@@ -348,6 +509,11 @@ MergeFirmwareImages (
 
   if (!MigrateBootLogo (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateBootLogo () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateSmbiosData (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateSmbiosData () failed\n", __FUNCTION__));
     goto Fail;
   }
 

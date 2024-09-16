@@ -26,6 +26,7 @@
 [LibraryClasses]
   BaseMemoryLib
   BlParseLib
+  CbfsLib
   DebugLib
   FmapLib
   HobLib
