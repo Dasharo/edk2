@@ -294,6 +294,7 @@
   BlParseLib|DasharoPayloadPkg/Library/SblParseLib/SblParseLib.inf
 !endif
   FmapLib|DasharoPayloadPkg/Library/FmapLib/FmapLib.inf
+  CbfsLib|DasharoPayloadPkg/Library/CbfsLib/CbfsLib.inf
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
