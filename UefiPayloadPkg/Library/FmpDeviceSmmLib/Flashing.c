@@ -3,10 +3,13 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/CbfsLib.h>
 #include <Library/DebugLib.h>
+#include <Library/EfiVarsLib.h>
 #include <Library/FmapLib.h>
 #include <Library/FmpDeviceLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/SmmStoreLib.h>
+#include <Library/UefiLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 
 typedef enum {
   REGION_MIGRATED,
@@ -222,17 +225,184 @@ MigrateRegion (
 }
 
 STATIC
+EFI_STATUS
+CopyVariable (
+  IN OUT EfiVars         *Storage,
+  IN     CHAR16          *VarName,
+  IN     CONST EFI_GUID  *Vendor
+  )
+{
+  EFI_STATUS  Status;
+  VOID        *VarData;
+  UINTN       NameSize;
+  UINTN       VarSize;
+  EfiVar      *Var;
+  UINT32      Attrs;
+
+  NameSize = StrSize (VarName);
+
+  VarName = AllocateCopyPool (NameSize, VarName);
+  if (VarName == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to clone EFI variable name: %g-%s\n",
+      __FUNCTION__,
+      Vendor,
+      VarName
+      ));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = GetVariable3 (VarName, Vendor, &VarData, &VarSize, &Attrs);
+  if (EFI_ERROR (Status)) {
+    FreePool (VarName);
+    return Status;
+  }
+
+  if (!(Attrs & EFI_VARIABLE_NON_VOLATILE)) {
+    FreePool (VarName);
+    FreePool (VarData);
+    return EFI_SUCCESS;
+  }
+
+  Var = EfiVarsCreateVar (Storage);
+  if (Var == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to allocate EFI variable structure for %g-%s\n",
+      __FUNCTION__,
+      Vendor,
+      VarName
+      ));
+    FreePool (VarName);
+    FreePool (VarData);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Var->Name     = VarName;
+  Var->NameSize = NameSize;
+  Var->Data     = VarData;
+  Var->DataSize = VarSize;
+  Var->Guid     = *Vendor;
+  Var->Attrs    = Attrs;
+
+  return Status;
+}
+
+STATIC
+EFI_STATUS
+CopyVariables (
+  IN OUT EfiVars  *Storage
+  )
+{
+  EFI_STATUS  Status;
+  CHAR16      *Name;
+  CHAR16      *NewBuf;
+  UINTN       MaxNameSize;
+  UINTN       NameSize;
+  EFI_GUID    Guid;
+
+  MaxNameSize = 32 * sizeof (CHAR16);
+  Name = AllocateZeroPool (MaxNameSize);
+  if (Name == NULL)
+    return EFI_OUT_OF_RESOURCES;
+
+  while (TRUE) {
+    NameSize = MaxNameSize;
+    Status = gRT->GetNextVariableName (&NameSize, Name, &Guid);
+    if (Status == EFI_BUFFER_TOO_SMALL) {
+      NewBuf = AllocatePool (NameSize);
+      if (NewBuf == NULL) {
+        Status = EFI_OUT_OF_RESOURCES;
+        break;
+      }
+
+      StrnCpyS (
+        NewBuf,
+        NameSize / sizeof (CHAR16),
+        Name,
+        MaxNameSize / sizeof (CHAR16)
+        );
+      FreePool (Name);
+
+      Name = NewBuf;
+      MaxNameSize = NameSize;
+
+      Status = gRT->GetNextVariableName (&NameSize, Name, &Guid);
+    }
+
+    if (Status == EFI_NOT_FOUND) {
+      Status = EFI_SUCCESS;
+      break;
+    }
+
+    if (EFI_ERROR (Status))
+      break;
+
+    CopyVariable (Storage, Name, &Guid);
+  }
+
+  FreePool (Name);
+  return Status;
+}
+
+STATIC
 BOOLEAN
 MigrateVariables (
   IN CONST MigrationData  *Data
   )
 {
-  RegionMigrationStatus  Status;
+  EFI_STATUS      Status;
+  CONST FmapArea  *UpdatedRegion;
+  MemRange        Fv;
+  EfiVars         Storage;
 
-  Status = MigrateRegion ("SMMSTORE", Data, FALSE);
+  UpdatedRegion = FmapFindArea (Data->UpdatedFmap, "SMMSTORE");
+  if (UpdatedRegion == NULL) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): failed to find SMMSTORE in updated firmware\n",
+      __FUNCTION__
+      ));
+    return TRUE;
+  }
 
-  return Status == REGION_MIGRATED
-      || Status == REGION_NOT_IN_DST;
+  Fv.Start = Data->Updated + UpdatedRegion->offset;
+  Fv.Length = UpdatedRegion->size;
+
+  if (!EfiVarsInit (Fv, &Storage)) {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a(): failed to open SMMSTORE in updated firmware\n",
+      __FUNCTION__
+      ));
+    return TRUE;
+  }
+
+  Status = CopyVariables (&Storage);
+  if (EFI_ERROR (Status)) {
+    EfiVarsFree (&Storage);
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to copy EFI variables to updated firmware: %r\n",
+      __FUNCTION__,
+      Status
+      ));
+    return TRUE;
+  }
+
+  if (!EfiVarsWrite (&Storage)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to write SMMSTORE to updated firmware\n",
+      __FUNCTION__
+      ));
+    EfiVarsFree (&Storage);
+    return FALSE;
+  }
+
+  EfiVarsFree (&Storage);
+  return TRUE;
 }
 
 STATIC

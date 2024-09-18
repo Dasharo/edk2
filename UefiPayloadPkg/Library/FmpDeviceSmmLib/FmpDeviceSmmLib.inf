@@ -28,6 +28,7 @@
   BlParseLib
   CbfsLib
   DebugLib
+  EfiVarsLib
   FmapLib
   HobLib
   MemoryAllocationLib
