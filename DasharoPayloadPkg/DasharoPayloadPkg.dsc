@@ -755,6 +755,7 @@
   }
   MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
   MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+  DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf
 !endif
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
