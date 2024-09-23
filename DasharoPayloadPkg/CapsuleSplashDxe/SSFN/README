@@ -1,0 +1,5 @@
+Files in this directory were obtained from https://gitlab.com/bztsrc/scalable-font2,
+revision 26dc7c5c97c4a005ff2bdf76870168d244135e78. Their license is MIT.
+
+VeraB.h was created by extracting VeraB.sfn and running 'xxd -i', with resulting
+array made constant.
