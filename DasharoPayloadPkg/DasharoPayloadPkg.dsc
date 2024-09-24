@@ -540,6 +540,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciSerialParameters|$(PCI_SERIAL_PARAMETERS)
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMaxLogicalProcessorNumber|$(MAX_LOGICAL_PROCESSORS)
+  gUefiCpuPkgTokenSpaceGuid.PcdFirstTimeWakeUpAPsBySipi|FALSE
 
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE
