@@ -166,7 +166,10 @@ SetDummyLogo (
 
 // Note: this is horizontal baseline (aka ascender), not line height.
 #define FONT_SIZE_PERCENT  5
-#define FONT_SIZE(Mode) (Mode->VerticalResolution * FONT_SIZE_PERCENT / 100)
+#define FONT_SIZE(Mode) (                                                   \
+    (Mode->VerticalResolution * FONT_SIZE_PERCENT / 100) < SSFN_SIZE_MAX ?  \
+    (Mode->VerticalResolution * FONT_SIZE_PERCENT / 100) : SSFN_SIZE_MAX    \
+  )
 
 EFI_STATUS
 InitSsfn (
@@ -266,9 +269,10 @@ RenderTextCenteredAt (
   @param[in] ImageHandle    The firmware allocated handle for the EFI image.
   @param[in] SystemTable    A pointer to the EFI System Table.
 
-  @retval EFI_SUCCESS       The entry point is executed successfully.
-  @retval other             Some error occurs when executing this entry point.
-
+  @retval EFI_SUCCESS       This is the only returned value, even in case of
+                            errors. Reasoning is that this driver gives only
+                            informational output, and failure to do so shouldn't
+                            abort the update process.
 **/
 EFI_STATUS
 EFIAPI
@@ -289,14 +293,14 @@ CapsuleSplashEntry (
                                 (VOID **)&GraphicsOutput);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Couldn't find GOP\n"));
-    return Status;
+    return EFI_SUCCESS;
   }
 
   ModeInfo = GraphicsOutput->Mode->Info;
   if (ModeInfo->PixelFormat != PixelRedGreenBlueReserved8BitPerColor &&
       ModeInfo->PixelFormat != PixelBlueGreenRedReserved8BitPerColor) {
     DEBUG ((DEBUG_ERROR, "Wrong pixel format\n"));
-    return EFI_UNSUPPORTED;
+    return EFI_SUCCESS;
   }
 
   //
@@ -305,7 +309,7 @@ CapsuleSplashEntry (
   Status = SetDummyLogo (ModeInfo);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Couldn't set dummy logo\n"));
-    return Status;
+    return EFI_SUCCESS;
   }
 
   //
@@ -314,32 +318,26 @@ CapsuleSplashEntry (
   Status = InitSsfn (GraphicsOutput->Mode->FrameBufferBase, ModeInfo);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Couldn't init font renderer\n"));
-    return Status;
+    return EFI_SUCCESS;
   }
 
   //
   // Clear the background. We don't know what logo was shown there, if any.
   //
-  SetMem ((VOID *)GraphicsOutput->Mode->FrameBufferBase,
-          GraphicsOutput->Mode->FrameBufferSize,
-          0x00);
+  ZeroMem ((VOID *)GraphicsOutput->Mode->FrameBufferBase,
+           GraphicsOutput->Mode->FrameBufferSize);
 
   //
-  // Print some warnings.
+  // Print some warnings. Ignore the result, we still want to try printing even
+  // if one of the earlier lines fails.
   //
   Status = RenderTextCenteredAt("Firmware update in progress",
                                 ModeInfo->HorizontalResolution / 2,
-                                ModeInfo->VerticalResolution * 20 / 100);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
+                                ModeInfo->VerticalResolution * 37 / 100);
 
   Status = RenderTextCenteredAt("Don't turn off your platform!",
                                 ModeInfo->HorizontalResolution / 2,
-                                ModeInfo->VerticalResolution * 90 / 100);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
+                                ModeInfo->VerticalResolution * 88 / 100);
 
-  return Status;
+  return EFI_SUCCESS;
 }
