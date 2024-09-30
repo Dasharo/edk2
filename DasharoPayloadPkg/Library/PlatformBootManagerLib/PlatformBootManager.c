@@ -1134,7 +1134,7 @@ WarnIfFirmwareUpdateMode (
   Status = gRT->SetVariable (
       DASHARO_VAR_FIRMWARE_UPDATE_MODE,
       &gDasharoSystemFeaturesGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      0,
       0,
       NULL
       );
