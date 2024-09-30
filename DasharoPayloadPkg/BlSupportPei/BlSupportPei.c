@@ -8,6 +8,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #include "BlSupportPei.h"
 
+#define PEI_MEM_SIZE                      SIZE_64MB
+
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
 #define LEGACY_8259_MASK_REGISTER_SLAVE   0xA1
 
@@ -310,7 +312,6 @@ MemInfoCallback (
   EFI_PHYSICAL_ADDRESS    Base;
   EFI_RESOURCE_TYPE       Type;
   UINT64                  Size;
-  UINT32                  SystemLowMemTop;
   UINT8                   Flag;
 
   Attribute = EFI_RESOURCE_ATTRIBUTE_PRESENT |
@@ -327,12 +328,12 @@ MemInfoCallback (
   Size    = MemoryMapEntry->Size;
   Flag    = MemoryMapEntry->Flag;
 
-  if ((Base  < 0x100000) && ((Base + Size) > 0x100000)) {
-    Size -= (0x100000 - Base);
-    Base  = 0x100000;
+  if ((Base  < BASE_1MB) && ((Base + Size) > BASE_1MB)) {
+    Size -= (BASE_1MB - Base);
+    Base  = BASE_1MB;
   }
 
-  if (Base >= 0x100000) {
+  if (Base >= BASE_1MB) {
     if (!(Flag & EFI_RESOURCE_ATTRIBUTE_PRESENT)) {
       BuildResourceDescriptorHob (
         Type,
@@ -341,8 +342,14 @@ MemInfoCallback (
         Size
         );
     } else if (Type == EFI_RESOURCE_SYSTEM_MEMORY) {
-      if (Base < 0x100000000ULL) {
-        MemInfo->UsableLowMemTop = (UINT32)(Base + Size);
+      if (Base < BASE_4GB) {
+        //
+        // Skip regions smaller than PEI_MEM_SIZE, the highest non-reserved
+        // region may be too small.
+        //
+        if (Size >= PEI_MEM_SIZE) {
+          MemInfo->UsableLowMemTop = (UINT32)(Base + Size);
+        }
       } else {
         Attribute &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
       }
@@ -364,14 +371,16 @@ MemInfoCallback (
         Size,
         EfiACPIReclaimMemory
         );
-      if (Base < 0x100000000ULL) {
-        SystemLowMemTop = ((UINT32)(Base + Size) + 0x0FFFFFFF) & 0xF0000000;
-        if (SystemLowMemTop > MemInfo->SystemLowMemTop) {
-          MemInfo->SystemLowMemTop = SystemLowMemTop;
-        }
-      }
     } else if (Type == EFI_RESOURCE_MEMORY_MAPPED_IO) {
       BuildMemoryMappedIoRangeHob((EFI_PHYSICAL_ADDRESS)Base, Size);
+      //
+      // Find base of the lowest MMIO in range 1M - 4G.
+      //
+      if (Base < BASE_4GB) {
+        if (Base < MemInfo->SystemLowMemTop) {
+          MemInfo->SystemLowMemTop = Base;
+        }
+      }
     } else if (Type == EFI_RESOURCE_FIRMWARE_DEVICE) {
       BuildResourceDescriptorHob (
           EFI_RESOURCE_FIRMWARE_DEVICE,
@@ -513,7 +522,6 @@ BlPeiEntryPoint (
 {
   EFI_STATUS                       Status;
   UINT64                           LowMemorySize;
-  UINT64                           PeiMemSize = SIZE_64MB;
   EFI_PHYSICAL_ADDRESS             PeiMemBase = 0;
   UINT32                           RegEax;
   UINT8                            PhysicalAddressBits;
@@ -583,7 +591,8 @@ BlPeiEntryPoint (
   //
   // Parse memory info
   //
-  ZeroMem (&PldMemInfo, sizeof(PldMemInfo));
+  PldMemInfo.UsableLowMemTop = 0;
+  PldMemInfo.SystemLowMemTop = 0xFFFFFFFFUL;
   Status = ParseMemoryInfo (MemInfoCallback, &PldMemInfo);
   if (EFI_ERROR(Status)) {
     return Status;
@@ -593,18 +602,19 @@ BlPeiEntryPoint (
   // Install memory
   //
   LowMemorySize = PldMemInfo.UsableLowMemTop;
-  PeiMemBase = (LowMemorySize - PeiMemSize) & (~(BASE_64KB - 1));
-  DEBUG ((DEBUG_INFO, "Low memory 0x%lx\n", LowMemorySize));
+  ASSERT (LowMemorySize >= BASE_1MB + PEI_MEM_SIZE);
+  PeiMemBase = (LowMemorySize - PEI_MEM_SIZE) & (~(BASE_64KB - 1));
+  DEBUG ((DEBUG_INFO, "UsableLowMemTop 0x%lx\n", LowMemorySize));
   DEBUG ((DEBUG_INFO, "SystemLowMemTop 0x%x\n", PldMemInfo.SystemLowMemTop));
   DEBUG ((DEBUG_INFO, "PeiMemBase: 0x%lx.\n", PeiMemBase));
-  DEBUG ((DEBUG_INFO, "PeiMemSize: 0x%lx.\n", PeiMemSize));
-  Status = PeiServicesInstallPeiMemory (PeiMemBase, PeiMemSize);
+  DEBUG ((DEBUG_INFO, "PeiMemSize: 0x%lx.\n", PEI_MEM_SIZE));
+  Status = PeiServicesInstallPeiMemory (PeiMemBase, PEI_MEM_SIZE);
   ASSERT_EFI_ERROR (Status);
 
   //
   // Set cache on the physical memory
   //
-  MtrrSetMemoryAttribute (BASE_1MB, LowMemorySize - BASE_1MB, CacheWriteBack);
+  MtrrSetMemoryAttribute (BASE_1MB, PldMemInfo.SystemLowMemTop - BASE_1MB, CacheWriteBack);
   MtrrSetMemoryAttribute (0, 0xA0000, CacheWriteBack);
 
   //
