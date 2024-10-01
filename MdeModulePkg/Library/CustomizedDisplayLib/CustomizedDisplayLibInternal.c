@@ -62,6 +62,14 @@ PrintBannerInfo (
     gScreenDimensions.LeftColumn,
     gScreenDimensions.RightColumn,
     gScreenDimensions.TopRow,
+    gScreenDimensions.TopRow,
+    TITLE_TEXT | TITLE_BACKGROUND
+    );
+
+  ClearLines (
+    gScreenDimensions.LeftColumn,
+    gScreenDimensions.RightColumn,
+    gScreenDimensions.TopRow + 1 ,
     FRONT_PAGE_HEADER_HEIGHT - 1 + gScreenDimensions.TopRow,
     BANNER_TEXT | BANNER_BACKGROUND
     );
@@ -100,11 +108,24 @@ PrintBannerInfo (
         //
         // Handle center column
         //
-        PrintStringAt (
-          gScreenDimensions.LeftColumn + (gScreenDimensions.RightColumn - gScreenDimensions.LeftColumn) / 3,
-          Line,
-          StrFrontPageBanner
-          );
+        if (Line == gScreenDimensions.TopRow) {
+          gST->ConOut->SetAttribute (gST->ConOut, TITLE_TEXT | TITLE_BACKGROUND);
+
+          PrintStringAt (
+            (gScreenDimensions.RightColumn + gScreenDimensions.LeftColumn - LibGetStringWidth (StrFrontPageBanner) / 2) / 2,
+            Line,
+            StrFrontPageBanner
+            );
+
+          gST->ConOut->SetAttribute (gST->ConOut, BANNER_TEXT | BANNER_BACKGROUND);
+
+        } else {
+          PrintStringAt (
+            gScreenDimensions.LeftColumn + (gScreenDimensions.RightColumn - gScreenDimensions.LeftColumn) / 3,
+            Line,
+            StrFrontPageBanner
+            );
+        }
         break;
 
       case 2:
