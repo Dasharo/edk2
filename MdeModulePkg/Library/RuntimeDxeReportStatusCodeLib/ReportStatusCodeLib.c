@@ -232,6 +232,15 @@ InternalReportStatusCode (
     }
 
     //
+    // Prevent debugging at runtime by not doing anything after boot services
+    // are exited. This is done to avoid accesses to cbmem CONSOLE buffer which
+    // is neither marked as runtime code nor data.
+    //
+    if (mHaveExitedBootServices) {
+      return EFI_UNSUPPORTED;
+    }
+
+    //
     // A Report Status Code Protocol is present in system, so pass in all the parameters to the service.
     //
     return mReportStatusCodeLibStatusCodeProtocol->ReportStatusCode (Type, Value, Instance, (EFI_GUID *)CallerId, Data);

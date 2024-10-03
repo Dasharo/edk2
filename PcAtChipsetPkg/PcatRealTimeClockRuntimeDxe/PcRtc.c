@@ -241,8 +241,8 @@ PcRtcInit (
   //
   // Clear RTC register D
   //
-  RegisterD.Data = FixedPcdGet8 (PcdInitialValueRtcRegisterD);
-  RtcWrite (RTC_ADDRESS_REGISTER_D, RegisterD.Data);
+  RegisterD.Data = RtcRead (RTC_ADDRESS_REGISTER_D);
+  RtcWrite (RTC_ADDRESS_REGISTER_D, RegisterD.Data & 0x80);
 
   //
   // Wait for up to 0.1 seconds for the RTC to be updated

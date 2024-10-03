@@ -47,6 +47,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/ReportStatusCodeLib.h>
 #include <Library/Tpm12CommandLib.h>
 #include <Library/BaseCryptLib.h>
+#include <Library/DasharoVariablesLib.h>
 
 #define TCG_DXE_DATA_FROM_THIS(this)  \
   BASE_CR (this, TCG_DXE_DATA, TcgProtocol)
@@ -1125,6 +1126,11 @@ OnReadyToBoot (
   TPM_PCRINDEX  PcrIndex;
 
   if (mBootAttempts == 0) {
+    Status = DasharoMeasureVariables ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "Dasharo variables not Measured. Error: %r!\n", Status));
+    }
+
     //
     // Measure handoff tables.
     //

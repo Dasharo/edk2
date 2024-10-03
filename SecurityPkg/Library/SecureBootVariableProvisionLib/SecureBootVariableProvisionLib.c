@@ -23,6 +23,7 @@
 #include <Library/SecureBootVariableLib.h>
 #include <Library/SecureBootVariableProvisionLib.h>
 #include <Library/DxeServicesLib.h>
+#include <Library/AuthVariableLib.h>
 
 /**
   Create a EFI Signature List with data fetched from section specified as a argument.
@@ -79,6 +80,13 @@ SecureBootFetchData (
                );
 
     if (Status == EFI_SUCCESS) {
+      /* dbx file downloaded from uefi.org is a raw variable value, simply return the buffer. */
+      if (CompareGuid(KeyFileGuid, &gDefaultdbxFileGuid)) {
+        *SigListOut = (EFI_SIGNATURE_LIST *)Buffer;
+        *SigListsSize = Size;
+        return EFI_SUCCESS;
+      }
+
       RsaPubKey = NULL;
       if (RsaGetPublicKeyFromX509 (Buffer, Size, &RsaPubKey) == FALSE) {
         DEBUG ((DEBUG_ERROR, "%a: Invalid key format: %d\n", __func__, KeyIndex));
@@ -154,6 +162,7 @@ EnrollFromDefault (
   )
 {
   VOID        *Data;
+  VOID        *EnrollData;
   UINTN       DataSize;
   EFI_STATUS  Status;
 
@@ -166,7 +175,14 @@ EnrollFromDefault (
     return Status;
   }
 
-  Status = EnrollFromInput (VariableName, VendorGuid, DataSize, Data);
+  EnrollData = Data;
+  /* dbx from uefi.org comes with the time payload. */
+  if (StrCmp (DefaultName, EFI_DBX_DEFAULT_VARIABLE_NAME) == 0) {
+    DataSize -= AUTHINFO2_SIZE (Data);
+    EnrollData = (UINT8 *) Data + AUTHINFO2_SIZE (Data);
+  }
+
+  Status = EnrollFromInput (VariableName, VendorGuid, DataSize, EnrollData);
 
   if (Data != NULL) {
     FreePool (Data);

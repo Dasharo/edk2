@@ -3,22 +3,23 @@
   Cryptographic Library.
 
 Copyright (c) 2023, Intel Corporation. All rights reserved.<BR>
+Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
 #include <Base.h>
 #include <Library/BaseLib.h>
-#include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
-#include <stdio.h>
+#include <Library/DebugLib.h>
 
-#include <Library/MemoryAllocationLib.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 int
 my_snprintf (
   char        *str,
-  size_t      size,
+  long long   size,
   const char  *format,
   ...
   )
@@ -58,8 +59,10 @@ mbedtls_calloc (
   //
   NewSize = (UINTN)(size * num) + CRYPTMEM_OVERHEAD;
 
-  Data = AllocateZeroPool (NewSize);
+  Data = malloc (NewSize);
   if (Data != NULL) {
+    ZeroMem (Data, NewSize);
+
     PoolHdr = (CRYPTMEM_HEAD *)Data;
     //
     // Record the memory brief information
@@ -74,6 +77,16 @@ mbedtls_calloc (
     //
     return NULL;
   }
+}
+
+/* Allocates zero-initialized memory blocks */
+void *
+calloc (
+  size_t  num,
+  size_t  size
+  )
+{
+  return mbedtls_calloc (num, size);
 }
 
 /* De-allocates or frees a memory block */
@@ -91,6 +104,6 @@ mbedtls_free (
   if (ptr != NULL) {
     PoolHdr = (CRYPTMEM_HEAD *)ptr - 1;
     ASSERT (PoolHdr->Signature == CRYPTMEM_HEAD_SIGNATURE);
-    FreePool (PoolHdr);
+    free (PoolHdr);
   }
 }

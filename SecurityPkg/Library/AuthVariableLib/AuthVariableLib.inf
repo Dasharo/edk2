@@ -34,6 +34,7 @@
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
   CryptoPkg/CryptoPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -43,6 +44,11 @@
   BaseCryptLib
   PlatformSecureLib
   VariablePolicyLib
+  PcdLib
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum
 
 [Guids]
   ## CONSUMES            ## Variable:L"SetupMode"
@@ -82,6 +88,9 @@
   ## CONSUMES            ## Variable:L"AuthVarKeyDatabase"
   ## PRODUCES            ## Variable:L"AuthVarKeyDatabase"
   gEfiAuthenticatedVariableGuid
+  
+  ## CONSUMES            ## Variable:L"FirmwareUpdateMode"
+  gDasharoSystemFeaturesGuid  
 
   gEfiCertTypeRsa2048Sha256Guid  ## SOMETIMES_CONSUMES   ## GUID  # Unique ID for the type of the certificate.
   gEfiCertPkcs7Guid              ## SOMETIMES_CONSUMES   ## GUID  # Unique ID for the type of the certificate.

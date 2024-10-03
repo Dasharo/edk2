@@ -36,6 +36,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   ReportStatusCodeLib
@@ -68,3 +69,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   Ps2MouseDxeExtra.uni
+
+[Depex]
+  gDasharoPs2ControllerPolicyGuid

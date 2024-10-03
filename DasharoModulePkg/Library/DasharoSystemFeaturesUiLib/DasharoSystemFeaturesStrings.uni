@@ -1,0 +1,217 @@
+///** @file
+//
+//  String definitions for the Dasharo System Features.
+//
+//  Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause
+//
+//**/
+
+/=#
+
+#langdef   en-US "English"
+
+#string STR_EMPTY_STRING       #language en-US  ""
+#string STR_EXIT_STRING        #language en-US  "Press ESC to exit."
+
+#string STR_EDKII_MENU_TITLE   #language en-US  "Dasharo System Features"
+#string STR_EDKII_MENU_HELP    #language en-US  "This selection will take you to Dasharo System Features Manager"
+
+#string STR_DASHARO_SECURITY_OPTIONS_TITLE   #language en-US  "Dasharo Security Options"
+#string STR_DASHARO_SECURITY_OPTIONS_HELP    #language en-US  "Security-related options"
+
+#string STR_DASHARO_NETWORKING_OPTIONS_TITLE   #language en-US  "Networking Options"
+#string STR_DASHARO_NETWORKING_OPTIONS_HELP    #language en-US  "Network-related options"
+
+#string STR_DASHARO_USB_CONFIGURATION_TITLE   #language en-US  "USB Configuration"
+#string STR_DASHARO_USB_CONFIGURATION_HELP    #language en-US  "USB-related options"
+
+#string STR_DASHARO_CHIPSET_CONFIGURATION_TITLE   #language en-US  "Chipset Configuration"
+#string STR_DASHARO_CHIPSET_CONFIGURATION_HELP    #language en-US  "Chipset-related options"
+
+#string STR_DASHARO_POWER_CONFIGURATION_TITLE   #language en-US  "Power Management Options"
+#string STR_DASHARO_POWER_CONFIGURATION_HELP    #language en-US  "Power management-related options"
+
+#string STR_DASHARO_PCI_CONFIGURATION_TITLE   #language en-US  "PCI/PCIe Configuration"
+#string STR_DASHARO_PCI_CONFIGURATION_HELP    #language en-US  "PCI/PCIe configuration options"
+
+#string STR_DASHARO_MEMORY_CONFIGURATION_TITLE   #language en-US  "Memory Configuration"
+#string STR_DASHARO_MEMORY_CONFIGURATION_HELP    #language en-US  "Memory-related options"
+
+#string STR_DASHARO_SERIAL_PORT_CONFIGURATION_TITLE   #language en-US  "Serial Port Configuration"
+#string STR_DASHARO_SERIAL_PORT_CONFIGURATION_HELP    #language en-US  "Serial port options"
+
+#string STR_DASHARO_CPU_CONFIGURATION_TITLE   #language en-US "CPU Configuration"
+#string STR_DASHARO_CPU_CONFIGURATION_HELP    #language en-US "CPU related configuration options"
+
+#string STR_FUM_PROMPT   #language en-US  "> Enter Firmware Update Mode"
+#string STR_FUM_HELP     #language en-US  "Disables all firmware protections for the duration of next boot."
+
+#string STR_LOCK_BIOS_PROMPT   #language en-US  "Lock the BIOS boot medium"
+#string STR_LOCK_BIOS_HELP     #language en-US  "Locks the recovery partition of vboot"
+
+#string STR_SMM_BWP_PROMPT   #language en-US  "Enable SMM BIOS write protection"
+#string STR_SMM_BWP_HELP     #language en-US  "Prevents writing to the boot medium outside of SMM. Recommended to enable if using an admin password. Disable when updating firmware."
+
+#string STR_NETWORK_BOOT_ENABLE_PROMPT   #language en-US  "Enable network boot"
+#string STR_NETWORK_BOOT_ENABLE_HELP     #language en-US  "Enables/disables the iPXE network boot and all NIC drivers"
+
+#string STR_USB_STACK_ENABLE_PROMPT      #language en-US  "Enable USB stack"
+#string STR_USB_STACK_ENABLE_HELP        #language en-US  "Enables/disables the USB drivers. Disabling it means neither USB keyboard nor storage will work"
+
+#string STR_USB_MASS_STORAGE_ENABLE_PROMPT   #language en-US  "Enable USB Mass Storage driver"
+#string STR_USB_MASS_STORAGE_ENABLE_HELP     #language en-US  "Enables/disables the USB Mass Storage driver. When disabled, booting from USB will not work, but USB keyboard still will"
+
+#string STR_DASHARO_INTEL_ME_OPTIONS_TITLE   #language en-US  "Intel Management Engine Options"
+#string STR_DASHARO_INTEL_ME_OPTIONS_HELP    #language en-US  "Configuration for Intel Management Engine"
+
+#string STR_ME_MODE_PROMPT   #language en-US  "Intel ME mode"
+#string STR_ME_MODE_HELP     #language en-US  "Operation mode of the Intel Management Engine. The ME can be enabled, or disabled using various methods.\n\n"
+                                                "Enabled: Enable the Intel Management Engine.\n\n"
+                                                "Disabled (Soft): Disable using a HECI message.\n\n"
+                                                "Disabled (HAP): Disable using the High Assurance Platform bit in the flash descriptor.\n\n"
+                                                "Note that with ME disabled, the firmware TPM will no longer be functional."
+
+#string STR_ME_MODE_ENABLE         #language en-US  "Enabled"
+#string STR_ME_MODE_DISABLE_HECI   #language en-US  "Disabled (Soft)"
+#string STR_ME_MODE_DISABLE_HAP    #language en-US  "Disabled (HAP)"
+
+#string STR_PS2_CONTROLLER_ENABLE_PROMPT   #language en-US  "Enable PS2 Controller"
+#string STR_PS2_CONTROLLER_ENABLE_HELP     #language en-US  "Enables/disables the PS/2 Controller. When enabled, PS/2 keyboards and mice will be detected in the firmware and operating system."
+
+#string STR_WATCHDOG_ENABLE_PROMPT   #language en-US  "Enable watchdog"
+#string STR_WATCHDOG_ENABLE_HELP     #language en-US  "Enables/disables OC Watchdog Timer during POST. If the timers expires, for example due to an unexpected hang or lockup, the platform will be reset after specified timeout."
+
+#string STR_WATCHDOG_TIMEOUT_PROMPT   #language en-US  "Watchdog timeout value"
+#string STR_WATCHDOG_TIMEOUT_HELP     #language en-US  "Sets the watchdog timer expiration value in seconds. Minimum is 300s, maximum 1024s."
+
+#string STR_BOOT_MENU_ENABLED_PROMPT  #language en-US  "Boot menu enabled"
+#string STR_BOOT_MENU_ENABLED_HELP  #language en-US  "Enables or disables choice of one-time boot menu"
+
+#string STR_FAN_CURVE_PROMPT   #language en-US "Fan profile"
+#string STR_FAN_CURVE_HELP     #language en-US "Sets the preferred fan operation mode.\n\n"
+                                                 "Silent: The fan will operate at lower speeds to reduce noise.\n\n"
+                                                 "Performance: The fans will work at higher speeds to reduce temperature and increase performance."
+
+#string STR_FAN_CURVE_SILENT        #language en-US "Silent"
+#string STR_FAN_CURVE_PERFORMANCE   #language en-US "Performance"
+
+#string STR_DMA_PROTECTION_PROMPT      #language en-US "Early boot DMA Protection"
+#string STR_DMA_PROTECTION_HELP        #language en-US "Enables IOMMU DMA protection early during POST."
+
+#string STR_IOMMU_HANDOFF_PROMPT   #language en-US "Keep IOMMU enabled when transfer control to OS"
+#string STR_IOMMU_HANDOFF_HELP     #language en-US "Keeps IOMMU DMA protection enabled during ExitBootServices when control is passed to the OS.\n\n"
+                                                     "If unsure or see any problems with DMA/IOMMU during OS boot, keep it disabled."
+
+#string STR_SLEEP_TYPE_PROMPT   #language en-US "Platform sleep type"
+#string STR_SLEEP_TYPE_HELP     #language en-US "Select the sleep type that will be exposed to the OS.\n\n"
+                                                  "Note that Suspend to Idle (S0ix) will not work if Intel ME is disabled.\n\n"
+                                                  "Recommended settings:\n"
+                                                  "- Windows: S0ix\n"
+                                                  "- Linux: S3\n\n"
+
+#string STR_SLEEP_TYPE_HELP_EXPERIMENTAL    #language en-US "Select the sleep type that will be exposed to the OS.\n\n"
+                                                              "Note that Suspend to Idle (S0ix) will not work if Intel ME is disabled.\n\n"
+                                                              "Recommended settings:\n"
+                                                              "- Windows: S0ix\n"
+                                                              "- Linux: S3\n\n"
+                                                              "Note: S3 support is experimental on this device."
+
+#string STR_SLEEP_TYPE_S0IX   #language en-US "Suspend to Idle (S0ix)"
+#string STR_SLEEP_TYPE_S3     #language en-US "Suspend to RAM (S3)"
+#string STR_SLEEP_TYPE_S3_EXPERIMENTAL     #language en-US "Suspend to RAM (S3) - Experimental"
+
+#string STR_POWER_FAILURE_STATE_PROMPT  #language en-US "Power state after power/AC loss"
+#string STR_POWER_FAILURE_STATE_HELP    #language en-US "Selects state the system gets into when power supply is restored after power failure.\n\n"
+
+                                                          "Note that the definition of power failure varies between platforms and it might take absence of power for up to 30 seconds for this option to apply.\n\n"
+
+#string STR_POWER_FAILURE_STATE_OFF     #language en-US "Powered Off"
+#string STR_POWER_FAILURE_STATE_ON      #language en-US "Powered On"
+#string STR_POWER_FAILURE_STATE_KEEP    #language en-US "The state at the moment of power failure"
+
+#string STR_RESIZEABLE_BARS_PROMPT    #language en-US "Enable PCIe Resizeable BARs"
+#string STR_RESIZEABLE_BARS_HELP      #language en-US "Enables allocation of resizeable BARs for devices that request them.\n\n"
+                                                        "Enabling this option can cause conflicts with GPU virtualization.\n\n"
+                                                        "Requested size might exceed maximum BAR size of the firmware in which case performance might be reduced."
+
+#string STR_OPTION_ROM_PROMPT   #language en-US  "OptionROM Execution Policy"
+#string STR_OPTION_ROM_HELP     #language en-US  "This option allows control over which OptionROMs get loaded."
+
+#string STR_OPTION_ROM_DISABLE      #language en-US  "Disable all OptionROMs loading"
+#string STR_OPTION_ROM_ENABLE       #language en-US  "Enable all OptionROMs loading"
+#string STR_OPTION_ROM_ENABLE_VGA   #language en-US  "Enable OptionROM loading only on GPUs"
+
+#string STR_ENABLE_CAMERA_PROMPT    #language en-US "Enable Camera"
+#string STR_ENABLE_CAMERA_HELP      #language en-US "If this option is disabled, the power to the USB webcam is disconnected completely"
+
+#string STR_WIFI_BT_ENABLE_PROMPT    #language en-US "Enable Wi-Fi + BT radios"
+#string STR_WIFI_BT_ENABLE_HELP      #language en-US "When not enabled, WiFi + Bluetooth card slot is disabled."
+
+#string STR_BATTERY_START_THRESHOLD_PROMPT    #language en-US "Battery Start Charge Threshold"
+#string STR_BATTERY_START_THRESHOLD_HELP      #language en-US "The battery will only start charging once the charge level drops below this value. Consider lowering the value to around 70% if the device is mostly used when connected to an AC adapter to reduce battery wear."
+
+#string STR_BATTERY_STOP_THRESHOLD_PROMPT    #language en-US "Battery Stop Charge Threshold"
+#string STR_BATTERY_STOP_THRESHOLD_HELP      #language en-US "The battery will only stop charging once the charge level reaches this value. Consider lowering this value to around 80% if the device is mostly used when connected to an AC adapter to reduce battery wear."
+
+#string STR_BATTERY_THRESHOLD_RANGE_ERROR  #language en-US "The battery stop threshold must be greater than the start threshold!"
+
+#string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
+#string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
+                                                       "Selecting an XMP profile may result in unstable memory modules and even prevent system from booting.\n\n"
+                                                       "Changing this option causes memory retraining on the next boot which takes time to complete."
+
+#string STR_MEMORY_PROFILE_JEDEC   #language en-US  "JEDEC (safe non-overclocked default)"
+#string STR_MEMORY_PROFILE_XMP1    #language en-US  "XMP#1 (predefined extreme memory profile)"
+#string STR_MEMORY_PROFILE_XMP2    #language en-US  "XMP#2 (predefined extreme memory profile)"
+#string STR_MEMORY_PROFILE_XMP3    #language en-US  "XMP#3 (predefined extreme memory profile)"
+
+#string STR_SERIAL_CONSOLE_REDIRECTION_PROMPT   #language en-US  "Enable COM0 Serial Console Redirection"
+#string STR_SERIAL_CONSOLE_REDIRECTION_HELP     #language en-US  "Redirect the firmware console to the serial port."
+
+#string STR_SERIAL_CONSOLE_REDIRECTION2_PROMPT   #language en-US  "Enable COM1 Serial Console Redirection"
+#string STR_SERIAL_CONSOLE_REDIRECTION2_HELP     #language en-US  "Redirect the firmware console to the second serial port."
+
+#string STR_CPU_THROTTLING_THRESHOLD_PROMPT      #language en-US  "Current CPU Throttling Threshold Temperature"
+#string STR_CPU_THROTTLING_THRESHOLD_HELP        #language en-US  "The temperature above which the CPU will start throttling itself."
+
+#string STR_CPU_THROTTLING_OFFSET_PROMPT      #language en-US  "CPU Throttling Temperature Offset"
+#string STR_CPU_THROTTLING_OFFSET_HELP        #language en-US  "The temperature offset from TjMax (maximum CPU temperature) above which the CPU will start throttling itself.\n\n"
+                                                                  "The value is also known as TCC offset."
+
+#string STR_BIG_CORE_COUNT_PROMPT   #language en-US  "Number of active P-cores"
+#string STR_BIG_CORE_COUNT_HELP     #language en-US  "Specify the number of Performance cores that should remain active.\n\n"
+                                                     "Minimum is one, maximum is processor dependent."
+
+#string STR_SMALL_CORE_COUNT_PROMPT   #language en-US  "Number of active E-cores"
+#string STR_SMALL_CORE_COUNT_HELP     #language en-US  "Specify the number of Efficient cores that should remain active.\n\n"
+                                                       "Minimum is zero (or one if there are no Performance cores in the system), "
+                                                       "maximum is processor dependent."
+
+#string STR_CORE_COUNT_PROMPT   #language en-US  "Number of active CPU cores"
+#string STR_CORE_COUNT_HELP     #language en-US  "Specify the number of CPU cores that should remain active.\n\n"
+                                                 "Minimum is one, maximum is processor dependent."
+
+#string STR_HYPER_THREADING_PROMPT      #language en-US "Hyper-Threading"
+#string STR_HYPER_THREADING_HELP        #language en-US "Enable/disable CPU Hyper-Threading feature.\n\n"
+                                                        "All cores supporting Hyper-Threading will have their second logical thread enabled or disabled."
+
+#string STR_CPU_CORES_ENABLE_ALL        #language en-US  "All active"
+
+#string STR_0     #language en-US "0"
+#string STR_1     #language en-US "1"
+#string STR_2     #language en-US "2"
+#string STR_3     #language en-US "3"
+#string STR_4     #language en-US "4"
+#string STR_5     #language en-US "5"
+#string STR_6     #language en-US "6"
+#string STR_7     #language en-US "7"
+#string STR_8     #language en-US "8"
+#string STR_9     #language en-US "9"
+#string STR_10    #language en-US "10"
+#string STR_11    #language en-US "11"
+#string STR_12    #language en-US "12"
+#string STR_13    #language en-US "13"
+#string STR_14    #language en-US "14"
+#string STR_15    #language en-US "15"
+#string STR_16    #language en-US "16"

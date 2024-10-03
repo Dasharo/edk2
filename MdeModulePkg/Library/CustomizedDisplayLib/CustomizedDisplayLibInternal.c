@@ -25,6 +25,7 @@ CHAR16  *gMoveHighlight;
 CHAR16  *gDecNumericInput;
 CHAR16  *gHexNumericInput;
 CHAR16  *gToggleCheckBox;
+CHAR16  *gScreenshotString;
 CHAR16  *gLibEmptyString;
 CHAR16  *gAreYouSure;
 CHAR16  *gYesResponse;
@@ -582,7 +583,7 @@ PrintHotKeyHelpString (
 
   CopyMem (&LocalScreen, &gScreenDimensions, sizeof (EFI_SCREEN_DESCRIPTOR));
   ColumnWidth           = (LocalScreen.RightColumn - LocalScreen.LeftColumn) / 3;
-  BottomRowOfHotKeyHelp = LocalScreen.BottomRow - STATUS_BAR_HEIGHT - 3;
+  BottomRowOfHotKeyHelp = LocalScreen.BottomRow - STATUS_BAR_HEIGHT - 4;
   ColumnStr             = gLibEmptyString;
 
   //
@@ -722,6 +723,7 @@ InitializeLibStrings (
   gDecNumericInput   = LibGetToken (STRING_TOKEN (DEC_NUMERIC_INPUT), mCDLStringPackHandle);
   gHexNumericInput   = LibGetToken (STRING_TOKEN (HEX_NUMERIC_INPUT), mCDLStringPackHandle);
   gToggleCheckBox    = LibGetToken (STRING_TOKEN (TOGGLE_CHECK_BOX), mCDLStringPackHandle);
+  gScreenshotString  = LibGetToken (STRING_TOKEN (SCREENSHOT_STRING), mCDLStringPackHandle);
 
   gAreYouSure   = LibGetToken (STRING_TOKEN (ARE_YOU_SURE), mCDLStringPackHandle);
   gYesResponse  = LibGetToken (STRING_TOKEN (ARE_YOU_SURE_YES), mCDLStringPackHandle);
@@ -762,6 +764,7 @@ FreeLibStrings (
   FreePool (gDecNumericInput);
   FreePool (gHexNumericInput);
   FreePool (gToggleCheckBox);
+  FreePool (gScreenshotString);
 
   FreePool (gAreYouSure);
   FreePool (gYesResponse);
@@ -984,4 +987,109 @@ PrintAt (
   LengthOfPrinted = PrintInternal (Width, Column, Row, gST->ConOut, Fmt, Args);
   VA_END (Args);
   return LengthOfPrinted;
+}
+
+/**
+  Draw a pop up windows based on the dimension, number of lines and
+  strings specified.
+
+  @param RequestedWidth  The width of the pop-up.
+  @param NumberOfLines   The number of lines.
+  @param Marker          The variable argument list for the list of string to be printed.
+
+**/
+VOID
+CreateSharedPopUp (
+  IN  UINTN    RequestedWidth,
+  IN  UINTN    NumberOfLines,
+  IN  VA_LIST  Marker
+  )
+{
+  UINTN   Index;
+  UINTN   Count;
+  CHAR16  Character;
+  UINTN   Start;
+  UINTN   End;
+  UINTN   Top;
+  UINTN   Bottom;
+  CHAR16  *String;
+  UINTN   DimensionsWidth;
+  UINTN   DimensionsHeight;
+
+  DimensionsWidth  = gScreenDimensions.RightColumn - gScreenDimensions.LeftColumn;
+  DimensionsHeight = gScreenDimensions.BottomRow - gScreenDimensions.TopRow;
+
+  gST->ConOut->SetAttribute (gST->ConOut, GetPopupColor ());
+
+  if ((RequestedWidth + 2) > DimensionsWidth) {
+    RequestedWidth = DimensionsWidth - 2;
+  }
+
+  //
+  // Subtract the PopUp width from total Columns, allow for one space extra on
+  // each end plus a border.
+  //
+  Start = (DimensionsWidth - RequestedWidth - 2) / 2 + gScreenDimensions.LeftColumn + 1;
+  End   = Start + RequestedWidth + 1;
+
+  Top    = ((DimensionsHeight - NumberOfLines - 2) / 2) + gScreenDimensions.TopRow - 1;
+  Bottom = Top + NumberOfLines + 2;
+
+  Character = BOXDRAW_DOWN_RIGHT;
+  PrintCharAt (Start, Top, Character);
+  Character = BOXDRAW_HORIZONTAL;
+  for (Index = Start; Index + 2 < End; Index++) {
+    PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
+  }
+
+  Character = BOXDRAW_DOWN_LEFT;
+  PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
+  Character = BOXDRAW_VERTICAL;
+
+  Count = 0;
+  for (Index = Top; Index + 2 < Bottom; Index++, Count++) {
+    String = VA_ARG (Marker, CHAR16 *);
+
+    //
+    // This will clear the background of the line - we never know who might have been
+    // here before us.  This differs from the next clear in that it used the non-reverse
+    // video for normal printing.
+    //
+    if (GetStringWidth (String) / 2 > 1) {
+      ClearLines (Start, End, Index + 1, Index + 1, GetPopupColor ());
+    }
+
+    //
+    // Passing in a space results in the assumption that this is where typing will occur
+    //
+    if (String[0] == L' ') {
+      ClearLines (Start + 1, End - 1, Index + 1, Index + 1, GetPopupInverseColor ());
+    }
+
+    //
+    // Passing in a NULL results in a blank space
+    //
+    if (String[0] == CHAR_NULL) {
+      ClearLines (Start, End, Index + 1, Index + 1, GetPopupColor ());
+    }
+
+    PrintStringAt (
+      ((DimensionsWidth - GetStringWidth (String) / 2) / 2) + gScreenDimensions.LeftColumn + 1,
+      Index + 1,
+      String
+      );
+    gST->ConOut->SetAttribute (gST->ConOut, GetPopupColor ());
+    PrintCharAt (Start, Index + 1, Character);
+    PrintCharAt (End - 1, Index + 1, Character);
+  }
+
+  Character = BOXDRAW_UP_RIGHT;
+  PrintCharAt (Start, Bottom - 1, Character);
+  Character = BOXDRAW_HORIZONTAL;
+  for (Index = Start; Index + 2 < End; Index++) {
+    PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
+  }
+
+  Character = BOXDRAW_UP_LEFT;
+  PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
 }

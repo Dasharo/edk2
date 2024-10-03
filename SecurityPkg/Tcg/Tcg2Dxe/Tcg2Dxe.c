@@ -44,6 +44,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/PerformanceLib.h>
 #include <Library/ReportStatusCodeLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
+#include <Library/DasharoVariablesLib.h>
 
 #define PERF_ID_TCG2_DXE  0x3120
 
@@ -2422,6 +2423,11 @@ OnReadyToBoot (
 
   PERF_START_EX (mImageHandle, "EventRec", "Tcg2Dxe", 0, PERF_ID_TCG2_DXE);
   if (mBootAttempts == 0) {
+    Status = DasharoMeasureVariables ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "Dasharo variables not Measured. Error: %r!\n", Status));
+    }
+
     //
     // Measure handoff tables.
     //

@@ -135,7 +135,8 @@ gmtime (
   const time_t  *timer
   )
 {
-  struct tm  *GmTime;
+  STATIC struct tm  GmTime;
+
   UINT64     DayNo;
   UINT64     DayRemainder;
   time_t     Year;
@@ -148,23 +149,18 @@ gmtime (
     return NULL;
   }
 
-  GmTime = malloc (sizeof (struct tm));
-  if (GmTime == NULL) {
-    return NULL;
-  }
-
-  ZeroMem ((VOID *)GmTime, (UINTN)sizeof (struct tm));
+  ZeroMem ((VOID *)&GmTime, (UINTN)sizeof (GmTime));
 
   DayNo        = (UINT64)DivS64x64Remainder (*timer, SECSPERDAY, &Remainder);
   DayRemainder = (UINT64)Remainder;
 
   DivS64x64Remainder (DayRemainder, SECSPERMIN, &Remainder);
-  GmTime->tm_sec = (int)Remainder;
+  GmTime.tm_sec = (int)Remainder;
   DivS64x64Remainder (DayRemainder, SECSPERHOUR, &Remainder);
-  GmTime->tm_min  = (int)DivS64x64Remainder (Remainder, SECSPERMIN, NULL);
-  GmTime->tm_hour = (int)DivS64x64Remainder (DayRemainder, SECSPERHOUR, NULL);
+  GmTime.tm_min  = (int)DivS64x64Remainder (Remainder, SECSPERMIN, NULL);
+  GmTime.tm_hour = (int)DivS64x64Remainder (DayRemainder, SECSPERHOUR, NULL);
   DivS64x64Remainder ((DayNo + 4), 7, &Remainder);
-  GmTime->tm_wday = (int)Remainder;
+  GmTime.tm_wday = (int)Remainder;
 
   for (Year = 1970, YearNo = 0; DayNo > 0; Year++) {
     TotalDays = (UINT32)(IsLeap (Year) ? 366 : 365);
@@ -176,8 +172,8 @@ gmtime (
     }
   }
 
-  GmTime->tm_year = (int)(YearNo + (1970 - 1900));
-  GmTime->tm_yday = (int)DayNo;
+  GmTime.tm_year = (int)(YearNo + (1970 - 1900));
+  GmTime.tm_yday = (int)DayNo;
 
   for (MonthNo = 12; MonthNo > 1; MonthNo--) {
     if (DayNo >= CumulativeDays[IsLeap (Year)][MonthNo]) {
@@ -186,12 +182,12 @@ gmtime (
     }
   }
 
-  GmTime->tm_mon  = (int)MonthNo - 1;
-  GmTime->tm_mday = (int)DayNo + 1;
+  GmTime.tm_mon  = (int)MonthNo - 1;
+  GmTime.tm_mday = (int)DayNo + 1;
 
-  GmTime->tm_isdst  = 0;
-  GmTime->tm_gmtoff = 0;
-  GmTime->tm_zone   = NULL;
+  GmTime.tm_isdst  = 0;
+  GmTime.tm_gmtoff = 0;
+  GmTime.tm_zone   = NULL;
 
-  return GmTime;
+  return &GmTime;
 }

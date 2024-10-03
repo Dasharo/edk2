@@ -30,6 +30,7 @@
   MdeModulePkg/MdeModulePkg.dec
   CryptoPkg/CryptoPkg.dec
   SecurityPkg/SecurityPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -47,6 +48,7 @@
   PcdLib
   ReportStatusCodeLib
   Tpm12CommandLib
+  DasharoVariablesLib
 
 [Guids]
   gEfiGlobalVariableGuid                             ## SOMETIMES_CONSUMES  ## Variable:L"BootXXXX"

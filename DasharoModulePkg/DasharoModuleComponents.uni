@@ -1,0 +1,15 @@
+// /** @file
+// Dasharo Module Package
+//
+// This Package provides cryptographic-related libraries for UEFI security modules.
+// It also provides a test application to test libraries.
+//
+// Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause
+//
+// **/
+
+#string STR_PACKAGE_ABSTRACT            #language en-US "Provides Dasharo-related modules"
+
+#string STR_PACKAGE_DESCRIPTION         #language en-US "This package provides modules that are used in Dasharo firmware."

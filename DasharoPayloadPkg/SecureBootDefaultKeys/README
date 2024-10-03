@@ -1,0 +1,9 @@
+# PK certificate generation
+
+* Do not save private key for re-usage.
+* Generate a RSA 2048 x509 certificate
+* Exponent should be 65537
+* Microsoft certificates can be found here: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-secure-boot-key-creation-and-management-guidance
+* Date of downloading Microsoft certificates and DBX: 16-11-2023
+
+openssl req -outform DER -newkey rsa:2048 -keyout /dev/null -passout file:<(head -c 40 /dev/urandom) -x509 -days 1825 -out pk.crt -subj "/C=PL/ST=Pomerania/L=Gdansk/O=3mdeb Sp. z o.o./CN=Dasharo PK/emailAddress=contact@dasharo.com"

@@ -430,20 +430,6 @@ StartManagingRootBridge (
   );
 
 /**
-  This routine can be used to check whether a PCI device should be rejected when light enumeration.
-
-  @param PciIoDevice  Pci device instance.
-
-  @retval TRUE      This device should be rejected.
-  @retval FALSE     This device shouldn't be rejected.
-
-**/
-BOOLEAN
-IsPciDeviceRejected (
-  IN PCI_IO_DEVICE  *PciIoDevice
-  );
-
-/**
   Reset all bus number from specific bridge.
 
   @param Bridge           Parent specific bridge.

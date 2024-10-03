@@ -882,8 +882,8 @@ BootMaintRouteConfig (
   }
 
   if (CompareMem (&NewBmmData->BootTimeOut, &OldBmmData->BootTimeOut, sizeof (NewBmmData->BootTimeOut)) != 0) {
-    Status = gRT->SetVariable (
-                    L"Timeout",
+    Status = gRT->SetVariable(
+                    EFI_TIME_OUT_VARIABLE_NAME,
                     &gEfiGlobalVariableGuid,
                     EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
                     sizeof (UINT16),
@@ -1109,7 +1109,9 @@ BootMaintCallback (
   UINTN                     Index;
   EFI_DEVICE_PATH_PROTOCOL  *File;
 
-  if ((Action != EFI_BROWSER_ACTION_CHANGING) && (Action != EFI_BROWSER_ACTION_CHANGED) && (Action != EFI_BROWSER_ACTION_FORM_OPEN)) {
+  if ((Action != EFI_BROWSER_ACTION_CHANGING) && (Action != EFI_BROWSER_ACTION_CHANGED) &&
+      (Action != EFI_BROWSER_ACTION_FORM_OPEN) && (Action != EFI_BROWSER_ACTION_DEFAULT_STANDARD) &&
+      (Action != EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING)) {
     //
     // Do nothing for other UEFI Action. Only do call back when data is changed or the form is open.
     //
@@ -1144,6 +1146,18 @@ BootMaintCallback (
   CurrentFakeNVMap = &Private->BmmFakeNvData;
   OldFakeNVMap     = &Private->BmmOldFakeNVData;
   HiiGetBrowserData (&mBootMaintGuid, mBootMaintStorageName, sizeof (BMM_FAKE_NV_DATA), (UINT8 *)CurrentFakeNVMap);
+
+  if (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD || Action == EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING) {
+    if (Value == NULL)
+      return EFI_INVALID_PARAMETER;
+
+    if (QuestionId == FORM_TIME_OUT_ID) {
+      CurrentFakeNVMap->BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
+      Value->u16 = PcdGet16 (PcdPlatformBootTimeOut);
+    } else {
+      return EFI_UNSUPPORTED;
+    }
+  }
 
   if (Action == EFI_BROWSER_ACTION_CHANGING) {
     if (Value == NULL) {
@@ -1503,6 +1517,9 @@ InitializeBmmConfig (
   BM_MENU_ENTRY    *NewMenuEntry;
   BM_LOAD_CONTEXT  *NewLoadContext;
   UINT16           Index;
+  EFI_STATUS       Status;
+  UINTN            DataSize;
+  UINT16           BootTimeout = 0xFFFF;
 
   ASSERT (CallbackData != NULL);
 
@@ -1520,7 +1537,20 @@ InitializeBmmConfig (
     }
   }
 
-  CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
+  DataSize = sizeof(BootTimeout);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &BootTimeout
+                  );
+  if (!EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_INFO, "%a: Timeout from variable: %d\n", __FUNCTION__, BootTimeout));
+    CallbackData->BmmFakeNvData.BootTimeOut = BootTimeout;
+  } else {
+    CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
+  }
 
   //
   // Initialize data which located in Boot Options Menu

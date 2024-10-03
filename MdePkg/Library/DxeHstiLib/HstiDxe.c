@@ -105,7 +105,7 @@ InternalHstiFindAip (
                     &InformationBlock,
                     &InformationBlockSize
                     );
-    if (EFI_ERROR (Status)) {
+    if (EFI_ERROR (Status) || InformationBlockSize == 0) {
       continue;
     }
 

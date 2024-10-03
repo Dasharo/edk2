@@ -30,6 +30,8 @@
   MemoryAllocationLib
   UefiDriverEntryPoint
   DebugLib
+  HobLib
+  PcdLib
   SecureBootVariableLib
   SecureBootVariableProvisionLib
 
@@ -40,6 +42,9 @@
   ## SOMETIMES_PRODUCES      ## Variable:L"dbtDefault"
   ## SOMETIMES_PRODUCES      ## Variable:L"dbxDefault"
   gEfiGlobalVariableGuid
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Depex]
   gEfiVariableArchProtocolGuid      AND

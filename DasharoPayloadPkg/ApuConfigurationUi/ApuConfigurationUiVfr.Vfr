@@ -1,0 +1,59 @@
+///** @file
+//
+//  Formset for Dasharo APU Configuration UI
+//
+//  Copyright (c) 2024, 3mdeb All rights reserved.<BR>
+//
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+#include <Uefi/UefiMultiPhase.h>
+#include <Guid/ApuConfigurationGuid.h>
+
+formset
+  guid      = APU_CONFIGURATION_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_FORM_APU_CONFIG_TITLE),
+  help      = STRING_TOKEN(STR_FORM_APU_CONFIG_TITLE),
+  classguid = gEfiIfrFrontPageGuid,
+
+  efivarstore APU_CONFIGURATION_VARSTORE_DATA,
+    attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+    name  = ApuConfig,
+    guid  = APU_CONFIGURATION_FORMSET_GUID;
+
+  form formid = 0x0001,
+    title  = STRING_TOKEN(STR_FORM_APU_CONFIG_TITLE);
+
+    checkbox varid = ApuConfig.CorePerfBoost,
+      prompt      = STRING_TOKEN(STR_CPB_PROMPT),
+      help        = STRING_TOKEN(STR_CPB_HELP),
+      flags       = CHECKBOX_DEFAULT | RESET_REQUIRED,
+    endcheckbox;
+
+    checkbox varid = ApuConfig.WatchdogEnable,
+      prompt      = STRING_TOKEN(STR_WATCHDOG_ENABLE_PROMPT),
+      help        = STRING_TOKEN(STR_WATCHDOG_ENABLE_HELP),
+      flags       = RESET_REQUIRED,
+    endcheckbox;
+
+    suppressif ideqval ApuConfig.WatchdogEnable == 0;
+      numeric varid   = ApuConfig.WatchdogTimeout,
+              prompt  = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_PROMPT),
+              help    = STRING_TOKEN(STR_WATCHDOG_TIMEOUT_HELP),
+              flags   = NUMERIC_SIZE_2 | DISPLAY_UINT_DEC | RESET_REQUIRED,
+              minimum = 60,
+              maximum = 65535,
+              step    = 0,
+              default = 60,
+      endnumeric;
+    endif;
+
+    checkbox varid = ApuConfig.PciePwrMgmt,
+      prompt      = STRING_TOKEN(STR_PCIE_PWR_MGMT_PROMPT),
+      help        = STRING_TOKEN(STR_PCIE_PWR_MGMT_HELP),
+      flags       = RESET_REQUIRED,
+    endcheckbox;
+
+  endform;
+endformset;

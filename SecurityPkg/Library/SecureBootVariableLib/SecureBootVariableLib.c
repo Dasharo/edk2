@@ -401,6 +401,45 @@ SetSecureBootMode (
                 );
 }
 
+
+/**
+
+  Set the platform secure boot state into "Enabled" or "Disabled".
+
+  @param[in]   SecureBootMode        New secure boot state.
+
+  @return EFI_SUCCESS                The platform has switched to the new state successfully.
+  @return other                      Fail to operate the secure boot mode.
+
+**/
+EFI_STATUS
+SetSecureBootState (
+  IN  UINT8  SecureBootState
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gRT->SetVariable (
+                  EFI_SECURE_BOOT_MODE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  sizeof(UINT8),
+                  &SecureBootState
+                  );
+
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  return gRT->SetVariable (
+                EFI_SECURE_BOOT_ENABLE_NAME,
+                &gEfiSecureBootEnableDisableGuid,
+                EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                sizeof (UINT8),
+                &SecureBootState
+                );
+}
+
 /**
   Fetches the value of SetupMode variable.
 

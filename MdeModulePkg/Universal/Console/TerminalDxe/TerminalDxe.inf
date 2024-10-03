@@ -42,6 +42,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   DevicePathLib
@@ -96,3 +97,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   TerminalDxeExtra.uni
+
+[Depex]
+  gDasharoSerialRedirectionPolicyGuid

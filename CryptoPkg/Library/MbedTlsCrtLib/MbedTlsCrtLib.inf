@@ -1,0 +1,40 @@
+## @file
+#  Pre-runtime library with basic functions needed by the MbedTls.
+#
+#  To be used by all consumers of MbedTlsLib except for DXE_RUNTIME_DRIVER kind
+#  which would cause a crash due to MemoryAllocationLib trying to use boot
+#  services after they are gone (unless some special kind of MemoryAllocationLib
+#  is employed).
+#
+#  Copyright (c) 2023, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MbedTlsCrtLib
+  FILE_GUID                      = 29A024DF-8D89-495C-8872-1A195214A980
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MbedTlsCrtLib|SEC PEIM DXE_DRIVER DXE_SMM_DRIVER UEFI_DRIVER UEFI_APPLICATION
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+#
+
+[Sources]
+  CrtWrapper.c
+
+[Packages]
+  CryptoPkg/CryptoPkg.dec
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib

@@ -1,0 +1,33 @@
+name: Check if UEFI revocation list is up-to-date
+
+on:
+  push:
+    branches:
+      - dasharo
+  pull_request:
+    branches:
+      - dasharo
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Check if DBX is up-to-date
+      run: |
+        echo 'Fetching DBX from uefi.org'
+        wget https://uefi.org/sites/default/files/resources/x64_DBXUpdate.bin -o /dev/null
+        if [ $? -ne 0 ]; then
+          echo 'Failed to fetch latest DBX.'
+          exit 1
+        fi
+        diff <(sha256sum x64_DBXUpdate.bin | awk '{ print $1 }') <(sha256sum DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin | awk '{ print $1 }')
+        if [ $? -ne 0 ]; then
+          echo 'UEFI DBX is out of date.'
+          exit 1
+        else
+          echo 'UEFI DBX is up-to-date.'
+        fi

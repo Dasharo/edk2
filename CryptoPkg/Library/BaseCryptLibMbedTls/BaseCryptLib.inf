@@ -17,7 +17,8 @@
   FILE_GUID                      = 693C5308-AF95-4CE5-ADE9-CA011C2FC642
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = BaseCryptLib|DXE_DRIVER DXE_CORE UEFI_APPLICATION UEFI_DRIVER
+  LIBRARY_CLASS                  = BaseCryptLib|DXE_DRIVER DXE_CORE DXE_SMM_DRIVER UEFI_APPLICATION UEFI_DRIVER
+  DEFINE BASE_CRYPT_PATH         = ../BaseCryptLib
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -27,33 +28,39 @@
 
 [Sources]
   InternalCryptLib.h
-  Cipher/CryptAeadAesGcmNull.c
-  Cipher/CryptAes.c
-  Hash/CryptSha256.c
-  Hash/CryptSha512.c
-  Hash/CryptParallelHashNull.c
-  Hash/CryptSm3Null.c
   Hash/CryptMd5.c
   Hash/CryptSha1.c
+  Hash/CryptSha256.c
+  Hash/CryptSha512.c
+  $(BASE_CRYPT_PATH)/Hash/CryptCShake256.c
+  $(BASE_CRYPT_PATH)/Hash/CryptDispatchApDxe.c
+  $(BASE_CRYPT_PATH)/Hash/CryptParallelHash.c
+  $(BASE_CRYPT_PATH)/Hash/CryptSha3.c
+  $(BASE_CRYPT_PATH)/Hash/CryptSm3.c
+  $(BASE_CRYPT_PATH)/Hash/CryptXkcp.c
   Hmac/CryptHmac.c
   Kdf/CryptHkdf.c
+  Cipher/CryptAes.c
+  Cipher/CryptAeadAesGcm.c
   Pk/CryptRsaBasic.c
-  Pk/CryptRsaExtNull.c
-  Pk/CryptRsaPss.c
-  Pk/CryptRsaPssSignNull.c
-  Bn/CryptBnNull.c
-  Pem/CryptPemNull.c
+  Pk/CryptRsaExt.c
+  Pk/CryptPkcs1Oaep.c
+  Pk/CryptPkcs5Pbkdf2.c
+  Pk/CryptPkcs7Sign.c
+  Pk/CryptPkcs7VerifyCommon.c
+  Pk/CryptPkcs7VerifyBase.c
+  Pk/CryptPkcs7VerifyEku.c
   Pk/CryptDhNull.c
+  Pk/CryptX509.c
+  Pk/CryptAuthenticode.c
+  Pk/CryptTs.c
+  Pk/CryptRsaPss.c
+  Pk/CryptRsaPssSign.c
   Pk/CryptEcNull.c
-  Pk/CryptPkcs1OaepNull.c
-  Pk/CryptPkcs5Pbkdf2Null.c
-  Pk/CryptPkcs7SignNull.c
-  Pk/CryptPkcs7VerifyNull.c
-  Pk/CryptPkcs7VerifyEkuNull.c
-  Pk/CryptX509Null.c
-  Pk/CryptAuthenticodeNull.c
-  Pk/CryptTsNull.c
-  Rand/CryptRandNull.c
+  Pem/CryptPem.c
+  Bn/CryptBnNull.c
+  Rand/CryptRand.c
+
   SysCall/CrtWrapper.c
   SysCall/TimerWrapper.c
 
@@ -72,6 +79,7 @@
   IntrinsicLib
   RngLib
   SynchronizationLib
+  MbedTlsCrtLib
 [Protocols]
   gEfiMpServiceProtocolGuid
 #
