@@ -307,7 +307,7 @@ MemInfoCallback (
   IN VOID                         *Params
   )
 {
-  PAYLOAD_MEM_INFO        *MemInfo;
+  EFI_PHYSICAL_ADDRESS    *UsableLowMemTop;
   UINTN                   Attribute;
   EFI_PHYSICAL_ADDRESS    Base;
   EFI_RESOURCE_TYPE       Type;
@@ -322,11 +322,11 @@ MemInfoCallback (
              EFI_RESOURCE_ATTRIBUTE_WRITE_THROUGH_CACHEABLE |
              EFI_RESOURCE_ATTRIBUTE_WRITE_BACK_CACHEABLE;
 
-  MemInfo = (PAYLOAD_MEM_INFO *)Params;
-  Type    = MemoryMapEntry->Type;
-  Base    = MemoryMapEntry->Base;
-  Size    = MemoryMapEntry->Size;
-  Flag    = MemoryMapEntry->Flag;
+  UsableLowMemTop = (EFI_PHYSICAL_ADDRESS *)Params;
+  Type            = MemoryMapEntry->Type;
+  Base            = MemoryMapEntry->Base;
+  Size            = MemoryMapEntry->Size;
+  Flag            = MemoryMapEntry->Flag;
 
   if ((Base  < BASE_1MB) && ((Base + Size) > BASE_1MB)) {
     Size -= (BASE_1MB - Base);
@@ -348,7 +348,7 @@ MemInfoCallback (
         // region may be too small.
         //
         if (Size >= PEI_MEM_SIZE) {
-          MemInfo->UsableLowMemTop = (UINT32)(Base + Size);
+          *UsableLowMemTop = Base + Size;
         }
       } else {
         Attribute &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
@@ -373,14 +373,6 @@ MemInfoCallback (
         );
     } else if (Type == EFI_RESOURCE_MEMORY_MAPPED_IO) {
       BuildMemoryMappedIoRangeHob((EFI_PHYSICAL_ADDRESS)Base, Size);
-      //
-      // Find base of the lowest MMIO in range 1M - 4G.
-      //
-      if (Base < BASE_4GB) {
-        if (Base < MemInfo->SystemLowMemTop) {
-          MemInfo->SystemLowMemTop = Base;
-        }
-      }
     } else if (Type == EFI_RESOURCE_FIRMWARE_DEVICE) {
       BuildResourceDescriptorHob (
           EFI_RESOURCE_FIRMWARE_DEVICE,
@@ -521,11 +513,10 @@ BlPeiEntryPoint (
   )
 {
   EFI_STATUS                       Status;
-  UINT64                           LowMemorySize;
+  EFI_PHYSICAL_ADDRESS             UsableLowMemTop = 0;
   EFI_PHYSICAL_ADDRESS             PeiMemBase = 0;
   UINT32                           RegEax;
   UINT8                            PhysicalAddressBits;
-  PAYLOAD_MEM_INFO                 PldMemInfo;
   SYSTEM_TABLE_INFO                SysTableInfo;
   SYSTEM_TABLE_INFO                *NewSysTableInfo;
   ACPI_BOARD_INFO                  AcpiBoardInfo;
@@ -591,9 +582,7 @@ BlPeiEntryPoint (
   //
   // Parse memory info
   //
-  PldMemInfo.UsableLowMemTop = 0;
-  PldMemInfo.SystemLowMemTop = 0xFFFFFFFFUL;
-  Status = ParseMemoryInfo (MemInfoCallback, &PldMemInfo);
+  Status = ParseMemoryInfo (MemInfoCallback, &UsableLowMemTop);
   if (EFI_ERROR(Status)) {
     return Status;
   }
@@ -601,21 +590,13 @@ BlPeiEntryPoint (
   //
   // Install memory
   //
-  LowMemorySize = PldMemInfo.UsableLowMemTop;
-  ASSERT (LowMemorySize >= BASE_1MB + PEI_MEM_SIZE);
-  PeiMemBase = (LowMemorySize - PEI_MEM_SIZE) & (~(BASE_64KB - 1));
-  DEBUG ((DEBUG_INFO, "UsableLowMemTop 0x%lx\n", LowMemorySize));
-  DEBUG ((DEBUG_INFO, "SystemLowMemTop 0x%x\n", PldMemInfo.SystemLowMemTop));
+  ASSERT (UsableLowMemTop >= BASE_1MB + PEI_MEM_SIZE);
+  PeiMemBase = (UsableLowMemTop - PEI_MEM_SIZE) & (~(BASE_64KB - 1));
+  DEBUG ((DEBUG_INFO, "UsableLowMemTop 0x%lx\n", UsableLowMemTop));
   DEBUG ((DEBUG_INFO, "PeiMemBase: 0x%lx.\n", PeiMemBase));
   DEBUG ((DEBUG_INFO, "PeiMemSize: 0x%lx.\n", PEI_MEM_SIZE));
   Status = PeiServicesInstallPeiMemory (PeiMemBase, PEI_MEM_SIZE);
   ASSERT_EFI_ERROR (Status);
-
-  //
-  // Set cache on the physical memory
-  //
-  MtrrSetMemoryAttribute (BASE_1MB, PldMemInfo.SystemLowMemTop - BASE_1MB, CacheWriteBack);
-  MtrrSetMemoryAttribute (0, 0xA0000, CacheWriteBack);
 
   //
   // Create Memory Type Information HOB

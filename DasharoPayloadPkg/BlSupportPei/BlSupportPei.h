@@ -37,9 +37,4 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Ppi/MasterBootMode.h>
 #include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
 
-typedef struct {
-  UINT32  UsableLowMemTop;
-  UINT32  SystemLowMemTop;
-} PAYLOAD_MEM_INFO;
-
 #endif
