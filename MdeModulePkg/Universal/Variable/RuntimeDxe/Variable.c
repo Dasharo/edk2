@@ -2354,6 +2354,9 @@ VariableServiceGetVariable (
   VARIABLE_POINTER_TRACK  Variable;
   UINTN                   VarDataSize;
 
+  DEBUG ((EFI_D_INFO, "%a Enter: VariableName 0x%p, VendorGuid 0x%p, Attributes 0x%p, DataSize 0x%p, Data 0x%p\n",
+          __FUNCTION__, VariableName, VendorGuid, Attributes, DataSize));
+
   if (VariableName == NULL || VendorGuid == NULL || DataSize == NULL) {
     return EFI_INVALID_PARAMETER;
   }
@@ -2361,6 +2364,10 @@ VariableServiceGetVariable (
   if (VariableName[0] == 0) {
     return EFI_NOT_FOUND;
   }
+
+  DEBUG ((EFI_D_INFO, "%a Params: VariableName %s, VendorGuid %g, Attributes %x, DataSize %x\n",
+          __FUNCTION__, VariableName, VendorGuid, Attributes ? *Attributes : 0, *DataSize));
+
 
   AcquireLockOnlyAtBootTime(&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
 
@@ -2401,6 +2408,10 @@ Done:
     }
   }
   ReleaseLockOnlyAtBootTime (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
+
+  DEBUG ((EFI_D_INFO, "%a Exit: Attributes %x, DataSize %x, Status %r\n",
+          __FUNCTION__, Attributes ? *Attributes : 0, *DataSize, Status));
+
   return Status;
 }
 
@@ -2444,6 +2455,9 @@ VariableServiceGetNextVariableName (
   VARIABLE_HEADER         *VariablePtr;
   VARIABLE_STORE_HEADER   *VariableStoreHeader[VariableStoreTypeMax];
 
+  DEBUG ((EFI_D_INFO, "%a Enter: VariableName 0x%p, VendorGuid 0x%p, VariableNameSize 0x%p\n",
+          __FUNCTION__, VariableName, VendorGuid, VariableNameSize));
+
   if (VariableNameSize == NULL || VariableName == NULL || VendorGuid == NULL) {
     return EFI_INVALID_PARAMETER;
   }
@@ -2461,6 +2475,9 @@ VariableServiceGetNextVariableName (
     //
     return EFI_INVALID_PARAMETER;
   }
+
+  DEBUG ((EFI_D_INFO, "%a Params: VariableName %s, VendorGuid %g, VariableNameSize %x\n",
+          __FUNCTION__, VariableName, VendorGuid, *VariableNameSize));
 
   AcquireLockOnlyAtBootTime(&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
 
@@ -2503,6 +2520,9 @@ VariableServiceGetNextVariableName (
   }
 
   ReleaseLockOnlyAtBootTime (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
+
+  DEBUG ((EFI_D_INFO, "%a Exit: VariableName %s, VendorGuid %g, VariableNameSize %x, Status %r\n",
+          __FUNCTION__, VariableName, VendorGuid, *VariableNameSize, Status));
   return Status;
 }
 
@@ -2550,6 +2570,9 @@ VariableServiceSetVariable (
 
   AuthFormat = mVariableModuleGlobal->VariableGlobal.AuthFormat;
 
+  DEBUG ((EFI_D_INFO, "%a Enter: VariableName 0x%p, VendorGuid 0x%p, Attributes %x, DataSize %x, Data 0x%p\n",
+          __FUNCTION__, VariableName, VendorGuid, Attributes, DataSize));
+
   //
   // Check input parameters.
   //
@@ -2560,6 +2583,9 @@ VariableServiceSetVariable (
   if (DataSize != 0 && Data == NULL) {
     return EFI_INVALID_PARAMETER;
   }
+
+  DEBUG ((EFI_D_INFO, "%a Params: VariableName 0x%p, VendorGuid %g, Attributes %x, DataSize %x, Data 0x%p\n",
+          __FUNCTION__, VariableName, VendorGuid, Attributes, DataSize));
 
   //
   // Check for reserverd bit in variable attribute.
@@ -2808,6 +2834,9 @@ Done:
     }
   }
 
+  DEBUG ((EFI_D_INFO, "%a Exit: VariableName 0x%p, VendorGuid %g, Attributes %x, DataSize %x, Status %r\n",
+          __FUNCTION__, VariableName, VendorGuid, Attributes, DataSize, Status));
+
   return Status;
 }
 
@@ -3020,6 +3049,10 @@ VariableServiceQueryVariableInfo (
 {
   EFI_STATUS             Status;
 
+  DEBUG ((EFI_D_INFO, "%a: MaximumVariableStorageSize 0x%p, RemainingVariableStorageSize %g, Attributes %x, MaximumVariableSize 0x%p\n",
+          __FUNCTION__, MaximumVariableStorageSize, RemainingVariableStorageSize, Attributes, MaximumVariableSize));
+
+
   if(MaximumVariableStorageSize == NULL || RemainingVariableStorageSize == NULL || MaximumVariableSize == NULL || Attributes == 0) {
     return EFI_INVALID_PARAMETER;
   }
@@ -3082,6 +3115,10 @@ VariableServiceQueryVariableInfo (
              );
 
   ReleaseLockOnlyAtBootTime (&mVariableModuleGlobal->VariableGlobal.VariableServicesLock);
+
+  DEBUG ((EFI_D_INFO, "%a: MaximumVariableStorageSize %x, RemainingVariableStorageSize %x, Attributes %x, MaximumVariableSize %x, Status %r\n",
+          __FUNCTION__, *MaximumVariableStorageSize, *RemainingVariableStorageSize, Attributes, *MaximumVariableSize, Status));
+
   return Status;
 }
 
