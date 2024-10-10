@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <IndustryStandard/Acpi.h>
 #include <IndustryStandard/PeImage.h>
 #include <IndustryStandard/TcpaAcpi.h>
+#include <IndustryStandard/Tpm2Acpi.h>
 
 #include <Guid/GlobalVariable.h>
 #include <Guid/HobList.h>
@@ -20,6 +21,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/ImageAuthentication.h>
 #include <Guid/TpmInstance.h>
 
+#include <Protocol/AcpiTable.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/MpService.h>
 #include <Protocol/VariableWrite.h>
@@ -45,6 +47,40 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/ReportStatusCodeLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/DasharoVariablesLib.h>
+#include <Library/TpmMeasurementLib.h>
+
+#pragma pack(1)
+
+typedef struct {
+  EFI_ACPI_DESCRIPTION_HEADER Header;
+  // Flags field is replaced in version 4 and above
+  //    BIT0~15:  PlatformClass      This field is only valid for version 4 and above
+  //    BIT16~31: Reserved
+  UINT32                      Flags;
+  UINT64                      AddressOfControlArea;
+  UINT32                      StartMethod;
+  UINT8                       PlatformSpecificParameters[12];  // size up to 12
+  UINT32                      Laml;                          // Optional
+  UINT64                      Lasa;                          // Optional
+} EFI_TPM2_ACPI_TABLE_V4;
+
+EFI_TPM2_ACPI_TABLE_V4  mTpm2AcpiTemplate = {
+  {
+    EFI_ACPI_5_0_TRUSTED_COMPUTING_PLATFORM_2_TABLE_SIGNATURE,
+    sizeof (mTpm2AcpiTemplate),
+    EFI_TPM2_ACPI_TABLE_REVISION,
+    //
+    // Compiler initializes the remaining bytes to 0
+    // These fields should be filled in in production
+    //
+  },
+  0, // BIT0~15:  PlatformClass
+     // BIT16~31: Reserved
+  0, // Control Area
+  EFI_TPM2_ACPI_TABLE_START_METHOD_TIS, // StartMethod
+};
+
+#pragma pack()
 
 #define PERF_ID_TCG2_DXE  0x3120
 
@@ -1046,13 +1082,37 @@ GetDigestListBinSize (
   return TotalSize;
 }
 
+STATIC VOID *
+FindHashInDigestListBin (
+  IN VOID        *DigestListBin,
+  TPMI_ALG_HASH  HashAlg
+  )
+{
+  UINTN          Index;
+  UINT32         Count;
+  TPMI_ALG_HASH  Alg;
+
+  Count = ReadUnaligned32 (DigestListBin);
+  DigestListBin = (UINT8 *)DigestListBin + sizeof(Count);
+  for (Index = 0; Index < Count; Index++) {
+    Alg = ReadUnaligned16 (DigestListBin);
+    DigestListBin = (UINT8 *)DigestListBin + sizeof(Alg);
+
+    if (Alg == HashAlg)
+      return DigestListBin;
+
+    DigestListBin = (UINT8 *)DigestListBin + GetHashSizeFromAlgo (Alg);
+  }
+
+  return NULL;
+}
+
 /**
   Copy TPML_DIGEST_VALUES compact binary into a buffer
 
   @param[in,out]    Buffer                  Buffer to hold copied TPML_DIGEST_VALUES compact binary.
   @param[in]        DigestListBin           TPML_DIGEST_VALUES compact binary buffer.
   @param[in]        HashAlgorithmMask       HASH bits corresponding to the desired digests to copy.
-  @param[out]       HashAlgorithmMaskCopied Pointer to HASH bits corresponding to the digests copied.
 
   @return The end of buffer to hold TPML_DIGEST_VALUES compact binary.
 **/
@@ -1060,41 +1120,64 @@ VOID *
 CopyDigestListBinToBuffer (
   IN OUT VOID  *Buffer,
   IN VOID      *DigestListBin,
-  IN UINT32    HashAlgorithmMask,
-  OUT UINT32   *HashAlgorithmMaskCopied
+  IN UINT32    HashAlgorithmMask
   )
 {
   UINTN          Index;
   UINT16         DigestSize;
-  UINT32         Count;
   TPMI_ALG_HASH  HashAlg;
   UINT32         DigestListCount;
   UINT32         *DigestListCountPtr;
+  TPMI_ALG_HASH HashAlgs[5];
+  VOID          *Digest;
+
+  HashAlgs[0] = TPM_ALG_SHA1;
+  HashAlgs[1] = TPM_ALG_SHA256;
+  HashAlgs[2] = TPM_ALG_SM3_256;
+  HashAlgs[3] = TPM_ALG_SHA384;
+  HashAlgs[4] = TPM_ALG_SHA512;
 
   DigestListCountPtr         = (UINT32 *)Buffer;
+  Buffer = (UINT8 *)Buffer + sizeof(UINT32);
+
   DigestListCount            = 0;
-  (*HashAlgorithmMaskCopied) = 0;
+  //
+  // Make sure output buffer conforms to HashAlgorithmMask.
+  //
+  // Copy digests from the entry if they are present, otherwise add missing
+  // digests filled as what's called "OneDigest" in TXT Software
+  // Development Guide (not really related, but alternatives are zeroes or
+  // 0xFFs, might as well use a value documented somewhere).
+  //
+  for (Index = 0; Index < ARRAY_SIZE (HashAlgs); Index++) {
+    HashAlg = HashAlgs[Index];
+    Digest = FindHashInDigestListBin (DigestListBin, HashAlg);
+    DigestSize = GetHashSizeFromAlgo (HashAlg);
 
-  Count         = ReadUnaligned32 (DigestListBin);
-  Buffer        = (UINT8 *)Buffer + sizeof (Count);
-  DigestListBin = (UINT8 *)DigestListBin + sizeof (Count);
-  for (Index = 0; Index < Count; Index++) {
-    HashAlg       = ReadUnaligned16 (DigestListBin);
-    DigestListBin = (UINT8 *)DigestListBin + sizeof (HashAlg);
-    DigestSize    = GetHashSizeFromAlgo (HashAlg);
-
-    if (IsHashAlgSupportedInHashAlgorithmMask (HashAlg, HashAlgorithmMask)) {
-      CopyMem (Buffer, &HashAlg, sizeof (HashAlg));
-      Buffer = (UINT8 *)Buffer + sizeof (HashAlg);
-      CopyMem (Buffer, DigestListBin, DigestSize);
-      Buffer = (UINT8 *)Buffer + DigestSize;
-      DigestListCount++;
-      (*HashAlgorithmMaskCopied) |= GetHashMaskFromAlgo (HashAlg);
-    } else {
-      DEBUG ((DEBUG_ERROR, "WARNING: CopyDigestListBinToBuffer Event log has HashAlg unsupported by PCR bank (0x%x)\n", HashAlg));
+    if (!(HashAlgorithmMask & GetHashMaskFromAlgo (HashAlg))) {
+      // Not active.
+      if (Digest != NULL)
+        DEBUG ((DEBUG_WARN, "%a(): Event log entry includes HashAlg (0x%x) unsupported by PCR bank\n",
+                __FUNCTION__, HashAlg));
+      continue;
     }
 
-    DigestListBin = (UINT8 *)DigestListBin + DigestSize;
+    CopyMem (Buffer, &HashAlg, sizeof(HashAlg));
+    Buffer = (UINT8 *)Buffer + sizeof(HashAlg);
+
+    if (Digest == NULL) {
+      // Missing, use "OneDigest".
+      ZeroMem (Buffer, DigestSize);
+      *(UINT8 *)Buffer = 1;
+      DEBUG ((DEBUG_WARN, "%a(): Event log entry is missing HashAlg (0x%x) supported by PCR bank\n",
+              __FUNCTION__, HashAlg));
+    } else {
+      CopyMem (Buffer, Digest, DigestSize);
+    }
+
+    Buffer = (UINT8 *)Buffer + DigestSize;
+
+    DigestListCount++;
   }
 
   WriteUnaligned32 (DigestListCountPtr, DigestListCount);
@@ -1554,12 +1637,10 @@ SetupEventLog (
   EFI_PHYSICAL_ADDRESS             Lasa;
   UINTN                            Index;
   VOID                             *DigestListBin;
-  TPML_DIGEST_VALUES               TempDigestListBin;
   UINT32                           DigestListBinSize;
   UINT8                            *Event;
   UINT32                           EventSize;
   UINT32                           *EventSizePtr;
-  UINT32                           HashAlgorithmMaskCopied;
   TCG_EfiSpecIDEventStruct         *TcgEfiSpecIdEventStruct;
   UINT8                            TempBuf[sizeof (TCG_EfiSpecIDEventStruct) + sizeof (UINT32) + (HASH_COUNT * sizeof (TCG_EfiSpecIdEventAlgorithmSize)) + sizeof (UINT8)];
   TCG_PCR_EVENT_HDR                SpecIdEvent;
@@ -1825,11 +1906,11 @@ SetupEventLog (
       while (!EFI_ERROR (Status) &&
              (GuidHob.Raw = GetNextGuidHob (mTcg2EventInfo[Index].EventGuid, GuidHob.Raw)) != NULL)
       {
-        TcgEvent = AllocateCopyPool (GET_GUID_HOB_DATA_SIZE (GuidHob.Guid), GET_GUID_HOB_DATA (GuidHob.Guid));
-        ASSERT (TcgEvent != NULL);
-        GuidHob.Raw = GET_NEXT_HOB (GuidHob);
         switch (mTcg2EventInfo[Index].LogFormat) {
           case EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2:
+            TcgEvent = AllocateCopyPool (GET_GUID_HOB_DATA_SIZE (GuidHob.Guid), GET_GUID_HOB_DATA (GuidHob.Guid));
+            ASSERT (TcgEvent != NULL);
+
             Status = TcgDxeLogEvent (
                        mTcg2EventInfo[Index].LogFormat,
                        TcgEvent,
@@ -1839,8 +1920,15 @@ SetupEventLog (
                        );
             break;
           case EFI_TCG2_EVENT_LOG_FORMAT_TCG_2:
-            DigestListBin     = (UINT8 *)TcgEvent + sizeof (TCG_PCRINDEX) + sizeof (TCG_EVENTTYPE);
+            //
+            // This is a storage for new header.
+            //
+            TcgEvent = AllocatePool (sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE) + sizeof(TPML_DIGEST_VALUES) + sizeof(UINT32));
+            ASSERT (TcgEvent != NULL);
+
+            DigestListBin = (UINT8 *)GET_GUID_HOB_DATA (GuidHob.Guid) + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE);
             DigestListBinSize = GetDigestListBinSize (DigestListBin);
+            CopyMem (TcgEvent, GET_GUID_HOB_DATA (GuidHob.Guid), sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE));
             //
             // Save event size.
             //
@@ -1849,27 +1937,19 @@ SetupEventLog (
             //
             // Filter inactive digest in the event2 log from PEI HOB.
             //
-            CopyMem (&TempDigestListBin, DigestListBin, GetDigestListBinSize (DigestListBin));
             EventSizePtr = CopyDigestListBinToBuffer (
+                             TcgEvent + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE),
                              DigestListBin,
-                             &TempDigestListBin,
-                             mTcgDxeData.BsCap.ActivePcrBanks,
-                             &HashAlgorithmMaskCopied
+                             mTcgDxeData.BsCap.ActivePcrBanks
                              );
-            if (HashAlgorithmMaskCopied != mTcgDxeData.BsCap.ActivePcrBanks) {
-              DEBUG ((
-                DEBUG_ERROR,
-                "ERROR: The event2 log includes digest hash mask 0x%x, but required digest hash mask is 0x%x\n",
-                HashAlgorithmMaskCopied,
-                mTcgDxeData.BsCap.ActivePcrBanks
-                ));
-            }
 
             //
             // Restore event size.
             //
             CopyMem (EventSizePtr, &EventSize, sizeof (UINT32));
-            DigestListBinSize = GetDigestListBinSize (DigestListBin);
+            DigestListBinSize = GetDigestListBinSize (TcgEvent + sizeof(TCG_PCRINDEX) + sizeof(TCG_EVENTTYPE));
+
+            DEBUG ((DEBUG_INFO, "%a: DigestListBinSize = %d\n", __FUNCTION__, DigestListBinSize));
 
             Status = TcgDxeLogEvent (
                        mTcg2EventInfo[Index].LogFormat,
@@ -1882,6 +1962,7 @@ SetupEventLog (
         }
 
         FreePool (TcgEvent);
+        GuidHob.Raw = GET_NEXT_HOB (GuidHob);
       }
     }
   }
@@ -2666,6 +2747,106 @@ InstallTcg2 (
 }
 
 /**
+  Publish TPM2 ACPI table
+
+  @retval   EFI_SUCCESS     The TPM2 ACPI table is published successfully.
+  @retval   Others          The TPM2 ACPI table is not published.
+
+**/
+EFI_STATUS
+PublishTpm2 (
+  VOID
+  )
+{
+  EFI_STATUS                     Status;
+  EFI_ACPI_TABLE_PROTOCOL        *AcpiTable;
+  UINTN                          TableKey;
+  UINT64                         OemTableId;
+  EFI_TPM2_ACPI_CONTROL_AREA     *ControlArea;
+  TPM2_PTP_INTERFACE_TYPE        InterfaceType;
+
+  //
+  // Measure to PCR[0] with event EV_POST_CODE ACPI DATA.
+  // The measurement has to be done before any update.
+  // Otherwise, the PCR record would be different after event log update
+  // or the PCD configuration change.
+  //
+  TpmMeasureAndLogData(
+    0,
+    EV_POST_CODE,
+    EV_POSTCODE_INFO_ACPI_DATA,
+    ACPI_DATA_LEN,
+    &mTpm2AcpiTemplate,
+    mTpm2AcpiTemplate.Header.Length
+    );
+
+  mTpm2AcpiTemplate.Header.Revision = PcdGet8(PcdTpm2AcpiTableRev);
+  DEBUG((DEBUG_INFO, "Tpm2 ACPI table revision is %d\n", mTpm2AcpiTemplate.Header.Revision));
+
+  //
+  // PlatformClass is only valid for version 4 and above
+  //    BIT0~15:  PlatformClass
+  //    BIT16~31: Reserved
+  //
+  if (mTpm2AcpiTemplate.Header.Revision >= EFI_TPM2_ACPI_TABLE_REVISION_4) {
+    mTpm2AcpiTemplate.Flags = (mTpm2AcpiTemplate.Flags & 0xFFFF0000) | PcdGet8(PcdTpmPlatformClass);
+    DEBUG((DEBUG_INFO, "Tpm2 ACPI table PlatformClass is %d\n", (mTpm2AcpiTemplate.Flags & 0x0000FFFF)));
+  }
+
+  mTpm2AcpiTemplate.Laml = PcdGet32(PcdTpm2AcpiTableLaml);
+  mTpm2AcpiTemplate.Lasa = PcdGet64(PcdTpm2AcpiTableLasa);
+  if ((mTpm2AcpiTemplate.Header.Revision < EFI_TPM2_ACPI_TABLE_REVISION_4) ||
+      (mTpm2AcpiTemplate.Laml == 0) || (mTpm2AcpiTemplate.Lasa == 0)) {
+    //
+    // If version is smaller than 4 or Laml/Lasa is not valid, rollback to original Length.
+    //
+    mTpm2AcpiTemplate.Header.Length = sizeof(EFI_TPM2_ACPI_TABLE);
+  }
+
+  InterfaceType = PcdGet8(PcdActiveTpmInterfaceType);
+  switch (InterfaceType) {
+  case Tpm2PtpInterfaceCrb:
+    mTpm2AcpiTemplate.StartMethod = EFI_TPM2_ACPI_TABLE_START_METHOD_COMMAND_RESPONSE_BUFFER_INTERFACE;
+    mTpm2AcpiTemplate.AddressOfControlArea = PcdGet64 (PcdTpmBaseAddress) + 0x40;
+    ControlArea = (EFI_TPM2_ACPI_CONTROL_AREA *)(UINTN)mTpm2AcpiTemplate.AddressOfControlArea;
+    ControlArea->CommandSize  = 0xF80;
+    ControlArea->ResponseSize = 0xF80;
+    ControlArea->Command      = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    ControlArea->Response     = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    break;
+  case Tpm2PtpInterfaceFifo:
+  case Tpm2PtpInterfaceTis:
+    break;
+  default:
+    DEBUG((EFI_D_ERROR, "TPM2 InterfaceType get error! %d\n", InterfaceType));
+    break;
+  }
+
+  CopyMem (mTpm2AcpiTemplate.Header.OemId, PcdGetPtr (PcdAcpiDefaultOemId), sizeof (mTpm2AcpiTemplate.Header.OemId));
+  OemTableId = PcdGet64 (PcdAcpiDefaultOemTableId);
+  CopyMem (&mTpm2AcpiTemplate.Header.OemTableId, &OemTableId, sizeof (UINT64));
+  mTpm2AcpiTemplate.Header.OemRevision      = PcdGet32 (PcdAcpiDefaultOemRevision);
+  mTpm2AcpiTemplate.Header.CreatorId        = PcdGet32 (PcdAcpiDefaultCreatorId);
+  mTpm2AcpiTemplate.Header.CreatorRevision  = PcdGet32 (PcdAcpiDefaultCreatorRevision);
+
+  //
+  // Construct ACPI table
+  //
+  Status = gBS->LocateProtocol (&gEfiAcpiTableProtocolGuid, NULL, (VOID **) &AcpiTable);
+  ASSERT_EFI_ERROR (Status);
+
+  Status = AcpiTable->InstallAcpiTable (
+                        AcpiTable,
+                        &mTpm2AcpiTemplate,
+                        mTpm2AcpiTemplate.Header.Length,
+                        &TableKey
+                        );
+  ASSERT_EFI_ERROR (Status);
+
+  return Status;
+}
+
+/**
   The driver's entry point. It publishes EFI Tcg2 Protocol.
 
   @param[in] ImageHandle  The firmware allocated handle for the EFI image.
@@ -2783,13 +2964,10 @@ DriverEntry (
     }
   }
 
-  mTcgDxeData.BsCap.SupportedEventLogs = EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2 | EFI_TCG2_EVENT_LOG_FORMAT_TCG_2;
-  if ((mTcgDxeData.BsCap.ActivePcrBanks & EFI_TCG2_BOOT_HASH_ALG_SHA1) == 0) {
-    //
-    // No need to expose TCG1.2 event log if SHA1 bank does not exist.
-    //
-    mTcgDxeData.BsCap.SupportedEventLogs &= ~EFI_TCG2_EVENT_LOG_FORMAT_TCG_1_2;
-  }
+  //
+  // Only expose TCG2 event log for TPM2.
+  //
+  mTcgDxeData.BsCap.SupportedEventLogs = EFI_TCG2_EVENT_LOG_FORMAT_TCG_2;
 
   DEBUG ((DEBUG_INFO, "Tcg2.SupportedEventLogs - 0x%08x\n", mTcgDxeData.BsCap.SupportedEventLogs));
   DEBUG ((DEBUG_INFO, "Tcg2.HashAlgorithmBitmap - 0x%08x\n", mTcgDxeData.BsCap.HashAlgorithmBitmap));
@@ -2852,6 +3030,12 @@ DriverEntry (
   //
   Status = InstallTcg2 ();
   DEBUG ((DEBUG_INFO, "InstallTcg2 - %r\n", Status));
+
+  //
+  // Set TPM2 ACPI table
+  //
+  Status = PublishTpm2 ();
+  ASSERT_EFI_ERROR (Status);
 
   return Status;
 }

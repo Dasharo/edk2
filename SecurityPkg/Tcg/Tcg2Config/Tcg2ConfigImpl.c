@@ -724,31 +724,43 @@ FillBufferWithBootHashAlg (
 /**
   Set ConfigInfo according to TpmAlgHash.
 
-  @param[in,out] Tcg2ConfigInfo       TCG2 config info.
-  @param[in]     TpmAlgHash           TpmAlgHash.
+  @param[in,out] Tcg2ConfigInfo           TCG2 config info.
+  @param[in]     TpmAlgHash               TpmAlgHash.
+  @param[in]     SupportedHashAlgorithms  Mask of supported hash algorithms.
 
 **/
 VOID
 SetConfigInfo (
-  IN OUT TCG2_CONFIGURATION_INFO  *Tcg2ConfigInfo,
-  IN UINT32                       TpmAlgHash
+  IN OUT TCG2_CONFIGURATION_INFO   *Tcg2ConfigInfo,
+  IN UINT32                        TpmAlgHash,
+  EFI_TCG2_EVENT_ALGORITHM_BITMAP  SupportedHashAlgorithms
   )
 {
   switch (TpmAlgHash) {
     case TPM_ALG_SHA1:
-      Tcg2ConfigInfo->Sha1Supported = TRUE;
+      if (SupportedHashAlgorithms & HASH_ALG_SHA1) {
+        Tcg2ConfigInfo->Sha1Supported = TRUE;
+      }
       break;
     case TPM_ALG_SHA256:
-      Tcg2ConfigInfo->Sha256Supported = TRUE;
+      if (SupportedHashAlgorithms & HASH_ALG_SHA256) {
+        Tcg2ConfigInfo->Sha256Supported = TRUE;
+      }
       break;
     case TPM_ALG_SHA384:
-      Tcg2ConfigInfo->Sha384Supported = TRUE;
+      if (SupportedHashAlgorithms & HASH_ALG_SHA384) {
+        Tcg2ConfigInfo->Sha384Supported = TRUE;
+      }
       break;
     case TPM_ALG_SHA512:
-      Tcg2ConfigInfo->Sha512Supported = TRUE;
+      if (SupportedHashAlgorithms & HASH_ALG_SHA512) {
+        Tcg2ConfigInfo->Sha512Supported = TRUE;
+      }
       break;
     case TPM_ALG_SM3_256:
-      Tcg2ConfigInfo->Sm3Supported = TRUE;
+      if (SupportedHashAlgorithms & HASH_ALG_SM3_256) {
+        Tcg2ConfigInfo->Sm3Supported = TRUE;
+      }
       break;
   }
 }
@@ -809,16 +821,17 @@ InstallTcg2ConfigForm (
   IN OUT TCG2_CONFIG_PRIVATE_DATA  *PrivateData
   )
 {
-  EFI_STATUS                      Status;
-  EFI_HII_HANDLE                  HiiHandle;
-  EFI_HANDLE                      DriverHandle;
-  EFI_HII_CONFIG_ACCESS_PROTOCOL  *ConfigAccess;
-  UINTN                           Index;
-  TPML_PCR_SELECTION              Pcrs;
-  CHAR16                          TempBuffer[1024];
-  TCG2_CONFIGURATION_INFO         Tcg2ConfigInfo;
-  TPM2_PTP_INTERFACE_TYPE         TpmDeviceInterfaceDetected;
-  BOOLEAN                         IsCmdImp = FALSE;
+  EFI_STATUS                       Status;
+  EFI_HII_HANDLE                   HiiHandle;
+  EFI_HANDLE                       DriverHandle;
+  EFI_HII_CONFIG_ACCESS_PROTOCOL   *ConfigAccess;
+  UINTN                            Index;
+  TPML_PCR_SELECTION               Pcrs;
+  CHAR16                           TempBuffer[1024];
+  TCG2_CONFIGURATION_INFO          Tcg2ConfigInfo;
+  TPM2_PTP_INTERFACE_TYPE          TpmDeviceInterfaceDetected;
+  BOOLEAN                          IsCmdImp = FALSE;
+  EFI_TCG2_EVENT_ALGORITHM_BITMAP  SupportedHashAlgorithms;
 
   DriverHandle = NULL;
   ConfigAccess = &PrivateData->ConfigAccess;
@@ -879,6 +892,8 @@ InstallTcg2ConfigForm (
       break;
   }
 
+  SupportedHashAlgorithms = PcdGet32 (PcdTcg2HashAlgorithmBitmap);
+
   ZeroMem (&Tcg2ConfigInfo, sizeof (Tcg2ConfigInfo));
   Status = Tpm2GetCapabilityPcrs (&Pcrs);
   if (EFI_ERROR (Status)) {
@@ -897,7 +912,7 @@ InstallTcg2ConfigForm (
     TempBuffer[0] = 0;
     for (Index = 0; Index < Pcrs.count; Index++) {
       AppendBufferWithTpmAlgHash (TempBuffer, sizeof (TempBuffer), Pcrs.pcrSelections[Index].hash);
-      SetConfigInfo (&Tcg2ConfigInfo, Pcrs.pcrSelections[Index].hash);
+      SetConfigInfo (&Tcg2ConfigInfo, Pcrs.pcrSelections[Index].hash, SupportedHashAlgorithms);
     }
 
     HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_TPM2_SUPPORTED_HASH_ALGO_CONTENT), TempBuffer, NULL);
@@ -910,7 +925,7 @@ InstallTcg2ConfigForm (
 
   Tcg2ConfigInfo.ChangeEPSSupported = IsCmdImp;
 
-  FillBufferWithBootHashAlg (TempBuffer, sizeof (TempBuffer), PcdGet32 (PcdTcg2HashAlgorithmBitmap));
+  FillBufferWithBootHashAlg (TempBuffer, sizeof (TempBuffer), SupportedHashAlgorithms);
   HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_BIOS_HASH_ALGO_CONTENT), TempBuffer, NULL);
 
   //

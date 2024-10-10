@@ -66,6 +66,7 @@
   Tcg2PhysicalPresenceLib
   PeCoffLib
   DasharoVariablesLib
+  TpmMeasurementLib
 
 [Guids]
   ## SOMETIMES_CONSUMES     ## Variable:L"SecureBoot"
@@ -95,8 +96,14 @@
   gEfiMpServiceProtocolGuid                          ## SOMETIMES_CONSUMES
   gEfiVariableWriteArchProtocolGuid                  ## NOTIFY
   gEfiResetNotificationProtocolGuid                  ## CONSUMES
+  gEfiAcpiTableProtocolGuid                          ## CONSUMES
 
 [Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiDefaultOemId                        ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiDefaultOemTableId                   ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiDefaultOemRevision                  ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiDefaultCreatorId                    ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiDefaultCreatorRevision              ## SOMETIMES_CONSUMES
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmPlatformClass                         ## SOMETIMES_CONSUMES
   gEfiSecurityPkgTokenSpaceGuid.PcdFirmwareDebuggerInitialized              ## SOMETIMES_CONSUMES
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid                          ## CONSUMES
@@ -109,8 +116,11 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2AcpiTableLaml                        ## PRODUCES
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2AcpiTableLasa                        ## PRODUCES
   gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision               ## CONSUMES
+  gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType                   ## CONSUMES
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress                           ## CONSUMES
 
 [Depex]
+  gEfiAcpiTableProtocolGuid AND
   # According to PcdTpm2AcpiTableRev definition in SecurityPkg.dec
   # This PCD should be configured at DynamicHii or DynamicHiiEx.
   # So, this PCD read operation depends on GetVariable service.

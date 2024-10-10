@@ -307,7 +307,7 @@ SyncPcrAllocationsAndPcrMask (
   {
     DEBUG ((DEBUG_INFO, "TpmActivePcrBanks & Tpm2PcrMask = 0x%08x\n", (TpmActivePcrBanks & Tpm2PcrMask)));
     DEBUG ((DEBUG_INFO, "TpmActivePcrBanks & BiosHashAlgorithmBitmap = 0x%08x\n", (TpmActivePcrBanks & BiosHashAlgorithmBitmap)));
-    NewTpmActivePcrBanks  = TpmActivePcrBanks;
+    NewTpmActivePcrBanks  = TpmHashAlgorithmBitmap;
     NewTpmActivePcrBanks &= Tpm2PcrMask;
     NewTpmActivePcrBanks &= BiosHashAlgorithmBitmap;
     DEBUG ((DEBUG_INFO, "NewTpmActivePcrBanks 0x%08x\n", NewTpmActivePcrBanks));

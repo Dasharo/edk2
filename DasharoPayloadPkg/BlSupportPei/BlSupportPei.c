@@ -8,6 +8,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #include "BlSupportPei.h"
 
+#include <Coreboot.h>
+#include <IndustryStandard/UefiTcgPlatform.h>
+
 #define LEGACY_8259_MASK_REGISTER_MASTER  0x21
 #define LEGACY_8259_MASK_REGISTER_SLAVE   0xA1
 
@@ -496,6 +499,139 @@ ValidateFvHeader (
   return EFI_SUCCESS;
 }
 
+STATIC
+EFI_STATUS
+ParseAndPublishTPM1Log (
+  CONST struct tcpa_spec_entry  *SpecEntry,
+  UINTN                         Size
+)
+{
+  UINT8                  ZeroBlock[sizeof (struct tcpa_spec_entry)];
+  struct tcpa_log_entry  *Entry;
+  EFI_PHYSICAL_ADDRESS   Start;
+  EFI_PHYSICAL_ADDRESS   Current;
+  UINTN                  EntrySize;
+
+  // This must hold to avoid integer overflow below.
+  ASSERT (Size >= sizeof (*Entry));
+
+  ZeroMem (ZeroBlock, sizeof (ZeroBlock));
+
+  Start = (EFI_PHYSICAL_ADDRESS)(UINTN) SpecEntry;
+  Current = Start;
+  while (Current - Start < Size - sizeof (*Entry) &&
+         CompareMem ((VOID *)(UINTN) Current, (VOID *) ZeroBlock, sizeof (ZeroBlock)) != 0) {
+    Entry = (VOID *)(UINTN) Current;
+    EntrySize = sizeof (*Entry) + Entry->event_data_size;
+
+    BuildGuidDataHob (&gTcgEventEntryHobGuid, Entry, EntrySize);
+    Current += EntrySize;
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+EFI_STATUS
+ParseAndPublishTPM2Log (
+  CONST struct tcg_efi_spec_id_event  *SpecEntry,
+  UINTN                               Size
+)
+{
+  UINT8                         ZeroBlock[sizeof (struct tcg_pcr_event2_header)];
+  struct tcg_pcr_event2_header  *Header;
+  EFI_PHYSICAL_ADDRESS          Start;
+  EFI_PHYSICAL_ADDRESS          Current;
+  UINTN                         EntrySize;
+  UINTN                         DigestsSize;
+  UINTN                         Idx;
+
+  // This must hold to avoid integer overflow below.
+  ASSERT (Size >= sizeof (*Header));
+
+  ZeroMem (ZeroBlock, sizeof (ZeroBlock));
+
+  DigestsSize = 0;
+  for (Idx = 0; Idx < SpecEntry->num_of_algorithms; ++Idx) {
+    DigestsSize += sizeof (UINT16) + SpecEntry->digest_sizes[Idx].digest_size;
+  }
+
+  Start = (EFI_PHYSICAL_ADDRESS)(UINTN) SpecEntry;
+
+  // Not adding Spec ID Event for TPM2 because Tcg2Dxe adds one, coreboot's
+  // event would have to be modified to be suitable due to the list of
+  // algorithms there.
+  Current = Start + sizeof (struct tcpa_log_entry) + SpecEntry->event_size;
+
+  while (Current - Start < Size - sizeof (*Header) &&
+         CompareMem ((VOID *)(UINTN) Current, (VOID *) ZeroBlock, sizeof (ZeroBlock)) != 0) {
+    Header = (VOID *)(UINTN) Current;
+    EntrySize = sizeof (*Header) + DigestsSize;
+
+    // Event data size field and data itself.
+    EntrySize += sizeof (UINT32) + *(CONST UINT32 *)(UINTN) (Current + EntrySize);
+
+    BuildGuidDataHob (&gTcgEvent2EntryHobGuid, Header, EntrySize);
+    Current += EntrySize;
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+EFI_STATUS
+ParseAndPublishTPMLog (
+  VOID
+)
+{
+  RETURN_STATUS  Status;
+  VOID           *LogBase;
+  UINTN          LogSize;
+
+  const struct tcpa_spec_entry        *Tcg1Entry;
+  const struct tcg_efi_spec_id_event  *Tcg2Entry;
+
+  Status = ParseTPMLog (&LogBase, &LogSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: Not publishing coreboot's TPM log entries because: %r.\n",
+      __FUNCTION__, Status
+      ));
+    return Status;
+  }
+
+  Tcg1Entry = LogBase;
+  if (AsciiStrCmp((CONST CHAR8 *)Tcg1Entry->signature, TCPA_SPEC_ID_EVENT_SIGNATURE) == 0) {
+    if (Tcg1Entry->spec_version_major == 1 &&
+        Tcg1Entry->spec_version_minor == 2 &&
+        Tcg1Entry->spec_errata >= 1 &&
+        Tcg1Entry->entry.event_type == EV_NO_ACTION) {
+      return ParseAndPublishTPM1Log (Tcg1Entry, LogSize);
+    }
+
+    DEBUG ((DEBUG_WARN, "%a: Unknown TPM1.2 log specification.\n", __FUNCTION__));
+    return EFI_UNSUPPORTED;
+  }
+
+  Tcg2Entry = LogBase;
+  if (AsciiStrCmp((CONST CHAR8 *)Tcg1Entry->signature, TCG_EFI_SPEC_ID_EVENT_SIGNATURE) == 0) {
+    if (Tcg2Entry->spec_version_major == 2 &&
+        Tcg2Entry->spec_version_minor == 0 &&
+        Tcg2Entry->event_type == EV_NO_ACTION) {
+      return ParseAndPublishTPM2Log (Tcg2Entry, LogSize);
+    }
+
+    DEBUG ((DEBUG_WARN, "%a: Unknown TPM2 log specification.\n", __FUNCTION__));
+    return EFI_UNSUPPORTED;
+  }
+
+  DEBUG ((DEBUG_WARN,
+          "%a: Unknown TPM log specification %.*s.\n",
+          __FUNCTION__, (int)sizeof(Tcg2Entry->signature), (CONST CHAR8 *)Tcg2Entry->signature));
+  return EFI_UNSUPPORTED;
+}
+
 /**
   This is the entrypoint of PEIM
 
@@ -766,6 +902,15 @@ BlPeiEntryPoint (
   //
   IoWrite8 (LEGACY_8259_MASK_REGISTER_MASTER, 0xFF);
   IoWrite8 (LEGACY_8259_MASK_REGISTER_SLAVE,  0xFF);
+
+  //
+  // Parse coreboot's log.
+  //
+  Status = ParseAndPublishTPMLog ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Error when parsing platform info, Status = %r\n", Status));
+    return Status;
+  }
 
   return EFI_SUCCESS;
 }
