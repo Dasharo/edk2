@@ -1,6 +1,7 @@
 /** @file  SmmStore.c
 
   Copyright (c) 2022, 9elements GmbH<BR>
+  Copyright (c) 2024, 3mdeb Sp. z o.o.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -13,7 +14,6 @@
 #include <Library/DxeServicesTableLib.h>
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/UefiRuntimeLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/SmmStoreLib.h>
 #include "SmmStore.h"
@@ -28,8 +28,6 @@ STATIC EFI_PHYSICAL_ADDRESS  mArgComBufPhys;
  * Metadata provided by the first stage bootloader.
  */
 STATIC SMMSTORE_INFO  *mSmmStoreInfo;
-
-STATIC EFI_EVENT  mSmmStoreLibVirtualAddrChangeEvent;
 
 /**
   Calls into SMM to use the SMMSTOREv2 implementation for persistent storage.
@@ -142,6 +140,52 @@ SmmStoreLibGetMmioAddress (
 }
 
 /**
+  Read a flash block.  The whole flash is represented as a
+  sequence of blocks.
+
+  @param[in] Lba      The starting logical block index to read from.
+  @param[in] Offset   Offset into the block at which to begin reading.
+  @param[in] NumBytes On input, indicates the requested read size. On
+                      output, indicates the actual number of bytes read
+  @param[in] Buffer   Pointer to the buffer to read into.
+  @param[in] ReadCmd  Read command to use.
+
+  @note Validation of mSmmStoreInfo and Lba must be done by the calling code.
+
+**/
+STATIC
+EFI_STATUS
+ReadBlock (
+  IN        EFI_LBA  Lba,
+  IN        UINTN    Offset,
+  IN        UINTN    *NumBytes,
+  IN        UINT8    *Buffer,
+  IN        UINT8    ReadCmd
+  )
+{
+  EFI_STATUS  Status;
+
+  if (((*NumBytes + Offset) > mSmmStoreInfo->BlockSize) ||
+      ((*NumBytes + Offset) > mSmmStoreInfo->ComBufferSize))
+  {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  mArgComBuf->Read.BufSize   = *NumBytes;
+  mArgComBuf->Read.BufOffset = Offset;
+  mArgComBuf->Read.BlockId   = Lba;
+
+  Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd, mArgComBufPhys);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  CopyMem (Buffer, (VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), *NumBytes);
+
+  return EFI_SUCCESS;
+}
+
+/**
   Read from SmmStore
 
   @param[in] Lba      The starting logical block index to read from.
@@ -159,8 +203,6 @@ SmmStoreLibRead (
   IN        UINT8    *Buffer
   )
 {
-  EFI_STATUS  Status;
-
   if (mSmmStoreInfo == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -169,24 +211,72 @@ SmmStoreLibRead (
     return EFI_INVALID_PARAMETER;
   }
 
+  return ReadBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_RAW_READ);
+}
+
+/**
+  Read from an arbitrary flash location.  The whole flash is represented as a
+  sequence of blocks.
+
+  @param[in] Lba      The starting logical block index to read from.
+  @param[in] Offset   Offset into the block at which to begin reading.
+  @param[in] NumBytes On input, indicates the requested read size. On
+                      output, indicates the actual number of bytes read
+  @param[in] Buffer   Pointer to the buffer to read into.
+
+**/
+EFI_STATUS
+SmmStoreLibReadAnyBlock (
+  IN        EFI_LBA  Lba,
+  IN        UINTN    Offset,
+  IN        UINTN    *NumBytes,
+  IN        UINT8    *Buffer
+  )
+{
+  if (mSmmStoreInfo == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  return ReadBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_READ);
+}
+
+/**
+  Write a flash block.  The whole flash is represented as a
+  sequence of blocks.
+
+  @param[in] Lba      The starting logical block index to write to.
+  @param[in] Offset   Offset into the block at which to begin writing.
+  @param[in] NumBytes On input, indicates the requested write size. On
+                      output, indicates the actual number of bytes written
+  @param[in] Buffer   Pointer to the data to write.
+  @param[in] WriteCmd Write command to use.
+
+  @note Validation of mSmmStoreInfo and Lba must be done by the calling code.
+
+**/
+STATIC
+EFI_STATUS
+WriteBlock (
+  IN        EFI_LBA  Lba,
+  IN        UINTN    Offset,
+  IN        UINTN    *NumBytes,
+  IN        UINT8    *Buffer,
+  IN        UINT8    WriteCmd
+  )
+{
   if (((*NumBytes + Offset) > mSmmStoreInfo->BlockSize) ||
       ((*NumBytes + Offset) > mSmmStoreInfo->ComBufferSize))
   {
     return EFI_INVALID_PARAMETER;
   }
 
-  mArgComBuf->Read.BufSize   = *NumBytes;
-  mArgComBuf->Read.BufOffset = Offset;
-  mArgComBuf->Read.BlockId   = Lba;
+  mArgComBuf->Write.BufSize   = *NumBytes;
+  mArgComBuf->Write.BufOffset = Offset;
+  mArgComBuf->Write.BlockId   = Lba;
 
-  Status = CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_READ, mArgComBufPhys);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
+  CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
 
-  CopyMem (Buffer, (VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), *NumBytes);
-
-  return EFI_SUCCESS;
+  return CallSmm (mSmmStoreInfo->ApmCmd, WriteCmd, mArgComBufPhys);
 }
 
 /**
@@ -215,19 +305,33 @@ SmmStoreLibWrite (
     return EFI_INVALID_PARAMETER;
   }
 
-  if (((*NumBytes + Offset) > mSmmStoreInfo->BlockSize) ||
-      ((*NumBytes + Offset) > mSmmStoreInfo->ComBufferSize))
-  {
-    return EFI_INVALID_PARAMETER;
+  return WriteBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_RAW_WRITE);
+}
+
+/**
+  Write to an arbitrary flash location.  The whole flash is represented as a
+  sequence of blocks.
+
+  @param[in] Lba      The starting logical block index to write to.
+  @param[in] Offset   Offset into the block at which to begin writing.
+  @param[in] NumBytes On input, indicates the requested write size. On
+                      output, indicates the actual number of bytes written
+  @param[in] Buffer   Pointer to the data to write.
+
+**/
+EFI_STATUS
+SmmStoreLibWriteAnyBlock (
+  IN        EFI_LBA  Lba,
+  IN        UINTN    Offset,
+  IN        UINTN    *NumBytes,
+  IN        UINT8    *Buffer
+  )
+{
+  if (mSmmStoreInfo == NULL) {
+    return EFI_NO_MEDIA;
   }
 
-  mArgComBuf->Write.BufSize   = *NumBytes;
-  mArgComBuf->Write.BufOffset = Offset;
-  mArgComBuf->Write.BlockId   = Lba;
-
-  CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
-
-  return CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_WRITE, mArgComBufPhys);
+  return WriteBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_WRITE);
 }
 
 /**
@@ -255,25 +359,47 @@ SmmStoreLibEraseBlock (
 }
 
 /**
-  Fixup internal data so that EFI can be call in virtual mode.
-  Call the passed in Child Notify event and convert any pointers in
-  lib to virtual mode.
+  Erase an arbitrary block of the flash.  The whole flash is represented as a
+  sequence of blocks.
 
-  @param[in]    Event   The Event that is being processed
-  @param[in]    Context Event Context
+  @param Lba    The logical block index to erase.
+
 **/
-STATIC
-VOID
-EFIAPI
-SmmStoreLibVirtualNotifyEvent (
-  IN EFI_EVENT  Event,
-  IN VOID       *Context
+EFI_STATUS
+SmmStoreLibEraseAnyBlock (
+  IN   EFI_LBA  Lba
   )
 {
-  EfiConvertPointer (0x0, (VOID **)&mArgComBuf);
+  if (mSmmStoreInfo == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  mArgComBuf->Clear.BlockId = Lba;
+
+  return CallSmm (mSmmStoreInfo->ApmCmd,
+                  SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR,
+                  mArgComBufPhys);
+}
+
+/**
+  Fixup internal data so that EFI can be called in virtual mode.
+  Converts any pointers in lib to virtual mode. This function is meant to
+  be invoked on gEfiEventVirtualAddressChangeGuid event when the library is
+  used at run-time.
+
+  @param[in] ConvertPointer  Function to switch virtual address space.
+
+**/
+VOID
+EFIAPI
+SmmStoreLibVirtualAddressChange (
+  IN ConvertPointerFunc  ConvertPointer
+  )
+{
+  ConvertPointer (0x0, (VOID **)&mArgComBuf);
   if (mSmmStoreInfo != NULL) {
-    EfiConvertPointer (0x0, (VOID **)&mSmmStoreInfo->ComBuffer);
-    EfiConvertPointer (0x0, (VOID **)&mSmmStoreInfo);
+    ConvertPointer (0x0, (VOID **)&mSmmStoreInfo->ComBuffer);
+    ConvertPointer (0x0, (VOID **)&mSmmStoreInfo);
   }
 
   return;
@@ -361,19 +487,6 @@ SmmStoreLibInitialize (
   mArgComBuf = (VOID *)mArgComBufPhys;
 
   //
-  // Register for the virtual address change event
-  //
-  Status = gBS->CreateEventEx (
-                  EVT_NOTIFY_SIGNAL,
-                  TPL_NOTIFY,
-                  SmmStoreLibVirtualNotifyEvent,
-                  NULL,
-                  &gEfiEventVirtualAddressChangeGuid,
-                  &mSmmStoreLibVirtualAddrChangeEvent
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  //
   // Finally mark the SMM communication buffer provided by CB or SBL as runtime memory
   //
   Status = gDS->GetMemorySpaceDescriptor (mSmmStoreInfo->ComBuffer, &GcdDescriptor);
@@ -447,8 +560,7 @@ SmmStoreLibInitialize (
 }
 
 /**
-  Denitializes SmmStore support by freeing allocated memory and unregistering
-  the virtual address change event.
+  Denitializes SmmStore support by freeing allocated memory.
 **/
 VOID
 EFIAPI
@@ -464,10 +576,5 @@ SmmStoreLibDeinitialize (
   if (mSmmStoreInfo != NULL) {
     FreePool (mSmmStoreInfo);
     mSmmStoreInfo = NULL;
-  }
-
-  if (mSmmStoreLibVirtualAddrChangeEvent != NULL) {
-    gBS->CloseEvent (mSmmStoreLibVirtualAddrChangeEvent);
-    mSmmStoreLibVirtualAddrChangeEvent = NULL;
   }
 }

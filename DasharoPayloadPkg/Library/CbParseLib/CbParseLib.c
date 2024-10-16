@@ -1024,3 +1024,66 @@ ParseBootLogo (
 
   return RETURN_SUCCESS;
 }
+
+/**
+  Parse firmware information passed in by coreboot
+
+  @param  Guid     Kind of the firmware.
+  @param  Version  Current version.
+  @param  Lsv      Lowest supported version.
+  @param  Size     Firmware size in bytes.
+
+  @retval RETURN_INVALID_PARAMETER  At least one of the parameters is NULL.
+  @retval RETURN_SUCCESS            Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND          coreboot table is missing.
+**/
+RETURN_STATUS
+EFIAPI
+ParseFwInfo (
+  OUT EFI_GUID  *Guid,
+  OUT UINT32    *Version,
+  OUT UINT32    *Lsv,
+  OUT UINT32    *Size
+  )
+{
+  struct lb_efi_fw_info  *FwInfo;
+
+  if (Guid == NULL || Version == NULL || Lsv == NULL || Size == NULL) {
+    return RETURN_INVALID_PARAMETER;
+  }
+
+  FwInfo = FindCbTag (CB_TAG_FW_INFO);
+  if (FwInfo == NULL) {
+    return RETURN_NOT_FOUND;
+  }
+
+  CopyMem (Guid, &FwInfo->guid, sizeof (*Guid));
+  *Version = FwInfo->version;
+  *Lsv = FwInfo->lowest_supported_version;
+  *Size = FwInfo->fw_size;
+  return RETURN_SUCCESS;
+}
+
+/**
+  Parse information in a string form identified by a number
+
+  @param  Id  String identifier.
+
+  @retval NULL       The requested information wasn't found.
+  @retval Otherwise  A pointer to a static string.
+**/
+CONST CHAR8 *
+EFIAPI
+ParseInfoString (
+  IN UINTN  Id
+  )
+{
+  struct cb_string  *CbString;
+
+  CbString = FindCbTag (Id);
+  if (CbString == NULL) {
+    return NULL;
+  }
+
+  return (CONST CHAR8 *)CbString->string;
+}

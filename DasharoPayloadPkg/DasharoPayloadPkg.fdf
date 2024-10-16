@@ -391,6 +391,10 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 
 INF CrScreenshotDxe/CrScreenshotDxe.inf
 
+!if $(CAPSULE_SUPPORT) == TRUE
+INF  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+!endif
+
 ################################################################################
 #
 # Rules are use with the [FV] section's module INF type to define

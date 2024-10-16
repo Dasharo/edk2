@@ -14,6 +14,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/GlobalVariable.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
+#include <Library/CapsuleLib.h>
+#include <Library/HobLib.h>
 #include <Coreboot.h>
 #include <DasharoOptions.h>
 
@@ -673,6 +675,19 @@ PlatformBootManagerBeforeConsole (
   }
 
   //
+  // Process system firmware update capsules and possibly device update
+  // capsules that don't contain embedded drivers if those devices are already
+  // available.
+  //
+  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+    // TODO: when enabling capsule support for laptops, add a battery check here
+    Status = ProcessCapsules ();
+    if (EFI_ERROR (Status)) {
+      DEBUG((DEBUG_ERROR, "%a(): ProcessCapsule() failed with: %r\n", __FUNCTION__, Status));
+    }
+  }
+
+  //
   // Install ready to lock.
   // This needs to be done before option rom dispatched.
   //
@@ -1119,7 +1134,7 @@ WarnIfFirmwareUpdateMode (
   Status = gRT->SetVariable (
       DASHARO_VAR_FIRMWARE_UPDATE_MODE,
       &gDasharoSystemFeaturesGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      0,
       0,
       NULL
       );
@@ -1566,6 +1581,30 @@ PlatformBootManagerAfterConsole (
 
   EfiBootManagerConnectAll ();
   EfiBootManagerRefreshAllBootOption ();
+
+  //
+  // Process device update capsules there weren't processed along with system
+  // firmware capsules on first call to ProcessCapsules() in
+  // PlatformBootManagerBeforeConsole().
+  //
+  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+    // TODO: when enabling capsule support for laptops, add a battery check here
+    Status = ProcessCapsules ();
+    if (EFI_ERROR (Status)) {
+      DEBUG((DEBUG_ERROR, "%a(): ProcessCapsule() failed with: %r\n", __FUNCTION__, Status));
+    }
+
+    //
+    // Reset the system to disable SMI handler in order to exclude the
+    // possibility of it being used outside of the firmware
+    //
+    // In practice, this will rarely execute because even the first
+    // ProcessCapsules() invocation might do a reset if all capsules were
+    // processed and at least one of them needed a reset.  This is just to catch
+    // a case when this doesn't happen which is possible on error.
+    //
+    gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+  }
 
   //
   // Process TPM PPI request

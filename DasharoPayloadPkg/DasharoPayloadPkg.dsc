@@ -111,6 +111,8 @@
   DEFINE APU_CONFIG_ENABLE              = FALSE
   DEFINE USE_PLATFORM_GOP               = FALSE
   DEFINE USE_LAPTOP_LID_LIB             = FALSE
+  DEFINE CAPSULE_SUPPORT                = FALSE
+  DEFINE CAPSULE_MAIN_FW_GUID           =
 
   #
   # Network definition
@@ -214,13 +216,31 @@
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
   UefiScsiLib|MdePkg/Library/UefiScsiLib/UefiScsiLib.inf
   OemHookStatusCodeLib|MdeModulePkg/Library/OemHookStatusCodeLibNull/OemHookStatusCodeLibNull.inf
-  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   SecurityManagementLib|MdeModulePkg/Library/DxeSecurityManagementLib/DxeSecurityManagementLib.inf
   UefiBootManagerLib|MdeModulePkg/Library/UefiBootManagerLib/UefiBootManagerLib.inf
   BootLogoLib|MdeModulePkg/Library/BootLogoLib/BootLogoLib.inf
   BmpSupportLib|MdeModulePkg/Library/BaseBmpSupportLib/BaseBmpSupportLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FrameBufferBltLib|MdeModulePkg/Library/FrameBufferBltLib/FrameBufferBltLib.inf
+
+  #
+  # Capsule Updates
+  #
+!if $(CAPSULE_SUPPORT) == TRUE
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeCapsuleLib.inf
+  # At the moment there are no update checks to do, so null-library suffices
+  CapsuleUpdatePolicyLib|FmpDevicePkg/Library/CapsuleUpdatePolicyLibNull/CapsuleUpdatePolicyLibNull.inf
+  DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibGraphics/DisplayUpdateProgressLibGraphics.inf
+  FmpAuthenticationLib|SecurityPkg/Library/FmpAuthenticationLibPkcs7/FmpAuthenticationLibPkcs7.inf
+  FmpDependencyCheckLib|FmpDevicePkg/Library/FmpDependencyCheckLib/FmpDependencyCheckLib.inf
+  # No need to save/restore FMP dependencies until they are utilized
+  FmpDependencyDeviceLib|FmpDevicePkg/Library/FmpDependencyDeviceLibNull/FmpDependencyDeviceLibNull.inf
+  FmpDependencyLib|FmpDevicePkg/Library/FmpDependencyLib/FmpDependencyLib.inf
+  FmpDeviceLib|DasharoPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
+  FmpPayloadHeaderLib|FmpDevicePkg/Library/FmpPayloadHeaderLibV1/FmpPayloadHeaderLibV1.inf
+!else
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
+!endif
 
   #
   # CPU
@@ -273,6 +293,9 @@
 !else
   BlParseLib|DasharoPayloadPkg/Library/SblParseLib/SblParseLib.inf
 !endif
+  FmapLib|DasharoPayloadPkg/Library/FmapLib/FmapLib.inf
+  CbfsLib|DasharoPayloadPkg/Library/CbfsLib/CbfsLib.inf
+  EfiVarsLib|DasharoPayloadPkg/Library/EfiVarsLib/EfiVarsLib.inf
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
@@ -419,6 +442,9 @@
   DebugLib|MdeModulePkg/Library/PeiDxeDebugLibReportStatusCode/PeiDxeDebugLibReportStatusCode.inf
   PerformanceLib|MdeModulePkg/Library/DxePerformanceLib/DxePerformanceLib.inf
   MbedTlsCrtLib|CryptoPkg/Library/MbedTlsCrtRuntimeLib/MbedTlsCrtRuntimeLib.inf
+!if $(CAPSULE_SUPPORT) == TRUE
+  CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeRuntimeCapsuleLib.inf
+!endif
 
 [LibraryClasses.common.UEFI_DRIVER,LibraryClasses.common.UEFI_APPLICATION]
   PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -442,6 +468,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwarePerformanceDataTableS3Support|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdInstallAcpiSdtProtocol|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdPs2KbdExtendedVerification|TRUE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSupportUpdateCapsuleReset|$(CAPSULE_SUPPORT)
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
@@ -460,10 +487,14 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|$(LOAD_OPTION_ROMS)
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport|$(CAPSULE_SUPPORT)
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
 
   gUefiCpuPkgTokenSpaceGuid.PcdFirstTimeWakeUpAPsBySipi|FALSE
+
+  # Disable MTRR programming as coreboot has already done it
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuDisableMtrrProgramming|TRUE
 
 !if $(SECURE_BOOT_DEFAULT_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|1
@@ -711,6 +742,25 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
+!if $(CAPSULE_SUPPORT) == TRUE
+  FmpDevicePkg/FmpDxe/FmpDxe.inf {
+    <Defines>
+      # FmpDxe interprets its FILE_GUID as firmware GUID.  This allows including
+      # multiple FmpDxe instances along each other targeting different
+      # components.
+      FILE_GUID = $(CAPSULE_MAIN_FW_GUID)
+    <PcdsFixedAtBuild>
+      gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceImageIdName|L"System Firmware"
+      # Public certificate used for validation of UEFI capsules
+      #
+      # See BaseTools/Source/Python/Pkcs7Sign/Readme.md for more details on such
+      # PCDs and include files.
+      !include DasharoPayloadPkg/CapsuleRootKey.inc
+  }
+  MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
+  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+  DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf
+!endif
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
