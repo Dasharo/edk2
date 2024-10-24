@@ -37,6 +37,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -64,6 +65,7 @@
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection             ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck          ## SOMETIMES_CONSUMES
 
 #
 # [Event]
@@ -76,3 +78,6 @@
 
 [UserExtensions.TianoCore."ExtraFiles"]
   Ps2KeyboardDxeExtra.uni
+
+[Depex]
+  gDasharoPs2ControllerPolicyGuid

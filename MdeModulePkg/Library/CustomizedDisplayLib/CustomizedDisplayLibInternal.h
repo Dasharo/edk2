@@ -50,7 +50,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define FRONT_PAGE_HEADER_HEIGHT       6
 #define NONE_FRONT_PAGE_HEADER_HEIGHT  3
-#define FOOTER_HEIGHT                  4
+#define FOOTER_HEIGHT                  5
 #define STATUS_BAR_HEIGHT              1
 
 //
@@ -95,6 +95,7 @@ extern CHAR16  *gMoveHighlight;
 extern CHAR16  *gDecNumericInput;
 extern CHAR16  *gHexNumericInput;
 extern CHAR16  *gToggleCheckBox;
+extern CHAR16  *gScreenshotString;
 extern CHAR16  *gLibEmptyString;
 extern CHAR16  *gAreYouSure;
 extern CHAR16  *gYesResponse;
@@ -282,6 +283,22 @@ PrintAt (
 VOID
 ProcessExternedOpcode (
   IN FORM_DISPLAY_ENGINE_FORM  *FormData
+  );
+
+/**
+  Draw a pop up windows based on the dimension, number of lines and
+  strings specified.
+
+  @param RequestedWidth  The width of the pop-up.
+  @param NumberOfLines   The number of lines.
+  @param Marker          The variable argument list for the list of string to be printed.
+
+**/
+VOID
+CreateSharedPopUp (
+  IN  UINTN    RequestedWidth,
+  IN  UINTN    NumberOfLines,
+  IN  VA_LIST  Marker
   );
 
 #endif

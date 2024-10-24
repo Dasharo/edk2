@@ -1,0 +1,103 @@
+## @file
+# UEFI Payload Package
+#
+# Provides drivers and definitions to create uefi payload for bootloaders.
+#
+# Copyright (c) 2014 - 2019, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = DasharoPayloadPkg
+  PACKAGE_GUID                   = E0FC9D50-415E-4946-B686-9A130D5859E7
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+
+
+[Guids]
+  #
+  ## Defines the token space for the UEFI Payload Package PCDs.
+  #
+  gDasharoPayloadPkgTokenSpaceGuid  = {0x66d719f9, 0xfa16, 0x4729, {0xa9, 0xb5, 0x23, 0xad, 0xd4, 0xc6, 0x8e, 0x93}}
+
+  #
+  # Gop Temp
+  #
+  gBmpImageGuid                           = { 0x878AC2CC, 0x5343, 0x46F2, { 0xB5, 0x63, 0x51, 0xF8, 0x9D, 0xAF, 0x56, 0xBA } }
+
+  gUefiSystemTableInfoGuid = {0x16c8a6d0, 0xfe8a, 0x4082, {0xa2, 0x8, 0xcf, 0x89, 0xc4, 0x29, 0x4, 0x33}}
+  gUefiAcpiBoardInfoGuid   = {0xad3d31b, 0xb3d8, 0x4506, {0xae, 0x71, 0x2e, 0xf1, 0x10, 0x6, 0xd9, 0xf}}
+  gUefiSerialPortInfoGuid  = { 0x6c6872fe, 0x56a9, 0x4403, { 0xbb, 0x98, 0x95, 0x8d, 0x62, 0xde, 0x87, 0xf1 } }
+  gLoaderMemoryMapInfoGuid = { 0xa1ff7424, 0x7a1a, 0x478e, { 0xa9, 0xe4, 0x92, 0xf3, 0x57, 0xd1, 0x28, 0x32 } }
+  gEfiSmmStoreInfoHobGuid  = { 0xf585ca19, 0x881b, 0x44fb, { 0x3f, 0x3d, 0x81, 0x89, 0x7c, 0x57, 0xbb, 0x01 } }
+  gEfiTcgPhysicalPresenceInfoHobGuid = { 0xf367be59, 0x5891, 0x40eb, { 0x21, 0x44, 0xed, 0x2e, 0xac, 0x57, 0xfd, 0x14 }}
+
+  ## GUID used for ApuConfigurationUi FormSet guid and related variables.
+  gApuConfigurationFormsetGuid = {0x6f4e051b, 0x1c10, 0x422a, {0x98, 0xcf, 0x96, 0x2e, 0x78, 0x36, 0x5c, 0x74} }
+
+[Ppis]
+  gEfiPayLoadHobBasePpiGuid = { 0xdbe23aa1, 0xa342, 0x4b97, {0x85, 0xb6, 0xb2, 0x26, 0xf1, 0x61, 0x73, 0x89} }
+
+[Protocols]
+  #
+  # Gop Temp
+  #
+  gPlatformGOPPolicyGuid                  = { 0xec2e931b, 0x3281, 0x48a5, { 0x81, 0x07, 0xdf, 0x8a, 0x8b, 0xed, 0x3c, 0x5d } }
+
+################################################################################
+#
+# PCD Declarations section - list of all PCDs Declared by this Package
+#                            Only this package should be providing the
+#                            declaration, other packages should not.
+#
+################################################################################
+[PcdsFixedAtBuild, PcdsPatchableInModule]
+## Indicates the base address of the payload binary in memory
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase|0|UINT32|0x10000001
+## Provides the size of the payload binary in memory
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemSize|0|UINT32|0x10000002
+## Payload stack top
+gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop|0x90000|UINT32|0x10000004
+
+## FFS filename to find the shell application.
+gDasharoPayloadPkgTokenSpaceGuid.PcdShellFile|{ 0x83, 0xA5, 0x04, 0x7C, 0x3E, 0x9E, 0x1c, 0x4f, 0xAD, 0x65, 0xE0, 0x52, 0x68, 0xD0, 0xB4, 0xD1 }|VOID*|0x10000005
+
+### FFS filename to find the ipxe application.
+gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEFile|{ 0xC7, 0x53, 0x86, 0xb6, 0xA1, 0xEE, 0x35, 0x44, 0xA1, 0x99, 0xA4, 0x4F, 0x59, 0xE4, 0x47, 0x6C }|VOID*|0x10000006
+gDasharoPayloadPkgTokenSpaceGuid.PcdiPXEOptionName|L"iPXE"|VOID*|0x10000007
+
+
+## Used to help reduce fragmentation in the EFI memory map
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory|0x08|UINT32|0x10000012
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS|0x04|UINT32|0x10000013
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType|0x04|UINT32|0x00000014
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData|0xC0|UINT32|0x00000015
+gDasharoPayloadPkgTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode|0x80|UINT32|0x00000016
+## Used to block PCI OptionROM loading
+gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x10000017
+## Used to skip PS/2 keyboard detection.
+# Useful for laptops where the PS/2 keyboard is always connected.
+# If set to TRUE, Boot Manager will unconditionally add PS keyboard to ConIn.
+gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE|BOOLEAN|0x10000018
+
+[PcdsFixedAtBuild]
+## Specifies the initial value for Register_A in RTC.
+# @Prompt Initial value for Register_A in RTC.
+gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterA|0x26|UINT8|0x00000006
+
+## Specifies the initial value for Register_B in RTC.
+# @Prompt Initial value for Register_B in RTC.
+gPcAtChipsetPkgTokenSpaceGuid.PcdInitialValueRtcRegisterB|0x02|UINT8|0x00000002
+
+## Specifies the scan code of the key to enter boot menu
+gDasharoPayloadPkgTokenSpaceGuid.PcdBootMenuKey|0x0016|UINT16|0x00000007
+
+## Specifies the scan code of the key to enter boot menu
+gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
+
+gDasharoPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A
+gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B

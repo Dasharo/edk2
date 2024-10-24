@@ -64,6 +64,12 @@ OvmfPkg_Ubuntu_GCC5_          | IA32            |op32du|      |op32ru|      |op3
 
 `More OvmfPkg CI Build Information <OvmfPkg/PlatformCI/ReadMe.md>`__
 
+To use iPXE as payload:
+
+.. code-block:: bash
+
+  build -D NETWORK_IPXE=TRUE -D SERIAL_TERMINAL=FALSE -D SECURE_BOOT_ENABLE=TRUE -D BOOTLOADER=COREBOOT -D PCIE_BASE=0xe0000000 -DPS2_KEYBOARD_ENABLE -a IA32 -a X64 -t GCC5 -b DEBUG -p DasharoPayloadPkg/DasharoPayloadPkgIa32X64.dsc`
+
 
 License Details
 ---------------

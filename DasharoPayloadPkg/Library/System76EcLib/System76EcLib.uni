@@ -1,0 +1,13 @@
+// /** @file
+// System76 EC logging.
+//
+// Copyright (c) 2020, System76, Inc.
+// SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+// **/
+
+
+#string STR_MODULE_ABSTRACT             #language en-US "System76 EC logging"
+
+#string STR_MODULE_DESCRIPTION          #language en-US "System76 EC logging."
+

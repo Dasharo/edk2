@@ -1,0 +1,40 @@
+---
+default_stages: [pre-commit]
+
+default_install_hook_types: [pre-commit, commit-msg]
+
+ci:
+  autoupdate_commit_msg: 'pre-commit: autoupdate hooks'
+  autofix_prs: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+        files: ^DasharoModulePkg/
+      - id: check-merge-conflict
+        files: ^DasharoModulePkg/
+      - id: check-symlinks
+        files: ^DasharoModulePkg/
+      - id: detect-private-key
+        files: ^DasharoModulePkg/
+      - id: end-of-file-fixer
+        files: ^DasharoModulePkg/
+      - id: trailing-whitespace
+        files: ^DasharoModulePkg/
+      - id: mixed-line-ending
+        files: ^DasharoModulePkg/
+
+  - repo: https://github.com/talos-systems/conform
+    rev: v0.1.0-alpha.27
+    hooks:
+      - id: conform
+        stages:
+          - commit-msg
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.5
+    hooks:
+      - id: codespell
+        files: ^DasharoModulePkg/

@@ -1,0 +1,89 @@
+## @file
+# Dasharo Module Package
+#
+# Provides libraries specific to Dasharo firmware.
+#
+# Copyright (c) 2022, 3mdeb Sp. z o.o. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = DasharoModulePkg
+  PACKAGE_GUID                   = 34B742F3-EB9D-4204-8C9A-E1B47966A61F
+  PACKAGE_VERSION                = 0.1
+  PACKAGE_UNI_FILE               = DasharoModuleComponents.uni
+
+[Includes]
+  Include
+
+[LibraryClasses]
+  ##  @libraryclass  Provides a platform-specific method to return the password policy.
+  PlatformPasswordLib|Include/Library/PlatformPasswordLib.h
+
+[Guids]
+  gDasharoSystemFeaturesGuid = { 0xd15b327e, 0xff2d, 0x4fc1, { 0xab, 0xf6, 0xc1, 0x2b, 0xd0, 0x8c, 0x13, 0x59 }}
+  gDasharoSystemFeaturesTokenSpaceGuid = {0xc7d52e10, 0xadec, 0x4d49, { 0x9e, 0xc5, 0xb8, 0xcf, 0xcd, 0x4b, 0x9d, 0xb9 }}
+  gUserAuthFeaturePkgTokenSpaceGuid  =  {0xa2793a6e, 0x6af1, 0x45c4, {0x88, 0x4d, 0x3d, 0x0c, 0x7a, 0xfe, 0x91, 0xc6}}
+  ## Include Include/Guid/UserAuthentication.h
+  gUserAuthenticationGuid = { 0xee24a7f7, 0x606b, 0x4724, { 0xb3, 0xc9, 0xf5, 0xae, 0x4a, 0x3b, 0x81, 0x65}}
+
+[Ppis]
+
+[Protocols]
+  gDasharoNetworkBootPolicyGuid = { 0xdef83d91, 0x4613, 0x474c, { 0xa7, 0xad, 0xf7, 0x79, 0x10, 0x11, 0x43, 0xf2 }}
+  gDasharoUsbDriverPolicyGuid = { 0x808330b5, 0xbe46, 0x4a41, { 0x97, 0x79, 0x84, 0xa3, 0xd1, 0x31, 0xbb, 0xb4 }}
+  gDasharoUsbMassStoragePolicyGuid = { 0xd7d1a290, 0x651a, 0x4c90, { 0xbf, 0x09, 0x1b, 0x7c, 0x56, 0x7c, 0xd5, 0x9c }}
+  gDasharoPs2ControllerPolicyGuid = { 0x4885b96d, 0xbdf1, 0x496d, { 0xbc, 0x3d, 0x3e, 0x79, 0x57, 0x74, 0xcd, 0x40 }}
+  gDasharoSerialRedirectionPolicyGuid = { 0x0cd9776f, 0xd803, 0x42b4, { 0x95, 0xa4, 0xa8, 0x58, 0x46, 0x46, 0x23, 0xc9 }}
+
+[PcdsFixedAtBuild]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu|FALSE|BOOLEAN|0x00000001
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu|FALSE|BOOLEAN|0x00000002
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu|FALSE|BOOLEAN|0x00000003
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu|FALSE|BOOLEAN|0x00000004
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu|FALSE|BOOLEAN|0x00000005
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu|FALSE|BOOLEAN|0x00000006
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu|FALSE|BOOLEAN|0x00000007
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve|FALSE|BOOLEAN|0x00000008
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable|FALSE|BOOLEAN|0x00000009
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise|FALSE|BOOLEAN|0x0000000A
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|FALSE|BOOLEAN|0x0000000B
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions|FALSE|BOOLEAN|0x0000000C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault|500|UINT16|0x0000000D
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState|0xff|UINT8|0x0000000E
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType|TRUE|BOOLEAN|0x0000000F
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu|FALSE|BOOLEAN|0x00000010
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars|FALSE|BOOLEAN|0x00000011
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds|FALSE|BOOLEAN|0x00000012
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryMenu|FALSE|BOOLEAN|0x000000013
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|FALSE|BOOLEAN|0x000000014
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|FALSE|BOOLEAN|0x000000015
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption|FALSE|BOOLEAN|0x000000016
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|FALSE|BOOLEAN|0x000000017
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState|0|UINT8|0x000000018
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeHapAvailable|TRUE|BOOLEAN|0x000000019
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdS3SupportExperimental|FALSE|BOOLEAN|0x000000020
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios|FALSE|BOOLEAN|0x00000001A
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp|FALSE|BOOLEAN|0x00000001B
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowFum|TRUE|BOOLEAN|0x00000001C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|FALSE|BOOLEAN|0x00000001D
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3|FALSE|BOOLEAN|0x00000001E
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState|FALSE|BOOLEAN|0x00000001F
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart|FALSE|BOOLEAN|0x000000021
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault|FALSE|BOOLEAN|0x000000022
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold|FALSE|BOOLEAN|0x00000023
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature|100|UINT8|0x00000024
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuMenu|FALSE|BOOLEAN|0x000000025
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuCoreDisable|FALSE|BOOLEAN|0x000000026
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading|FALSE|BOOLEAN|0x000000027
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault|TRUE|BOOLEAN|0x000000028
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault|20|UINT8|0x00000029
+
+[PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
+  ## Indicate whether the password is cleared.
+  # When it is configured to Dynamic or DynamicEx, it can be set through detection using
+  # a platform-specific method (e.g. Board Jumper set) in a actual platform in early boot phase.<BR><BR>
+  # @Prompt The password clear status
+  gUserAuthFeaturePkgTokenSpaceGuid.PcdPasswordCleared|FALSE|BOOLEAN|0xF0000001

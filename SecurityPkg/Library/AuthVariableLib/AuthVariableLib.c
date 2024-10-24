@@ -17,6 +17,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "AuthServiceInternal.h"
+#include <DasharoOptions.h>
 
 ///
 /// Global database array for scratch
@@ -217,7 +218,7 @@ AuthVariableLibInitialize (
     //
     // "SecureBootEnable" not exist, initialize it in USER_MODE.
     //
-    SecureBootEnable = SECURE_BOOT_ENABLE;
+    SecureBootEnable = FixedPcdGet8 (PcdSecureBootDefaultEnable);
     Status           = AuthServiceInternalUpdateVariable (
                          EFI_SECURE_BOOT_ENABLE_NAME,
                          &gEfiSecureBootEnableDisableGuid,
@@ -230,6 +231,14 @@ AuthVariableLibInitialize (
     }
   }
 
+  Status = AuthServiceInternalFindVariable (DASHARO_VAR_FIRMWARE_UPDATE_MODE, &gDasharoSystemFeaturesGuid,
+                                            (VOID **) &Data, &DataSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
+  } else {
+    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
+  }
+
   //
   // Create "SecureBoot" variable with BS+RT attribute set.
   //
@@ -238,6 +247,10 @@ AuthVariableLibInitialize (
   } else {
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
   }
+
+  // Disable Secure Boot if FUM enabled in the project and currently active
+  if (PcdGetBool (PcdShowFum) && !EFI_ERROR (Status))
+    SecureBootMode = SECURE_BOOT_MODE_DISABLE;
 
   Status = AuthServiceInternalUpdateVariable (
              EFI_SECURE_BOOT_MODE_NAME,

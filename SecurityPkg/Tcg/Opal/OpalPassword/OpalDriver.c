@@ -2418,6 +2418,13 @@ OpalDriverStopDevice (
          Dev->Handle
          );
 
+  gBS->CloseProtocol(
+    Dev->Handle,
+    &gEfiBlockIo2ProtocolGuid,
+    gOpalDriverBinding.DriverBindingHandle,
+    Dev->Handle
+    );
+
   FreePool (Dev);
 }
 
@@ -2717,10 +2724,6 @@ OpalEfiDriverBindingSupported (
   EFI_STATUS                             Status;
   EFI_STORAGE_SECURITY_COMMAND_PROTOCOL  *SecurityCommand;
 
-  if (mOpalEndOfDxe) {
-    return EFI_UNSUPPORTED;
-  }
-
   //
   // Test EFI_STORAGE_SECURITY_COMMAND_PROTOCOL on controller Handle.
   //
@@ -2793,11 +2796,13 @@ OpalEfiDriverBindingStart (
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath
   )
 {
-  EFI_STATUS             Status;
-  EFI_BLOCK_IO_PROTOCOL  *BlkIo;
-  OPAL_DRIVER_DEVICE     *Dev;
-  OPAL_DRIVER_DEVICE     *Itr;
-  BOOLEAN                Result;
+  EFI_STATUS              Status;
+  EFI_STATUS              Status2;
+  EFI_BLOCK_IO_PROTOCOL   *BlkIo;
+  EFI_BLOCK_IO2_PROTOCOL  *BlkIo2;
+  OPAL_DRIVER_DEVICE      *Dev;
+  OPAL_DRIVER_DEVICE      *Itr;
+  BOOLEAN                 Result;
 
   Itr = mOpalDriver.DeviceList;
   while (Itr != NULL) {
@@ -2836,8 +2841,8 @@ OpalEfiDriverBindingStart (
   }
 
   //
-  // Open EFI_BLOCK_IO_PROTOCOL on controller Handle, required by EFI_STORAGE_SECURITY_COMMAND_PROTOCOL
-  // function APIs
+  // Open EFI_BLOCK_IO_PROTOCOL or EFI_BLOCK_IO2_PROTOCOL on controller
+  // Handle, required by EFI_STORAGE_SECURITY_COMMAND_PROTOCOL function APIs
   //
   Status = gBS->OpenProtocol (
                   Controller,
@@ -2847,43 +2852,70 @@ OpalEfiDriverBindingStart (
                   Controller,
                   EFI_OPEN_PROTOCOL_BY_DRIVER
                   );
-  if (EFI_ERROR (Status)) {
-    //
-    // Block_IO not supported on handle
-    //
-    if (Status == EFI_UNSUPPORTED) {
-      BlkIo = NULL;
-    } else {
-      //
-      // Close storage security that was opened
-      //
-      gBS->CloseProtocol (
-             Controller,
-             &gEfiStorageSecurityCommandProtocolGuid,
-             This->DriverBindingHandle,
-             Controller
-             );
 
-      FreePool (Dev);
-      return Status;
+  if (Status == EFI_UNSUPPORTED)
+    BlkIo = NULL;
+
+  if (EFI_ERROR (Status)) {
+    Status2 = gBS->OpenProtocol(
+      Controller,
+      &gEfiBlockIo2ProtocolGuid,
+      (VOID **)&BlkIo2,
+      This->DriverBindingHandle,
+      Controller,
+      EFI_OPEN_PROTOCOL_BY_DRIVER
+      );
+
+    if (EFI_ERROR (Status2)) {
+      //
+      // Block_IO not supported on handle
+      //
+      if (Status2 == EFI_UNSUPPORTED)
+        BlkIo2 = NULL;
+
+      if (Status != EFI_UNSUPPORTED && Status2 != EFI_UNSUPPORTED) {
+        //
+        // Close storage security that was opened
+        //
+        gBS->CloseProtocol (
+               Controller,
+               &gEfiStorageSecurityCommandProtocolGuid,
+               This->DriverBindingHandle,
+               Controller
+               );
+
+        FreePool (Dev);
+        return Status;
+      }
     }
   }
 
   //
   // Save mediaId
   //
-  if (BlkIo == NULL) {
+  if (BlkIo == NULL && BlkIo2 == NULL) {
     // If no Block IO present, use defined MediaId value.
     Dev->MediaId = 0x0;
   } else {
-    Dev->MediaId = BlkIo->Media->MediaId;
+    if (BlkIo) {
+      Dev->MediaId = BlkIo->Media->MediaId;
 
-    gBS->CloseProtocol (
-           Controller,
-           &gEfiBlockIoProtocolGuid,
-           This->DriverBindingHandle,
-           Controller
-           );
+      gBS->CloseProtocol (
+             Controller,
+             &gEfiBlockIoProtocolGuid,
+             This->DriverBindingHandle,
+             Controller
+             );
+    } else if (BlkIo2) {
+      Dev->MediaId = BlkIo2->Media->MediaId;
+
+      gBS->CloseProtocol (
+             Controller,
+             &gEfiBlockIo2ProtocolGuid,
+             This->DriverBindingHandle,
+             Controller
+             );
+    }
   }
 
   //

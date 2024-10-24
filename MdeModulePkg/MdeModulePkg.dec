@@ -1678,6 +1678,8 @@
   # @Prompt Boot Discovery Policy
   gEfiMdeModulePkgTokenSpaceGuid.PcdBootDiscoveryPolicy|2|UINT32|0x4000000f
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdDetectPs2KbOnCmdAck|TRUE|BOOLEAN|0x40000010
+
 [PcdsFixedAtBuild.AARCH64, PcdsPatchableInModule.AARCH64]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiExposedTableVersions|0x20|UINT32|0x0001004c
 
@@ -2166,6 +2168,13 @@
   ## The value of rate limiter event for timeout check. Default value is 100(unit 1ms).
   # @Prompt The value is use for Usb Network rate limiting supported.
   gEfiMdeModulePkgTokenSpaceGuid.PcdUsbNetworkRateLimitingFactor|100|UINT32|0x10000028
+
+  ## Controls whether to scan ESP partitions to detect pre-installed OSes and create boot options
+  # from it.
+  #   TRUE  - Create boot options for pre-installed OSes.<BR>
+  #   FALSE - Do not create boot options for pre-installed OSes.
+  # @Prompt Create boot options for pre-installed OSes.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions|FALSE|BOOLEAN|0x0001007a
 
 [PcdsPatchableInModule]
   ## Specify memory size with page number for PEI code when

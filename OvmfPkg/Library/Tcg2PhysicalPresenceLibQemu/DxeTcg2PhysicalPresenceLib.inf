@@ -57,15 +57,19 @@
   HobLib
   MemoryAllocationLib
   PrintLib
-  QemuFwCfgLib
   Tpm2CommandLib
   UefiBootManagerLib
   UefiBootServicesTableLib
   UefiLib
   UefiRuntimeServicesTableLib
+  Tcg2PhysicalPresencePlatformLib
+  CacheMaintenanceLib
 
 [Protocols]
   gEfiTcg2ProtocolGuid                 ## SOMETIMES_CONSUMES
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2PhysicalPresenceFlags       ## SOMETIMES_CONSUMES
 
 [Guids]
   ## SOMETIMES_CONSUMES ## HII

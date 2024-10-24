@@ -15,7 +15,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define PRODUCT_IDENTIFICATION_LENGTH  16
 
 CONST UINT16  mBmUsbLangId    = 0x0409; // English
-CHAR16        mBmUefiPrefix[] = L"UEFI ";
+//CHAR16        mBmUefiPrefix[] = L"UEFI ";
 
 LIST_ENTRY  mPlatformBootDescriptionHandlers = INITIALIZE_LIST_HEAD_VARIABLE (mPlatformBootDescriptionHandlers);
 
@@ -182,16 +182,16 @@ BmGetDescriptionFromDiskInfo (
       }
 
       Length                = Index;
-      Description[Length++] = L' ';
+      //Description[Length++] = L' ';
 
-      for (Index = 0; Index + 1 < SerialNumberLength; Index += 2) {
-        Description[Length + Index]     = (CHAR16)IdentifyData.SerialNo[Index + 1];
-        Description[Length + Index + 1] = (CHAR16)IdentifyData.SerialNo[Index];
-      }
+      //for (Index = 0; Index + 1 < SerialNumberLength; Index += 2) {
+      //  Description[Length + Index]     = (CHAR16)IdentifyData.SerialNo[Index + 1];
+      //  Description[Length + Index + 1] = (CHAR16)IdentifyData.SerialNo[Index];
+      //}
 
-      Length               += Index;
+      //Length               += Index;
       Description[Length++] = L'\0';
-      ASSERT (Length == ModelNameLength + SerialNumberLength + 2);
+      //ASSERT (Length == ModelNameLength + SerialNumberLength + 2);
 
       BmEliminateExtraSpaces (Description);
     }
@@ -316,15 +316,16 @@ BmGetUsbDescription (
     Product = &NullChar;
   }
 
-  Status = UsbIo->UsbGetStringDescriptor (
-                    UsbIo,
-                    mBmUsbLangId,
-                    DevDesc.StrSerialNumber,
-                    &SerialNumber
-                    );
-  if (EFI_ERROR (Status)) {
-    SerialNumber = &NullChar;
-  }
+  //Status = UsbIo->UsbGetStringDescriptor (
+  //                  UsbIo,
+  //                  mBmUsbLangId,
+  //                  DevDesc.StrSerialNumber,
+  //                  &SerialNumber
+  //                  );
+  //if (EFI_ERROR (Status)) {
+  //  SerialNumber = &NullChar;
+  //}
+  SerialNumber = &NullChar;
 
   if ((Manufacturer == &NullChar) &&
       (Product == &NullChar) &&
@@ -655,19 +656,19 @@ BmGetNvmeDescription (
       *(Char++) = (CHAR16)ControllerData.Mn[Index];
     }
 
-    *(Char++) = L' ';
-    for (Index = 0; Index < ARRAY_SIZE (ControllerData.Sn); Index++) {
-      *(Char++) = (CHAR16)ControllerData.Sn[Index];
-    }
+    //*(Char++) = L' ';
+    //for (Index = 0; Index < ARRAY_SIZE (ControllerData.Sn); Index++) {
+    //  *(Char++) = (CHAR16)ControllerData.Sn[Index];
+    //}
 
-    *(Char++) = L' ';
-    UnicodeValueToStringS (
-      Char,
-      sizeof (CHAR16) * (MAXIMUM_VALUE_CHARACTERS + 1),
-      0,
-      DevicePath.NvmeNamespace->NamespaceId,
-      0
-      );
+    //*(Char++) = L' ';
+    //UnicodeValueToStringS (
+    //  Char,
+    //  sizeof (CHAR16) * (MAXIMUM_VALUE_CHARACTERS + 1),
+    //  0,
+    //  DevicePath.NvmeNamespace->NamespaceId,
+    //  0
+    //  );
     BmEliminateExtraSpaces (Description);
   }
 
@@ -817,10 +818,12 @@ BmGetBootDescription (
       // Avoid description confusion between UEFI & Legacy boot option by adding "UEFI " prefix
       // ONLY for core provided boot description handler.
       //
-      Temp = AllocatePool (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix));
+      //Temp = AllocatePool (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix));
+      Temp = AllocatePool (StrSize (DefaultDescription));
       ASSERT (Temp != NULL);
-      StrCpyS (Temp, (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix)) / sizeof (CHAR16), mBmUefiPrefix);
-      StrCatS (Temp, (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix)) / sizeof (CHAR16), DefaultDescription);
+      //StrCpyS (Temp, (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix)) / sizeof (CHAR16), mBmUefiPrefix);
+      //StrCatS (Temp, (StrSize (DefaultDescription) + sizeof (mBmUefiPrefix)) / sizeof (CHAR16), DefaultDescription);
+      StrCpyS (Temp, StrSize (DefaultDescription) / sizeof (CHAR16), DefaultDescription);
       FreePool (DefaultDescription);
       DefaultDescription = Temp;
       break;

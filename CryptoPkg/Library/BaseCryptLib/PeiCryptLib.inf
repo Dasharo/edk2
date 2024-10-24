@@ -81,7 +81,6 @@
   BaseMemoryLib
   MemoryAllocationLib
   DebugLib
-  OpensslLib
   IntrinsicLib
   PrintLib
   PeiServicesTablePointerLib

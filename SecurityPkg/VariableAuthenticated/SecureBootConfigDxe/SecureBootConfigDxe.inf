@@ -50,12 +50,16 @@
   UefiHiiServicesLib
   DebugLib
   HiiLib
+  PcdLib
   PlatformSecureLib
   DevicePathLib
   FileExplorerLib
   PeCoffLib
   SecureBootVariableLib
   SecureBootVariableProvisionLib
+
+[FixedPcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
 
 [Guids]
   ## SOMETIMES_CONSUMES      ## Variable:L"CustomMode"

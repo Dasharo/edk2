@@ -1,0 +1,55 @@
+## @file
+#  Driver for DXE phase to publish Dasharo APU Configuration form
+#
+#  Copyright (c) 2024, 3mdeb All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ApuConfigurationUi
+  MODULE_UNI_FILE                = ApuConfigurationUi.uni
+  FILE_GUID                      = D21C607C-B034-4727-AA91-7B156907CDEA
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 2.0
+  ENTRY_POINT                    = ApuConfigurationUiEntry
+  UNLOAD_IMAGE                   = ApuConfigurationUiUnload
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 AARCH64
+#
+
+[Sources]
+  ApuConfigurationUi.c
+  ApuConfigurationUiStrings.uni
+  ApuConfigurationUiVfr.Vfr
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  DevicePathLib
+  BaseLib
+  UefiRuntimeServicesTableLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  DebugLib
+  HiiLib
+  UefiLib
+  BaseMemoryLib
+
+[Guids]
+  gApuConfigurationFormsetGuid
+  gEfiIfrFrontPageGuid
+
+[Protocols]
+  gEfiDevicePathProtocolGuid                    ## PRODUCES
+
+[Depex]
+  gEfiHiiDatabaseProtocolGuid        AND
+  gEfiVariableArchProtocolGuid       AND
+  gEfiVariableWriteArchProtocolGuid

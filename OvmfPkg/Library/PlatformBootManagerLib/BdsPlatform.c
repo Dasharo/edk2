@@ -14,6 +14,12 @@
 #include <Library/PlatformBmPrintScLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Library/XenPlatformLib.h>
+#include <Guid/TtyTerm.h>
+#include <DasharoOptions.h>
+
+EFI_GUID mBootMenuFile = {
+  0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
+};
 
 //
 // Global data
@@ -82,8 +88,219 @@ InstallDevicePathCallback (
   VOID
   );
 
+EFI_DEVICE_PATH *
+FvFilePath (
+  EFI_GUID                     *FileGuid
+  )
+{
+
+  EFI_STATUS                         Status;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+  return AppendDevicePathNode (
+           DevicePathFromHandle (LoadedImage->DeviceHandle),
+           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
+           );
+}
+
+/**
+  Create one boot option for BootManagerMenuApp.
+
+  @param  FileGuid          Input file guid for the BootManagerMenuApp.
+  @param  Description       Description of the BootManagerMenuApp boot option.
+  @param  Position          Position of the new load option to put in the ****Order variable.
+  @param  IsBootCategory    Whether this is a boot category.
+
+
+  @retval OptionNumber      Return the option number info.
+
+**/
+UINTN
+RegisterBootManagerMenuAppBootOption (
+  EFI_GUID                         *FileGuid,
+  CHAR16                           *Description,
+  UINTN                            Position,
+  BOOLEAN                          IsBootCategory
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
+  EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
+  UINTN                            OptionNumber;
+
+  DevicePath = FvFilePath (FileGuid);
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  Status = EfiBootManagerAddLoadOptionVariable (&NewOption, Position);
+  ASSERT_EFI_ERROR (Status);
+
+  OptionNumber = NewOption.OptionNumber;
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+
+  return OptionNumber;
+}
+
+/**
+  Check if it's a Device Path pointing to BootManagerMenuApp.
+
+  @param  DevicePath     Input device path.
+
+  @retval TRUE   The device path is BootManagerMenuApp File Device Path.
+  @retval FALSE  The device path is NOT BootManagerMenuApp File Device Path.
+**/
+BOOLEAN
+IsBootManagerMenuAppFilePath (
+  EFI_DEVICE_PATH_PROTOCOL     *DevicePath
+)
+{
+  EFI_HANDLE                      FvHandle;
+  VOID                            *NameGuid;
+  EFI_STATUS                      Status;
+
+  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &DevicePath, &FvHandle);
+  if (!EFI_ERROR (Status)) {
+    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *) DevicePath);
+    if (NameGuid != NULL) {
+      return CompareGuid (NameGuid, &mBootMenuFile);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+  Return the boot option number to the BootManagerMenuApp.
+
+  If not found it in the current boot option, create a new one.
+
+  @retval OptionNumber   Return the boot option number to the BootManagerMenuApp.
+
+**/
+UINTN
+GetBootManagerMenuAppOption (
+  VOID
+  )
+{
+  UINTN                        BootOptionCount;
+  EFI_BOOT_MANAGER_LOAD_OPTION *BootOptions;
+  UINTN                        Index;
+  UINTN                        OptionNumber;
+
+  OptionNumber = 0;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+    if (IsBootManagerMenuAppFilePath (BootOptions[Index].FilePath)) {
+      OptionNumber = BootOptions[Index].OptionNumber;
+      break;
+    }
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+
+  if (Index >= BootOptionCount) {
+    //
+    // If not found the BootManagerMenuApp, create it.
+    //
+    OptionNumber = (UINT16) RegisterBootManagerMenuAppBootOption (&mBootMenuFile, L"UEFI BootManagerMenuApp", (UINTN) -1, FALSE);
+  }
+
+  return OptionNumber;
+}
+
 VOID
 PlatformRegisterFvBootOption (
+  EFI_GUID  *FileGuid,
+  CHAR16    *Description,
+  UINT32    Attributes,
+  BOOLEAN   BootNow
+  )
+{
+  EFI_STATUS                         Status;
+  INTN                               OptionIndex;
+  EFI_BOOT_MANAGER_LOAD_OPTION       NewOption;
+  EFI_BOOT_MANAGER_LOAD_OPTION       *BootOptions;
+  UINTN                              BootOptionCount;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **)&LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
+  DevicePath = AppendDevicePathNode (
+                 DevicePath,
+                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
+                 );
+  ASSERT (DevicePath != NULL);
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             Attributes,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  if (BootNow)
+    EfiBootManagerBoot (&NewOption);
+
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &NewOption,
+                  BootOptions,
+                  BootOptionCount
+                  );
+
+  if (OptionIndex == -1) {
+    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+    ASSERT_EFI_ERROR (Status);
+  }
+
+  EfiBootManagerFreeLoadOption (&NewOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+VOID
+PlatformUnregisterFvBootOption (
   EFI_GUID  *FileGuid,
   CHAR16    *Description,
   UINT32    Attributes
@@ -138,8 +355,9 @@ PlatformRegisterFvBootOption (
                   BootOptionCount
                   );
 
-  if (OptionIndex == -1) {
-    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
     ASSERT_EFI_ERROR (Status);
   }
 
@@ -341,6 +559,7 @@ PlatformRegisterOptionsAndKeys (
   EFI_INPUT_KEY                 F2;
   EFI_INPUT_KEY                 Esc;
   EFI_BOOT_MANAGER_LOAD_OPTION  BootOption;
+  UINTN                         OptionNumber;
 
   //
   // Register ENTER as CONTINUE key
@@ -359,11 +578,12 @@ PlatformRegisterOptionsAndKeys (
   Esc.UnicodeChar = CHAR_NULL;
   Status          = EfiBootManagerGetBootManagerMenu (&BootOption);
   ASSERT_EFI_ERROR (Status);
+  OptionNumber = GetBootManagerMenuAppOption ();
   Status = EfiBootManagerAddKeyOptionVariable (
              NULL,
-             (UINT16)BootOption.OptionNumber,
+             (UINT16)OptionNumber,
              0,
-             &F2,
+             &Esc,
              NULL
              );
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
@@ -371,7 +591,7 @@ PlatformRegisterOptionsAndKeys (
              NULL,
              (UINT16)BootOption.OptionNumber,
              0,
-             &Esc,
+             &F2,
              NULL
              );
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
@@ -426,7 +646,7 @@ PlatformBootManagerBeforeConsole (
   EFI_HANDLE     Handle;
   EFI_STATUS     Status;
   UINT16         FrontPageTimeout;
-  RETURN_STATUS  PcdStatus;
+  UINTN          DataSize;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerBeforeConsole\n"));
   InstallDevicePathCallback ();
@@ -502,29 +722,37 @@ PlatformBootManagerBeforeConsole (
     XenDetected () ? gXenPlatformConsole : gPlatformConsole
     );
 
-  FrontPageTimeout = GetFrontPageTimeoutFromQemu ();
-  PcdStatus        = PcdSet16S (PcdPlatformBootTimeOut, FrontPageTimeout);
-  ASSERT_RETURN_ERROR (PcdStatus);
-  //
-  // Reflect the PCD in the standard Timeout variable.
-  //
-  Status = gRT->SetVariable (
+  DataSize = sizeof(FrontPageTimeout);
+  Status = gRT->GetVariable(
                   EFI_TIME_OUT_VARIABLE_NAME,
                   &gEfiGlobalVariableGuid,
-                  (EFI_VARIABLE_NON_VOLATILE |
-                   EFI_VARIABLE_BOOTSERVICE_ACCESS |
-                   EFI_VARIABLE_RUNTIME_ACCESS),
-                  sizeof FrontPageTimeout,
+                  NULL,
+                  &DataSize,
                   &FrontPageTimeout
                   );
-  DEBUG ((
-    EFI_ERROR (Status) ? DEBUG_ERROR : DEBUG_VERBOSE,
-    "%a: SetVariable(%s, %u): %r\n",
-    __func__,
-    EFI_TIME_OUT_VARIABLE_NAME,
-    FrontPageTimeout,
-    Status
-    ));
+  if (EFI_ERROR (Status)) {
+    FrontPageTimeout = GetFrontPageTimeoutFromQemu ();
+    //
+    // Reflect the PCD in the standard Timeout variable.
+    //
+    Status = gRT->SetVariable (
+                    EFI_TIME_OUT_VARIABLE_NAME,
+                    &gEfiGlobalVariableGuid,
+                    (EFI_VARIABLE_NON_VOLATILE |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS),
+                    sizeof FrontPageTimeout,
+                    &FrontPageTimeout
+                    );
+    DEBUG ((
+      EFI_ERROR (Status) ? DEBUG_ERROR : DEBUG_VERBOSE,
+      "%a: SetVariable(%s, %u): %r\n",
+      __FUNCTION__,
+      EFI_TIME_OUT_VARIABLE_NAME,
+      FrontPageTimeout,
+      Status
+      ));
+  }
 
   if (!FeaturePcdGet (PcdBootRestrictToFirmware)) {
     PlatformRegisterOptionsAndKeys ();
@@ -698,6 +926,7 @@ PrepareLpcBridgeDevicePath (
   EFI_STATUS                Status;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
+  EFI_GUID                  TerminalTypeGuid;
   CHAR16                    *DevPathStr;
 
   DevicePath = NULL;
@@ -736,6 +965,10 @@ PrepareLpcBridgeDevicePath (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gUartDeviceNode
                  );
+
+  TerminalTypeGuid = gEfiTtyTermGuid;
+  CopyGuid (&gTerminalTypeDeviceNode.Guid, &TerminalTypeGuid);
+
   DevicePath = AppendDevicePathNode (
                  DevicePath,
                  (EFI_DEVICE_PATH_PROTOCOL *)&gTerminalTypeDeviceNode
@@ -1775,8 +2008,17 @@ PlatformBootManagerAfterConsole (
   )
 {
   EFI_BOOT_MODE  BootMode;
+  BOOLEAN        NetBootEnabled;
+  UINTN          VarSize;
+  EFI_STATUS     Status;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerAfterConsole\n"));
+
+  // This is probably the earliest we can print this, as before the console is
+  // not ready yet.
+  Print(L"F2 to enter Setup\n");
+  Print(L"ESC to enter Boot Manager Menu\n");
+  Print(L"ENTER to boot directly\n");
 
   if (PcdGetBool (PcdOvmfFlashVariablesEnable)) {
     DEBUG ((
@@ -1834,13 +2076,51 @@ PlatformBootManagerAfterConsole (
     EfiBootManagerRefreshAllBootOption ();
   }
 
+  VarSize = sizeof (NetBootEnabled);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_NETWORK_BOOT,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &NetBootEnabled
+      );
+
+  //
+  // Register iPXE
+  //
+  if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
+    if (NetBootEnabled) {
+      DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
+      PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE,
+                                    FALSE);
+    } else {
+        DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
+        PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                        (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                        LOAD_OPTION_ACTIVE);
+    }
+  } else if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
+    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                  LOAD_OPTION_ACTIVE,
+                                  FALSE);
+  } else {
+    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
+    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE);
+  }
   //
   // Register UEFI Shell
   //
   PlatformRegisterFvBootOption (
     &gUefiShellFileGuid,
-    L"EFI Internal Shell",
-    LOAD_OPTION_ACTIVE
+    L"UEFI Shell",
+    LOAD_OPTION_ACTIVE,
+    FALSE
     );
 
   //
@@ -1849,7 +2129,8 @@ PlatformBootManagerAfterConsole (
   PlatformRegisterFvBootOption (
     &gGrubFileGuid,
     L"Grub Bootloader",
-    LOAD_OPTION_ACTIVE
+    LOAD_OPTION_ACTIVE,
+    FALSE
     );
 
   RemoveStaleFvFileOptions ();
@@ -1977,8 +2258,22 @@ PlatformBootManagerWaitCallback (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  Black;
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  White;
   UINT16                               TimeoutInitial;
+  UINTN                                DataSize;
+  EFI_STATUS                           Status;
 
-  TimeoutInitial = PcdGet16 (PcdPlatformBootTimeOut);
+  DEBUG ((EFI_D_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
+
+  DataSize = sizeof (TimeoutInitial);
+  Status = gRT->GetVariable(
+                  EFI_TIME_OUT_VARIABLE_NAME,
+                  &gEfiGlobalVariableGuid,
+                  NULL,
+                  &DataSize,
+                  &TimeoutInitial
+                  );
+  if (EFI_ERROR (Status)) {
+    TimeoutInitial = PcdGet16 (PcdPlatformBootTimeOut);
+  }
 
   //
   // If PcdPlatformBootTimeOut is set to zero, then we consider

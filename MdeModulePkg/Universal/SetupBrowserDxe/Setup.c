@@ -53,7 +53,7 @@ BOOLEAN                gResetRequiredSystemLevel = FALSE;
 BOOLEAN                gExitRequired;
 BOOLEAN                gFlagReconnect;
 BOOLEAN                gCallbackReconnect;
-BROWSER_SETTING_SCOPE  gBrowserSettingScope  = FormSetLevel;
+BROWSER_SETTING_SCOPE  gBrowserSettingScope  = SystemLevel;
 BOOLEAN                mBrowserScopeFirstSet = TRUE;
 EXIT_HANDLER           ExitHandlerFunction   = NULL;
 FORM_BROWSER_FORMSET   *mSystemLevelFormSet;

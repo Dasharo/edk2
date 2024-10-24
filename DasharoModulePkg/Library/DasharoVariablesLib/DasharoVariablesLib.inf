@@ -1,0 +1,85 @@
+#
+#  A library for providing services related to Dasharo-specific EFI variables.
+#
+#  Copyright (c) 2024, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = DasharoVariablesLib
+  MODULE_UNI_FILE                = DasharoVariablesLib.uni
+  FILE_GUID                      = F7C51973-0F61-4955-87D2-710FD578D161
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = DasharoVariablesLib|DXE_DRIVER UEFI_APPLICATION
+  CONSTRUCTOR                    = DasharoVariablesLibConstructor
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  DasharoVariablesLib.c
+
+[Packages]
+  DasharoModulePkg/DasharoModulePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  TpmMeasurementLib
+  PcdLib
+  UefiLib
+
+[Guids]
+  gDasharoSystemFeaturesGuid           ### CONSUMES
+  gApuConfigurationFormsetGuid         ### SOMETIMES CONSUMES
+
+[Pcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowOcWdtOptions
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtTimeoutDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultPowerFailureState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowLockBios
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSmmBwp
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSleepTypeDefaultS3
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdOcWdtEnableDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuThrottlingThreshold
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuCoreDisable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault
+
+  gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
