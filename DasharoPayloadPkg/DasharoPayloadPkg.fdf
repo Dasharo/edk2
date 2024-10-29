@@ -203,7 +203,10 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
 
-
+FILE DRIVER = CDBD2D34-0E33-46A8-A6E8-38AE30899FA1 {
+  SECTION PE32 = DasharoPayloadPkg/FmpDxe.efi
+  SECTION UI = "NuvotonTpmFmpDxe"
+}
 
 #
 # SCSI/ATA/IDE/DISK Support
