@@ -115,5 +115,5 @@ IsLockFmpDeviceAtLockEventGuidRequired (
   VOID
   )
 {
-  return TRUE;
+  return FALSE;
 }
