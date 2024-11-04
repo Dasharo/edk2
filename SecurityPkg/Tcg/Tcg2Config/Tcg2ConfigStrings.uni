@@ -12,7 +12,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_TCG2_HELP                       #language en-US "Press <Enter> to select TCG2 Setup options."
 
 #string STR_TCG2_DEVICE_STATE_PROMPT        #language en-US "Current TPM Device"
-#string STR_TCG2_DEVICE_STATE_HELP          #language en-US "Current TPM Device: Disable, TPM1.2, or TPM2.0"
+#string STR_TCG2_DEVICE_STATE_HELP          #language en-US "Current TPM Device: Not Found, Unknown, TPM1.2, or TPM2.0"
 #string STR_TCG2_DEVICE_STATE_CONTENT       #language en-US ""
 
 #string STR_TCG2_DEVICE_PROMPT              #language en-US "Attempt TPM Device"
