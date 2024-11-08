@@ -86,7 +86,7 @@ TERMINAL_DEV  mTerminalDevTemplate = {
 
   NULL, // ControllerNameTable
   NULL, // TimerEvent
-  NULL, // TwoSecondTimeOut
+  NULL, // EscapeTimeout
   INPUT_STATE_DEFAULT,
   RESET_STATE_DEFAULT,
   {
@@ -359,7 +359,7 @@ StopTerminalStateMachine (
   OriginalTpl = gBS->RaiseTPL (TPL_NOTIFY);
 
   gBS->CloseEvent (TerminalDevice->TimerEvent);
-  gBS->CloseEvent (TerminalDevice->TwoSecondTimeOut);
+  gBS->CloseEvent (TerminalDevice->EscapeTimeout);
 
   gBS->RestoreTPL (OriginalTpl);
 }
@@ -397,7 +397,7 @@ StartTerminalStateMachine (
                   TPL_CALLBACK,
                   NULL,
                   NULL,
-                  &TerminalDevice->TwoSecondTimeOut
+                  &TerminalDevice->EscapeTimeout
                   );
   ASSERT_EFI_ERROR (Status);
 }

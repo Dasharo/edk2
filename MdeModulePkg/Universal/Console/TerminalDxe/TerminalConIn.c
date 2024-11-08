@@ -1238,7 +1238,7 @@ UnicodeToEfiKeyFlushState (
   // Cancel the timer.
   //
   gBS->SetTimer (
-         TerminalDevice->TwoSecondTimeOut,
+         TerminalDevice->EscapeTimeout,
          TimerCancel,
          0
          );
@@ -1345,7 +1345,7 @@ UnicodeToEfiKey (
   EFI_INPUT_KEY  Key;
   BOOLEAN        SetDefaultResetState;
 
-  TimerStatus = gBS->CheckEvent (TerminalDevice->TwoSecondTimeOut);
+  TimerStatus = gBS->CheckEvent (TerminalDevice->EscapeTimeout);
 
   if (!EFI_ERROR (TimerStatus)) {
     UnicodeToEfiKeyFlushState (TerminalDevice);
@@ -1357,7 +1357,7 @@ UnicodeToEfiKey (
       //
       // Check to see if the 2 seconds timer has expired
       //
-      TimerStatus = gBS->CheckEvent (TerminalDevice->TwoSecondTimeOut);
+      TimerStatus = gBS->CheckEvent (TerminalDevice->EscapeTimeout);
       if (!EFI_ERROR (TimerStatus)) {
         UnicodeToEfiKeyFlushState (TerminalDevice);
         TerminalDevice->ResetState = RESET_STATE_DEFAULT;
@@ -2092,9 +2092,9 @@ UnicodeToEfiKey (
 
     if (TerminalDevice->InputState != INPUT_STATE_DEFAULT) {
       Status = gBS->SetTimer (
-                      TerminalDevice->TwoSecondTimeOut,
+                      TerminalDevice->EscapeTimeout,
                       TimerRelative,
-                      (UINT64)20000000
+                      PcdGet64 (PcdEscapeTimeout)
                       );
       ASSERT_EFI_ERROR (Status);
       continue;
