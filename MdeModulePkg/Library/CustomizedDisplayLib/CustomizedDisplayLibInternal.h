@@ -53,7 +53,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FORMSET_CLASS_FRONT_PAGE             0x0002
 
 
-#define FRONT_PAGE_HEADER_HEIGHT      6
+#define FRONT_PAGE_HEADER_HEIGHT      5
 #define NONE_FRONT_PAGE_HEADER_HEIGHT 3
 #define FOOTER_HEIGHT                 5
 #define STATUS_BAR_HEIGHT             1

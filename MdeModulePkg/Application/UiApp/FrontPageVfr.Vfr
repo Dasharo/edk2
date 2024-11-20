@@ -24,6 +24,11 @@ formset
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
 
     banner
+      title = STRING_TOKEN(STR_FRONT_PAGE_BANNER_TITLE),
+      line  0,
+      align center;
+
+    banner
       title = STRING_TOKEN(STR_FRONT_PAGE_COMPUTER_MODEL),
       line  1,
       align left;
@@ -46,26 +51,6 @@ formset
     banner
       title = STRING_TOKEN(STR_FRONT_PAGE_MEMORY_SIZE),
       line  3,
-      align right;
-
-    banner
-      title = STRING_TOKEN(STR_CUSTOMIZE_BANNER_LINE4_LEFT),
-      line  4,
-      align left;
-
-    banner
-      title = STRING_TOKEN(STR_CUSTOMIZE_BANNER_LINE4_RIGHT),
-      line  4,
-      align right;
-
-    banner
-      title = STRING_TOKEN(STR_CUSTOMIZE_BANNER_LINE5_LEFT),
-      line  5,
-      align left;
-
-    banner
-      title = STRING_TOKEN(STR_CUSTOMIZE_BANNER_LINE5_RIGHT),
-      line  5,
       align right;
 
     label LABEL_FRANTPAGE_INFORMATION;
