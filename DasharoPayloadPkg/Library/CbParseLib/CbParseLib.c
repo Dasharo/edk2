@@ -461,6 +461,7 @@ ParseMemoryInfo (
       /* ACPI/SMBIOS/CBMEM has it's own tag */
       case CB_MEM_ACPI:
       case CB_MEM_TABLE:
+      case CB_MEM_SOFT_RESERVED:
         MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
         MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
         break;

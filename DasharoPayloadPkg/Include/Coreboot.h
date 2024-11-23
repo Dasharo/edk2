@@ -111,13 +111,14 @@ struct cb_memory_range {
   UINT32 type;
 };
 
-#define CB_MEM_RAM    1
-#define CB_MEM_RESERVED     2
-#define CB_MEM_ACPI   3
-#define CB_MEM_NVS    4
-#define CB_MEM_UNUSABLE     5
-#define CB_MEM_VENDOR_RSVD  6
-#define CB_MEM_TABLE       16
+#define CB_MEM_RAM           1
+#define CB_MEM_RESERVED      2
+#define CB_MEM_ACPI          3
+#define CB_MEM_NVS           4
+#define CB_MEM_UNUSABLE      5
+#define CB_MEM_VENDOR_RSVD   6
+#define CB_MEM_TABLE         16
+#define CB_MEM_SOFT_RESERVED 0xefffffff
 
 struct cb_memory {
   UINT32 tag;
