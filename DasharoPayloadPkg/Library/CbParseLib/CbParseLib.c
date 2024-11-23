@@ -362,7 +362,10 @@ ParseCbMemTable (
   return Status;
 }
 
-
+#define MSR_TOP_MEM 0xC001001A
+#define MSR_TOM2    0xC001001D
+#define TOLUD       0xBC
+#define TOUUD       0xA8
 
 /**
   Acquire the memory information from the coreboot table in memory.
@@ -385,9 +388,20 @@ ParseMemoryInfo (
   struct cb_memory_range   *Range;
   UINTN                    Index;
   MEMROY_MAP_ENTRY         MemoryMap;
-  UINT32                   Tolud;
+  UINT64                   Tolud;
+  UINT64                   Touud;
 
-  Tolud = PciRead32(PCI_LIB_ADDRESS(0,0,0,0xbc)) & 0xFFF00000;
+  Tolud = 0;
+  Touud = 0;
+
+  if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x8086) /* Intel */ {
+    Tolud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOLUD)) & 0xFFF00000;
+    Touud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD)) & 0xFFF00000;
+    Touud |= RShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
+  } else if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x1022) /* AMD */ {
+    Tolud = AsmReadMsr64(MSR_TOP_MEM);
+    Touud = AsmReadMsr64(MSR_TOM2);
+  }
 
   //
   // Get the coreboot memory table
@@ -411,13 +425,27 @@ ParseMemoryInfo (
       /* Only MMIO is marked reserved */
       case CB_MEM_RESERVED:
         /*
-         * Reserved memory Below TOLUD can't be MMIO except legacy VGA which
-         * is reported elsewhere as reserved.
+         * Reserved memory Below TOLUD/TOUUD can't be MMIO except legacy VGA
+         * which is reported elsewhere as reserved.
          */
-        if (MemoryMap.Base < Tolud) {
-          MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
-          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        if (MemoryMap.Base >= BASE_4GB && Touud != 0) {
+          if (MemoryMap.Base < Touud) {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          } else {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          }
+        } else if (MemoryMap.Base < BASE_4GB && Tolud != 0) {
+          if (MemoryMap.Base < Tolud) {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          } else {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          }
         } else {
+          /* Fallback, if not Intel/AMD or TOLUD/TOUUD is zero, treat everything as MMIO */
           MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
           MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
         }
