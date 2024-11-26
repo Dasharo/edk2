@@ -31,7 +31,7 @@ jobs:
       run: |
         git clone https://git.ipxe.org/ipxe.git && \
         cd ipxe && \
-        git checkout 77b07ea4fdc259d7253c6f9df2beda6e6c7a9d85 && \
+        git checkout e9a23a5b394f40c1525c40416105eaaa1787f749 && \
         sed -i 's|//#define\s*IMAGE_SCRIPT.*|#define IMAGE_SCRIPT|' "src/config/general.h" && \
         sed -i 's|.*DOWNLOAD_PROTO_HTTPS|#define DOWNLOAD_PROTO_HTTPS|g'  "src/config/general.h" && \
         wget https://raw.githubusercontent.com/Dasharo/dasharo-blobs/main/dasharo/dasharo.ipxe && \
@@ -42,14 +42,14 @@ jobs:
         docker run --rm -i -v $PWD/ipxe:/home/coreboot/ipxe:rw \
           -v $PWD/.github:/home/coreboot/ipxe/.github \
           -u $(id -u):$(id -g) -w /home/coreboot/ipxe \
-          coreboot/coreboot-sdk:2021-09-23_b0d87f753c \
+          coreboot/coreboot-sdk:2024-02-18_732134932b \
          ./.github/scripts/build-ipxe.sh
 
     - name: Build OVMF Firmware Image
       run: |
         docker run --rm -i -v $PWD:/home/coreboot/coreboot:rw \
           -u $(id -u):$(id -g) -w /home/coreboot/coreboot \
-          coreboot/coreboot-sdk:2021-09-23_b0d87f753c \
+          coreboot/coreboot-sdk:2024-02-18_732134932b \
          ./.github/scripts/build-qemu.sh
 
     - name: Check RELEASE build Artifacts
@@ -75,7 +75,7 @@ jobs:
         fi
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ovmf-artifacts  # Name for the artifact
         path: |
