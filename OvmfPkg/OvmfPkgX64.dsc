@@ -284,6 +284,7 @@
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
 
   DasharoVariablesLib|DasharoModulePkg/Library/DasharoVariablesLib/DasharoVariablesLib.inf
+  BlParseLib|OvmfPkg/Library/QemuParseLib/QemuParseLib.inf
 
   #
   # Network libraries
