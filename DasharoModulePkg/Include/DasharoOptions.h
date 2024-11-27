@@ -54,6 +54,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define DASHARO_FAN_CURVE_OPTION_SILENT        0
 #define DASHARO_FAN_CURVE_OPTION_PERFORMANCE   1
+#define DASHARO_FAN_CURVE_OPTION_OFF           2
 
 #define DASHARO_ME_MODE_ENABLE                 0
 #define DASHARO_ME_MODE_DISABLE_HECI           1
