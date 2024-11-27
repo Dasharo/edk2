@@ -91,10 +91,12 @@
 #string STR_FAN_CURVE_PROMPT   #language en-US "Fan profile"
 #string STR_FAN_CURVE_HELP     #language en-US "Sets the preferred fan operation mode.\n\n"
                                                  "Silent: The fan will operate at lower speeds to reduce noise.\n\n"
-                                                 "Performance: The fans will work at higher speeds to reduce temperature and increase performance."
+                                                 "Performance: The fans will work at higher speeds to reduce temperature and increase performance.\n\n"
+                                                 "Fans Off: The fans will be turned off."
 
 #string STR_FAN_CURVE_SILENT        #language en-US "Silent"
 #string STR_FAN_CURVE_PERFORMANCE   #language en-US "Performance"
+#string STR_FAN_CURVE_OFF           #language en-US "Fans Off"
 
 #string STR_DMA_PROTECTION_PROMPT      #language en-US "Early boot DMA Protection"
 #string STR_DMA_PROTECTION_HELP        #language en-US "Enables IOMMU DMA protection early during POST."
