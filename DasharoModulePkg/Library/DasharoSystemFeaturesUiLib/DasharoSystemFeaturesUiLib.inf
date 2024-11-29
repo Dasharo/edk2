@@ -95,3 +95,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuCoreDisable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption
