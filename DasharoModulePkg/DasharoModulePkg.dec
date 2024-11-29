@@ -80,6 +80,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading|FALSE|BOOLEAN|0x000000027
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault|TRUE|BOOLEAN|0x000000028
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault|20|UINT8|0x00000029
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption|FALSE|BOOLEAN|0x00000002A
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
