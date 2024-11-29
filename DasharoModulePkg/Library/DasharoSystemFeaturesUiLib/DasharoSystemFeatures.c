@@ -197,6 +197,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowCpuHyperThreading) = FixedPcdGetBool(PcdShowCpuHyperThreading);
   PRIVATE_DATA(WatchdogAvailable) = FixedPcdGetBool (PcdShowOcWdtOptions);
   PRIVATE_DATA(ShowPowerFailureState) = FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN;
+  PRIVATE_DATA(HideFanCurveOff) = !FixedPcdGetBool (PcdPowerMenuShowFanCurveOffOption);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
