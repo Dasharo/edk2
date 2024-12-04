@@ -1130,7 +1130,7 @@ BootMaintCallback (
         // 1. Update the menus (including legacy munu) show in BootMiantenanceManager page.
         // 2. Re-scan the BootOption menus (including the legacy boot option).
         //
-        CustomizeMenus ();
+        // CustomizeMenus ();
         EfiBootManagerRefreshAllBootOption ();
         BOpt_GetBootOptions (Private);
         mFirstEnterBMMForm = TRUE;
@@ -1556,6 +1556,8 @@ InitializeBmmConfig (
   GetConsoleOutCheck (CallbackData);
   GetConsoleErrCheck (CallbackData);
   GetTerminalAttribute (CallbackData);
+
+  CustomizeMenus();
 
   CallbackData->BmmFakeNvData.ForceReconnect = TRUE;
 
