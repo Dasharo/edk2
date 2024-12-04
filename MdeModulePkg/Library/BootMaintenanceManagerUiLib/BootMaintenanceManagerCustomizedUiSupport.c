@@ -125,12 +125,14 @@ BmmCreateTimeOutMenu (
   DefaultOpCodeHandle = HiiAllocateOpCodeHandle ();
   ASSERT (DefaultOpCodeHandle != NULL);
 
-  HiiCreateDefaultOpCode (
-    DefaultOpCodeHandle,
-    EFI_HII_DEFAULT_CLASS_STANDARD,
-    EFI_IFR_TYPE_NUM_SIZE_16,
-    PcdGet16 (PcdPlatformBootTimeOut)
-    );
+  if (DefaultOpCodeHandle != NULL ) {
+    HiiCreateDefaultOpCode (
+      DefaultOpCodeHandle,
+      EFI_HII_DEFAULT_CLASS_STANDARD,
+      EFI_IFR_TYPE_NUM_SIZE_16,
+      PcdGet16 (PcdPlatformBootTimeOut)
+      );
+  }
 
   HiiCreateNumericOpCode (
     StartOpCodeHandle,
@@ -144,10 +146,12 @@ BmmCreateTimeOutMenu (
     0,
     65535,
     0,
-    DefaultOpCodeHandle
+    DefaultOpCodeHandle ? DefaultOpCodeHandle : NULL
     );
 
-  HiiFreeOpCodeHandle (DefaultOpCodeHandle);
+  if (DefaultOpCodeHandle != NULL) {
+    HiiFreeOpCodeHandle (DefaultOpCodeHandle);
+  }
 }
 
 /**
