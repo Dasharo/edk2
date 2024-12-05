@@ -197,6 +197,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(WatchdogAvailable) = FixedPcdGetBool (PcdShowOcWdtOptions);
   PRIVATE_DATA(ShowPowerFailureState) = FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN;
   PRIVATE_DATA(HideFanCurveOff) = !FixedPcdGetBool (PcdPowerMenuShowFanCurveOffOption);
+  PRIVATE_DATA(PowerMenuShowUsbPower) = FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
@@ -217,6 +218,7 @@ DasharoSystemFeaturesUiLibConstructor (
                                   FixedPcdGetBool (PcdPowerMenuShowSleepType) ||
                                   FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds) ||
                                   FixedPcdGetBool (PcdShowCpuThrottlingThreshold) ||
+                                  FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption) ||
                                   (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
 
   if (PRIVATE_DATA(ShowCpuMenu))
@@ -275,6 +277,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
   LOAD_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
+  LOAD_VAR (DASHARO_VAR_USB_PORT_POWER, UsbPortPower);
 
 #undef LOAD_VAR
 
@@ -548,6 +551,7 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, FixedPcdGetBool (PcdPowerMenuShowFanCurve));
     STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds));
     STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, FixedPcdGetBool (PcdShowCpuThrottlingThreshold));
+    STORE_VAR_IF (DASHARO_VAR_USB_PORT_POWER, UsbPortPower, FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption));
   }
 
   if (FixedPcdGetBool (PcdShowPciMenu)) {

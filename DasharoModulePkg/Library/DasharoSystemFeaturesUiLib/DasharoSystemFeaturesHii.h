@@ -47,6 +47,7 @@ typedef struct {
   BOOLEAN  PowerMenuShowFanCurve;
   BOOLEAN  PowerMenuShowSleepType;
   BOOLEAN  PowerMenuShowBatteryThresholds;
+  BOOLEAN  PowerMenuShowUsbPower;
   BOOLEAN  DasharoEnterprise;
   BOOLEAN  SecurityMenuShowIommu;
   BOOLEAN  PciMenuShowResizeableBars;
@@ -94,6 +95,7 @@ typedef struct {
   UINT8                    SmallCoreMaxCount;
   UINT8                    CoreActiveCount;
   UINT8                    CoreMaxCount;
+  UINT8                    UsbPortPower;
 } DASHARO_FEATURES_DATA;
 
 //
@@ -131,6 +133,9 @@ typedef struct {
 
 #define CPU_CORES_ENABLE_ALL           DASHARO_CPU_CORES_ENABLE_ALL
 
+#define USB_POWER_ON_WHEN_POWERED      DASHARO_USB_POWER_ON_WHEN_POWERED
+#define USB_POWER_ALWAYS_ON            DASHARO_USB_POWER_ALWAYS_ON
+
 //
 // Question IDs are used in VFR file to let the code in
 // DasharoSystemFeaturesCallback() know what form element caused
@@ -152,5 +157,6 @@ typedef struct {
 #define HYPER_THREADING_QUESTION_ID          0x800C
 #define CPU_THROTTLING_OFFSET_QUESTION_ID    0x800D
 #define CPU_THROTTLING_THRESHOLD_QUESTION_ID 0x800E
+#define USB_PORTS_POWER_QUESTION_ID          0x800F
 
 #endif
