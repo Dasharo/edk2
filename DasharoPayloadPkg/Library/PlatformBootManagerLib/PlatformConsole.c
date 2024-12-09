@@ -330,9 +330,6 @@ PrepareLpcBridgeDevicePath (
     return Status;
   }
 
-  /* Start the drivers for all child devices of this controller/device */
-  gBS->ConnectController (DeviceHandle, NULL, NULL, TRUE);
-
   TempDevicePath = DevicePath;
 
   /* Don't bother with adding PS/2 keyboard if PS/2 not enabled in the project */
