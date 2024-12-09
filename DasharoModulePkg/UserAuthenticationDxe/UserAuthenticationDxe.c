@@ -108,7 +108,8 @@ GetUserInput (
           // add Next key entry
           //
           UserInput[InputLength] = InputKey.UnicodeChar;
-          Mask[InputLength] = L'*';
+          //Mask[InputLength] = L'*';
+          Mask[InputLength] = InputKey.UnicodeChar;
           InputLength++;
         }
       }
