@@ -322,6 +322,7 @@ IsPasswordSet (
   Return if the password is strong.
   Criteria:
   1) length >= PASSWORD_MIN_SIZE
+  2) include lower case, upper case, number, symbol.
 
   @param[in]  Password               The user input password.
   @param[in]  PasswordSize           The size of Password in byte.
@@ -345,6 +346,24 @@ IsPasswordStrong (
     return FALSE;
   }
 
+  HasLowerCase = FALSE;
+  HasUpperCase = FALSE;
+  HasNumber = FALSE;
+  HasSymbol = FALSE;
+  for (Index = 0; Index < PasswordSize - 1; Index++) {
+    if (Password[Index] >= 'a' && Password[Index] <= 'z') {
+      HasLowerCase = TRUE;
+    } else if (Password[Index] >= 'A' && Password[Index] <= 'Z') {
+      HasUpperCase = TRUE;
+    } else if (Password[Index] >= '0' && Password[Index] <= '9') {
+      HasNumber = TRUE;
+    } else {
+      HasSymbol = TRUE;
+    }
+  }
+  if ((!HasLowerCase) || (!HasUpperCase) || (!HasNumber) || (!HasSymbol)) {
+    return FALSE;
+  }
   return TRUE;
 }
 
