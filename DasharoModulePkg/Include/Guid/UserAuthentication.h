@@ -12,8 +12,8 @@
 #define PASSWORD_MIN_SIZE    9  // MIN number of chars of password, including NULL.
 #define PASSWORD_MAX_SIZE    65 // MAX number of chars of password, including NULL.
 
-#define PASSWORD_SALT_SIZE   32
-#define PASSWORD_HASH_SIZE   32 // SHA256_DIGEST_SIZE
+#define PASSWORD_SALT_SIZE   64
+#define PASSWORD_HASH_SIZE   64 // SHA256_DIGEST_SIZE
 
 #define PASSWORD_MAX_TRY_COUNT  3
 #define PASSWORD_HISTORY_CHECK_COUNT  5
