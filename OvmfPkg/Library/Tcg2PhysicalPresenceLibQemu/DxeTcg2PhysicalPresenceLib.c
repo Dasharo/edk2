@@ -138,6 +138,7 @@ QemuTpmInitPPI (
     mPpi->NextStep    = TCG2_PHYSICAL_PRESENCE_NO_ACTION;
   }
 
+  WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
   return EFI_SUCCESS;
 
 InvalidPpiAddress:
@@ -804,12 +805,13 @@ Tcg2ExecutePendingTpmRequest (
       if (mPpi->Request != TCG2_PHYSICAL_PRESENCE_NO_ACTION) {
         break;
       }
-
+      WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
       return;
   }
 
   Print (L"Rebooting system to make TPM2 settings in effect\n");
   WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
+  gBS->Stall(500000);
   gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
   ASSERT (FALSE);
 }
