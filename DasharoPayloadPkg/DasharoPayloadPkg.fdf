@@ -165,6 +165,8 @@ INF MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
 INF OvmfPkg/SioBusDxe/SioBusDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
 INF MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
+!endif
+!if $(PS2_MOUSE_ENABLE) == TRUE
 INF MdeModulePkg/Bus/Isa/Ps2MouseDxe/Ps2MouseDxe.inf
 !endif
 
@@ -194,7 +196,7 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
 !else
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
- 
+
 
 
 #
@@ -203,36 +205,51 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
 INF MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
 INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
 INF MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
+!if $(HAVE_SATA) == TRUE
 INF MdeModulePkg/Bus/Pci/SataControllerDxe/SataControllerDxe.inf
+!endif
+!if $(HAVE_ATA) == TRUE
 INF MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
 INF MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+!endif
+!if $(HAVE_NVME) == TRUE
 INF MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
+!endif
+!if $(HAVE_SCSI) == TRUE
 INF MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
 INF MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
+!endif
 
 INF FatPkg/EnhancedFatDxe/Fat.inf
 
 #
 # Filesystem drivers
 #
-!if $(ARCH) == IA32
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/exfat.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext2.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ntfs.inf
-INF  RuleOverride=BINARY USE = IA32 FSDrivers/ext4.inf
-!else
-INF  RuleOverride=BINARY USE = X64 FSDrivers/exfat.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ext2.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ntfs.inf
-INF  RuleOverride=BINARY USE = X64 FSDrivers/ext4.inf
+!if $(SUPPORT_FS_EXFAT)
+INF  RuleOverride=BINARY USE = $(ARCH) FSDrivers/exfat.inf
+!endif
+!if $(SUPPORT_FS_EXT2)
+INF  RuleOverride=BINARY USE = $(ARCH) FSDrivers/ext2.inf
+!endif
+!if $(SUPPORT_FS_NTFS)
+INF  RuleOverride=BINARY USE = $(ARCH) FSDrivers/ntfs.inf
+!endif
+!if $(SUPPORT_FS_EXT4)
+INF  RuleOverride=BINARY USE = $(ARCH) FSDrivers/ext4.inf
 !endif
 
 #
 # SD/eMMC Support
 #
+!if $(HAVE_SD) == TRUE || $(HAVE_EMMC) == TRUE
 INF MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+!endif
+!if $(HAVE_EMMC) == TRUE
 INF MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+!endif
+!if $(HAVE_SD) == TRUE
 INF MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+!endif
 
 #
 # Usb Support
@@ -242,9 +259,11 @@ INF MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
 INF MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
-INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+!if $(SUPPORT_USB_MOUSE) == TRUE
+INF MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
+!endif
 
 #
 # Hash2
@@ -390,7 +409,9 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 !endif
 !endif
 
+!if $(SUPPORT_SCREENSHOT)
 INF CrScreenshotDxe/CrScreenshotDxe.inf
+!endif
 
 ################################################################################
 #

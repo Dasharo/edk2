@@ -26,6 +26,21 @@
 
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
+  DEFINE PS2_MOUSE_ENABLE             = FALSE
+
+  DEFINE HAVE_SATA                    = FALSE
+  DEFINE HAVE_ATA                     = FALSE
+  DEFINE HAVE_SCSI                    = FALSE
+  DEFINE HAVE_NVME                    = FALSE
+  DEFINE HAVE_SD                      = FALSE
+  DEFINE HAVE_EMMC                    = FALSE
+
+  DEFINE SUPPORT_SCREENSHOT           = FALSE
+  DEFINE SUPPORT_USB_MOUSE            = FALSE
+  DEFINE SUPPORT_FS_NTFS              = FALSE
+  DEFINE SUPPORT_FS_EXFAT             = FALSE
+  DEFINE SUPPORT_FS_EXT2              = FALSE
+  DEFINE SUPPORT_FS_EXT4              = FALSE
 
   #
   # SBL:      UEFI payload for Slim Bootloader
@@ -748,7 +763,9 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
   DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
+!if $(SUPPORT_SCREENSHOT)
   CrScreenshotDxe/CrScreenshotDxe.inf
+!endif
 
   #
   # SMBIOS Support
@@ -779,19 +796,33 @@
   MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
   MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
   FatPkg/EnhancedFatDxe/Fat.inf
+!if $(HAVE_SATA) == TRUE
   MdeModulePkg/Bus/Pci/SataControllerDxe/SataControllerDxe.inf
+!endif
+!if $(HAVE_ATA) == TRUE
   MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
   MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
+!endif
+!if $(HAVE_NVME) == TRUE
   MdeModulePkg/Bus/Pci/NvmExpressDxe/NvmExpressDxe.inf
+!endif
+!if $(HAVE_SCSI) == TRUE
   MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
   MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
+!endif
 
   #
   # SD/eMMC Support
   #
+!if $(HAVE_SD) == TRUE || $(HAVE_EMMC) == TRUE
   MdeModulePkg/Bus/Pci/SdMmcPciHcDxe/SdMmcPciHcDxe.inf
+!endif
+!if $(HAVE_EMMC) == TRUE
   MdeModulePkg/Bus/Sd/EmmcDxe/EmmcDxe.inf
+!endif
+!if $(HAVE_SD) == TRUE
   MdeModulePkg/Bus/Sd/SdDxe/SdDxe.inf
+!endif
 
   #
   # Usb Support
@@ -801,9 +832,11 @@
   MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
-  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+!if $(SUPPORT_USB_MOUSE) == TRUE
+  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
+!endif
 
   #
   # ISA Support
@@ -826,6 +859,8 @@
   OvmfPkg/SioBusDxe/SioBusDxe.inf
 !if $(PS2_KEYBOARD_ENABLE) == TRUE
   MdeModulePkg/Bus/Isa/Ps2KeyboardDxe/Ps2KeyboardDxe.inf
+!endif
+!if $(PS2_MOUSE_ENABLE) == TRUE
   MdeModulePkg/Bus/Isa/Ps2MouseDxe/Ps2MouseDxe.inf
 !endif
 
@@ -843,7 +878,6 @@
 !else
   DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
-
 
   #
   # Network Support
