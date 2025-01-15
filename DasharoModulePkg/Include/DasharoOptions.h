@@ -47,6 +47,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_SMBIOS_UUID  L"Type1UUID"
 #define DASHARO_VAR_SMBIOS_SN    L"Type2SN"
 
+#define DASHARO_VAR_QUIET_BOOT   L"QuietBoot"
+#define DASHARO_VAR_FAST_BOOT    L"FastBoot"
+
 //
 // Constants for some of the above EFI variables which typically have a value of
 // UINT8 type.
