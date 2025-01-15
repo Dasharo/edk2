@@ -70,6 +70,8 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
   { DASHARO_VAR_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
   { DASHARO_VAR_HYPER_THREADING, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuHyperThreading) },
+  { DASHARO_VAR_QUIET_BOOT, TRUE },
+  { DASHARO_VAR_FAST_BOOT, TRUE },
 };
 
 /**
@@ -179,6 +181,14 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_HYPER_THREADING) == 0) {
     Data.Boolean = FixedPcdGetBool (PcdCpuHyperThreadingDefault);
     Size = sizeof (Data.Boolean);
+  } else if (StrCmp (VarName, DASHARO_VAR_QUIET_BOOT) == 0) {
+    Data.Boolean = FALSE;
+    Size = sizeof (Data.Boolean);
+    ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
+  } else if (StrCmp (VarName, DASHARO_VAR_FAST_BOOT) == 0) {
+    Data.Boolean = FALSE;
+    Size = sizeof (Data.Boolean);
+    ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));
     ASSERT ((0 && "No default value set for a variable."));
