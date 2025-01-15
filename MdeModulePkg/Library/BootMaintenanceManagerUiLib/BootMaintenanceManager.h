@@ -37,6 +37,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/FileExplorerLib.h>
 #include "BootMaintenanceManagerCustomizedUi.h"
 
+#include <DasharoOptions.h>
+
 #pragma pack(1)
 
 ///
