@@ -41,6 +41,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FORM_DRIVER_ADD_FILE_DESCRIPTION_ID  0x1020
 #define FORM_CON_MODE_ID                     0x1021
 #define FORM_BOOT_FROM_FILE_ID               0x1024
+#define FORM_QUIET_BOOT_ID                   0x1025
+#define FORM_FAST_BOOT_ID                    0x1026
 
 #define MAXIMUM_FORM_ID  0x10FF
 
@@ -100,6 +102,8 @@ typedef struct {
   //
   UINT16     BootTimeOut;
   UINT32     BootNext;
+  BOOLEAN    QuietBoot;
+  BOOLEAN    FastBoot;
 
   //
   // This is the COM1 Attributes value storage
