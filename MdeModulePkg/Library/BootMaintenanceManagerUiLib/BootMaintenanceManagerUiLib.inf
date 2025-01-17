@@ -77,6 +77,8 @@
   gEfiIfrTianoGuid                              ## SOMETIMES_CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
   gEfiIfrBootMaintenanceGuid                    ## CONSUMES ## GUID
+  gDasharoSystemFeaturesGuid                    ## CONSUMES ## Variable:L"QuietBoot"
+                                                ## CONSUMES ## Variable:L"FastBoot"
 
 [Protocols]
   gEfiSimpleFileSystemProtocolGuid              ## CONSUMES
