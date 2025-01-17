@@ -23,6 +23,10 @@ EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
 };
 
+// Defined and initialized in BdsDxe
+extern BOOLEAN mQuietBoot;
+extern BOOLEAN mFastBoot;
+
 VOID
 InstallReadyToLock (
   VOID
@@ -1576,10 +1580,15 @@ PlatformBootManagerAfterConsole (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
-  // FIXME: USB devices are not being detected unless we wait a bit.
-  gBS->Stall (100 * 1000);
+  if (!mFastBoot) {
+    // FIXME: USB devices are not being detected unless we wait a bit.
+    // But don't wait with fastboot enabled. We typically don't boot a full blown OS from USB.
+    gBS->Stall (100 * 1000);
 
-  EfiBootManagerConnectAll ();
+    // With fast boot, we can't call ConnectAll as it would connect all consoles.
+    EfiBootManagerConnectAll ();
+  }
+
   EfiBootManagerRefreshAllBootOption ();
 
   //
@@ -1677,22 +1686,27 @@ PlatformBootManagerAfterConsole (
           &BootMenuEnable
         );
 
-  if (PcdGetBool (PcdPrintSolStrings))
-    PrintSolStrings();
+  // Print the prompt and SOL strings only if Quiet Boot and Fast Boot are disabled.
+  // Do not refresh the logo, it should stay intact.
+  if (!mFastBoot && !mQuietBoot) {
 
-  Print (L"%-5s to enter Setup\n", SetupMenuKey);
+    if (PcdGetBool (PcdPrintSolStrings))
+      PrintSolStrings();
 
-  if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
-    Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
+    Print (L"%-5s to enter Setup\n", SetupMenuKey);
 
-  Print (L"ENTER to boot directly\n");
+    if (EFI_ERROR(Status) || VarSize != sizeof(BootMenuEnable) || BootMenuEnable)
+      Print (L"%-5s to enter Boot Manager Menu\n", BootMenuKey);
 
-  EfiCreateEventReadyToBootEx (
-             TPL_CALLBACK,
-             RefreshLogo,
-             NULL,
-             &Event
-             );
+    Print (L"ENTER to boot directly\n");
+
+    EfiCreateEventReadyToBootEx (
+               TPL_CALLBACK,
+               RefreshLogo,
+               NULL,
+               &Event
+               );
+  }
 }
 
 /**
@@ -1713,6 +1727,11 @@ PlatformBootManagerWaitCallback (
   EFI_STATUS                          Status;
 
   DEBUG ((EFI_D_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
+
+  // Don't print progress BAR on quiet or fast boot
+  if (mFastBoot || mQuietBoot)
+    return;
+
 
   DataSize = sizeof(Timeout);
   Status = gRT->GetVariable(
