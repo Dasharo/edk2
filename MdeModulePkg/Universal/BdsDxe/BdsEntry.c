@@ -17,6 +17,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "HwErrRecSupport.h"
 #include <Library/VariablePolicyHelperLib.h>
 
+#include <DasharoOptions.h>
+
 #define SET_BOOT_OPTION_SUPPORT_KEY_COUNT(a, c)  { \
       (a) = ((a) & ~EFI_BOOT_OPTION_SUPPORT_COUNT) | (((c) << LowBitSet32 (EFI_BOOT_OPTION_SUPPORT_COUNT)) & EFI_BOOT_OPTION_SUPPORT_COUNT); \
       }
@@ -50,6 +52,9 @@ CHAR16  *mBdsLoadOptionName[] = {
   L"Boot",
   L"PlatformRecovery"
 };
+
+BOOLEAN mQuietBoot = FALSE;
+BOOLEAN mFastBoot = FALSE;
 
 /**
   Event to Connect ConIn.
@@ -323,16 +328,20 @@ BdsWait (
 
   DEBUG ((DEBUG_INFO, "[Bds]BdsWait ...Zzzzzzzzzzzz...\n"));
 
-  DataSize = sizeof(BootTimeout);
-  Status = gRT->GetVariable(
-                  EFI_TIME_OUT_VARIABLE_NAME,
-                  &gEfiGlobalVariableGuid,
-                  NULL,
-                  &DataSize,
-                  &BootTimeout
-                  );
-  if (EFI_ERROR (Status)) {
-    BootTimeout = PcdGet16 (PcdPlatformBootTimeOut);
+  if (mFastBoot) {
+    BootTimeout = 0;
+  } else {
+    DataSize = sizeof(BootTimeout);
+    Status = gRT->GetVariable(
+                    EFI_TIME_OUT_VARIABLE_NAME,
+                    &gEfiGlobalVariableGuid,
+                    NULL,
+                    &DataSize,
+                    &BootTimeout
+                    );
+    if (EFI_ERROR (Status)) {
+      BootTimeout = PcdGet16 (PcdPlatformBootTimeOut);
+    }
   }
 
   TimeoutRemain = BootTimeout;
@@ -797,6 +806,35 @@ BdsEntry (
     }
   }
 
+  DataSize = sizeof(mQuietBoot);
+  Status = gRT->GetVariable(
+                  DASHARO_VAR_QUIET_BOOT,
+                  &gDasharoSystemFeaturesGuid,
+                  NULL,
+                  &DataSize,
+                  &mQuietBoot
+                  );
+  if (EFI_ERROR (Status)) {
+    mQuietBoot = FALSE;
+  }
+
+  DataSize = sizeof(mFastBoot);
+  Status = gRT->GetVariable(
+                  DASHARO_VAR_FAST_BOOT,
+                  &gDasharoSystemFeaturesGuid,
+                  NULL,
+                  &DataSize,
+                  &mFastBoot
+                  );
+  if (EFI_ERROR (Status)) {
+    mFastBoot = FALSE;
+  }
+
+  DEBUG ((DEBUG_ERROR, "Quiet Boot %sabled.\n", mQuietBoot ? L"en" : L"dis"));
+  DEBUG ((DEBUG_ERROR, "Fast Boot %sabled.\n", mFastBoot ? L"en" : L"dis"));
+  DEBUG ((DEBUG_ERROR, "Console on demand %sabled.\n",
+          PcdGetBool (PcdConInConnectOnDemand) ? L"en" : L"dis"));
+
   //
   // Initialize L"BootOptionSupport" EFI global variable.
   // Lazy-ConIn implictly disables BDS hotkey.
@@ -902,6 +940,7 @@ BdsEntry (
   // Initialize ConnectConIn event before calling platform code.
   //
   if (PcdGetBool (PcdConInConnectOnDemand)) {
+    DEBUG ((DEBUG_INFO, "Console on demand enabled\n"));
     Status = gBS->CreateEventEx (
                     EVT_NOTIFY_SIGNAL,
                     TPL_CALLBACK,
