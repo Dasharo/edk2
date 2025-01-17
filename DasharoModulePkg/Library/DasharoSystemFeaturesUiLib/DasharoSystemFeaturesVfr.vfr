@@ -369,19 +369,18 @@ formset
               maximum = 63,
               step    = 1,
 
-              write   set(FeaturesData.CpuThrottlingThreshold, get(FeaturesData.CpuMaxTemperature) - pushthis);
+              write   set(FeaturesData.CpuThrottlingThreshold, FixedPcdGet8(PcdCpuMaxTemperature) - pushthis);
 
       endnumeric;
 
       grayoutif TRUE;
         numeric varid   = FeaturesData.CpuThrottlingThreshold,
+                questionid = CPU_THROTTLING_THRESHOLD_QUESTION_ID,
                 prompt  = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_PROMPT),
                 help    = STRING_TOKEN(STR_CPU_THROTTLING_THRESHOLD_HELP),
+                flags   = INTERACTIVE,
                 minimum = 0,
                 maximum = 255,
-
-                read   get(FeaturesData.CpuMaxTemperature) - get(FeaturesData.CpuThrottlingOffset);
-
         endnumeric;
       endif;
     endif;
