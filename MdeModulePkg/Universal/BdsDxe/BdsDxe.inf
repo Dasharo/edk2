@@ -37,6 +37,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   DevicePathLib
@@ -74,6 +75,8 @@
   gConnectConInEventGuid                        ## SOMETIMES_CONSUMES ## Event
   gEdkiiStatusCodeDataTypeVariableGuid          ## SOMETIMES_CONSUMES ## GUID
   gEfiEventReadyToBootGuid                      ## CONSUMES           ## Event
+  gDasharoSystemFeaturesGuid                    ## CONSUMES ## Variable:L"QuietBoot"
+                                                ## CONSUMES ## Variable:L"FastBoot"
 
 [Protocols]
   gEfiBdsArchProtocolGuid                       ## PRODUCES
