@@ -192,7 +192,6 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowPs2Option) = FixedPcdGetBool (PcdShowPs2Option);
   PRIVATE_DATA(Have2ndUart) = FixedPcdGetBool (PcdHave2ndUart);
   PRIVATE_DATA(ShowCpuThrottlingThreshold) = FixedPcdGetBool (PcdShowCpuThrottlingThreshold);
-  PRIVATE_DATA(CpuMaxTemperature) = FixedPcdGet8 (PcdCpuMaxTemperature);
   PRIVATE_DATA(ShowCpuCoreDisable) = FixedPcdGetBool(PcdShowCpuCoreDisable);
   PRIVATE_DATA(ShowCpuHyperThreading) = FixedPcdGetBool(PcdShowCpuHyperThreading);
   PRIVATE_DATA(WatchdogAvailable) = FixedPcdGetBool (PcdShowOcWdtOptions);
@@ -280,7 +279,7 @@ DasharoSystemFeaturesUiLibConstructor (
 #undef LOAD_VAR
 
   PRIVATE_DATA(CpuThrottlingThreshold) =
-    PRIVATE_DATA(CpuMaxTemperature) - PRIVATE_DATA(CpuThrottlingOffset);
+    FixedPcdGet8(PcdCpuMaxTemperature) - PRIVATE_DATA(CpuThrottlingOffset);
 
   if (PRIVATE_DATA(HybridCpuArchitecture) &&
       PRIVATE_DATA(SmallCoreActiveCount) == 0 &&
@@ -620,11 +619,30 @@ DasharoSystemFeaturesCallback (
   EFI_STATUS                                 Status;
   EFI_INPUT_KEY                              Key;
   BOOLEAN                                    Enable;
+  DASHARO_SYSTEM_FEATURES_PRIVATE_DATA       *Private;
 
   Enable = TRUE;
   Status = EFI_SUCCESS;
+  Private = DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_FROM_THIS (This);
 
   switch (Action) {
+  case EFI_BROWSER_ACTION_RETRIEVE:
+    switch (QuestionId) {
+    case CPU_THROTTLING_THRESHOLD_QUESTION_ID:
+      /*
+       * For some reason CpuMaxTemperature is zeroed when user changes CPU
+       * throttling, exits PWR MGMT menu, goes to front page and goes back to
+       * PWR MGMT menu again. It results in the negative throttling threshold
+       * to be displayed. Always calculate the threshold based on PCD and
+       * current throttling offset value.
+       */
+      Value->u8 = FixedPcdGet8(PcdCpuMaxTemperature) - Private->DasharoFeaturesData.CpuThrottlingOffset;
+      break;
+    default:
+      Status = EFI_UNSUPPORTED;
+      break;
+    }
+    break;
   case EFI_BROWSER_ACTION_DEFAULT_STANDARD:
   case EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING:
     {
