@@ -25,6 +25,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
@@ -52,6 +53,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand
 
 [Depex]
   gEfiVariableArchProtocolGuid
