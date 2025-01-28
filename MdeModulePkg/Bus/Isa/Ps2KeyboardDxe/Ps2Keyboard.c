@@ -202,6 +202,8 @@ KbdControllerDriverStart (
   UINT8                     Data;
   EFI_STATUS_CODE_VALUE     StatusCode;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
+  FAST_BOOT_POLICY_PROTOCOL *FastBootPolicy;
+  BOOLEAN                   ExtendedVerification;
 
   StatusCode = 0;
 
@@ -371,10 +373,21 @@ KbdControllerDriverStart (
     DevicePath
     );
 
+  Status = gBS->LocateProtocol (
+                  &gDasharoFastBootPolicyGuid,
+                  NULL,
+                  (VOID **)&FastBootPolicy
+                  );
+
+  if (!EFI_ERROR (Status))
+    ExtendedVerification = FALSE;
+  else
+    ExtendedVerification = FeaturePcdGet (PcdPs2KbdExtendedVerification);
+
   //
   // Reset the keyboard device
   //
-  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, FeaturePcdGet (PcdPs2KbdExtendedVerification));
+  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, ExtendedVerification);
   if (EFI_ERROR (Status)) {
     Status     = EFI_DEVICE_ERROR;
     StatusCode = EFI_PERIPHERAL_KEYBOARD | EFI_P_EC_NOT_DETECTED;
