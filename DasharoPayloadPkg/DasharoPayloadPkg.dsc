@@ -638,6 +638,7 @@
 !endif
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
