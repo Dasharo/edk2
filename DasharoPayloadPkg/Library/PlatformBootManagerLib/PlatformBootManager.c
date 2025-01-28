@@ -551,6 +551,39 @@ IsPciDisplay (
   return IS_PCI_DISPLAY (&Pci);
 }
 
+/**
+  This FILTER_FUNCTION checks if a handle corresponds to a PCI display device.
+**/
+STATIC
+BOOLEAN
+EFIAPI
+IsPciMassStorage (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  )
+{
+  EFI_STATUS          Status;
+  EFI_PCI_IO_PROTOCOL *PciIo;
+  PCI_TYPE00          Pci;
+
+  Status = gBS->HandleProtocol (Handle, &gEfiPciIoProtocolGuid,
+                  (VOID**)&PciIo);
+  if (EFI_ERROR (Status)) {
+    //
+    // This is not an error worth reporting.
+    //
+    return FALSE;
+  }
+
+  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint32, 0 /* Offset */,
+                        sizeof Pci / sizeof (UINT32), &Pci);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: %s: %r\n", __FUNCTION__, ReportText, Status));
+    return FALSE;
+  }
+
+  return IS_PCI_MASS_STORAGE (&Pci);
+}
 
 /**
   This CALLBACK_FUNCTION attempts to connect a handle non-recursively, asking
@@ -576,6 +609,25 @@ Connect (
     __FUNCTION__, ReportText, Status));
 }
 
+STATIC
+VOID
+EFIAPI
+ConnectRecursive (
+  IN EFI_HANDLE   Handle,
+  IN CONST CHAR16 *ReportText
+  )
+{
+  EFI_STATUS Status;
+
+  Status = gBS->ConnectController (
+                  Handle, // ControllerHandle
+                  NULL,   // DriverImageHandle
+                  NULL,   // RemainingDevicePath -- produce all children
+                  TRUE    // Recursive
+                  );
+  DEBUG ((EFI_ERROR (Status) ? EFI_D_ERROR : EFI_D_VERBOSE, "%a: %s: %r\n",
+    __FUNCTION__, ReportText, Status));
+}
 
 /**
   This CALLBACK_FUNCTION retrieves the EFI_DEVICE_PATH_PROTOCOL from the
@@ -727,6 +779,19 @@ PlatformBootManagerBeforeConsole (
   // ErrOut.
   //
   FilterAndProcess (&gEfiGraphicsOutputProtocolGuid, NULL, AddOutput);
+
+  if (mFastBoot) {
+    //
+    // Find all mass storage class PCI devices and connect them
+    // non-recursively (do we have to handle other cases than PCI?). This
+    // should produce a number of child handles with storage-specific drivers
+    // on them. Connecting the storages may be needed, e.g. if Linux is
+    // installed on a separate driver than ESP. In such a case GRUB will not
+    // be able to find the grub.cfg on rootfs. Otherwise the boot manager
+    // would only connect the driver to the disk which is booted.
+    //
+    FilterAndProcess (&gEfiPciIoProtocolGuid, IsPciMassStorage, ConnectRecursive);
+  }
 }
 
 CHAR16*
