@@ -93,6 +93,19 @@ ShouldLoadOptionRom (
   EFI_STATUS  Status;
   UINTN       BufferSize;
   UINT8       OptionRomPolicy;
+  BOOLEAN     FastBoot;
+
+  BufferSize = sizeof(FastBoot);
+  Status = gRT->GetVariable(
+                  DASHARO_VAR_FAST_BOOT,
+                  &gDasharoSystemFeaturesGuid,
+                  NULL,
+                  &BufferSize,
+                  &FastBoot
+                  );
+  if (EFI_ERROR (Status)) {
+    FastBoot = FALSE;
+  }
 
   BufferSize = sizeof (OptionRomPolicy);
   Status = gRT->GetVariable (
@@ -103,12 +116,20 @@ ShouldLoadOptionRom (
       &OptionRomPolicy
       );
   if (EFI_ERROR (Status)) {
+    // On fast boot path load VGA ROMs only
+    if (FastBoot && PcdGetBool (PcdLoadOptionRoms))
+      return IsVgaDevice (PciHandle);
+
     // Fallback to PCD.
     return PcdGetBool (PcdLoadOptionRoms);
   }
 
   switch (OptionRomPolicy) {
     case DASHARO_OPTION_ROM_POLICY_ENABLE_ALL:
+      // On fast boot path load VGA ROMs only
+      if (FastBoot)
+        return IsVgaDevice (PciHandle);
+
       return TRUE;
     case DASHARO_OPTION_ROM_POLICY_DISABLE_ALL:
       return FALSE;
