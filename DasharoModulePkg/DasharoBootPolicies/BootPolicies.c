@@ -205,6 +205,8 @@ InitializeBootPolicies (
     mFastBootPolicy.FastBootEnabled = *EfiVar;
 
   if (mFastBootPolicy.FastBootEnabled) {
+    PcdSetBoolS(PcdConInConnectOnDemand, TRUE);
+
     gBS->InstallMultipleProtocolInterfaces (
       &ImageHandle,
       &gDasharoFastBootPolicyGuid,

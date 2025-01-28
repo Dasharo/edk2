@@ -588,7 +588,6 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|TRUE
 !endif
 
-
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -637,6 +636,8 @@
 !if $(USE_EDK2_PLATFORMS) == TRUE
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 !endif
+
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
