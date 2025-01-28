@@ -1645,7 +1645,7 @@ PlatformBootManagerAfterConsole (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
-  if (!mFastBoot) {
+  if (!mFastBoot || FUMEnabled) {
     // FIXME: USB devices are not being detected unless we wait a bit.
     // But don't wait with fastboot enabled. We typically don't boot a full blown OS from USB.
     gBS->Stall (100 * 1000);

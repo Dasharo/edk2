@@ -42,6 +42,7 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
+  BOOLEAN FUMEnabled;
 
   gBS = SystemTable->BootServices;
   gRT = SystemTable->RuntimeServices;
@@ -192,6 +193,21 @@ InitializeBootPolicies (
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Serial Redirection\n"));
   }
 
+  VarSize = sizeof (FUMEnabled);
+
+  Status = GetVariable2 (
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      &gDasharoSystemFeaturesGuid,
+      (VOID **) &EfiVar,
+      &VarSize
+      );
+
+  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
+    FUMEnabled = FALSE;
+  } else {
+    FUMEnabled = *EfiVar;
+  }
+
   VarSize = sizeof(BOOLEAN);
   Status = GetVariable2(
                   DASHARO_VAR_FAST_BOOT,
@@ -204,7 +220,7 @@ InitializeBootPolicies (
   else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
     mFastBootPolicy.FastBootEnabled = *EfiVar;
 
-  if (mFastBootPolicy.FastBootEnabled) {
+  if (mFastBootPolicy.FastBootEnabled && !FUMEnabled) {
     PcdSetBoolS(PcdConInConnectOnDemand, TRUE);
     PcdSetBoolS(PcdFastPS2Detection, TRUE);
 
