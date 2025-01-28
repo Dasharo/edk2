@@ -338,6 +338,17 @@ typedef struct {
 #define IS_CLASS3(_p, c, s, p)  (IS_CLASS2 (_p, c, s) && ((_p)->Hdr.ClassCode[0] == (p)))
 
 /**
+  Macro that checks whether device is a mass storage controller.
+
+  @param  _p      Specified device.
+
+  @retval TRUE    Device is a mass storage controller.
+  @retval FALSE   Device is not a mass storage controller.
+
+**/
+#define IS_PCI_MASS_STORAGE(_p)  IS_CLASS1 (_p, PCI_CLASS_MASS_STORAGE)
+
+/**
   Macro that checks whether device is a display controller.
 
   @param  _p      Specified device.
