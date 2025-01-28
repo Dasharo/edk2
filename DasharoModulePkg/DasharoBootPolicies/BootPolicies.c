@@ -206,6 +206,7 @@ InitializeBootPolicies (
 
   if (mFastBootPolicy.FastBootEnabled) {
     PcdSetBoolS(PcdConInConnectOnDemand, TRUE);
+    PcdSetBoolS(PcdFastPS2Detection, TRUE);
 
     gBS->InstallMultipleProtocolInterfaces (
       &ImageHandle,
