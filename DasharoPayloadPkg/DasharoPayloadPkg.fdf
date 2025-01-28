@@ -308,7 +308,7 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 # Typically will be done per platform needs by coreboot.
 #
   FILE DRIVER = DEB917C0-C56A-4860-A05B-BF2F22EBB717 {
-    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid}
+    SECTION DXE_DEPEX_EXP = {gDasharoNetworkBootPolicyGuid AND NOT gDasharoFastBootPolicyGuid}
     SECTION PE32 = DasharoPayloadPkg/NetworkDrivers/LanRom.efi
   }
 !endif
