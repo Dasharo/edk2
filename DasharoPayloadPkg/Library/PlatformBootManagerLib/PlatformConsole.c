@@ -107,6 +107,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define KEYBOARD_TIMEOUT                65536   // 0.07s
 #define KEYBOARD_WAITFORVALUE_TIMEOUT   1000000 // 1s
 
+extern BOOLEAN mFastBoot;
+
 typedef enum _TYPE_OF_TERMINAL {
   TerminalTypePcAnsi                = 0,
   TerminalTypeVt100,
@@ -147,7 +149,7 @@ DetectPs2Keyboard (
   TimeOut     = 0;
   RegEmptied  = 0;
 
-  if (PcdGetBool (PcdSkipPs2Detect))
+  if (PcdGetBool (PcdSkipPs2Detect) || mFastBoot)
     return TRUE;
 
   //
