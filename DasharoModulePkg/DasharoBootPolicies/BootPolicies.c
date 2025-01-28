@@ -23,6 +23,7 @@ USB_STACK_POLICY_PROTOCOL mUsbStackPolicy;
 USB_MASS_STORAGE_POLICY_PROTOCOL mUsbMassStoragePolicy;
 PS2_CONTROLLER_POLICY_PROTOCOL mPs2ControllerPolicy;
 SERIAL_REDIRECTION_POLICY_PROTOCOL mSerialRedirectionPolicy;
+FAST_BOOT_POLICY_PROTOCOL mFastBootPolicy;
 
 /**
   Entry point for the Boot Policies Driver.
@@ -53,8 +54,10 @@ InitializeBootPolicies (
   mUsbMassStoragePolicy.UsbMassStorageEnabled	= TRUE;
   mPs2ControllerPolicy.Revision			= PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
   mPs2ControllerPolicy.Ps2ControllerEnabled	= TRUE;
-  mSerialRedirectionPolicy.Revision = PS2_CONTROLLER_POLICY_PROTOCOL_REVISION_01;
+  mSerialRedirectionPolicy.Revision = SERIAL_REDIRECTION_POLICY_PROTOCOL_REVISION_01;
   mSerialRedirectionPolicy.SerialRedirectionEnabled = FALSE;
+  mFastBootPolicy.Revision = FAST_BOOT_POLICY_PROTOCOL_REVISION_01;
+  mFastBootPolicy.FastBootEnabled = FALSE;
 
   Status = GetVariable2 (
              DASHARO_VAR_NETWORK_BOOT,
@@ -187,6 +190,28 @@ InitializeBootPolicies (
       NULL
       );
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Serial Redirection\n"));
+  }
+
+  VarSize = sizeof(BOOLEAN);
+  Status = GetVariable2(
+                  DASHARO_VAR_FAST_BOOT,
+                  &gDasharoSystemFeaturesGuid,
+                  (VOID **) &EfiVar,
+                  &VarSize
+                  );
+  if (EFI_ERROR (Status))
+    mFastBootPolicy.FastBootEnabled = FALSE;
+  else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
+    mFastBootPolicy.FastBootEnabled = *EfiVar;
+
+  if (mFastBootPolicy.FastBootEnabled) {
+    gBS->InstallMultipleProtocolInterfaces (
+      &ImageHandle,
+      &gDasharoFastBootPolicyGuid,
+      &mFastBootPolicy,
+      NULL
+      );
+    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Fast Boot\n"));
   }
 
   return EFI_SUCCESS;

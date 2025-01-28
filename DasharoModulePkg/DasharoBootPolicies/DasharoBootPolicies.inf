@@ -45,6 +45,7 @@
   gDasharoUsbMassStoragePolicyGuid     ### PROVIDES
   gDasharoPs2ControllerPolicyGuid      ### PROVIDES
   gDasharoSerialRedirectionPolicyGuid  ### PROVIDES
+  gDasharoFastBootPolicyGuid           ### PROVIDES
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
