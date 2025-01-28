@@ -59,6 +59,7 @@
   gEfiPs2PolicyProtocolGuid                     ## SOMETIMES_CONSUMES
   gEfiSioProtocolGuid                           ## TO_START
   gEfiDevicePathProtocolGuid                    ## TO_START
+  gDasharoFastBootPolicyGuid                    ## SOMETIMES_CONSUMES
 
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdPs2KbdExtendedVerification   ## CONSUMES
