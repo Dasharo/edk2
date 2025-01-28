@@ -1640,6 +1640,11 @@ PlatformBootManagerAfterConsole (
                                   (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
                                   LOAD_OPTION_ACTIVE,
                                   TRUE);
+  } else if (mFastBoot) {
+    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option on fast boot path\n"));
+    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
+                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                                    LOAD_OPTION_ACTIVE);
   } else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
     if (NetBootEnabled) {
       DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
