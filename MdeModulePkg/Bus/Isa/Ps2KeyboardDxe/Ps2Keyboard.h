@@ -44,6 +44,11 @@ extern EFI_COMPONENT_NAME2_PROTOCOL  gPs2KeyboardComponentName2;
 #define KEYBOARD_CONSOLE_IN_DEV_SIGNATURE        SIGNATURE_32 ('k', 'k', 'e', 'y')
 #define KEYBOARD_CONSOLE_IN_EX_NOTIFY_SIGNATURE  SIGNATURE_32 ('k', 'c', 'e', 'n')
 
+typedef struct _FAST_BOOT_POLICY_PROTOCOL {
+  UINT32           Revision;
+  BOOLEAN          FastBootEnabled;
+} FAST_BOOT_POLICY_PROTOCOL;
+
 typedef struct _KEYBOARD_CONSOLE_IN_EX_NOTIFY {
   UINTN                      Signature;
   EFI_KEY_DATA               KeyData;
