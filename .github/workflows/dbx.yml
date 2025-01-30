@@ -18,13 +18,13 @@ jobs:
 
     - name: Check if DBX is up-to-date
       run: |
-        echo 'Fetching DBX from uefi.org'
-        wget https://uefi.org/sites/default/files/resources/x64_DBXUpdate.bin -o /dev/null
+        echo 'Fetching DBX from Microsoft Secure Boot GitHub repository'
+        wget https://github.com/microsoft/secureboot_objects/raw/refs/heads/main/PostSignedObjects/DBX/amd64/DBXUpdate.bin -o /dev/null
         if [ $? -ne 0 ]; then
           echo 'Failed to fetch latest DBX.'
           exit 1
         fi
-        diff <(sha256sum x64_DBXUpdate.bin | awk '{ print $1 }') <(sha256sum DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin | awk '{ print $1 }')
+        diff <(sha256sum DBXUpdate.bin | awk '{ print $1 }') <(sha256sum DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin | awk '{ print $1 }')
         if [ $? -ne 0 ]; then
           echo 'UEFI DBX is out of date.'
           exit 1
