@@ -100,11 +100,11 @@ PlatformFindLoadOption (
 }
 
 VOID
-PlatformRegisterFvBootOption (
+SyncFvBootOption (
   EFI_GUID                         *FileGuid,
   CHAR16                           *Description,
-  UINT32                           Attributes,
-  BOOLEAN                          BootNow
+  BOOLEAN                          BootNow,
+  BOOLEAN                          Remove
   )
 {
   EFI_STATUS                        Status;
@@ -115,6 +115,8 @@ PlatformRegisterFvBootOption (
   MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
+  EFI_DEVICE_PATH_PROTOCOL          *FileDevicePath;
+  BOOLEAN                           FileExists;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -132,11 +134,21 @@ PlatformRegisterFvBootOption (
                  );
   ASSERT (DevicePath != NULL);
 
+  // Search if given file exists anywhere
+  Status = GetFileDevicePathFromAnyFv (
+             FileGuid,
+             EFI_SECTION_ALL,
+             0,
+             &FileDevicePath
+             );
+
+  FileExists = !EFI_ERROR (Status);
+
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
              LoadOptionNumberUnassigned,
              LoadOptionTypeBoot,
-             Attributes,
+             LOAD_OPTION_ACTIVE,
              Description,
              DevicePath,
              NULL,
@@ -145,6 +157,8 @@ PlatformRegisterFvBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
+  // No need to check if the file exists here, because EfiBootManager will
+  // print a message on the screen if file was not found.
   if (BootNow)
     EfiBootManagerBoot (&NewOption);
 
@@ -156,73 +170,21 @@ PlatformRegisterFvBootOption (
                   &NewOption, BootOptions, BootOptionCount
                   );
 
-  if (OptionIndex == -1) {
+  if (OptionIndex == -1 && FileExists && !Remove) {
+    // Option does not exist yet and the file exists, so add new option
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
     ASSERT_EFI_ERROR (Status);
-  }
-
-  EfiBootManagerFreeLoadOption (&NewOption);
-  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
-}
-
-VOID
-PlatformUnregisterFvBootOption (
-  EFI_GUID                         *FileGuid,
-  CHAR16                           *Description,
-  UINT32                           Attributes
-  )
-{
-  EFI_STATUS                        Status;
-  INTN                              OptionIndex;
-  EFI_BOOT_MANAGER_LOAD_OPTION      NewOption;
-  EFI_BOOT_MANAGER_LOAD_OPTION      *BootOptions;
-  UINTN                             BootOptionCount;
-  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
-  EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
-  EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
-
-  Status = gBS->HandleProtocol (
-                  gImageHandle,
-                  &gEfiLoadedImageProtocolGuid,
-                  (VOID **) &LoadedImage
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
-  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
-  ASSERT (DevicePath != NULL);
-  DevicePath = AppendDevicePathNode (
-                 DevicePath,
-                 (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
-                 );
-  ASSERT (DevicePath != NULL);
-
-  Status = EfiBootManagerInitializeLoadOption (
-             &NewOption,
-             LoadOptionNumberUnassigned,
-             LoadOptionTypeBoot,
-             Attributes,
-             Description,
-             DevicePath,
-             NULL,
-             0
-             );
-  ASSERT_EFI_ERROR (Status);
-  FreePool (DevicePath);
-
-  BootOptions = EfiBootManagerGetLoadOptions (
-                  &BootOptionCount, LoadOptionTypeBoot
-                  );
-
-  OptionIndex = EfiBootManagerFindLoadOption (
-                  &NewOption, BootOptions, BootOptionCount
-                  );
-
-  if (OptionIndex >= 0 && OptionIndex < BootOptionCount) {
-    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+  } else if (OptionIndex != -1) {
+    if (Remove || !FileExists) {
+      // Option exists and the file does not exists, or we explicitly asked to
+      // remove it from boot option list.
+      Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
                                                      BootOptions[OptionIndex].OptionType);
-    ASSERT_EFI_ERROR (Status);
+    }
   }
+
+  ASSERT_EFI_ERROR (Status);
+
   EfiBootManagerFreeLoadOption (&NewOption);
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
@@ -1718,48 +1680,40 @@ PlatformBootManagerAfterConsole (
   //
   if (FUMEnabled) {
     DEBUG((DEBUG_INFO, "Registering iPXE boot option for FUM\n"));
-    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                  LOAD_OPTION_ACTIVE,
-                                  TRUE);
+    SyncFvBootOption (PcdGetPtr (PcdiPXEFile),
+                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                      TRUE,
+                      FALSE);
   } else if (mFastBoot) {
     DEBUG((DEBUG_INFO, "Unregistering iPXE boot option on fast boot path\n"));
-    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                    LOAD_OPTION_ACTIVE);
-  } else if ((Status != EFI_NOT_FOUND) && (VarSize == sizeof(NetBootEnabled))) {
-    if (NetBootEnabled) {
-      DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable\n"));
-      PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                    LOAD_OPTION_ACTIVE,
-                                    FALSE);
-    } else {
-      DEBUG((DEBUG_INFO, "Unregistering iPXE boot option by variable\n"));
-      PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                      LOAD_OPTION_ACTIVE);
-    }
-  } else if ((Status == EFI_NOT_FOUND) && FixedPcdGetBool(PcdDefaultNetworkBootEnable)) {
-    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy\n"));
-    PlatformRegisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                  (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                  LOAD_OPTION_ACTIVE,
-                                  FALSE);
+    SyncFvBootOption (PcdGetPtr (PcdiPXEFile),
+                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                      FALSE,
+                      TRUE);
+  } else if (!EFI_ERROR (Status) && (VarSize == sizeof(NetBootEnabled))) {
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by variable: %sbled\n",
+                       NetBootEnabled ? L"en" : L"dis"));
+    SyncFvBootOption (PcdGetPtr (PcdiPXEFile),
+                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                      FALSE,
+                      !NetBootEnabled);
+
   } else {
-    DEBUG((DEBUG_INFO, "Unregistering iPXE boot option\n"));
-    PlatformUnregisterFvBootOption (PcdGetPtr (PcdiPXEFile),
-                                    (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                                    LOAD_OPTION_ACTIVE);
+    DEBUG((DEBUG_INFO, "Registering iPXE boot option by policy: %sbled\n",
+                       FixedPcdGetBool(PcdDefaultNetworkBootEnable) ? L"en" : L"dis"));
+    SyncFvBootOption (PcdGetPtr (PcdiPXEFile),
+                      (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
+                      FALSE,
+                      !FixedPcdGetBool(PcdDefaultNetworkBootEnable));
   }
   //
   // Register UEFI Shell
   //
   DEBUG((DEBUG_INFO, "Registering UEFI Shell boot option\n"));
-  PlatformRegisterFvBootOption (PcdGetPtr (PcdShellFile),
-                                L"UEFI Shell",
-                                LOAD_OPTION_ACTIVE,
-                                FALSE);
+  SyncFvBootOption (PcdGetPtr (PcdShellFile),
+                    L"UEFI Shell",
+                    FALSE,
+                    FALSE);
 
   BootMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdBootMenuKey), L"F12");
   SetupMenuKey = GetKeyStringFromScanCode (FixedPcdGet16(PcdSetupMenuKey), L"ESC");
