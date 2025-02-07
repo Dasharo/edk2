@@ -125,6 +125,7 @@
   DEFINE NETWORK_IP4_ENABLE             = TRUE
   DEFINE NETWORK_LAN_ROM                = FALSE
 
+!if $(NETWORK_ENABLE) == TRUE
 !if $(NETWORK_PXE_BOOT) == TRUE
   DEFINE NETWORK_SNP_ENABLE             = TRUE
   DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
@@ -135,7 +136,7 @@
   DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
   DEFINE NETWORK_ISCSI_ENABLE           = TRUE
 !endif
-
+!endif
 
 !include NetworkPkg/NetworkDefines.dsc.inc
   #
