@@ -115,6 +115,8 @@ PlatformRegisterFvBootOption (
   MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
   EFI_LOADED_IMAGE_PROTOCOL         *LoadedImage;
   EFI_DEVICE_PATH_PROTOCOL          *DevicePath;
+  EFI_DEVICE_PATH_PROTOCOL          *FileDevicePath;
+  BOOLEAN                           FileExists;
 
   Status = gBS->HandleProtocol (
                   gImageHandle,
@@ -132,6 +134,16 @@ PlatformRegisterFvBootOption (
                  );
   ASSERT (DevicePath != NULL);
 
+  // Search if given file exists anywhere
+  Status = GetFileDevicePathFromAnyFv (
+             FileGuid,
+             EFI_SECTION_ALL,
+             0,
+             &FileDevicePath
+             );
+
+  FileExists = !EFI_ERROR (Status);
+
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
              LoadOptionNumberUnassigned,
@@ -145,6 +157,8 @@ PlatformRegisterFvBootOption (
   ASSERT_EFI_ERROR (Status);
   FreePool (DevicePath);
 
+  // No need to guard here, because an error would be displayed on the screen
+  // if file is not found.
   if (BootNow)
     EfiBootManagerBoot (&NewOption);
 
@@ -156,8 +170,13 @@ PlatformRegisterFvBootOption (
                   &NewOption, BootOptions, BootOptionCount
                   );
 
-  if (OptionIndex == -1) {
+  if (OptionIndex == -1 && FileExists) {
     Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
+    ASSERT_EFI_ERROR (Status);
+  } else if (OptionIndex != -1 && !FileExists) {
+    // Option exists but no longer in the image. Remove it from boot option list.
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[OptionIndex].OptionNumber,
+                                                     BootOptions[OptionIndex].OptionType);
     ASSERT_EFI_ERROR (Status);
   }
 
