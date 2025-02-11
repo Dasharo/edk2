@@ -27,6 +27,7 @@
   MdePkg/MdePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
   IntelSiliconPkg/IntelSiliconPkg.dec
+  OptionRomPkg/OptionRomPkg.dec
 
 [LibraryClasses]
   BaseLib

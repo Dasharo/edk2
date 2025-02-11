@@ -194,7 +194,7 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
 !else
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
- 
+
 
 
 #
@@ -364,6 +364,8 @@ INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 !if $(APU_CONFIG_ENABLE) == TRUE
 INF DasharoPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
 !endif
+
+INF OptionRomPkg/Bus/Usb/FtdiUsbSerialDxe/FtdiUsbSerialDxe.inf
 
 #
 # Shell
