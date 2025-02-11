@@ -1109,9 +1109,7 @@ BootMaintCallback (
   UINTN                     Index;
   EFI_DEVICE_PATH_PROTOCOL  *File;
 
-  if ((Action != EFI_BROWSER_ACTION_CHANGING) && (Action != EFI_BROWSER_ACTION_CHANGED) &&
-      (Action != EFI_BROWSER_ACTION_FORM_OPEN) && (Action != EFI_BROWSER_ACTION_DEFAULT_STANDARD) &&
-      (Action != EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING)) {
+  if ((Action != EFI_BROWSER_ACTION_CHANGING) && (Action != EFI_BROWSER_ACTION_CHANGED) && (Action != EFI_BROWSER_ACTION_FORM_OPEN)) {
     //
     // Do nothing for other UEFI Action. Only do call back when data is changed or the form is open.
     //
@@ -1132,7 +1130,7 @@ BootMaintCallback (
         // 1. Update the menus (including legacy munu) show in BootMiantenanceManager page.
         // 2. Re-scan the BootOption menus (including the legacy boot option).
         //
-        CustomizeMenus ();
+        // CustomizeMenus ();
         EfiBootManagerRefreshAllBootOption ();
         BOpt_GetBootOptions (Private);
         mFirstEnterBMMForm = TRUE;
@@ -1146,18 +1144,6 @@ BootMaintCallback (
   CurrentFakeNVMap = &Private->BmmFakeNvData;
   OldFakeNVMap     = &Private->BmmOldFakeNVData;
   HiiGetBrowserData (&mBootMaintGuid, mBootMaintStorageName, sizeof (BMM_FAKE_NV_DATA), (UINT8 *)CurrentFakeNVMap);
-
-  if (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD || Action == EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING) {
-    if (Value == NULL)
-      return EFI_INVALID_PARAMETER;
-
-    if (QuestionId == FORM_TIME_OUT_ID) {
-      CurrentFakeNVMap->BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
-      Value->u16 = PcdGet16 (PcdPlatformBootTimeOut);
-    } else {
-      return EFI_UNSUPPORTED;
-    }
-  }
 
   if (Action == EFI_BROWSER_ACTION_CHANGING) {
     if (Value == NULL) {
@@ -1570,6 +1556,8 @@ InitializeBmmConfig (
   GetConsoleOutCheck (CallbackData);
   GetConsoleErrCheck (CallbackData);
   GetTerminalAttribute (CallbackData);
+
+  CustomizeMenus();
 
   CallbackData->BmmFakeNvData.ForceReconnect = TRUE;
 
