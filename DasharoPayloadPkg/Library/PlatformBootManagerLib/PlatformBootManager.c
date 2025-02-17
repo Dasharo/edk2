@@ -1681,6 +1681,23 @@ PlatformBootManagerAfterConsole (
   }
 
   //
+  // Ps2KeyboardDxe module requires the keyboard to be added to the ConIn and
+  // the real i8042 controller and keyboard initialization happens when the
+  // console is connected (using DriverBindingStart). That is why checking for
+  // keyboard presence in PlatformBootManagerBeforeConsole is too early,
+  // because the controller is not yet ready to issue commands to the
+  // keyboard. When all consoles are connected on non-fastboot path, we can
+  // check the keyboard presence and remove it from ConIn if it is not
+  // detected. That way we avoid the huge delay when booting Ventoy
+  // (https://github.com/Dasharo/dasharo-issues/issues/160), which called the
+  // ConIn->Reset multiple times. The console reset on PS/2 keyboard is very
+  // time-consuming.
+  //
+  if (!mFastBoot && !PcdGetBool (PcdSkipPs2Detect)) {
+    UpdatePs2KeyboardConIn ();
+  }
+
+  //
   // Process TPM PPI request
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
