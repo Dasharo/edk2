@@ -1555,13 +1555,13 @@ InitKeyboard (
       //
       Status = KeyboardCommand (ConsoleIn, KEYBOARD_8042_COMMAND_READ);
       if (EFI_ERROR (Status)) {
-        KeyboardError (ConsoleIn, L"\n\r");
+        KeyboardError (ConsoleIn, L"8042 controller initialized but could not issue a read command\n\r");
         goto Done;
       }
 
       Status = KeyboardRead (ConsoleIn, &CommandByte);
       if (EFI_ERROR (Status)) {
-        KeyboardError (ConsoleIn, L"\n\r");
+        KeyboardError (ConsoleIn, L"8042 controller initialized but cannot read command byte\n\r");
         goto Done;
       }
 
@@ -1588,13 +1588,13 @@ InitKeyboard (
     if (!PcdGetBool (PcdFastPS2Detection)) {
       Status = KeyboardCommand (ConsoleIn, KEYBOARD_8042_COMMAND_DISABLE_KEYBOARD_INTERFACE);
       if (EFI_ERROR (Status)) {
-        KeyboardError (ConsoleIn, L"\n\r");
+        KeyboardError (ConsoleIn, L"8042 could not disable keyboard I/F\n\r");
         goto Done;
       }
 
       Status = KeyboardCommand (ConsoleIn, KEYBOARD_8042_COMMAND_DISABLE_MOUSE_INTERFACE);
       if (EFI_ERROR (Status)) {
-        KeyboardError (ConsoleIn, L"\n\r");
+        KeyboardError (ConsoleIn, L"8042 could not disable mouse I/F\n\r");
         goto Done;
       }
 
@@ -1687,10 +1687,11 @@ InitKeyboard (
   ConsoleIn->SysReq     = FALSE;
 
   ConsoleIn->IsSupportPartialKey = FALSE;
+
   //
   // For resetting keyboard is not mandatory before booting OS and sometimes keyboard responses very slow,
   // and to support KB hot plug, we need to let the InitKB succeed no matter whether there is a KB device connected
-  // to system. So we only do the real resetting for keyboard when user asks and there is a real KB connected t system,
+  // to system. So we only do the real resetting for keyboard when user asks and there is a real KB connected to the system,
   // and normally during booting an OS, it's skipped.
   //
   if (ExtendedVerification && CheckKeyboardConnect (ConsoleIn)) {
@@ -1850,12 +1851,12 @@ CheckKeyboardConnect (
   // enable keyboard itself and wait for its ack
   // If can't receive ack, Keyboard should not be connected.
   //
-  if (!PcdGetBool (PcdFastPS2Detection)) {
-    Status = KeyboardWrite (
-               ConsoleIn,
-               KEYBOARD_KBEN
-               );
+  Status = KeyboardWrite (
+    ConsoleIn,
+    KEYBOARD_KBEN
+    );
 
+  if (!PcdGetBool (PcdFastPS2Detection)) {
     if (EFI_ERROR (Status)) {
       return FALSE;
     }
