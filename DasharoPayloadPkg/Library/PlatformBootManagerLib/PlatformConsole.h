@@ -69,4 +69,14 @@ PlatformConsoleInit (
   VOID
 );
 
+/**
+  Check if PS/2 keyboard is connected and removes it from ConIn if not detected.
+
+**/
+VOID
+EFIAPI
+UpdatePs2KeyboardConIn (
+  VOID
+);
+
 #endif
