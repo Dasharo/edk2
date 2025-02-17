@@ -1863,7 +1863,7 @@ CheckKeyboardConnect (
     // wait for 1s
     //
     WaitForValueTimeOutBcakup = mWaitForValueTimeOut;
-    mWaitForValueTimeOut      = KEYBOARD_WAITFORVALUE_TIMEOUT;
+    mWaitForValueTimeOut      = KEYBOARD_DETECT_TIMEOUT;
     Status                    = KeyboardWaitForValue (
                                   ConsoleIn,
                                   KEYBOARD_CMDECHO_ACK
