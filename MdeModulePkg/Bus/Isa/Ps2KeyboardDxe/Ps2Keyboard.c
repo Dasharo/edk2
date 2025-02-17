@@ -202,8 +202,6 @@ KbdControllerDriverStart (
   UINT8                     Data;
   EFI_STATUS_CODE_VALUE     StatusCode;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
-  FAST_BOOT_POLICY_PROTOCOL *FastBootPolicy;
-  BOOLEAN                   ExtendedVerification;
 
   StatusCode = 0;
 
@@ -373,21 +371,10 @@ KbdControllerDriverStart (
     DevicePath
     );
 
-  Status = gBS->LocateProtocol (
-                  &gDasharoFastBootPolicyGuid,
-                  NULL,
-                  (VOID **)&FastBootPolicy
-                  );
-
-  if (!EFI_ERROR (Status))
-    ExtendedVerification = FALSE;
-  else
-    ExtendedVerification = FeaturePcdGet (PcdPs2KbdExtendedVerification);
-
   //
   // Reset the keyboard device
   //
-  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, ExtendedVerification);
+  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, FeaturePcdGet (PcdPs2KbdExtendedVerification));
   if (EFI_ERROR (Status)) {
     Status     = EFI_DEVICE_ERROR;
     StatusCode = EFI_PERIPHERAL_KEYBOARD | EFI_P_EC_NOT_DETECTED;
@@ -653,6 +640,108 @@ KbdFreeNotifyList (
 }
 
 /**
+  Minimal i8042 controlelr initialization
+
+  @retval EFI_OUT_OF_RESOURCES   Could not allocate KEYBOARD_CONSOLE_IN_DEV
+  @retval EFI_DEVICE_ERROR       Controller not found in the system or other initialization error
+  @retval EFI_SUCCESS            Controller initialized successfully
+**/
+EFI_STATUS
+KbdControllerInit (
+  VOID
+)
+{
+  EFI_STATUS                Status;
+  KEYBOARD_CONSOLE_IN_DEV   *ConsoleIn;
+  UINT8                     Data;
+  EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
+
+  // A dummy device path just for the sake of initialization
+  ACPI_HID_DEVICE_PATH      Ps2KeyboardDevicePath = { \
+    { \
+      ACPI_DEVICE_PATH, \
+      ACPI_DP, \
+      { \
+        (UINT8) (sizeof (ACPI_HID_DEVICE_PATH)), \
+        (UINT8) ((sizeof (ACPI_HID_DEVICE_PATH)) >> 8) \
+      }, \
+    }, \
+    EISA_PNP_ID((0x303)), \
+    0 \
+  };
+
+  DEBUG ((EFI_D_INFO, "8042 controller initializing.\n"));
+
+  //
+  // Allocate private data
+  //
+  ConsoleIn = AllocateZeroPool (sizeof (KEYBOARD_CONSOLE_IN_DEV));
+  if (ConsoleIn == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)AllocatePool (END_DEVICE_PATH_LENGTH);
+  if (DevicePath == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ErrorExit;
+  }
+
+  SetDevicePathEndNode (DevicePath);
+
+  //
+  // Setup a dummy device instance
+  //
+  ConsoleIn->Signature              = KEYBOARD_CONSOLE_IN_DEV_SIGNATURE;
+  ConsoleIn->Handle                 = NULL;
+  (ConsoleIn->ConIn).Reset          = KeyboardEfiReset;
+  (ConsoleIn->ConIn).ReadKeyStroke  = KeyboardReadKeyStroke;
+  ConsoleIn->DataRegisterAddress    = KEYBOARD_8042_DATA_REGISTER;
+  ConsoleIn->StatusRegisterAddress  = KEYBOARD_8042_STATUS_REGISTER;
+  ConsoleIn->CommandRegisterAddress = KEYBOARD_8042_COMMAND_REGISTER;
+  ConsoleIn->DevicePath             = AppendDevicePathNode (
+                                        DevicePath,
+                                        (EFI_DEVICE_PATH_PROTOCOL *) &Ps2KeyboardDevicePath
+                                        );
+
+  if (ConsoleIn->DevicePath == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ErrorExit;
+  }
+
+  ConsoleIn->ConInEx.Reset               = KeyboardEfiResetEx;
+  ConsoleIn->ConInEx.ReadKeyStrokeEx     = KeyboardReadKeyStrokeEx;
+  ConsoleIn->ConInEx.SetState            = KeyboardSetState;
+  ConsoleIn->ConInEx.RegisterKeyNotify   = KeyboardRegisterKeyNotify;
+  ConsoleIn->ConInEx.UnregisterKeyNotify = KeyboardUnregisterKeyNotify;
+
+  KeyboardRead (ConsoleIn, &Data);
+  if ((KeyReadStatusRegister (ConsoleIn) & (KBC_PARE | KBC_TIM)) == (KBC_PARE | KBC_TIM)) {
+    //
+    // If nobody decodes KBC I/O port, it will read back as 0xFF.
+    // Check the Time-Out and Parity bit to see if it has an active KBC in system
+    //
+    DEBUG ((EFI_D_ERROR, "8042 controller not found in the system\n"));
+    Status = EFI_DEVICE_ERROR;
+    goto ErrorExit;
+  }
+
+  // Skip extended verification since we only want the controller to be
+  // initialized. Keyboard will be handled by OS.
+  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, FALSE);
+
+ErrorExit:
+  if (DevicePath)
+    FreePool (DevicePath);
+
+  if (ConsoleIn->DevicePath)
+    FreePool (ConsoleIn->DevicePath);
+
+  FreePool (ConsoleIn);
+
+  return Status;
+}
+
+/**
   The module Entry Point for module Ps2Keyboard.
 
   @param[in] ImageHandle    The firmware allocated handle for the EFI image.
@@ -670,6 +759,25 @@ InitializePs2Keyboard (
   )
 {
   EFI_STATUS  Status;
+  FAST_BOOT_POLICY_PROTOCOL *FastBootPolicy;
+
+  // If we are fastbooting, we have to at least initialize the i8042 controller.
+  // Otherwise the OS may end up with non-working PS/2 keybaord.
+  Status = gBS->LocateProtocol (
+    &gDasharoFastBootPolicyGuid,
+    NULL,
+    (VOID **)&FastBootPolicy
+    );
+
+  if (!EFI_ERROR (Status)) {
+    Status = KbdControllerInit ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_INFO, "8042 controller initialization status: %r", Status));
+    }
+    // From now we can use fast PS/2 detection. Normally it would skip some initialization
+    // which is not desired, as it makes the PS/2 keyboard not functional in Windows.
+    PcdSetBoolS (PcdFastPS2Detection, TRUE);
+  }
 
   //
   // Install driver model protocol(s).
