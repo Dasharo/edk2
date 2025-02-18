@@ -299,6 +299,7 @@
   FmapLib|DasharoPayloadPkg/Library/FmapLib/FmapLib.inf
   CbfsLib|DasharoPayloadPkg/Library/CbfsLib/CbfsLib.inf
   EfiVarsLib|DasharoPayloadPkg/Library/EfiVarsLib/EfiVarsLib.inf
+  CfrHelpersLib|DasharoPayloadPkg/Library/CfrHelpersLib/CfrHelpersLib.inf
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
@@ -744,6 +745,7 @@
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
+  DasharoPayloadPkg/CfrSetupMenuDxe/CfrSetupMenuDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
