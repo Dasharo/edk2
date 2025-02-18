@@ -35,6 +35,10 @@
   DebugLib
   PcdLib
   PciLib
+  HobLib
+
+[Guids]
+  gEfiCfrSetupMenuFormGuid
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
