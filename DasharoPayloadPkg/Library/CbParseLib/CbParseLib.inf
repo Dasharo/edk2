@@ -39,11 +39,12 @@
   HobLib
   CpuLib
 
+[Guids]
+  gEfiCfrSetupMenuFormGuid
+  gUniversalPayloadPciRootBridgeInfoGuid
+
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseSize
-
-[Guids]
-  gUniversalPayloadPciRootBridgeInfoGuid
 
