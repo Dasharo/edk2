@@ -9,7 +9,9 @@
   SPDX-License-Identifier: BSD-3-Clause
 **/
 
+#include <PiPei.h>
 #include <Uefi/UefiBaseType.h>
+#include <Library/HobLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
@@ -19,6 +21,7 @@
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
 #include <Coreboot.h>
+#include <Guid/CfrSetupMenuGuid.h>
 
 
 /**
@@ -1086,4 +1089,81 @@ ParseInfoString (
   }
 
   return (CONST CHAR8 *)CbString->string;
+}
+
+/**
+  Parse and handle the misc info provided by bootloader
+
+  @retval RETURN_SUCCESS           The misc information was parsed successfully.
+  @retval RETURN_NOT_FOUND         Could not find required misc info.
+  @retval RETURN_OUT_OF_RESOURCES  Insufficant memory space.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseMiscInfo (
+  VOID
+  )
+{
+  struct cb_cfr                         *CbCfrSetupMenu;
+  UINT32                                CfrCalculatedChecksum;
+  UINTN                                 ProcessedLength;
+  CFR_OPTION_FORM                       *CbCfrOuterFormOffset;
+  CFR_OPTION_FORM                       *CfrSetupMenuForm;
+  CFR_VARBINARY                         *CfrFormName;
+
+  //
+  // CFR has several CB tags, though these are nested structures,
+  // not for individual table-to-HOB conversion
+  //
+  CbCfrSetupMenu = FindCbTag (CB_TAG_CFR_ROOT);
+  if (CbCfrSetupMenu == NULL) {
+    DEBUG ((DEBUG_ERROR, "CFR Tag not found in cbtables\n"));
+    return RETURN_NOT_FOUND;
+  }
+
+  //
+  // Checksum over CFR_FORM[] data  -- CbCfrSetupMenu header excluded
+  //
+  CfrCalculatedChecksum = CalculateCrc32 (CbCfrSetupMenu + 1, CbCfrSetupMenu->size - sizeof(*CbCfrSetupMenu));
+
+  if (CfrCalculatedChecksum != CbCfrSetupMenu->checksum) {
+    DEBUG ((DEBUG_WARN, "CFR: Calculated CRC32 0x%x does not match stored CRC32 0x%x!\n", CfrCalculatedChecksum, CbCfrSetupMenu->checksum));
+    // Disable for now until cause of checksum mismatch found
+    //return RETURN_CRC_ERROR;
+  }
+
+  ProcessedLength = sizeof (struct cb_cfr);
+
+  //
+  // Copy each form to HOB; TODO: This creates duplicate, copy pointer?
+  //
+  while (ProcessedLength < CbCfrSetupMenu->size) {
+    CbCfrOuterFormOffset = (CFR_OPTION_FORM *)((UINT8 *)CbCfrSetupMenu + ProcessedLength);
+    if (CbCfrOuterFormOffset->tag != CB_TAG_CFR_OPTION_FORM) {
+      DEBUG ((DEBUG_ERROR, "CFR Tag mismatch: 0x%x vs 0x%x\n", CbCfrOuterFormOffset->tag, CB_TAG_CFR_OPTION_FORM));
+      return RETURN_NOT_FOUND;
+    }
+    CfrSetupMenuForm = BuildGuidDataHob (
+                          &gEfiCfrSetupMenuFormGuid,
+                          CbCfrOuterFormOffset,
+                          CbCfrOuterFormOffset->size
+                          );
+    if (CfrSetupMenuForm == NULL) {
+      break;
+    }
+    ASSERT (CfrSetupMenuForm->tag == CB_TAG_CFR_OPTION_FORM);
+
+    CfrFormName = (CFR_VARBINARY *)((UINT8 *)CfrSetupMenuForm + sizeof (CFR_OPTION_FORM));
+    DEBUG ((
+      DEBUG_INFO,
+      "CFR: Found form \"%a\", size 0x%x bytes\n",
+      CfrFormName->data,
+      CfrSetupMenuForm->size
+      ));
+
+    ProcessedLength += CfrSetupMenuForm->size;
+  }
+
+  return RETURN_SUCCESS;
 }
