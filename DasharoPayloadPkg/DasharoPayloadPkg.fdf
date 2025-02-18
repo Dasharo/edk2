@@ -117,6 +117,7 @@ INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
 INF UefiCpuPkg/CpuDxe/CpuDxe.inf
 INF MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
+INF DasharoPayloadPkg/CfrSetupMenuDxe/CfrSetupMenuDxe.inf
 INF MdeModulePkg/Application/UiApp/UiApp.inf
 INF MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 !if $(RAM_DISK_ENABLE) == TRUE
@@ -222,6 +223,7 @@ FILE FREEFORM = $(AMD_GOP_VBIOS_GUID) {
 !else
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
+
 
 #
 # SCSI/ATA/IDE/DISK Support
