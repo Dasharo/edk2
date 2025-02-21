@@ -244,19 +244,35 @@ UpdateStatusLights (
   );
 
 /**
-  write key to keyboard.
+  Read key value .
 
-  @param ConsoleIn Pointer to instance of KEYBOARD_CONSOLE_IN_DEV
-  @param Data      value wanted to be written
+  @param ConsoleIn - Pointer to instance of KEYBOARD_CONSOLE_IN_DEV
+  @param Data      - Pointer to outof buffer for keeping key value
 
-  @retval EFI_TIMEOUT - GC_TODO: Add description for return value
-  @retval EFI_SUCCESS - GC_TODO: Add description for return value
+  @retval EFI_TIMEOUT Status register time out
+  @retval EFI_SUCCESS Success to read keyboard
 
 **/
 EFI_STATUS
 KeyboardRead (
   IN KEYBOARD_CONSOLE_IN_DEV  *ConsoleIn,
   OUT UINT8                   *Data
+  );
+
+/**
+  write key to keyboard
+
+  @param ConsoleIn Pointer to instance of KEYBOARD_CONSOLE_IN_DEV
+  @param Data      value wanted to be written
+
+  @retval EFI_TIMEOUT   The input buffer register is full for putting new value util timeout
+  @retval EFI_SUCCESS   The new value is success put into input buffer register.
+
+**/
+EFI_STATUS
+KeyboardWrite (
+  IN KEYBOARD_CONSOLE_IN_DEV  *ConsoleIn,
+  IN UINT8                    Data
   );
 
 /**
