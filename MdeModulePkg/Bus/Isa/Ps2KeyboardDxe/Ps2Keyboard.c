@@ -640,100 +640,38 @@ KbdFreeNotifyList (
 }
 
 /**
-  Minimal i8042 controlelr initialization
+  Minimal PS/2 keybaord initialization
 
-  @retval EFI_OUT_OF_RESOURCES   Could not allocate KEYBOARD_CONSOLE_IN_DEV
   @retval EFI_DEVICE_ERROR       Controller not found in the system or other initialization error
-  @retval EFI_SUCCESS            Controller initialized successfully
+  @retval EFI_TIMEOUT            Keyboard did not accept KBEN command
+  @retval EFI_SUCCESS            Keyboard initialized successfully
 **/
 EFI_STATUS
-KbdControllerInit (
+KeyboardMinimalInit (
   VOID
 )
 {
-  EFI_STATUS                Status;
-  KEYBOARD_CONSOLE_IN_DEV   *ConsoleIn;
+  KEYBOARD_CONSOLE_IN_DEV   ConsoleIn;
   UINT8                     Data;
-  EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
 
-  // A dummy device path just for the sake of initialization
-  ACPI_HID_DEVICE_PATH      Ps2KeyboardDevicePath = { \
-    { \
-      ACPI_DEVICE_PATH, \
-      ACPI_DP, \
-      { \
-        (UINT8) (sizeof (ACPI_HID_DEVICE_PATH)), \
-        (UINT8) ((sizeof (ACPI_HID_DEVICE_PATH)) >> 8) \
-      }, \
-    }, \
-    EISA_PNP_ID((0x303)), \
-    0 \
-  };
-
-  DEBUG ((EFI_D_INFO, "8042 controller initializing.\n"));
-
-  //
-  // Allocate private data
-  //
-  ConsoleIn = AllocateZeroPool (sizeof (KEYBOARD_CONSOLE_IN_DEV));
-  if (ConsoleIn == NULL) {
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)AllocatePool (END_DEVICE_PATH_LENGTH);
-  if (DevicePath == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ErrorExit;
-  }
-
-  SetDevicePathEndNode (DevicePath);
-
+  DEBUG ((EFI_D_INFO, "PS/2 keyboard initializing.\n"));
   //
   // Setup a dummy device instance
   //
-  ConsoleIn->Signature              = KEYBOARD_CONSOLE_IN_DEV_SIGNATURE;
-  ConsoleIn->Handle                 = NULL;
-  (ConsoleIn->ConIn).Reset          = KeyboardEfiReset;
-  (ConsoleIn->ConIn).ReadKeyStroke  = KeyboardReadKeyStroke;
-  ConsoleIn->DataRegisterAddress    = KEYBOARD_8042_DATA_REGISTER;
-  ConsoleIn->StatusRegisterAddress  = KEYBOARD_8042_STATUS_REGISTER;
-  ConsoleIn->CommandRegisterAddress = KEYBOARD_8042_COMMAND_REGISTER;
-  ConsoleIn->DevicePath             = AppendDevicePathNode (
-                                        DevicePath,
-                                        (EFI_DEVICE_PATH_PROTOCOL *) &Ps2KeyboardDevicePath
-                                        );
+  ConsoleIn.DataRegisterAddress    = KEYBOARD_8042_DATA_REGISTER;
+  ConsoleIn.StatusRegisterAddress  = KEYBOARD_8042_STATUS_REGISTER;
+  ConsoleIn.CommandRegisterAddress = KEYBOARD_8042_COMMAND_REGISTER;
 
-  if (ConsoleIn->DevicePath == NULL) {
-    Status = EFI_OUT_OF_RESOURCES;
-    goto ErrorExit;
-  }
-
-  ConsoleIn->ConInEx.Reset               = KeyboardEfiResetEx;
-  ConsoleIn->ConInEx.ReadKeyStrokeEx     = KeyboardReadKeyStrokeEx;
-  ConsoleIn->ConInEx.SetState            = KeyboardSetState;
-  ConsoleIn->ConInEx.RegisterKeyNotify   = KeyboardRegisterKeyNotify;
-  ConsoleIn->ConInEx.UnregisterKeyNotify = KeyboardUnregisterKeyNotify;
-
-  KeyboardRead (ConsoleIn, &Data);
-  if ((KeyReadStatusRegister (ConsoleIn) & (KBC_PARE | KBC_TIM)) == (KBC_PARE | KBC_TIM)) {
+  KeyboardRead (&ConsoleIn, &Data);
+  if ((KeyReadStatusRegister (&ConsoleIn) & (KBC_PARE | KBC_TIM)) == (KBC_PARE | KBC_TIM)) {
     //
     // If nobody decodes KBC I/O port, it will read back as 0xFF.
     // Check the Time-Out and Parity bit to see if it has an active KBC in system
     //
     DEBUG ((EFI_D_ERROR, "8042 controller not found in the system\n"));
-    Status = EFI_DEVICE_ERROR;
-    goto ErrorExit;
+    return EFI_DEVICE_ERROR;
   }
 
-  //
-  // Skip extended verification since we only want the controller to be
-  // initialized. Keyboard will be handled by OS.
-  //
-  Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, FALSE);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "8042 controller initielization error: %r\n", Status));
-    goto ErrorExit;
-  }
   //
   // Enable keyboard itself in blind. If this command is not issued,
   // keyboard may not work in Windows with NVC EC implementation of KBC,
@@ -742,18 +680,7 @@ KbdControllerInit (
   // desktops. We ignore the status, because keyboard may not be connected
   // and the command may fail.
   //
-  KeyboardWrite (ConsoleIn, KEYBOARD_KBEN);
-
-ErrorExit:
-  if (DevicePath)
-    FreePool (DevicePath);
-
-  if (ConsoleIn->DevicePath)
-    FreePool (ConsoleIn->DevicePath);
-
-  FreePool (ConsoleIn);
-
-  return Status;
+  return KeyboardWrite (&ConsoleIn, KEYBOARD_KBEN);;
 }
 
 /**
@@ -776,8 +703,11 @@ InitializePs2Keyboard (
   EFI_STATUS  Status;
   FAST_BOOT_POLICY_PROTOCOL *FastBootPolicy;
 
-  // If we are fastbooting, we have to at least initialize the i8042 controller.
-  // Otherwise the OS may end up with non-working PS/2 keybaord.
+  //
+  // If we are fastbooting, we have to at least enable keyboard. Otherwise the
+  // OS ends up with non-working PS/2 keyboard on NVC laptops. Minimal
+  // required setup is to issue KBEN command to enable scannign on EC side.
+  //
   Status = gBS->LocateProtocol (
     &gDasharoFastBootPolicyGuid,
     NULL,
@@ -785,14 +715,10 @@ InitializePs2Keyboard (
     );
 
   if (!EFI_ERROR (Status)) {
-    Status = KbdControllerInit ();
+    Status = KeyboardMinimalInit ();
     if (EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_INFO, "8042 controller initialization status: %r", Status));
+      DEBUG ((EFI_D_INFO, "Ps/2 keyboard initialization status: %r", Status));
     }
-
-    // From now we can use fast PS/2 detection. Normally it would skip some initialization
-    // which is not desired, as it makes the PS/2 keyboard not functional in Windows.
-    PcdSetBoolS (PcdFastPS2Detection, TRUE);
   }
 
   //
