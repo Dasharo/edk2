@@ -725,9 +725,24 @@ KbdControllerInit (
     goto ErrorExit;
   }
 
+  //
   // Skip extended verification since we only want the controller to be
   // initialized. Keyboard will be handled by OS.
+  //
   Status = ConsoleIn->ConInEx.Reset (&ConsoleIn->ConInEx, FALSE);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "8042 controller initielization error: %r\n", Status));
+    goto ErrorExit;
+  }
+  //
+  // Enable keyboard itself in blind. If this command is not issued,
+  // keyboard may not work in Windows with NVC EC implementation of KBC,
+  // because keyboard scanning won't be enabled on EC side, resulting on no
+  // scan codes returned on key presses. Confirmed to not be needed on MSI
+  // desktops. We ignore the status, because keyboard may not be connected
+  // and the command may fail.
+  //
+  KeyboardWrite (ConsoleIn, KEYBOARD_KBEN);
 
 ErrorExit:
   if (DevicePath)
@@ -774,6 +789,7 @@ InitializePs2Keyboard (
     if (EFI_ERROR (Status)) {
       DEBUG ((EFI_D_INFO, "8042 controller initialization status: %r", Status));
     }
+
     // From now we can use fast PS/2 detection. Normally it would skip some initialization
     // which is not desired, as it makes the PS/2 keyboard not functional in Windows.
     PcdSetBoolS (PcdFastPS2Detection, TRUE);
