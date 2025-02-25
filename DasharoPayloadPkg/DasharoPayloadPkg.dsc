@@ -53,7 +53,8 @@
   DEFINE UART_DEFAULT_PARITY          = 1
   DEFINE UART_DEFAULT_STOP_BITS       = 1
   DEFINE DEFAULT_TERMINAL_TYPE        = 4
-
+  
+  DEFINE FTDI_USB_UART_SUPPORT        = FALSE
   DEFINE UART_ON_SUPERIO              = FALSE
 
   DEFINE BOOT_MENU_KEY                = 0x0016
@@ -874,7 +875,9 @@
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
+!if $(FTDI_USB_UART_SUPPORT) == TRUE
   OptionRomPkg/Bus/Usb/FtdiUsbSerialDxe/FtdiUsbSerialDxe.inf
+!endif
 
   #
   # ISA Support
