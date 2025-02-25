@@ -1,12 +1,11 @@
-name: Check if UEFI revocation list is up-to-date
+name: Refresh UEFI Secure Boot revocation list
 
 on:
-  push:
-    branches:
-      - dasharo
-  pull_request:
-    branches:
-      - dasharo
+  schedule:
+    # At 23:35 on every day-of-week from Sunday through Saturday
+    # https://crontab.guru/#35_23_*_*_0-6
+    - cron: '35 23 * * 0-6'
+  workflow_dispatch:
 
 jobs:
   check:
@@ -14,20 +13,61 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        path: edk2
 
-    - name: Check if DBX is up-to-date
+    - name: Checkout microsoft/secureboot_objects
+      uses: actions/checkout@v4
+      with:
+        repository: microsoft/secureboot_objects
+        path: secureboot_objects
+
+    - name: Check if DBX is out-of-date
       run: |
-        echo 'Fetching DBX from Microsoft Secure Boot GitHub repository'
-        wget https://github.com/microsoft/secureboot_objects/raw/refs/heads/main/PostSignedObjects/DBX/amd64/DBXUpdate.bin -o /dev/null
-        if [ $? -ne 0 ]; then
-          echo 'Failed to fetch latest DBX.'
-          exit 1
-        fi
-        diff <(sha256sum DBXUpdate.bin | awk '{ print $1 }') <(sha256sum DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin | awk '{ print $1 }')
-        if [ $? -ne 0 ]; then
-          echo 'UEFI DBX is out of date.'
+        old=$(sha256sum edk2/DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin | awk '{ print $1 }')
+        new=$(sha256sum secureboot_objects/PostSignedObjects/DBX/amd64/DBXUpdate.bin | awk '{ print $1 }')
+        if [ "$old" = "$new" ]; then
+          echo 'UEFI DBX is up-to-date.'
           exit 1
         else
-          echo 'UEFI DBX is up-to-date.'
+          echo 'UEFI DBX is out of date.'
         fi
+
+  update:
+    runs-on: ubuntu-latest
+    needs: check
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        path: edk2
+
+    - name: Checkout microsoft/secureboot_objects
+      uses: actions/checkout@v4
+      with:
+        repository: microsoft/secureboot_objects
+        path: secureboot_objects
+
+    - name: Update DBX blob
+      run: |
+        cp secureboot_objects/PostSignedObjects/DBX/amd64/DBXUpdate.bin edk2/DasharoPayloadPkg/SecureBootDefaultKeys/DBXUpdate.bin
+
+    - name: Set current date
+      run: |
+        pushd secureboot_objects
+        echo "RELEASE_DATE=$(git log -1 --pretty='format:%cs' PostSignedObjects/DBX/amd64/DBXUpdate.bin)" >> ${GITHUB_ENV}
+        popd
+
+    - name: Submit pull request
+      uses: peter-evans/create-pull-request@v7.0.7
+      with:
+        path: edk2
+        base: dasharo
+        branch: update_dbx_${{ env.RELEASE_DATE }}
+        title: Update DBX ${{ env.RELEASE_DATE }}
+        commit-message: "[automated change] Update DBX ${{ env.RELEASE_DATE }}"
+
+
+
