@@ -759,6 +759,9 @@
   gIntelSiliconPkgTokenSpaceGuid.PcdVTdPolicyPropertyMask|1
 !endif
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
+
 [PcdsDynamicHii]
 !include OvmfPkg/Include/Dsc/OvmfTpmPcdsHii.dsc.inc
 
