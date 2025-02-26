@@ -13,6 +13,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #pragma once
 
 #include <Guid/PcAnsi.h>
+#include <Guid/TtyTerm.h>
 #include <IndustryStandard/Acpi30.h>
 #include <IndustryStandard/Bluetooth.h>
 
