@@ -1242,6 +1242,30 @@ DevPathFromTextVenUtf8 (
 }
 
 /**
+  Converts a text device path node to Vendor defined TtyTerm device path structure.
+
+  @param TextDeviceNode  The input Text device path node.
+
+  @return A pointer to the newly-created Vendor defined TtyTerm device path structure.
+
+**/
+EFI_DEVICE_PATH_PROTOCOL *
+DevPathFromTextVenTtyTerm (
+   CHAR16 *TextDeviceNode
+  )
+{
+  VENDOR_DEVICE_PATH  *Vendor;
+
+  Vendor = (VENDOR_DEVICE_PATH *) CreateDeviceNode (
+                                    MESSAGING_DEVICE_PATH,
+                                    MSG_VENDOR_DP,
+                                    (UINT16) sizeof (VENDOR_DEVICE_PATH));
+  CopyGuid (&Vendor->Guid, &gEfiTtyTermGuid);
+
+  return (EFI_DEVICE_PATH_PROTOCOL *) Vendor;
+}
+
+/**
   Converts a text device path node to UART Flow Control device path structure.
 
   @param TextDeviceNode  The input Text device path node.
@@ -3335,6 +3359,7 @@ DEVICE_PATH_FROM_TEXT_TABLE mUefiDevicePathLibDevPathFromTextTable[] = {
   {L"VenVt100",                DevPathFromTextVenVt100                },
   {L"VenVt100Plus",            DevPathFromTextVenVt100Plus            },
   {L"VenUtf8",                 DevPathFromTextVenUtf8                 },
+  {L"VenTtyTerm",              DevPathFromTextVenTtyTerm              },
   {L"UartFlowCtrl",            DevPathFromTextUartFlowCtrl            },
   {L"SAS",                     DevPathFromTextSAS                     },
   {L"SasEx",                   DevPathFromTextSasEx                   },
