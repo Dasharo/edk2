@@ -78,7 +78,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define DASHARO_USB_POWER_ON_WHEN_POWERED      0
 #define DASHARO_USB_POWER_ALWAYS_ON            1
-#define DASHARO_USB_POWER_ON_WHEN_AC           2
 
 // The values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
 #define DASHARO_MEMORY_PROFILE_JEDEC           0

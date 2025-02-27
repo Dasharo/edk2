@@ -394,7 +394,6 @@ formset
 
             option text = STRING_TOKEN(STR_USB_PORTS_POWER_ON_WHEN_POWERED), value = USB_POWER_ON_WHEN_POWERED, flags = DEFAULT;
             option text = STRING_TOKEN(STR_USB_PORTS_POWER_ALWAYS_ON), value = USB_POWER_ALWAYS_ON, flags = 0;
-            option text = STRING_TOKEN(STR_USB_PORTS_POWER_ON_AC), value = USB_POWER_ON_WHEN_AC, flags = 0;
       endoneof;
     endif;
 

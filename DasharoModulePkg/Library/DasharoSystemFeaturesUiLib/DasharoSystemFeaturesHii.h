@@ -135,7 +135,6 @@ typedef struct {
 
 #define USB_POWER_ON_WHEN_POWERED      DASHARO_USB_POWER_ON_WHEN_POWERED
 #define USB_POWER_ALWAYS_ON            DASHARO_USB_POWER_ALWAYS_ON
-#define USB_POWER_ON_WHEN_AC           DASHARO_USB_POWER_ON_WHEN_AC
 
 //
 // Question IDs are used in VFR file to let the code in

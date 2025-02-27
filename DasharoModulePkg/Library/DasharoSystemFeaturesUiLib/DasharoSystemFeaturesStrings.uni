@@ -164,7 +164,6 @@
 #string STR_USB_PORTS_POWER_HELP        #language en-US "Controls the USB port power and charging capabilities of the device.\n\n"
                                                           "On When Device Is Powered On - USB ports supply power only when the device is powered on\n"
                                                           "Always On - USB ports always supply power, even when device is powered off. WARNING: when device is left unattended it will drain the battery.\n"
-                                                          "On When On AC - USB ports supply power only when the device is powered on or when the device is powered off but plugged to AC.\n"
 
 #string STR_USB_PORTS_POWER_ON_WHEN_POWERED     #language en-US "On When Device Is Powered On"
 #string STR_USB_PORTS_POWER_ALWAYS_ON           #language en-US "Always On"
