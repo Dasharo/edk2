@@ -82,5 +82,6 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowCpuHyperThreading
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuHyperThreadingDefault
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault
-
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled
+  gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms

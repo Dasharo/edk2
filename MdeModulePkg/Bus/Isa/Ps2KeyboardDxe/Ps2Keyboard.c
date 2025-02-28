@@ -703,21 +703,23 @@ InitializePs2Keyboard (
   EFI_STATUS  Status;
   FAST_BOOT_POLICY_PROTOCOL *FastBootPolicy;
 
-  //
-  // If we are fastbooting, we have to at least enable keyboard. Otherwise the
-  // OS ends up with non-working PS/2 keyboard on NVC laptops. Minimal
-  // required setup is to issue KBEN command to enable scannign on EC side.
-  //
-  Status = gBS->LocateProtocol (
-    &gDasharoFastBootPolicyGuid,
-    NULL,
-    (VOID **)&FastBootPolicy
-    );
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
+    //
+    // If we are fastbooting, we have to at least enable keyboard. Otherwise the
+    // OS ends up with non-working PS/2 keyboard on NVC laptops. Minimal
+    // required setup is to issue KBEN command to enable scannign on EC side.
+    //
+    Status = gBS->LocateProtocol (
+      &gDasharoFastBootPolicyGuid,
+      NULL,
+      (VOID **)&FastBootPolicy
+      );
 
-  if (!EFI_ERROR (Status)) {
-    Status = KeyboardMinimalInit ();
-    if (EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_INFO, "Ps/2 keyboard initialization status: %r", Status));
+    if (!EFI_ERROR (Status)) {
+      Status = KeyboardMinimalInit ();
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_INFO, "Ps/2 keyboard initialization status: %r", Status));
+      }
     }
   }
 

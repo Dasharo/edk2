@@ -208,28 +208,31 @@ InitializeBootPolicies (
     FUMEnabled = *EfiVar;
   }
 
-  VarSize = sizeof(BOOLEAN);
-  Status = GetVariable2(
-                  DASHARO_VAR_FAST_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  (VOID **) &EfiVar,
-                  &VarSize
-                  );
-  if (EFI_ERROR (Status))
-    mFastBootPolicy.FastBootEnabled = FALSE;
-  else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
-    mFastBootPolicy.FastBootEnabled = *EfiVar;
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
 
-  if (mFastBootPolicy.FastBootEnabled && !FUMEnabled) {
-    PcdSetBoolS(PcdConInConnectOnDemand, TRUE);
+    VarSize = sizeof(BOOLEAN);
+    Status = GetVariable2(
+                    DASHARO_VAR_FAST_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    (VOID **) &EfiVar,
+                    &VarSize
+                    );
+    if (EFI_ERROR (Status))
+      mFastBootPolicy.FastBootEnabled = FALSE;
+    else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
+      mFastBootPolicy.FastBootEnabled = *EfiVar;
 
-    gBS->InstallMultipleProtocolInterfaces (
-      &ImageHandle,
-      &gDasharoFastBootPolicyGuid,
-      &mFastBootPolicy,
-      NULL
-      );
-    DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Fast Boot\n"));
+    if (mFastBootPolicy.FastBootEnabled && !FUMEnabled) {
+      PcdSetBoolS(PcdConInConnectOnDemand, TRUE);
+
+      gBS->InstallMultipleProtocolInterfaces (
+        &ImageHandle,
+        &gDasharoFastBootPolicyGuid,
+        &mFastBootPolicy,
+        NULL
+        );
+      DEBUG ((EFI_D_INFO, "Boot Policy: Enabling Fast Boot\n"));
+    }
   }
 
   return EFI_SUCCESS;

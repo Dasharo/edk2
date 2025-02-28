@@ -2234,6 +2234,16 @@
   # @Prompt Speculation Barrier Type.
   gEfiMdePkgTokenSpaceGuid.PcdSpeculationBarrierType|0x01|UINT8|0x30001018
 
+  ## If TRUE, enables fast boot support in the project and an option in Boot
+  # Maintenance Manager Menu.
+  # @Prompt Enable fast boot feature
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled|TRUE|BOOLEAN|0x30001019
+
+  ## If TRUE, enables quiet Boot support in the project and an option in Boot
+  # Maintenance Manager Menu.
+  # @Prompt Enable quiet boot feature
+  gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled|TRUE|BOOLEAN|0x3000101A
+
 [PcdsFixedAtBuild,PcdsPatchableInModule]
   ## Indicates the maximum length of unicode string used in the following
   #  BaseLib functions: StrLen(), StrSize(), StrCmp(), StrnCmp(), StrCpy(), StrnCpy()<BR><BR>

@@ -93,18 +93,21 @@ ShouldLoadOptionRom (
   EFI_STATUS  Status;
   UINTN       BufferSize;
   UINT8       OptionRomPolicy;
-  BOOLEAN     FastBoot;
+  BOOLEAN     FastBoot = FALSE;
 
-  BufferSize = sizeof(FastBoot);
-  Status = gRT->GetVariable(
-                  DASHARO_VAR_FAST_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  NULL,
-                  &BufferSize,
-                  &FastBoot
-                  );
-  if (EFI_ERROR (Status)) {
-    FastBoot = FALSE;
+
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
+    BufferSize = sizeof(FastBoot);
+    Status = gRT->GetVariable(
+                    DASHARO_VAR_FAST_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    NULL,
+                    &BufferSize,
+                    &FastBoot
+                    );
+    if (EFI_ERROR (Status)) {
+      FastBoot = FALSE;
+    }
   }
 
   BufferSize = sizeof (OptionRomPolicy);
