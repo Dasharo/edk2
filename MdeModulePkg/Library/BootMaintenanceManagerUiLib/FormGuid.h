@@ -104,6 +104,8 @@ typedef struct {
   UINT32     BootNext;
   BOOLEAN    QuietBoot;
   BOOLEAN    FastBoot;
+  BOOLEAN    HideQuietBoot;
+  BOOLEAN    HideFastBoot;
 
   //
   // This is the COM1 Attributes value storage

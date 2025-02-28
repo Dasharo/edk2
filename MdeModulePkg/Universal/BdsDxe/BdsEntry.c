@@ -806,28 +806,32 @@ BdsEntry (
     }
   }
 
-  DataSize = sizeof(mQuietBoot);
-  Status = gRT->GetVariable(
-                  DASHARO_VAR_QUIET_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  NULL,
-                  &DataSize,
-                  &mQuietBoot
-                  );
-  if (EFI_ERROR (Status)) {
-    mQuietBoot = FALSE;
+  if (FixedPcdGetBool (PcdQuietBootFeatureEnabled)) {
+    DataSize = sizeof(mQuietBoot);
+    Status = gRT->GetVariable(
+                    DASHARO_VAR_QUIET_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    NULL,
+                    &DataSize,
+                    &mQuietBoot
+                    );
+    if (EFI_ERROR (Status)) {
+      mQuietBoot = FALSE;
+    }
   }
 
-  DataSize = sizeof(mFastBoot);
-  Status = gRT->GetVariable(
-                  DASHARO_VAR_FAST_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  NULL,
-                  &DataSize,
-                  &mFastBoot
-                  );
-  if (EFI_ERROR (Status)) {
-    mFastBoot = FALSE;
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
+    DataSize = sizeof(mFastBoot);
+    Status = gRT->GetVariable(
+                    DASHARO_VAR_FAST_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    NULL,
+                    &DataSize,
+                    &mFastBoot
+                    );
+    if (EFI_ERROR (Status)) {
+      mFastBoot = FALSE;
+    }
   }
 
   DEBUG ((DEBUG_ERROR, "Quiet Boot %sabled.\n", mQuietBoot ? L"en" : L"dis"));

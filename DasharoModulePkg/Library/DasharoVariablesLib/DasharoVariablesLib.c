@@ -70,8 +70,8 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
   { DASHARO_VAR_CORE_ACTIVE_COUNT, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuCoreDisable) },
   { DASHARO_VAR_HYPER_THREADING, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuHyperThreading) },
-  { DASHARO_VAR_QUIET_BOOT, TRUE },
-  { DASHARO_VAR_FAST_BOOT, TRUE },
+  { DASHARO_VAR_QUIET_BOOT, FixedPcdGetBool (PcdQuietBootFeatureEnabled) },
+  { DASHARO_VAR_FAST_BOOT,  FixedPcdGetBool (PcdFastBootFeatureEnabled) },
 };
 
 /**
