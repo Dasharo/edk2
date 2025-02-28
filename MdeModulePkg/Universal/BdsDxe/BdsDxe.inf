@@ -103,6 +103,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport                 ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdPlatformRecoverySupport           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdSupportInfiniteBootRetries        ## CONSUMES
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled                  ## CONSUMES
+  gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled                 ## CONSUMES
 
 [Depex]
   TRUE
