@@ -102,6 +102,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport              ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport                 ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdPlatformRecoverySupport           ## CONSUMES
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled                  ## CONSUMES
+  gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled                 ## CONSUMES
 
 [Depex]
   TRUE

@@ -54,3 +54,4 @@
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled

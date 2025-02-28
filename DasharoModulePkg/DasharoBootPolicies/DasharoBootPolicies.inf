@@ -55,6 +55,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled
 
 [Depex]
   gEfiVariableArchProtocolGuid
