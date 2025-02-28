@@ -51,19 +51,23 @@ formset
             step    = 0,
     endnumeric;
 
-    checkbox varid  = BmmData.QuietBoot,
-              questionid = FORM_QUIET_BOOT_ID,
-              prompt = STRING_TOKEN(STR_QUIET_BOOT_PROMPT),
-              help   = STRING_TOKEN(STR_QUIET_BOOT_HELP),
-              flags  = RESET_REQUIRED,
-    endcheckbox;
+    disableif ideqval BmmData.HideQuietBoot == 1;
+      checkbox varid  = BmmData.QuietBoot,
+                questionid = FORM_QUIET_BOOT_ID,
+                prompt = STRING_TOKEN(STR_QUIET_BOOT_PROMPT),
+                help   = STRING_TOKEN(STR_QUIET_BOOT_HELP),
+                flags  = RESET_REQUIRED,
+      endcheckbox;
+    endif;
 
-    checkbox varid  = BmmData.FastBoot,
-              questionid = FORM_FAST_BOOT_ID,
-              prompt = STRING_TOKEN(STR_FAST_BOOT_PROMPT),
-              help   = STRING_TOKEN(STR_FAST_BOOT_HELP),
-              flags  = RESET_REQUIRED,
-    endcheckbox;
+    disableif ideqval BmmData.HideFastBoot == 1;
+     checkbox varid  = BmmData.FastBoot,
+               questionid = FORM_FAST_BOOT_ID,
+               prompt = STRING_TOKEN(STR_FAST_BOOT_PROMPT),
+               help   = STRING_TOKEN(STR_FAST_BOOT_HELP),
+               flags  = RESET_REQUIRED,
+     endcheckbox;
+    endif;
 
   endform;
 

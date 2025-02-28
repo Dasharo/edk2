@@ -2314,6 +2314,16 @@
   # @Prompt Enforce the use of Secure UEFI spec defined RNG algorithms.
   gEfiMdePkgTokenSpaceGuid.PcdEnforceSecureRngAlgorithms|TRUE|BOOLEAN|0x1000000D
 
+  ## If TRUE, enables fast boot support in the project and an option in Boot
+  # Maintenance Manager Menu.
+  # @Prompt Enable fast boot feature
+  gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled|FALSE|BOOLEAN|0x3000101A
+
+  ## If TRUE, enables quiet Boot support in the project and an option in Boot
+  # Maintenance Manager Menu.
+  # @Prompt Enable quiet boot feature
+  gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled|FALSE|BOOLEAN|0x3000101B
+
 [PcdsFixedAtBuild,PcdsPatchableInModule]
   ## Indicates the maximum length of unicode string used in the following
   #  BaseLib functions: StrLen(), StrSize(), StrCmp(), StrnCmp(), StrCpy(), StrnCpy()<BR><BR>

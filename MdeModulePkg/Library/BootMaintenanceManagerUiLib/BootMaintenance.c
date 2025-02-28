@@ -897,36 +897,40 @@ BootMaintRouteConfig (
     Private->BmmOldFakeNVData.BootTimeOut = NewBmmData->BootTimeOut;
   }
 
-  if (NewBmmData->QuietBoot != OldBmmData->QuietBoot) {
-    Status = gRT->SetVariable(
-                    DASHARO_VAR_QUIET_BOOT,
-                    &gDasharoSystemFeaturesGuid,
-                    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-                    sizeof (NewBmmData->QuietBoot),
-                    &(NewBmmData->QuietBoot)
-                    );
-    if (EFI_ERROR (Status)) {
-      Offset = OFFSET_OF (BMM_FAKE_NV_DATA, QuietBoot);
-      goto Exit;
-    }
+  if (FixedPcdGetBool (PcdQuietBootFeatureEnabled)) {
+    if (NewBmmData->QuietBoot != OldBmmData->QuietBoot) {
+      Status = gRT->SetVariable(
+                      DASHARO_VAR_QUIET_BOOT,
+                      &gDasharoSystemFeaturesGuid,
+                      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+                      sizeof (NewBmmData->QuietBoot),
+                      &(NewBmmData->QuietBoot)
+                      );
+      if (EFI_ERROR (Status)) {
+        Offset = OFFSET_OF (BMM_FAKE_NV_DATA, QuietBoot);
+        goto Exit;
+      }
 
-    Private->BmmOldFakeNVData.QuietBoot = NewBmmData->QuietBoot;
+      Private->BmmOldFakeNVData.QuietBoot = NewBmmData->QuietBoot;
+    }
   }
 
-  if (NewBmmData->FastBoot != OldBmmData->FastBoot) {
-    Status = gRT->SetVariable(
-                    DASHARO_VAR_FAST_BOOT,
-                    &gDasharoSystemFeaturesGuid,
-                    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-                    sizeof (NewBmmData->FastBoot),
-                    &(NewBmmData->FastBoot)
-                    );
-    if (EFI_ERROR (Status)) {
-      Offset = OFFSET_OF (BMM_FAKE_NV_DATA, FastBoot);
-      goto Exit;
-    }
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
+    if (NewBmmData->FastBoot != OldBmmData->FastBoot) {
+      Status = gRT->SetVariable(
+                      DASHARO_VAR_FAST_BOOT,
+                      &gDasharoSystemFeaturesGuid,
+                      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+                      sizeof (NewBmmData->FastBoot),
+                      &(NewBmmData->FastBoot)
+                      );
+      if (EFI_ERROR (Status)) {
+        Offset = OFFSET_OF (BMM_FAKE_NV_DATA, FastBoot);
+        goto Exit;
+      }
 
-    Private->BmmOldFakeNVData.FastBoot = NewBmmData->FastBoot;
+      Private->BmmOldFakeNVData.FastBoot = NewBmmData->FastBoot;
+    }
   }
 
   //
@@ -1586,30 +1590,38 @@ InitializeBmmConfig (
     CallbackData->BmmFakeNvData.BootTimeOut = PcdGet16 (PcdPlatformBootTimeOut);
   }
 
-  DataSize = sizeof(QuietBoot);
+  CallbackData->BmmFakeNvData.HideQuietBoot = !FixedPcdGetBool (PcdQuietBootFeatureEnabled);
   CallbackData->BmmFakeNvData.QuietBoot = FALSE;
-  Status = gRT->GetVariable(
-                  DASHARO_VAR_QUIET_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  NULL,
-                  &DataSize,
-                  &QuietBoot
-                  );
-  if (!EFI_ERROR (Status)) {
-    CallbackData->BmmFakeNvData.QuietBoot = QuietBoot;
+
+  if (FixedPcdGetBool (PcdQuietBootFeatureEnabled)) {
+    DataSize = sizeof(QuietBoot);
+    Status = gRT->GetVariable(
+                    DASHARO_VAR_QUIET_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    NULL,
+                    &DataSize,
+                    &QuietBoot
+                    );
+    if (!EFI_ERROR (Status)) {
+      CallbackData->BmmFakeNvData.QuietBoot = QuietBoot;
+    }
   }
 
-  DataSize = sizeof(FastBoot);
+  CallbackData->BmmFakeNvData.HideFastBoot = !FixedPcdGetBool (PcdFastBootFeatureEnabled);
   CallbackData->BmmFakeNvData.FastBoot = FALSE;
-  Status = gRT->GetVariable(
-                  DASHARO_VAR_FAST_BOOT,
-                  &gDasharoSystemFeaturesGuid,
-                  NULL,
-                  &DataSize,
-                  &FastBoot
-                  );
-  if (!EFI_ERROR (Status)) {
-    CallbackData->BmmFakeNvData.FastBoot = FastBoot;
+
+  if (FixedPcdGetBool (PcdFastBootFeatureEnabled)) {
+    DataSize = sizeof(FastBoot);
+    Status = gRT->GetVariable(
+                    DASHARO_VAR_FAST_BOOT,
+                    &gDasharoSystemFeaturesGuid,
+                    NULL,
+                    &DataSize,
+                    &FastBoot
+                    );
+    if (!EFI_ERROR (Status)) {
+      CallbackData->BmmFakeNvData.FastBoot = FastBoot;
+    }
   }
 
   //
