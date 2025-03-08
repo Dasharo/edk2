@@ -397,6 +397,14 @@ formset
       endoneof;
     endif;
 
+    disableif ideqval FeaturesData.PowerMenuShowDGPUPower == 0;
+      checkbox varid  = FeaturesData.DGPUEnabled,
+               prompt = STRING_TOKEN(STR_DGPU_ENABLE_POWER_PROMPT),
+               help   = STRING_TOKEN(STR_DGPU_ENABLE_POWER_HELP),
+               flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+      endcheckbox;
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);

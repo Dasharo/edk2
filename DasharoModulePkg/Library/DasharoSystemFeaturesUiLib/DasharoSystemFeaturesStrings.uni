@@ -168,6 +168,9 @@
 #string STR_USB_PORTS_POWER_ON_WHEN_POWERED     #language en-US "While System is On"
 #string STR_USB_PORTS_POWER_ALWAYS_ON           #language en-US "Always On"
 
+#string STR_DGPU_ENABLE_POWER_PROMPT    #language en-US "Enable DGPU (Discrete GPU)"
+#string STR_DGPU_ENABLE_POWER_HELP      #language en-US "If this option is disabled, the power to the Discrete GPU is disconnected completely"
+
 #string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
 #string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
                                                        "Selecting an XMP profile may result in unstable memory modules and even prevent system from booting.\n\n"
