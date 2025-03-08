@@ -83,6 +83,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuThrottlingOffsetDefault|20|UINT8|0x00000029
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption|FALSE|BOOLEAN|0x00000002A
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowUsbPowerOption|FALSE|BOOLEAN|0x00000002B
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption|FALSE|BOOLEAN|0x00000002C
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
