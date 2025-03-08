@@ -3,7 +3,7 @@ name: Check EDK2 QEMU Build
 on:
   push:
     branches:
-      - dasharo
+      - dasharo*
     tags:
       - 'qemu_q35_v*'
   pull_request:
