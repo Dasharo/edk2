@@ -97,3 +97,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdCpuMaxTemperature
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowUsbPowerOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption

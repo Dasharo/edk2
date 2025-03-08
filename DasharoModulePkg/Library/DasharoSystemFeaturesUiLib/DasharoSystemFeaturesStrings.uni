@@ -168,6 +168,12 @@
 #string STR_USB_PORTS_POWER_ON_WHEN_POWERED     #language en-US "While System is On"
 #string STR_USB_PORTS_POWER_ALWAYS_ON           #language en-US "Always On"
 
+#string STR_DGPU_ENABLE_POWER_PROMPT    #language en-US "Hybrid Graphics Mode"
+#string STR_DGPU_ENABLE_POWER_HELP      #language en-US "Select NVIDIA Optimus to enable both GPUs and leave power management to the OS driver. Select iGPU only for maximum power saving. Select dGPU only for maximum performance and Linux compatibility."
+#string STR_DGPU_ENABLE_POWER_NVIDIA_OPTIMUS    #language en-US "NVIDIA Optimus"
+#string STR_DGPU_ENABLE_POWER_IGPU_ONLY         #language en-US "iGPU Only"
+#string STR_DGPU_ENABLE_POWER_DGPU_ONLY         #language en-US "dGPU Only"
+
 #string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
 #string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
                                                        "Selecting an XMP profile may result in unstable memory modules and even prevent system from booting.\n\n"

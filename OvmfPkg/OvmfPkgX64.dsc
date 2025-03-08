@@ -746,6 +746,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowWiFiBtOption|TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSecurityShowCameraOption|TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption|FALSE
 
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
 ################################################################################
