@@ -397,6 +397,18 @@ formset
       endoneof;
     endif;
 
+    disableif ideqval FeaturesData.PowerMenuShowDGPUPower == 0;
+      oneof varid  = FeaturesData.DGPUEnabled,
+            questionid = DGPU_ENABLE_POWER_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_DGPU_ENABLE_POWER_PROMPT),
+            help   = STRING_TOKEN(STR_DGPU_ENABLE_POWER_HELP),
+            flags  = RESET_REQUIRED,
+
+            option text = STRING_TOKEN(STR_DGPU_ENABLE_POWER_NVIDIA_OPTIMUS), value = DGPU_ENABLED, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_DGPU_ENABLE_POWER_IGPU_ONLY), value = DGPU_DISABLED, flags = 0;
+      endoneof;
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
