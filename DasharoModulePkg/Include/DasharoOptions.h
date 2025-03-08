@@ -43,6 +43,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_CORE_ACTIVE_COUNT             L"CoreActiveCount"
 #define DASHARO_VAR_HYPER_THREADING               L"HyperThreading"
 #define DASHARO_VAR_USB_PORT_POWER                L"UsbPortPower"
+#define DASHARO_VAR_DGPU_STATE                    L"DGPUState"
 
 // Other
 #define DASHARO_VAR_SMBIOS_UUID  L"Type1UUID"
@@ -78,6 +79,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define DASHARO_USB_POWER_ON_WHEN_POWERED      0
 #define DASHARO_USB_POWER_ALWAYS_ON            1
+
+#define DASHARO_DGPU_DISABLED                  0
+#define DASHARO_DGPU_ENABLED                   1
+#define DASHARO_DGPU_ONLY                      2
 
 // The values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
 #define DASHARO_MEMORY_PROFILE_JEDEC           0
