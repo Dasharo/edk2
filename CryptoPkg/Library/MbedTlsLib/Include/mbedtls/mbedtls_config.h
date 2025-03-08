@@ -4123,6 +4123,8 @@
 #define MBEDTLS_PLATFORM_MS_TIME_TYPE_MACRO  ms_time_t   // #define MBEDTLS_PLATFORM_MS_TIME_TYPE_MACRO   int64_t /**< Default milliseconds time macro to use, can be undefined. MBEDTLS_HAVE_TIME must be enabled. It must be signed, and at least 64 bits. If it is changed from the default, MBEDTLS_PRINTF_MS_TIME must be updated to match.*/
 // #define MBEDTLS_PRINTF_MS_TIME    PRId64 /**< Default fmt for printf. That's avoid compiler warning if mbedtls_ms_time_t is redefined */
 
+#include <stddef.h>
+
 extern int
 my_printf (
   const char  *fmt,
@@ -4134,7 +4136,7 @@ my_printf (
 extern int
 my_snprintf (
   char        *str,
-  long long   size,
+  size_t      size,
   const char  *format,
   ...
   );
@@ -4142,7 +4144,6 @@ my_snprintf (
 #define MBEDTLS_PLATFORM_SNPRINTF_MACRO  my_snprintf
 
 #define MBEDTLS_PLATFORM_MEMORY
-#include <stddef.h>
 extern void *
 mbedtls_calloc (
   size_t  n,
