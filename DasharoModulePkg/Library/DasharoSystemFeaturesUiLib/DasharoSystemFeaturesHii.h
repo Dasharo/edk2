@@ -139,7 +139,7 @@ typedef struct {
 #define USB_POWER_ALWAYS_ON            DASHARO_USB_POWER_ALWAYS_ON
 
 #define DGPU_DISABLED                  DASHARO_DGPU_DISABLED
-#define DGPU_ENANBLED                  DASHARO_DGPU_ENABLED
+#define DGPU_ENABLED                   DASHARO_DGPU_ENABLED
 //
 // Question IDs are used in VFR file to let the code in
 // DasharoSystemFeaturesCallback() know what form element caused
