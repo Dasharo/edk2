@@ -97,7 +97,7 @@ typedef struct {
   UINT8                    CoreActiveCount;
   UINT8                    CoreMaxCount;
   UINT8                    UsbPortPower;
-  BOOLEAN                  DGPUEnabled;
+  UINT8                    DGPUEnabled;
 } DASHARO_FEATURES_DATA;
 
 //

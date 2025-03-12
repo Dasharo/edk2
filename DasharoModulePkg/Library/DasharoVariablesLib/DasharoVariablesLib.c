@@ -191,8 +191,8 @@ GetVariableInfo (
     Size = sizeof (Data.Boolean);
     ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_DGPU_ENABLED) == 0) {
-    Data.Boolean = TRUE;
-    Size = sizeof (Data.Boolean);
+    Data.Uint8 = DASHARO_DGPU_ENABLED;
+    Size = sizeof (Data.Uint8);
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));
     ASSERT ((0 && "No default value set for a variable."));
