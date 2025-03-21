@@ -281,7 +281,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, CoreActiveCount);
   LOAD_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
   LOAD_VAR (DASHARO_VAR_USB_PORT_POWER, UsbPortPower);
-  LOAD_VAR (DASHARO_VAR_DGPU_ENABLED, DGPUEnabled);
+  LOAD_VAR (DASHARO_VAR_DGPU_STATE, DGPUState);
 
 #undef LOAD_VAR
 
@@ -556,7 +556,7 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds));
     STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, FixedPcdGetBool (PcdShowCpuThrottlingThreshold));
     STORE_VAR_IF (DASHARO_VAR_USB_PORT_POWER, UsbPortPower, FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption));
-    STORE_VAR_IF (DASHARO_VAR_DGPU_ENABLED, DGPUEnabled, FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption));
+    STORE_VAR_IF (DASHARO_VAR_DGPU_STATE, DGPUState, FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption));
   }
 
   if (FixedPcdGetBool (PcdShowPciMenu)) {
