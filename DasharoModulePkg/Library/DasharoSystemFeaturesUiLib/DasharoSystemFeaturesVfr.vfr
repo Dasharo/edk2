@@ -398,8 +398,8 @@ formset
     endif;
 
     disableif ideqval FeaturesData.PowerMenuShowDGPUPower == 0;
-      oneof varid  = FeaturesData.DGPUEnabled,
-            questionid = DGPU_ENABLE_POWER_QUESTION_ID,
+      oneof varid  = FeaturesData.DGPUState,
+            questionid = DGPU_STATE_QUESTION_ID,
             prompt = STRING_TOKEN(STR_DGPU_ENABLE_POWER_PROMPT),
             help   = STRING_TOKEN(STR_DGPU_ENABLE_POWER_HELP),
             flags  = RESET_REQUIRED,

@@ -97,7 +97,7 @@ typedef struct {
   UINT8                    CoreActiveCount;
   UINT8                    CoreMaxCount;
   UINT8                    UsbPortPower;
-  UINT8                    DGPUEnabled;
+  UINT8                    DGPUState;
 } DASHARO_FEATURES_DATA;
 
 //
@@ -162,6 +162,6 @@ typedef struct {
 #define CPU_THROTTLING_OFFSET_QUESTION_ID    0x800D
 #define CPU_THROTTLING_THRESHOLD_QUESTION_ID 0x800E
 #define USB_PORTS_POWER_QUESTION_ID          0x800F
-#define DGPU_ENABLE_POWER_QUESTION_ID        0x8010
+#define DGPU_STATE_QUESTION_ID        0x8010
 
 #endif

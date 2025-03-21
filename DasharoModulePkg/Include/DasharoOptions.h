@@ -43,7 +43,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_CORE_ACTIVE_COUNT             L"CoreActiveCount"
 #define DASHARO_VAR_HYPER_THREADING               L"HyperThreading"
 #define DASHARO_VAR_USB_PORT_POWER                L"UsbPortPower"
-#define DASHARO_VAR_DGPU_ENABLED                  L"DGPUEnabled"
+#define DASHARO_VAR_DGPU_STATE                  L"DGPUState"
 
 // Other
 #define DASHARO_VAR_SMBIOS_UUID  L"Type1UUID"
