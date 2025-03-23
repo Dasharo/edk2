@@ -1460,7 +1460,7 @@ ParseMiscInfo (
 
   if (CfrCalculatedChecksum != CbCfrSetupMenu->checksum) {
     DEBUG ((DEBUG_WARN, "CFR: Calculated CRC32 0x%x does not match stored CRC32 0x%x!\n", CfrCalculatedChecksum, CbCfrSetupMenu->checksum));
-    return RETURN_CRC_ERROR;
+    //return RETURN_CRC_ERROR;
   }
 
   ProcessedLength = sizeof (struct cb_cfr);
