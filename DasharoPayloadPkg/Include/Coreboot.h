@@ -923,6 +923,7 @@ struct cb_cmos_checksum {
 struct cb_cfr {
   UINT32 tag;
   UINT32 size;
+  UINT32 version;
   UINT32 checksum;  /* Of the following data only; excludes these 3 fields */
   /* CFR_FORM forms[] */
 };
