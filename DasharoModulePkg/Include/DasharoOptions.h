@@ -82,6 +82,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define DASHARO_DGPU_DISABLED                  0
 #define DASHARO_DGPU_ENABLED                   1
+#define DASHARO_DGPU_ONLY                      2
 
 // The values aren't random, they match FSP_M_CONFIG::SpdProfileSelected
 #define DASHARO_MEMORY_PROFILE_JEDEC           0
