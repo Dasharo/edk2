@@ -173,6 +173,7 @@
 
 #string STR_DGPU_ENABLE_POWER_NVIDIA_OPTIMUS    #language en-US "NVIDIA Optimus"
 #string STR_DGPU_ENABLE_POWER_IGPU_ONLY         #language en-US "iGPU Only"
+#string STR_DGPU_ENABLE_POWER_DGPU_ONLY         #language en-US "dGPU Only"
 
 #string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
 #string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
