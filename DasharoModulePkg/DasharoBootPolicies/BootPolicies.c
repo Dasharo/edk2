@@ -40,9 +40,9 @@ InitializeBootPolicies (
 
 {
   EFI_STATUS  Status = EFI_SUCCESS;
-  BOOLEAN *EfiVar;
-  UINTN VarSize = sizeof(BOOLEAN);
-  BOOLEAN FUMEnabled;
+  UINT32 *EfiVar;
+  UINTN VarSize = sizeof(UINT32);
+  UINT32 FUMEnabled;
 
   gBS = SystemTable->BootServices;
   gRT = SystemTable->RuntimeServices;
