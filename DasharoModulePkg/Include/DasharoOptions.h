@@ -116,7 +116,7 @@ typedef struct {
 
 // Set of possible values of Dasharo variables.
 typedef union {
-  BOOLEAN  Boolean;
+  UINT32  Boolean;
   UINT8    Uint8;
 
   DASHARO_WATCHDOG_CONFIG  Watchdog;
