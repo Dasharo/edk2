@@ -31,7 +31,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_POWER_FAILURE_STATE           L"PowerFailureState"
 #define DASHARO_VAR_PS2_CONTROLLER                L"ps2_enable"
 #define DASHARO_VAR_RESIZEABLE_BARS_ENABLED       L"PCIeResizeableBarsEnabled"
-#define DASHARO_VAR_SERIAL_REDIRECTION            L"SerialRedirection"
+#define DASHARO_VAR_SERIAL_REDIRECTION            L"com0_redirection"
 #define DASHARO_VAR_SERIAL_REDIRECTION2           L"SerialRedirection2"
 #define DASHARO_VAR_SLEEP_TYPE                    L"SleepType"
 #define DASHARO_VAR_SMM_BWP                       L"SmmBwp"
