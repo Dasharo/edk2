@@ -1580,7 +1580,7 @@ PlatformBootManagerAfterConsole (
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
   CHAR16                         *BootMenuKey;
   CHAR16                         *SetupMenuKey;
-  BOOLEAN                        NetBootEnabled;
+  UINT32                        NetBootEnabled;
   BOOLEAN                        FUMEnabled;
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
@@ -1666,7 +1666,7 @@ PlatformBootManagerAfterConsole (
 
   SaveSMBIOSFields();
 
-  VarSize = sizeof (NetBootEnabled);
+  VarSize = sizeof (UINT32);
   Status = gRT->GetVariable (
       DASHARO_VAR_NETWORK_BOOT,
       &gDasharoSystemFeaturesGuid,

@@ -29,7 +29,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_NETWORK_BOOT                  L"network_boot"
 #define DASHARO_VAR_OPTION_ROM_POLICY             L"OptionRomPolicy"
 #define DASHARO_VAR_POWER_FAILURE_STATE           L"PowerFailureState"
-#define DASHARO_VAR_PS2_CONTROLLER                L"ps2_controller"
+#define DASHARO_VAR_PS2_CONTROLLER                L"ps2_enable"
 #define DASHARO_VAR_RESIZEABLE_BARS_ENABLED       L"PCIeResizeableBarsEnabled"
 #define DASHARO_VAR_SERIAL_REDIRECTION            L"SerialRedirection"
 #define DASHARO_VAR_SERIAL_REDIRECTION2           L"SerialRedirection2"
