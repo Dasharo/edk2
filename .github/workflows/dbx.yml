@@ -63,7 +63,7 @@ jobs:
         popd
 
     - name: Submit pull request
-      uses: peter-evans/create-pull-request@v7.0.7
+      uses: peter-evans/create-pull-request@v7.0.8
       with:
         path: edk2
         base: dasharo
