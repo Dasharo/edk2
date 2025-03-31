@@ -84,6 +84,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption|FALSE|BOOLEAN|0x00000002A
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowUsbPowerOption|FALSE|BOOLEAN|0x00000002B
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption|FALSE|BOOLEAN|0x00000002C
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDgpuOnlyAvailable|TRUE|BOOLEAN|0x00000002D
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
