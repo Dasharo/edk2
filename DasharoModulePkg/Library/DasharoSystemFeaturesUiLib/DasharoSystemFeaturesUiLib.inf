@@ -98,3 +98,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurveOffOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowUsbPowerOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDgpuOnlyAvailable

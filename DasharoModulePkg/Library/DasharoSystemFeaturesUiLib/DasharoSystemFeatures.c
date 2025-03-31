@@ -200,6 +200,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(HideFanCurveOff) = !FixedPcdGetBool (PcdPowerMenuShowFanCurveOffOption);
   PRIVATE_DATA(PowerMenuShowUsbPower) = FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption);
   PRIVATE_DATA(PowerMenuShowDGPUPower) = FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption);
+  PRIVATE_DATA(DgpuOnlyAvailable) = FixedPcdGetBool (PcdDgpuOnlyAvailable);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
