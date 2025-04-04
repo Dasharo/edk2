@@ -962,10 +962,7 @@
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
   }
-  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf{
-    <LibraryClasses>
-      Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
-  }
+  SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf
 !if $(OPAL_PASSWORD_ENABLE) == TRUE
   SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordDxe.inf {
     <LibraryClasses>
