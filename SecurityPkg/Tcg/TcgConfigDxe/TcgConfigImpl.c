@@ -346,7 +346,7 @@ TcgCallback (
   }
 
   TcgPhysicalPresenceLibSubmitRequestToPreOSFunction (Value->u8);
-  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_SUBMIT;
+  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_FORM_APPLY;
 
   return EFI_SUCCESS;
 }
