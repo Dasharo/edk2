@@ -53,6 +53,7 @@
   TimerLib
   PlatformHookLib
   Tcg2PhysicalPresenceLib
+  TcgPhysicalPresenceLib
   CustomizedDisplayLib
   LaptopBatteryLib
   BlParseLib
