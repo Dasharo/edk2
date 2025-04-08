@@ -366,6 +366,7 @@
 !else
   TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
   Tcg2PhysicalPresenceLib|OvmfPkg/Library/Tcg2PhysicalPresenceLibNull/DxeTcg2PhysicalPresenceLib.inf
+  TcgPhysicalPresenceLib|OvmfPkg/Library/TcgPhysicalPresenceLibNull/DxeTcgPhysicalPresenceLib.inf
 !endif
 
 !if $(USE_PLATFORM_GOP) == TRUE
