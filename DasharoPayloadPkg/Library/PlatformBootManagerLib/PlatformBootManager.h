@@ -30,6 +30,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/DxeServicesLib.h>
 #include <Library/BootLogoLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
+#include <Library/TcgPhysicalPresenceLib.h>
 #include <Protocol/SmmAccess2.h>
 
 #include <Library/LaptopBatteryLib.h>
