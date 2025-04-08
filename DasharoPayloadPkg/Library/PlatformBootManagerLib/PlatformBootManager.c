@@ -1663,6 +1663,7 @@ PlatformBootManagerAfterConsole (
   // Process TPM PPI request
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
+  TcgPhysicalPresenceLibProcessRequest ();
 
   SaveSMBIOSFields();
 
