@@ -45,4 +45,20 @@ TcgPhysicalPresenceLibNeedUserConfirm (
   VOID
   );
 
+/**
+  The handler for TPM physical presence function:
+  Submit TPM Operation Request to Pre-OS Environment.
+
+  Caution: This function may receive untrusted input.
+
+  @param[in]      PpRequest TPM physical presence operation request.
+
+  @return Return Code for Submit TPM Operation Request to Pre-OS Environment.
+**/
+EFI_STATUS
+EFIAPI
+TcgPhysicalPresenceLibSubmitRequestToPreOSFunction (
+  IN UINT8  PpRequest
+  );
+
 #endif

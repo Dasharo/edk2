@@ -29,6 +29,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/PcdLib.h>
 #include <Library/PrintLib.h>
 #include <Library/Tpm12DeviceLib.h>
+#include <Library/TcgPhysicalPresenceLib.h>
 
 #include <Guid/MdeModuleHii.h>
 
