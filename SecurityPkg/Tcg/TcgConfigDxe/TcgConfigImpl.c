@@ -286,54 +286,6 @@ TcgRouteConfig (
 }
 
 /**
-  Save TPM request to variable space.
-
-  @param[in] PpRequest             Physical Presence request command.
-
-  @retval    EFI_SUCCESS           The operation is finished successfully.
-  @retval    Others                Other errors as indicated.
-
-**/
-EFI_STATUS
-SavePpRequest (
-  IN UINT8  PpRequest
-  )
-{
-  EFI_STATUS             Status;
-  UINTN                  DataSize;
-  EFI_PHYSICAL_PRESENCE  PpData;
-
-  //
-  // Save TPM command to variable.
-  //
-  DataSize = sizeof (EFI_PHYSICAL_PRESENCE);
-  Status   = gRT->GetVariable (
-                    PHYSICAL_PRESENCE_VARIABLE,
-                    &gEfiPhysicalPresenceGuid,
-                    NULL,
-                    &DataSize,
-                    &PpData
-                    );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  PpData.PPRequest = PpRequest;
-  Status           = gRT->SetVariable (
-                            PHYSICAL_PRESENCE_VARIABLE,
-                            &gEfiPhysicalPresenceGuid,
-                            EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-                            DataSize,
-                            &PpData
-                            );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  return EFI_SUCCESS;
-}
-
-/**
   This function processes the results of changes in configuration.
 
   @param[in]  This               Points to the EFI_HII_CONFIG_ACCESS_PROTOCOL.
@@ -393,7 +345,7 @@ TcgCallback (
     return EFI_UNSUPPORTED;
   }
 
-  SavePpRequest (Value->u8);
+  TcgPhysicalPresenceLibSubmitRequestToPreOSFunction (Value->u8);
   *ActionRequest = EFI_BROWSER_ACTION_REQUEST_SUBMIT;
 
   return EFI_SUCCESS;
