@@ -18,6 +18,8 @@
   SecurityPkg/Tcg/TcgConfigDxe/TcgConfigDxe.inf {
     <LibraryClasses>
       Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+      TcgPhysicalPresenceLib|SecurityPkg/Library/DxeTcgPhysicalPresenceLib/DxeTcgPhysicalPresenceLib.inf
+      TcgPpVendorLib|SecurityPkg/Library/TcgPpVendorLibNull/TcgPpVendorLibNull.inf
   }
 !if $(TPM1_ENABLE) == TRUE
   SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {
