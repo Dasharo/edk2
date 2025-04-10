@@ -303,10 +303,10 @@ UpdatePs2KeyboardConIn (
     return;
 
   // Remove the keyboard from ConIn if it was not detected.
-  if (!DetectPs2Keyboard()) {
-    DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
-    EfiBootManagerUpdateConsoleVariable (ConIn, NULL, mPs2KbdDevicePath);
-  }
+  // if (!DetectPs2Keyboard()) {
+  //   DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
+  //   EfiBootManagerUpdateConsoleVariable (ConIn, NULL, mPs2KbdDevicePath);
+  // }
 }
 
 /**
