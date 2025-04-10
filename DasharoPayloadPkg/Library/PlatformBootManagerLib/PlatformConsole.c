@@ -266,6 +266,13 @@ RegisterUartConsole (
   // Print Device Path
   //
   DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  DEBUG((
+    EFI_D_INFO,
+    "%segistering UART Console: COM%d DevPath: %s\n",
+    UartEnabled ? L"R" : L"Unr",
+    UartNumber + 1,
+    DevPathStr
+    ));
   if (DevPathStr != NULL) {
     DEBUG((
       EFI_D_INFO,
@@ -464,6 +471,12 @@ PreparePciSerialDevicePath (
   // Print Device Path
   //
   DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  DEBUG((
+    DEBUG_INFO,
+    "Setting PCI Serial Console, DevPath: %s\n",
+    DevPathStr
+    ));
+  
   if (DevPathStr != NULL) {
     DEBUG((
       EFI_D_INFO,

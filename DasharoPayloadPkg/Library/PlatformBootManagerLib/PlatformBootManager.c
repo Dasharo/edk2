@@ -607,6 +607,8 @@ AddOutput (
   EFI_DEVICE_PATH_PROTOCOL *DevicePath;
 
   DevicePath = DevicePathFromHandle (Handle);
+  DEBUG ((DEBUG_INFO, "%a: %s: handle %p: device path found\n",
+    __FUNCTION__, ReportText, Handle));
   if (DevicePath == NULL) {
     DEBUG ((EFI_D_ERROR, "%a: %s: handle %p: device path not found\n",
       __FUNCTION__, ReportText, Handle));
@@ -615,7 +617,7 @@ AddOutput (
 
   Status = EfiBootManagerUpdateConsoleVariable (ConOut, DevicePath, NULL);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "%a: %s: adding to ConOut: %r\n", __FUNCTION__,
+    DEBUG ((DEBUG_INFO, "%a: %s: adding to ConOut: %r\n", __FUNCTION__,
       ReportText, Status));
     return;
   }
@@ -1618,6 +1620,50 @@ PlatformBootManagerAfterConsole (
   
   gBS->Stall (200 * 1000);
   EfiBootManagerConnectAll ();
+
+  // ------
+
+  EFI_DEVICE_PATH_PROTOCOL *dp;
+  UINTN                    Size;
+  EFI_STATUS               dumpStatus;
+
+  // Dump ConOut
+  Size = 0;
+  Status = gRT->GetVariable(
+      L"ConOut", &gEfiGlobalVariableGuid,
+      NULL, &Size, NULL);
+  if (Status == EFI_BUFFER_TOO_SMALL) {
+    dp = AllocatePool(Size);
+    if (dp) {
+      Status = gRT->GetVariable(
+          L"ConOut", &gEfiGlobalVariableGuid,
+          NULL, &Size, dp);
+      if (!EFI_ERROR(dumpStatus)) {
+        DEBUG((DEBUG_INFO, "[ConOut] %s\n", ConvertDevicePathToText(dp, TRUE, TRUE)));
+      }
+      FreePool(dp);
+    }
+  }
+
+  // Repeat the same for ConIn
+  Size = 0;
+  Status = gRT->GetVariable(
+      L"ConIn", &gEfiGlobalVariableGuid,
+      NULL, &Size, NULL);
+  if (Status == EFI_BUFFER_TOO_SMALL) {
+    dp = AllocatePool(Size);
+    if (dp) {
+      Status = gRT->GetVariable(
+          L"ConIn", &gEfiGlobalVariableGuid,
+          NULL, &Size, dp);
+      if (!EFI_ERROR(dumpStatus)) {
+        DEBUG((DEBUG_INFO, "[ConIn] %s\n", ConvertDevicePathToText(dp, TRUE, TRUE)));
+      }
+      FreePool(dp);
+    }
+  }
+
+  // ------
 
   EfiBootManagerRefreshAllBootOption ();
 
