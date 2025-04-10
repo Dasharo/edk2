@@ -1607,14 +1607,17 @@ PlatformBootManagerAfterConsole (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
-  if (!mFastBoot || FUMEnabled) {
-    // FIXME: USB devices are not being detected unless we wait a bit.
-    // But don't wait with fastboot enabled. We typically don't boot a full blown OS from USB.
-    gBS->Stall (100 * 1000);
+  // if (!mFastBoot || FUMEnabled) {
+  //   // FIXME: USB devices are not being detected unless we wait a bit.
+  //   // But don't wait with fastboot enabled. We typically don't boot a full blown OS from USB.
+  //   gBS->Stall (100 * 1000);
 
-    // With fast boot, we can't call ConnectAll as it would connect all consoles.
-    EfiBootManagerConnectAll ();
-  }
+  //   // With fast boot, we can't call ConnectAll as it would connect all consoles.
+  //   EfiBootManagerConnectAll ();
+  // }
+  
+  gBS->Stall (200 * 1000);
+  EfiBootManagerConnectAll ();
 
   EfiBootManagerRefreshAllBootOption ();
 
