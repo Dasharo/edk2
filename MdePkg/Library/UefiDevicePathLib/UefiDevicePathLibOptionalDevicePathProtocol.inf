@@ -58,6 +58,8 @@
   ## SOMETIMES_CONSUMES  ## GUID
   gEfiPcAnsiGuid
   ## SOMETIMES_CONSUMES  ## GUID
+  gEfiTtyTermGuid
+  ## SOMETIMES_CONSUMES  ## GUID
   gEfiUartDevicePathGuid
   ## SOMETIMES_CONSUMES  ## GUID
   gEfiSasDevicePathGuid

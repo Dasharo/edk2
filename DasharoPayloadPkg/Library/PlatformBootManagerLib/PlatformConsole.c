@@ -266,6 +266,13 @@ RegisterUartConsole (
   // Print Device Path
   //
   DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  DEBUG((
+    EFI_D_INFO,
+    "%segistering UART Console: COM%d DevPath: %s\n",
+    UartEnabled ? L"R" : L"Unr",
+    UartNumber + 1,
+    DevPathStr
+    ));
   if (DevPathStr != NULL) {
     DEBUG((
       EFI_D_INFO,
@@ -303,10 +310,10 @@ UpdatePs2KeyboardConIn (
     return;
 
   // Remove the keyboard from ConIn if it was not detected.
-  if (!DetectPs2Keyboard()) {
-    DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
-    EfiBootManagerUpdateConsoleVariable (ConIn, NULL, mPs2KbdDevicePath);
-  }
+  // if (!DetectPs2Keyboard()) {
+  //   DEBUG ((DEBUG_INFO, "PS/2 keyboard not connected\n"));
+  //   EfiBootManagerUpdateConsoleVariable (ConIn, NULL, mPs2KbdDevicePath);
+  // }
 }
 
 /**
@@ -464,6 +471,12 @@ PreparePciSerialDevicePath (
   // Print Device Path
   //
   DevPathStr = ConvertDevicePathToText (DevicePath, FALSE, FALSE);
+  DEBUG((
+    DEBUG_INFO,
+    "Setting PCI Serial Console, DevPath: %s\n",
+    DevPathStr
+    ));
+  
   if (DevPathStr != NULL) {
     DEBUG((
       EFI_D_INFO,
