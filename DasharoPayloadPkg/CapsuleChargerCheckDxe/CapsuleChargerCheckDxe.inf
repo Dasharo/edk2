@@ -1,0 +1,48 @@
+## @file
+# This driver produces GraphicsOutput protocol based on the GraphicsInfo HOB information.
+#
+# Copyright (c) 2016, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = CapsuleChargerCheckDxe
+  FILE_GUID                      = 62A2D07F-3DAE-4D42-B1C6-03A3B640F5BD
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = CapsuleChargerCheckEntry
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources.common]
+  CapsuleChargerCheckDxe.c
+  SSFN/ssfn.h
+  SSFN/VeraB.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  MemoryAllocationLib
+  SafeIntLib
+  UefiLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiDriverEntryPoint
+  LaptopBatteryLib
+
+[Protocols]
+  gEfiGraphicsOutputProtocolGuid       ## CONSUMES
+
+[Depex]
+  gEfiGraphicsOutputProtocolGuid
