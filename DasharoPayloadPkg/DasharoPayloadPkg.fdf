@@ -213,6 +213,13 @@ INF MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 INF FatPkg/EnhancedFatDxe/Fat.inf
 
 #
+# VirtIO SCSI Support
+#
+INF OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
+INF OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
+INF OvmfPkg/VirtioFsDxe/VirtioFsDxe.inf
+
+#
 # Filesystem drivers
 #
 !if $(ARCH) == IA32
