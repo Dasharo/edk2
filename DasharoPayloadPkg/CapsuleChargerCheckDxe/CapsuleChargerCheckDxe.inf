@@ -24,8 +24,6 @@
 
 [Sources.common]
   CapsuleChargerCheckDxe.c
-  SSFN/ssfn.h
-  SSFN/VeraB.h
 
 [Packages]
   MdePkg/MdePkg.dec
