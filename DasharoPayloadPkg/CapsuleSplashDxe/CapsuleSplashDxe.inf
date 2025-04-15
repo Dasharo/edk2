@@ -24,12 +24,11 @@
 
 [Sources.common]
   CapsuleSplashDxe.c
-  SSFN/ssfn.h
-  SSFN/VeraB.h
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
