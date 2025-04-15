@@ -35,8 +35,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define SSFN_MAXLINES 4096
 #define SSFN_IMPLEMENTATION
-#include "SSFN/ssfn.h"
-#include "SSFN/VeraB.h"
+#include <SSFN/ssfn.h>
+#include <SSFN/VeraB.h>
 
 ssfn_t     mCtx;
 ssfn_buf_t mFBuf;
