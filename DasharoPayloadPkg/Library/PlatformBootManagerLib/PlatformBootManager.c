@@ -698,7 +698,7 @@ PlatformBootManagerBeforeConsole (
   // available.
   //
   if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
-    // TODO: when enabling capsule support for laptops, add a battery check here
+    // Capsules may have their own sanity checks, e.g. AC check on laptops.
     Status = ProcessCapsules ();
     if (EFI_ERROR (Status)) {
       DEBUG((DEBUG_ERROR, "%a(): ProcessCapsule() failed with: %r\n", __FUNCTION__, Status));
@@ -1624,7 +1624,7 @@ PlatformBootManagerAfterConsole (
   // PlatformBootManagerBeforeConsole().
   //
   if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
-    // TODO: when enabling capsule support for laptops, add a battery check here
+    // Capsules may have their own sanity checks, e.g. AC check on laptops.
     Status = ProcessCapsules ();
     if (EFI_ERROR (Status)) {
       DEBUG((DEBUG_ERROR, "%a(): ProcessCapsule() failed with: %r\n", __FUNCTION__, Status));
