@@ -53,7 +53,7 @@
   DEFINE UART_DEFAULT_PARITY          = 1
   DEFINE UART_DEFAULT_STOP_BITS       = 1
   DEFINE DEFAULT_TERMINAL_TYPE        = 4
-  
+
   DEFINE FTDI_USB_UART_SUPPORT        = FALSE
   DEFINE UART_ON_SUPERIO              = FALSE
 
@@ -648,6 +648,10 @@
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
+
+  # coreboot produces SMBIOS v3.0 tables only
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0300
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
