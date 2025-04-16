@@ -649,6 +649,10 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand|FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection|FALSE
 
+  # coreboot produces SMBIOS v3.0 tables only
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0300
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS
