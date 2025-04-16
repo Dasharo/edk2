@@ -437,6 +437,21 @@ MigrateBootLogo (
 
 STATIC
 BOOLEAN
+MigrateGbeRegion (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("SI_GBE", Data, TRUE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
 MigrateFile (
   CONST CHAR8        *Name,
   struct cbfs_image  *CurrentCbfs,
@@ -679,6 +694,11 @@ MergeFirmwareImages (
 
   if (!MigrateBootLogo (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateBootLogo () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateGbeRegion (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateGbeRegion () failed\n", __FUNCTION__));
     goto Fail;
   }
 
