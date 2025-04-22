@@ -1190,6 +1190,11 @@ WarnIfFirmwareUpdateMode (
       );
   ASSERT_EFI_ERROR (Status);
 
+  // Don't bother checking user presence if FUM was triggered by capsule update
+  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+    return TRUE;
+  }
+
   Status = gRT->GetTime (&Time, NULL);
   //
   // Don't check status, even if the call failed we still have "random" data
