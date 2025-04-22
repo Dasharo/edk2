@@ -437,7 +437,7 @@ MigrateBootLogo (
 
 STATIC
 BOOLEAN
-MigrageGbeRegion (
+MigrateGbeRegion (
   IN CONST MigrationData  *Data
   )
 {
