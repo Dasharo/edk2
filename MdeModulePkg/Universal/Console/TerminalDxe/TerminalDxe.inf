@@ -87,6 +87,7 @@
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType           ## SOMETIMES_CONSUMES
+  gEfiMdePkgTokenSpaceGuid.PcdEscapeTimeout                 ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable    ## CONSUMES
 
 # [Event]

@@ -2520,5 +2520,9 @@
   # @Prompt Memory encryption attribute
   gEfiMdePkgTokenSpaceGuid.PcdConfidentialComputingGuestAttr|0|UINT64|0x0000002e
 
+  ## This dynamic PCD configures the escape sequence delay after Escape keypress.
+  # @Prompt Escape sequence timeout
+  gEfiMdePkgTokenSpaceGuid.PcdEscapeTimeout|5000000|UINT64|0x0000002f
+
 [UserExtensions.TianoCore."ExtraFiles"]
   MdePkgExtra.uni

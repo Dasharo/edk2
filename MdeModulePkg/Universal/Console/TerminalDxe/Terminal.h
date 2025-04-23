@@ -103,7 +103,7 @@ typedef struct {
   EFI_KEY_FIFO                       *EfiKeyFiFoForNotify;
   EFI_UNICODE_STRING_TABLE           *ControllerNameTable;
   EFI_EVENT                          TimerEvent;
-  EFI_EVENT                          TwoSecondTimeOut;
+  EFI_EVENT                          EscapeTimeout;
   UINT32                             InputState;
   UINT32                             ResetState;
   UINT16                             TtyEscapeStr[3];
