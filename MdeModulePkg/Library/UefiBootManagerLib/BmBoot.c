@@ -2542,6 +2542,9 @@ STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOpts[] = {
   { L"\\EFI\\Microsoft\\Boot\\bootmgfw.efi", L"Windows Boot Manager (on %s)" },
   { L"\\EFI\\Suse\\elilo.efi",               L"Suse Boot Manager (on %s)" },
   { L"\\EFI\\Redhat\\elilo.efi",             L"RedHat Boot Manager (on %s)" },
+  { L"\\EFI\\freebsd\\loader.efi",           L"FreeBSD (on %s)" },
+  { L"\\EFI\\opnsense\\loader.efi",          L"OPNsense (on %s)" },
+  { L"\\EFI\\pfsense\\loader.efi",           L"pfSense (on %s)" },
 };
 
 STATIC CONST PRE_INSTALLED_BOOT_OPT PreInstalledBootOptsShim[] = {
