@@ -590,7 +590,7 @@ DasharoCapsulesCanPersistAcrossReset (
   // update.  A more reliable solution would be to pass this information from
   // coreboot.
   //
-  return MeMode == DASHARO_ME_MODE_DISABLE_HAP;
+  return TRUE;
 }
 
 EFI_STATUS
