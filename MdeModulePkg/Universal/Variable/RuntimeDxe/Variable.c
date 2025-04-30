@@ -593,7 +593,17 @@ Reclaim (
     // end of the variable buffer.
     //
     MaximumBufferSize += 1;
-    ValidBuffer        = AllocatePool (MaximumBufferSize);
+    
+    Status = gBS->AllocatePool(EfiRuntimeServicesData, MaximumBufferSize, (VOID **)&ValidBuffer);
+    ASSERT_EFI_ERROR(Status);
+
+    Status = gDS->SetMemorySpaceAttributes(
+      (EFI_PHYSICAL_ADDRESS)(UINTN)ValidBuffer,
+      MaximumBufferSize,
+      EFI_MEMORY_RUNTIME | EFI_MEMORY_WB
+    );
+    ASSERT_EFI_ERROR(Status);
+    
     if (ValidBuffer == NULL) {
       return EFI_OUT_OF_RESOURCES;
     }
