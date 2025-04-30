@@ -1342,6 +1342,7 @@ VariableAddressChangeEvent (
   IN VOID       *Context
   )
 {
+  DEBUG ((DEBUG_INFO, ">>> [SMM] VariableAddressChangeEvent triggered\n"));
   EfiConvertPointer (0x0, (VOID **)&mVariableBuffer);
   EfiConvertPointer (0x0, (VOID **)&mMmCommunication2);
   EfiConvertPointer (EFI_OPTIONAL_PTR, (VOID **)&mVariableRtCacheInfo.CacheInfoFlagBuffer);

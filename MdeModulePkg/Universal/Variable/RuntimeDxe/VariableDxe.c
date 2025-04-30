@@ -521,6 +521,21 @@ ProtocolIsVariablePolicyEnabled (
   return EFI_SUCCESS;
 }
 
+VOID EFIAPI
+VariableAddressChangeEvent (
+  EFI_EVENT Event,
+  VOID      *Context
+)
+{
+  DEBUG ((DEBUG_INFO, ">>> [DXE] VariableAddressChangeEvent fired\n"));
+
+  EfiConvertPointer (0, (VOID **)&mVariableModuleGlobal);
+
+  if (mVariableModuleGlobal != NULL) {
+    EfiConvertPointer (0, (VOID **)&mVariableModuleGlobal->VariableGlobal.NonVolatileVariableBase);
+  }
+}
+
 /**
   Variable Driver main entry point. The Variable driver places the 4 EFI
   runtime services in the EFI System Table and installs arch protocols
@@ -645,4 +660,17 @@ VariableServiceInitialize (
   ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
+
+  EFI_EVENT Event;
+
+  Status = gBS->CreateEventEx (
+    EVT_NOTIFY_SIGNAL,
+    TPL_NOTIFY,
+    VariableAddressChangeEvent,
+    NULL,
+    &gEfiEventVirtualAddressChangeGuid,
+    &Event
+  );
+  ASSERT_EFI_ERROR(Status);
+  
 }

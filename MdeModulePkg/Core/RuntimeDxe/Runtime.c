@@ -252,6 +252,7 @@ RuntimeDriverSetVirtualAddressMap (
   LIST_ENTRY               *Link;
   EFI_PHYSICAL_ADDRESS     VirtImageBase;
 
+  DEBUG ((DEBUG_INFO, ">>> SetVirtualAddressMap() handler entered\n"));
   //
   // Can only switch to virtual addresses once the memory map is locked down,
   // and can only set it once
