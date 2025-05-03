@@ -1,7 +1,7 @@
 /** @file
   This library will parse the Slim Bootloader to get required information.
 
-  Copyright (c) 2014 - 2019, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -15,7 +15,7 @@
 #include <Library/HobLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
-
+#include <UniversalPayload/PciRootBridges.h>
 
 /**
   This function retrieves the parameter base address from boot loader.

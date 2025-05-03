@@ -783,4 +783,14 @@ struct lb_efi_fw_info {
   UINT32 fw_size;                   /* Size of firmware in bytes */
 } __attribute__ ((packed));
 
+#define CB_TAG_CFR_ROOT  0x0047
+
+struct cb_cfr {
+  UINT32 tag;
+  UINT32 size;
+  UINT32 version;
+  UINT32 checksum;  /* Of the following data only; excludes these 3 fields */
+  /* CFR_FORM forms[] */
+};
+
 #endif // _COREBOOT_PEI_H_INCLUDED_
