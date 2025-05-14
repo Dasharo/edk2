@@ -113,7 +113,11 @@ INF MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 !if $(RAM_DISK_ENABLE) == TRUE
 INF  MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
+!if $(QEMU_PLATFORM) == TRUE
+INF OvmfPkg/LocalApicTimerDxe/LocalApicTimerDxe.inf
+!else
 INF PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
+!endif
 INF MdeModulePkg/Universal/Metronome/Metronome.inf
 INF MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
 INF MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
@@ -194,7 +198,7 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
 !else
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
- 
+
 
 
 #
