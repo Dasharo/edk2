@@ -88,8 +88,8 @@
   # For recent X86 CPU, 0x15 CPUID instruction will return Time Stamp Counter Frequence.
   # This is how BaseCpuTimerLib works, and a recommended way to get Frequence, so set the default value as TRUE.
   # Note: for emulation platform such as QEMU, this may not work and should set it as FALSE
-  DEFINE CPU_TIMER_LIB_ENABLE  = TRUE
-
+  DEFINE CPU_TIMER_LIB_ENABLE           = TRUE
+  DEFINE QEMU_PLATFORM                  = FALSE
   #
   # Security options:
   #
@@ -196,6 +196,7 @@
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
   RngLib|DasharoPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
+  NestedInterruptTplLib|OvmfPkg/Library/NestedInterruptTplLib/NestedInterruptTplLib.inf
 
   #
   # UEFI & PI
@@ -260,10 +261,16 @@
   #
   # Platform
   #
+!if $(QEMU_PLATFORM) == TRUE
+  # coreboot will expose proper ACPI Timer I/O port from QEMU too
+  # No need to use OVMF HPET Timer libraries
+  TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
+!else
 !if $(CPU_TIMER_LIB_ENABLE) == TRUE
   TimerLib|UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
 !else
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
+!endif
 !endif
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
 !if (($(USE_CBMEM_FOR_CONSOLE) == TRUE) && ($(TARGET) == RELEASE))
@@ -391,6 +398,11 @@
   DebugAgentLib|MdeModulePkg/Library/DebugAgentLibNull/DebugAgentLibNull.inf
   ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
   PerformanceLib|MdeModulePkg/Library/PeiPerformanceLib/PeiPerformanceLib.inf
+
+[LibraryClasses.common.SEC]
+!if $(QEMU_PLATFORM) == TRUE
+  TimerLib|OvmfPkg/Library/AcpiTimerLib/BaseRomAcpiTimerLib.inf
+!endif
 
 [LibraryClasses.IA32.PEI_CORE, LibraryClasses.IA32.PEIM]
   PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
@@ -653,6 +665,10 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0300
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
 
+!if $(QEMU_PLATFORM) == TRUE
+  gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
+!endif
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS
@@ -789,7 +805,11 @@
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
+!if $(QEMU_PLATFORM) == TRUE
+  OvmfPkg/LocalApicTimerDxe/LocalApicTimerDxe.inf
+!else
   PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
+!endif
   MdeModulePkg/Universal/Metronome/Metronome.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
   MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
