@@ -45,6 +45,13 @@ jobs:
           coreboot/coreboot-sdk:2024-02-18_732134932b \
          ./.github/scripts/build-ipxe.sh
 
+    - name: Build DasharoPayloadPkg
+      run: |
+        docker run --rm -i -v $PWD:/home/coreboot/coreboot:rw \
+          -u $(id -u):$(id -g) -w /home/coreboot/coreboot \
+          coreboot/coreboot-sdk:2024-02-18_732134932b \
+         ./.github/scripts/build-dasharo-payload-pkg.sh
+
     - name: Build OVMF Firmware Image
       run: |
         docker run --rm -i -v $PWD:/home/coreboot/coreboot:rw \
