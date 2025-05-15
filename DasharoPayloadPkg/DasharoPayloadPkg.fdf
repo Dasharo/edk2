@@ -397,7 +397,7 @@ INF  RuleOverride = BINARY USE = X64 ShellBinPkg/UefiShell/UefiShell.inf
 # without forking.
 FILE DRIVER = CAB058DF-E938-4F85-8978-1F7E6AABDB96 {
   SECTION DXE_DEPEX_EXP = {gEfiGraphicsOutputProtocolGuid AND gEfiSimpleTextInputExProtocolGuid AND NOT gDasharoFastBootPolicyGuid}
-  SECTION PE32 = Build/DasharoPayloadPkgX64/$(TARGET)_COREBOOT/X64/CrScreenshotDxe.efi
+  SECTION PE32 = Build/DasharoPayloadPkgX64/$(TARGET)_$(TOOLCHAIN)/X64/CrScreenshotDxe.efi
   SECTION UI = "CrScreenshotDxe"
 }
 
