@@ -203,6 +203,8 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(PowerMenuShowDGPUPower) = FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption);
   PRIVATE_DATA(DgpuOnlyAvailable) = FixedPcdGetBool (PcdDgpuOnlyAvailable);
   PRIVATE_DATA(IntelMeMenuShowCbntStatus) = FixedPcdGetBool (PcdIntelMeMenuShowCbntStatus);
+  PRIVATE_DATA(ShowMemorySpdProfile) = FixedPcdGetBool(PcdShowMemorySpdProfileOption);
+  PRIVATE_DATA(ShowMemoryIbecc) = FixedPcdGetBool(PcdShowMemoryIbeccOption);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
@@ -230,6 +232,10 @@ DasharoSystemFeaturesUiLibConstructor (
   if (PRIVATE_DATA(ShowCpuMenu))
     PRIVATE_DATA(ShowCpuMenu) = FixedPcdGetBool(PcdShowCpuCoreDisable) ||
                                 FixedPcdGetBool(PcdShowCpuHyperThreading);
+
+  if (PRIVATE_DATA(ShowMemoryMenu))
+    PRIVATE_DATA(ShowMemoryMenu) = FixedPcdGetBool(PcdShowMemorySpdProfileOption) ||
+                                   FixedPcdGetBool(PcdShowMemoryIbeccOption);
 
   GetCpuInfo(&PRIVATE_DATA(BigCoreMaxCount),
              &PRIVATE_DATA(SmallCoreMaxCount),
@@ -266,6 +272,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_IOMMU_CONFIG, IommuConfig);
   LOAD_VAR (DASHARO_VAR_LOCK_BIOS, LockBios);
   LOAD_VAR (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile);
+  LOAD_VAR (DASHARO_VAR_IBECC, MemoryIbecc);
   LOAD_VAR (DASHARO_VAR_ME_MODE, MeMode);
   LOAD_VAR (DASHARO_VAR_NETWORK_BOOT, NetworkBoot);
   LOAD_VAR (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution);
@@ -547,7 +554,11 @@ DasharoSystemFeaturesRouteConfig (
       STORE_VAR_IF (DASHARO_VAR_SMM_BWP, SmmBwp, FixedPcdGetBool (PcdShowSmmBwp));
   }
 
-  STORE_VAR_IF (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile, FixedPcdGetBool (PcdShowMemoryMenu));
+  if (FixedPcdGetBool (PcdShowMemoryMenu)) {
+    STORE_VAR_IF (DASHARO_VAR_MEMORY_PROFILE, MemoryProfile, FixedPcdGetBool (PcdShowMemorySpdProfileOption));
+    STORE_VAR_IF (DASHARO_VAR_IBECC, MemoryIbecc, FixedPcdGetBool (PcdShowMemoryIbeccOption));
+  }
+
   STORE_VAR_IF (DASHARO_VAR_ME_MODE, MeMode, FixedPcdGetBool (PcdShowIntelMeMenu));
   STORE_VAR_IF (DASHARO_VAR_NETWORK_BOOT, NetworkBoot, FixedPcdGetBool (PcdShowNetworkMenu));
 
