@@ -163,6 +163,8 @@ typedef struct {
   BOOLEAN  HideFanCurveOff;
   BOOLEAN  DgpuOnlyAvailable;
   BOOLEAN  IntelMeMenuShowCbntStatus;
+  BOOLEAN  ShowMemorySpdProfile;
+  BOOLEAN  ShowMemoryIbecc;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
@@ -200,6 +202,7 @@ typedef struct {
   UINT8                    UsbPortPower;
   UINT8                    DGPUState;
   IBG_STATUS               IbgStatus;
+  BOOLEAN                  MemoryIbecc;
 } DASHARO_FEATURES_DATA;
 
 //

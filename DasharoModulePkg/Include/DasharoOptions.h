@@ -25,6 +25,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_IOMMU_CONFIG                  L"IommuConfig"
 #define DASHARO_VAR_LOCK_BIOS                     L"LockBios"
 #define DASHARO_VAR_MEMORY_PROFILE                L"MemoryProfile"
+#define DASHARO_VAR_IBECC                         L"IBECC"
 #define DASHARO_VAR_ME_MODE                       L"MeMode"
 #define DASHARO_VAR_NETWORK_BOOT                  L"NetworkBoot"
 #define DASHARO_VAR_OPTION_ROM_POLICY             L"OptionRomPolicy"
