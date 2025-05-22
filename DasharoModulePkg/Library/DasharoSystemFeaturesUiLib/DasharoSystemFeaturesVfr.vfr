@@ -981,7 +981,7 @@ formset
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
-    disableif ideqval FeaturesData.ShowMemoryMenu == 0;
+    disableif ideqval FeaturesData.ShowMemorySpdProfile == 0;
       oneof varid  = FeaturesData.MemoryProfile,
             prompt = STRING_TOKEN(STR_MEMORY_PROFILE_PROMPT),
             help   = STRING_TOKEN(STR_MEMORY_PROFILE_HELP),
@@ -992,6 +992,14 @@ formset
             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP2), value = MEMORY_PROFILE_XMP2, flags = 0;
             option text = STRING_TOKEN(STR_MEMORY_PROFILE_XMP3), value = MEMORY_PROFILE_XMP3, flags = 0;
       endoneof;
+    endif;
+
+    disableif ideqval FeaturesData.ShowMemoryIbecc == 0;
+        checkbox varid  = FeaturesData.MemoryIbecc,
+                 prompt = STRING_TOKEN(STR_MEMORY_IBECC_PROMPT),
+                 help   = STRING_TOKEN(STR_MEMORY_IBECC_HELP),
+                 flags  = RESET_REQUIRED,
+        endcheckbox;
     endif;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);

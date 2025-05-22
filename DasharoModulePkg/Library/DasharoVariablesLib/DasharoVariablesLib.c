@@ -53,7 +53,8 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_FAN_CURVE_OPTION, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) },
   { DASHARO_VAR_IOMMU_CONFIG, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowIommuOptions) },
   { DASHARO_VAR_LOCK_BIOS, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowLockBios) },
-  { DASHARO_VAR_MEMORY_PROFILE, FixedPcdGetBool (PcdShowMemoryMenu) },
+  { DASHARO_VAR_MEMORY_PROFILE, FixedPcdGetBool (PcdShowMemoryMenu) && FixedPcdGetBool (PcdShowMemorySpdProfileOption) },
+  { DASHARO_VAR_IBECC, FixedPcdGetBool (PcdShowMemoryMenu) && FixedPcdGetBool (PcdShowMemoryIbeccOption) },
   { DASHARO_VAR_ME_MODE, FixedPcdGetBool (PcdShowIntelMeMenu) },
   { DASHARO_VAR_NETWORK_BOOT, FixedPcdGetBool (PcdShowNetworkMenu) },
   { DASHARO_VAR_OPTION_ROM_POLICY, FixedPcdGetBool (PcdShowPciMenu) },
@@ -127,6 +128,9 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_MEMORY_PROFILE) == 0) {
     Data.Uint8 = DASHARO_MEMORY_PROFILE_JEDEC;
     Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_IBECC) == 0) {
+    Data.Boolean = FALSE;
+    Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_ME_MODE) == 0) {
     Data.Uint8 = FixedPcdGet8 (PcdIntelMeDefaultState);
     Size = sizeof (Data.Uint8);

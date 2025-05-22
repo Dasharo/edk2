@@ -100,3 +100,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDgpuOnlyAvailable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeMenuShowCbntStatus
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemorySpdProfileOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption
