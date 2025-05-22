@@ -184,6 +184,11 @@
 #string STR_MEMORY_PROFILE_XMP2    #language en-US  "XMP#2 (predefined extreme memory profile)"
 #string STR_MEMORY_PROFILE_XMP3    #language en-US  "XMP#3 (predefined extreme memory profile)"
 
+#string STR_MEMORY_IBECC_PROMPT   #language en-US  "Memory In-Band ECC (IBECC) Enable"
+#string STR_MEMORY_IBECC_HELP     #language en-US  "This option enables In-Band ECC (IBECC) feature on Intel processors\n\n"
+                                                   "Firmware will reserve a portion of RAM to store ECC syndrome data and enable hardware support for error correction on whole RAM.\n\n"
+                                                   "The portion of RAM being reserved depends on RAM size and is equal to 1/32 of the memory being ECC protected."
+
 #string STR_SERIAL_CONSOLE_REDIRECTION_PROMPT   #language en-US  "Enable COM0 Serial Console Redirection"
 #string STR_SERIAL_CONSOLE_REDIRECTION_HELP     #language en-US  "Redirect the firmware console to the serial port."
 
