@@ -115,6 +115,10 @@ INF  MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
 !if $(QEMU_PLATFORM) == TRUE
 INF OvmfPkg/LocalApicTimerDxe/LocalApicTimerDxe.inf
+INF OvmfPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
+INF OvmfPkg/Virtio10Dxe/Virtio10.inf
+INF OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
+INF OvmfPkg/VirtioScsiDxe/VirtioScsi.inf
 !else
 INF PcAtChipsetPkg/HpetTimerDxe/HpetTimerDxe.inf
 !endif
