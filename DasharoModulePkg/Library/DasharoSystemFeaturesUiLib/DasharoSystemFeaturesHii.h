@@ -28,6 +28,105 @@ SPDX-License-Identifier: BSD-2-Clause
 
 #define DASHARO_FEATURES_DATA_VARSTORE_ID      0x0001
 
+#pragma pack(1)
+typedef struct {
+  UINT64 NemEnabled : 1;
+  UINT64 TpmType : 2;
+  UINT64 TpmSuccess : 1;
+  UINT64 FACB : 1;
+  UINT64 MeasuredBoot : 1;
+  UINT64 VerifiedBoot : 1;
+  UINT64 Revoked : 1;
+  UINT64 : 24;
+  UINT64 BtgCap : 1;
+  UINT64 : 1;
+  UINT64 TxtServerCap : 1;
+  UINT64 NoRstSecretsProt : 1;
+  UINT64 : 28;
+} SACM_INFO_MSR_BITS;
+
+typedef struct {
+  UINT64 : 30;
+  UINT64 TxtSuccess : 1;
+  UINT64 BtgSuccess : 1;
+  UINT64 BlockBootEn : 1;
+  UINT64 PfrSuccess : 1;
+  UINT64 : 13;
+  UINT64 MemPowerDown : 1;
+  UINT64 BtgFailed : 1;
+  UINT64 : 10;
+  UINT64 BiosTrusted : 1;
+  UINT64 TxtDisPol : 1;
+  UINT64 BtgStartupErr : 1;
+  UINT64 CpuErr : 1;
+  UINT64 SacmSuccess : 1;
+} BOOT_STATUS_BITS;
+
+typedef struct {
+  UINT32 AcType : 4;
+  UINT32 Class : 6;
+  UINT32 Major : 5;
+  UINT32 AcmStarted : 1;
+  UINT32 Minor : 12;
+  UINT32 : 3;
+  UINT32 Valid : 1;
+} ACM_STATUS_BITS;
+
+typedef struct {
+  UINT64 KmId : 4;
+  UINT64 BpMeasured : 1;
+  UINT64 BpVerified : 1;
+  UINT64 BpHap : 1;
+  UINT64 BpTxt : 1;
+  UINT64 : 1;
+  UINT64 BpDcd : 1;
+  UINT64 BpDbi : 1;
+  UINT64 BpPbe : 1;
+  UINT64 : 1;
+  UINT64 TpmType : 2;
+  UINT64 TpmSuccess : 1;
+  UINT64 : 1;
+  UINT64 Pfr : 1;
+  UINT64 BackupAct : 2;
+  UINT64 TxtProfile : 5;
+  UINT64 ScrubPolicy : 2;
+  UINT64 : 2;
+  UINT64 DmaProtection : 1;
+  UINT64 : 2;
+  UINT64 ScrtmStatus : 3;
+  UINT64 CpuCoSigning : 1;
+  UINT64 TpmStartupLocality : 1;
+  UINT64 : 27;
+} ACM_POLICY_STATUS_BITS;
+#pragma pack()
+
+typedef union {
+  SACM_INFO_MSR_BITS Bits;
+  UINT64 Raw;
+} SACM_INFO_MSR;
+
+typedef union {
+  BOOT_STATUS_BITS Bits;
+  UINT64 Raw;
+} BOOT_STATUS;
+
+typedef union {
+  ACM_STATUS_BITS Bits;
+  UINT64 Raw;
+} ACM_STATUS;
+
+typedef union {
+  ACM_POLICY_STATUS_BITS Bits;
+  UINT64 Raw;
+} ACM_POLICY_STATUS;
+
+typedef struct {
+  SACM_INFO_MSR     SacmInfoMsr;
+  BOOT_STATUS       BootStatus;
+  ACM_STATUS        AcmStatus;
+  ACM_POLICY_STATUS AcmPolicyStatus;
+} IBG_STATUS;
+
 typedef struct {
   // Feature visibility
   BOOLEAN  ShowSecurityMenu;
@@ -99,6 +198,7 @@ typedef struct {
   UINT8                    CoreMaxCount;
   UINT8                    UsbPortPower;
   UINT8                    DGPUState;
+  IBG_STATUS               IbgStatus;
 } DASHARO_FEATURES_DATA;
 
 //
@@ -165,6 +265,10 @@ typedef struct {
 #define CPU_THROTTLING_OFFSET_QUESTION_ID    0x800D
 #define CPU_THROTTLING_THRESHOLD_QUESTION_ID 0x800E
 #define USB_PORTS_POWER_QUESTION_ID          0x800F
-#define DGPU_STATE_QUESTION_ID        0x8010
+#define DGPU_STATE_QUESTION_ID               0x8010
+#define IBG_SACM_INFO_MSR_QUESTION_ID        0x8011
+#define IBG_BOOT_STATUS_QUESTION_ID          0x8012
+#define IBG_ACM_STATUS_QUESTION_ID           0x8013
+#define IBG_ACM_POLICY_STATUS_QUESTION_ID    0x8014
 
 #endif
