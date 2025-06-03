@@ -9,6 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause
 #include "DasharoSystemFeatures.h"
 #include "DasharoOptions.h"
 
+#include <Library/BaseLib.h>
 #include <Library/DasharoVariablesLib.h>
 
 #define PCH_OC_WDT_CTL				0x54
@@ -645,6 +646,18 @@ DasharoSystemFeaturesCallback (
        * current throttling offset value.
        */
       Value->u8 = FixedPcdGet8(PcdCpuMaxTemperature) - Private->DasharoFeaturesData.CpuThrottlingOffset;
+      break;
+    case IBG_SACM_INFO_MSR_QUESTION_ID:
+      Value->u64 = AsmReadMsr64(0x13A);
+      break;
+    case IBG_BOOT_STATUS_QUESTION_ID:
+      Value->u64 = MmioRead64(0xFED300A0);
+      break;
+    case IBG_ACM_STATUS_QUESTION_ID:
+      Value->u32 = MmioRead64(0xFED30328);
+      break;
+    case IBG_ACM_POLICY_STATUS_QUESTION_ID:
+      Value->u64 = MmioRead64(0xFED30378);
       break;
     default:
       Status = EFI_UNSUPPORTED;
