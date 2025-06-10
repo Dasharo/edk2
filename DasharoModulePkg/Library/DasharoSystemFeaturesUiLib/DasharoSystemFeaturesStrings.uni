@@ -260,7 +260,8 @@
 #string STR_IBG_STATUS_BOOT_STATUS_MEM_POWER_DOWN         #language en-US "    Memory Power Down executed"
 #string STR_IBG_STATUS_BOOT_STATUS_BTG_FAILED             #language en-US "    Boot Guard Failed"
 #string STR_IBG_STATUS_BOOT_STATUS_BIOS_TRUSTED           #language en-US "    BIOS is Trusted"
-#string STR_IBG_STATUS_BOOT_STATUS_TXT_ENABLED_BY_POLICY #language en-US "    TXT is enabled by policy"
+#string STR_IBG_STATUS_BOOT_STATUS_TXT_DISABLED_BY_POLICY #language en-US "    TXT disabled by policy"
+
 #string STR_IBG_STATUS_BOOT_STATUS_BTG_STARTUP_ERR        #language en-US "    Boot Guard Startup Error"
 #string STR_IBG_STATUS_BOOT_STATUS_CPU_ERROR              #language en-US "    CPU Error (Startup ACM authentication failed)"
 #string STR_IBG_STATUS_BOOT_STATUS_SACM_SUCCESS           #language en-US "    S-ACM Startup Success"

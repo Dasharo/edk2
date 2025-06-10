@@ -440,15 +440,16 @@ formset
         endoneof;
 
         oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.TxtDisPol,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_ENABLED_BY_POLICY),
+                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_DISABLED_BY_POLICY),
                 help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
                 flags   = DISPLAY_UINT_HEX | INTERACTIVE,
                 minimum = 0,
                 maximum = 1,
 
-                 option text = STRING_TOKEN(STR_YES), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_NO), value = 1, flags = 0;
+                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
         endoneof;
+
 
         oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgStartupErr,
                 prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_STARTUP_ERR),
