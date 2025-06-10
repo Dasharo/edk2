@@ -99,3 +99,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowUsbPowerOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDgpuOnlyAvailable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeMenuShowCbntStatus
