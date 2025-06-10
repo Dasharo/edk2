@@ -202,6 +202,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(PowerMenuShowUsbPower) = FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption);
   PRIVATE_DATA(PowerMenuShowDGPUPower) = FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption);
   PRIVATE_DATA(DgpuOnlyAvailable) = FixedPcdGetBool (PcdDgpuOnlyAvailable);
+  PRIVATE_DATA(IntelMeMenuShowCbntStatus) = FixedPcdGetBool (PcdIntelMeMenuShowCbntStatus);
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))

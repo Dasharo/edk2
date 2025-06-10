@@ -162,6 +162,7 @@ typedef struct {
   BOOLEAN  ShowPowerFailureState;
   BOOLEAN  HideFanCurveOff;
   BOOLEAN  DgpuOnlyAvailable;
+  BOOLEAN  IntelMeMenuShowCbntStatus;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
