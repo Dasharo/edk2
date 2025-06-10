@@ -233,530 +233,532 @@ formset
              option text = STRING_TOKEN(STR_ME_MODE_DISABLE_HAP), value = ME_MODE_DISABLE_HAP, flags = 0;
           endif;
       endoneof;
-      grayoutif TRUE;
-        subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
-
-        numeric varid   = FeaturesData.IbgStatus.SacmInfoMsr.Raw,
-                questionid = IBG_SACM_INFO_MSR_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RAW_PROMPT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RAW_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xffffffffffffffff,
-        endnumeric;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.NemEnabled,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_NEM_ENABLED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TpmType,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TPM_TYPE),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-
-                 option text = STRING_TOKEN(STR_NO_TPM), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_DTPM_12), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_DTPM_20), value = 2, flags = 0;
-                 option text = STRING_TOKEN(STR_TPM_PTT), value = 3, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TpmSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TPM_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.FACB,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_FACB),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.MeasuredBoot,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_MEASURED_BOOT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.VerifiedBoot,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_VERIFIED_BOOT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.Revoked,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_REVOKED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.BtgCap,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_BTG_CAP),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TxtServerCap,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TXT_SERVER_CAP),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.NoRstSecretsProt,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RST_SECRETS_PROT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_YES), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_NO), value = 1, flags = 0;
-        endoneof;
-
-        numeric varid   = FeaturesData.IbgStatus.BootStatus.Raw,
-                questionid = IBG_BOOT_STATUS_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_RAW_PROMPT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_RAW_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xffffffffffffffff,
-        endnumeric;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.TxtSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BlockBootEn,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BLOCK_BOOT_EN),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.PfrSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_PFR_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.MemPowerDown,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_MEM_POWER_DOWN),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgFailed,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_FAILED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BiosTrusted,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BIOS_TRUSTED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.TxtDisPol,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_DISABLED_BY_POLICY),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgStartupErr,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_STARTUP_ERR),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.CpuErr,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_CPU_ERROR),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.SacmSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_SACM_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmStatus.Raw,
-                questionid = IBG_ACM_STATUS_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_RAW_PROMPT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_RAW_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xffffffff,
-        endnumeric;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.AcType,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_AC_TYPE),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xf,
-        endnumeric;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Class,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_CLASS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0x3f,
-        endnumeric;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Major,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_MAJOR),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0x1f,
-        endnumeric;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmStatus.Bits.AcmStarted,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_ACM_STARTED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Minor,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_MINOR),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0x3ff,
-        endnumeric;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Valid,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_VALID),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Raw,
-                questionid = IBG_ACM_POLICY_STATUS_QUESTION_ID,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_RAW_PROMPT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_RAW_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xffffffffffffffff,
-        endnumeric;
-
-        numeric varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.KmId,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_KM_ID),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0xf,
-        endnumeric;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpMeasured,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_MEASURED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpVerified,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_VERIFIED),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpHap,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_HAP),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpTxt,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_TXT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpDcd,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_DCD),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpDbi,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_DBI),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpPbe,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_PBE),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmType,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_TYPE),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 3,
-
-                 option text = STRING_TOKEN(STR_NO_TPM), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_DTPM_12), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_DTPM_20), value = 2, flags = 0;
-                 option text = STRING_TOKEN(STR_TPM_PTT), value = 3, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmSuccess,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_SUCCESS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.Pfr,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_PFR),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BackupAct,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BACKUP_ACT),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 3,
-
-                 option text = STRING_TOKEN(STR_BACKUP_ACTION_MEM_PD), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_BACKUP_ACTION_BTG_UBS), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_BACKUP_ACTION_PFR_RECV), value = 2, flags = 0;
-                 option text = STRING_TOKEN(STR_BACKUP_ACTION_RESERVED), value = 3, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TxtProfile,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TXT_PROFILE),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 0x1f,
-
-                 option text = STRING_TOKEN(STR_TXT_PROFILE_A), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_TXT_PROFILE_B), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_TXT_PROFILE_D), value = 2, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.ScrubPolicy,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_SCRUB_POLICY),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 3,
-
-                 option text = STRING_TOKEN(STR_MEM_SCRUB_DEFAULT), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_MEM_SCRUB_TME), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_MEM_SCRUB_SACM), value = 2, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.DmaProtection,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_DMA_PROTECTION),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.ScrtmStatus,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_SCRTM_STATUS),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 7,
-
-                 option text = STRING_TOKEN(STR_S_CRTM_STATUS_NONE), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_S_CRTM_STATUS_BTG), value = 1, flags = 0;
-                 option text = STRING_TOKEN(STR_S_CRTM_STATUS_TXT), value = 2, flags = 0;
-                 option text = STRING_TOKEN(STR_S_CRTM_STATUS_BTG_TXT), value = 3, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.CpuCoSigning,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_CPU_COSIGNING),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
-        endoneof;
-
-        oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmStartupLocality,
-                prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_STARTUP_LOCALITY),
-                help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
-                flags   = DISPLAY_UINT_HEX | INTERACTIVE,
-                minimum = 0,
-                maximum = 1,
-
-                 option text = STRING_TOKEN(STR_LOCALITY_3), value = 0, flags = 0;
-                 option text = STRING_TOKEN(STR_LOCALITY_0), value = 1, flags = 0;
-        endoneof;
+      disableif ideqval FeaturesData.IntelMeMenuShowCbntStatus == 0;
+        grayoutif TRUE;
+          subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+          numeric varid   = FeaturesData.IbgStatus.SacmInfoMsr.Raw,
+                  questionid = IBG_SACM_INFO_MSR_QUESTION_ID,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RAW_PROMPT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RAW_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xffffffffffffffff,
+          endnumeric;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.NemEnabled,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_NEM_ENABLED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TpmType,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TPM_TYPE),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+
+                   option text = STRING_TOKEN(STR_NO_TPM), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_DTPM_12), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_DTPM_20), value = 2, flags = 0;
+                   option text = STRING_TOKEN(STR_TPM_PTT), value = 3, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TpmSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TPM_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.FACB,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_FACB),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.MeasuredBoot,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_MEASURED_BOOT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.VerifiedBoot,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_VERIFIED_BOOT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.Revoked,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_REVOKED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.BtgCap,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_BTG_CAP),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.TxtServerCap,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_TXT_SERVER_CAP),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.SacmInfoMsr.Bits.NoRstSecretsProt,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_SACM_INFO_MSR_RST_SECRETS_PROT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_YES), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_NO), value = 1, flags = 0;
+          endoneof;
+
+          numeric varid   = FeaturesData.IbgStatus.BootStatus.Raw,
+                  questionid = IBG_BOOT_STATUS_QUESTION_ID,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_RAW_PROMPT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_RAW_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xffffffffffffffff,
+          endnumeric;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.TxtSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BlockBootEn,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BLOCK_BOOT_EN),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.PfrSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_PFR_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.MemPowerDown,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_MEM_POWER_DOWN),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgFailed,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_FAILED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BiosTrusted,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BIOS_TRUSTED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.TxtDisPol,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_TXT_DISABLED_BY_POLICY),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.BtgStartupErr,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_BTG_STARTUP_ERR),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.CpuErr,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_CPU_ERROR),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.BootStatus.Bits.SacmSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_BOOT_STATUS_SACM_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmStatus.Raw,
+                  questionid = IBG_ACM_STATUS_QUESTION_ID,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_RAW_PROMPT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_RAW_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xffffffff,
+          endnumeric;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.AcType,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_AC_TYPE),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xf,
+          endnumeric;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Class,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_CLASS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0x3f,
+          endnumeric;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Major,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_MAJOR),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0x1f,
+          endnumeric;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmStatus.Bits.AcmStarted,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_ACM_STARTED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Minor,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_MINOR),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0x3ff,
+          endnumeric;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmStatus.Bits.Valid,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_STATUS_VALID),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Raw,
+                  questionid = IBG_ACM_POLICY_STATUS_QUESTION_ID,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_RAW_PROMPT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_RAW_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xffffffffffffffff,
+          endnumeric;
+
+          numeric varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.KmId,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_KM_ID),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0xf,
+          endnumeric;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpMeasured,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_MEASURED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpVerified,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_VERIFIED),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpHap,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_HAP),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpTxt,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_TXT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpDcd,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_DCD),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpDbi,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_DBI),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BpPbe,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BP_PBE),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmType,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_TYPE),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 3,
+
+                   option text = STRING_TOKEN(STR_NO_TPM), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_DTPM_12), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_DTPM_20), value = 2, flags = 0;
+                   option text = STRING_TOKEN(STR_TPM_PTT), value = 3, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmSuccess,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_SUCCESS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.Pfr,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_PFR),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.BackupAct,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_BACKUP_ACT),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 3,
+
+                   option text = STRING_TOKEN(STR_BACKUP_ACTION_MEM_PD), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_BACKUP_ACTION_BTG_UBS), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_BACKUP_ACTION_PFR_RECV), value = 2, flags = 0;
+                   option text = STRING_TOKEN(STR_BACKUP_ACTION_RESERVED), value = 3, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TxtProfile,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TXT_PROFILE),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 0x1f,
+
+                   option text = STRING_TOKEN(STR_TXT_PROFILE_A), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_TXT_PROFILE_B), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_TXT_PROFILE_D), value = 2, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.ScrubPolicy,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_SCRUB_POLICY),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 3,
+
+                   option text = STRING_TOKEN(STR_MEM_SCRUB_DEFAULT), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_MEM_SCRUB_TME), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_MEM_SCRUB_SACM), value = 2, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.DmaProtection,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_DMA_PROTECTION),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.ScrtmStatus,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_SCRTM_STATUS),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 7,
+
+                   option text = STRING_TOKEN(STR_S_CRTM_STATUS_NONE), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_S_CRTM_STATUS_BTG), value = 1, flags = 0;
+                   option text = STRING_TOKEN(STR_S_CRTM_STATUS_TXT), value = 2, flags = 0;
+                   option text = STRING_TOKEN(STR_S_CRTM_STATUS_BTG_TXT), value = 3, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.CpuCoSigning,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_CPU_COSIGNING),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_NO), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_YES), value = 1, flags = 0;
+          endoneof;
+
+          oneof varid   = FeaturesData.IbgStatus.AcmPolicyStatus.Bits.TpmStartupLocality,
+                  prompt  = STRING_TOKEN(STR_IBG_STATUS_ACM_POLICY_STATUS_TPM_STARTUP_LOCALITY),
+                  help    = STRING_TOKEN(STR_IBG_STATUS_BITFIELD_HELP),
+                  flags   = DISPLAY_UINT_HEX | INTERACTIVE,
+                  minimum = 0,
+                  maximum = 1,
+
+                   option text = STRING_TOKEN(STR_LOCALITY_3), value = 0, flags = 0;
+                   option text = STRING_TOKEN(STR_LOCALITY_0), value = 1, flags = 0;
+          endoneof;
+        endif;
       endif;
     endif;
 
