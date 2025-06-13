@@ -2556,9 +2556,12 @@ UpdateDeletePage (
   CHAR8               *CertificateInfoStr8;
   EFI_STRING_ID       CertificateInfoID;
   EFI_STRING_ID       Help;
+  CHAR16              *FormatNameString;
   UINTN               CertificateInfoStrSize;
   CHAR16              *UnknownCert;
   RETURN_STATUS       RStatus;
+  CHAR16              *NameString;
+  EFI_STRING_ID       NameStringId;
 
   Data                    = NULL;
   CertList                = NULL;
@@ -2567,6 +2570,8 @@ UpdateDeletePage (
   CertificateInfoStr8     = NULL;
   StartOpCodeHandle       = NULL;
   EndOpCodeHandle         = NULL;
+  NameString              = NULL;
+  FormatNameString        = NULL;
   CertificateInfoStrSize  = 0;
   UnknownCert             = L"Unknown Certificate: No Common Name, No Issuer";
   RStatus                 = RETURN_SUCCESS;
@@ -2635,15 +2640,8 @@ UpdateDeletePage (
   GuidIndex    = 0;
 
   while ((ItemDataSize > 0) && (ItemDataSize >= CertList->SignatureListSize)) {
-    if (CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertX509Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertSha1Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertSha256Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha256Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha384Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha512Guid)
-        )
-    {
+    if (CompareGuid (&CertList->SignatureType, &gEfiCertX509Guid)) {
+      /* Handle certificates */
       CertCount = (CertList->SignatureListSize - sizeof (EFI_SIGNATURE_LIST) - CertList->SignatureHeaderSize) / CertList->SignatureSize;
       for (Index = 0; Index < CertCount; Index++) {
         Cert = (EFI_SIGNATURE_DATA *)((UINT8 *)CertList
@@ -2707,10 +2705,77 @@ UpdateDeletePage (
         CertificateInfoStr8 = NULL;
         CertificateInfoStr = NULL;
       }
+    } else if (CompareGuid (&CertList->SignatureType, &gEfiCertSha1Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertSha224Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertSha256Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertSha384Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertSha512Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertSm3Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha256Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha384Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha512Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertX509Sm3Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Guid) ||
+               CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Sha256Guid) 
+              )
+    {
+      /* Handle image hashes or certificate hashes */
+      CertCount = (CertList->SignatureListSize - sizeof (EFI_SIGNATURE_LIST) - CertList->SignatureHeaderSize) / CertList->SignatureSize;
+      for (Index = 0; Index < CertCount; Index++) {
+        Cert = (EFI_SIGNATURE_DATA *)((UINT8 *)CertList
+                                      + sizeof (EFI_SIGNATURE_LIST)
+                                      + CertList->SignatureHeaderSize
+                                      + Index * CertList->SignatureSize);
 
-      ItemDataSize -= CertList->SignatureListSize;
-      CertList      = (EFI_SIGNATURE_LIST *)((UINT8 *)CertList + CertList->SignatureListSize);
+        if (CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha256Guid) ||
+            CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha384Guid) ||
+            CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha512Guid) ||
+            CompareGuid (&CertList->SignatureType, &gEfiCertX509Sm3Guid)
+           )
+        {
+          FormatNameString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SIGNATURE_CERT_HASH_NAME_FORMAT), NULL);
+        } else if (CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Sha256Guid)) {
+          FormatNameString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SIGNATURE_DATA_RSA_HASH_NAME_FORMAT), NULL);
+        } else if (CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Guid)) {
+          FormatNameString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SIGNATURE_DATA_RSA_NAME_FORMAT), NULL);
+        } else {
+          FormatNameString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SIGNATURE_DATA_HASH_NAME_FORMAT), NULL);
+        }
+
+        if (FormatNameString == NULL) {
+          goto ON_EXIT;
+        }
+
+        NameString = AllocateZeroPool (BUFFER_MAX_SIZE + StrLen(FormatNameString) * sizeof(CHAR16));
+        if (NameString == NULL) {
+          Status = EFI_OUT_OF_RESOURCES;
+          goto ON_EXIT;
+        }
+
+        UnicodeSPrint (NameString, BUFFER_MAX_SIZE + StrLen(FormatNameString) * sizeof(CHAR16), FormatNameString, &Cert->SignatureOwner),
+        NameStringId = HiiSetString (PrivateData->HiiHandle, 0, NameString, NULL);
+
+        Status = FormatHelpInfo (PrivateData, CertList, Cert, &Help);
+        if (!EFI_ERROR (Status)) {
+          HiiCreateCheckBoxOpCode (
+            StartOpCodeHandle,
+            (EFI_QUESTION_ID)(QuestionIdBase + GuidIndex++),
+            0,
+            0,
+            NameStringId,
+            Help,
+            EFI_IFR_FLAG_CALLBACK | EFI_IFR_FLAG_RESET_REQUIRED,
+            0,
+            NULL
+            );
+        }
+      }
+    } else {
+      DEBUG ((EFI_D_WARN, "%a(): Unhandled Cert Type: %g\n", __FUNCTION__, &CertList->SignatureType));
     }
+
+    ItemDataSize -= CertList->SignatureListSize;
+    CertList      = (EFI_SIGNATURE_LIST *)((UINT8 *)CertList + CertList->SignatureListSize);
   }
 
 ON_EXIT:
@@ -2740,6 +2805,10 @@ ON_EXIT:
 
   if (CertificateInfoStr8 != NULL) {
     FreePool (CertificateInfoStr8);
+  }
+
+  if (NameString != NULL) {
+    FreePool (NameString);
   }
 
   return EFI_SUCCESS;
@@ -3033,10 +3102,15 @@ DeleteSignature (
     if (CompareGuid (&CertList->SignatureType, &gEfiCertRsa2048Guid) ||
         CompareGuid (&CertList->SignatureType, &gEfiCertX509Guid) ||
         CompareGuid (&CertList->SignatureType, &gEfiCertSha1Guid) ||
+        CompareGuid (&CertList->SignatureType, &gEfiCertSha224Guid) ||
+        CompareGuid (&CertList->SignatureType, &gEfiCertSha384Guid) ||
         CompareGuid (&CertList->SignatureType, &gEfiCertSha256Guid) ||
+        CompareGuid (&CertList->SignatureType, &gEfiCertSha512Guid) ||
+        CompareGuid (&CertList->SignatureType, &gEfiCertSm3Guid) ||
         CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha256Guid) ||
         CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha384Guid) ||
-        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha512Guid)
+        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sha512Guid) ||
+        CompareGuid (&CertList->SignatureType, &gEfiCertX509Sm3Guid)
         )
     {
       //
@@ -3838,23 +3912,31 @@ LoadSignatureList (
   ListWalker    = (EFI_SIGNATURE_LIST *)VariableData;
   while ((RemainingSize > 0) && (RemainingSize >= ListWalker->SignatureListSize)) {
     if (CompareGuid (&ListWalker->SignatureType, &gEfiCertRsa2048Guid)) {
+      ListType = STRING_TOKEN (STR_LIST_TYPE_RSA2048);
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertRsa2048Sha256Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_RSA2048_SHA256);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_X509);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha1Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_SHA1);
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha224Guid)) {
+      ListType = STRING_TOKEN (STR_LIST_TYPE_SHA224);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha256Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_SHA256);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha384Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_SHA384);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha512Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_SHA512);
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSm3Guid)) {
+      ListType = STRING_TOKEN (STR_LIST_TYPE_SM3);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha256Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_X509_SHA256);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha384Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_X509_SHA384);
     } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha512Guid)) {
       ListType = STRING_TOKEN (STR_LIST_TYPE_X509_SHA512);
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sm3Guid)) {
+      ListType = STRING_TOKEN (STR_LIST_TYPE_X509_SM3);
     } else {
       ListType = STRING_TOKEN (STR_LIST_TYPE_UNKNOWN);
     }
@@ -4083,9 +4165,11 @@ FormatHelpInfo (
   IsCert           = FALSE;
 
   if (CompareGuid (&ListEntry->SignatureType, &gEfiCertRsa2048Guid)) {
+    ListTypeId = STRING_TOKEN (STR_LIST_TYPE_RSA2048);
+    DataSize   = ListEntry->SignatureSize - sizeof (EFI_GUID);
+  } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertRsa2048Sha256Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_RSA2048_SHA256);
     DataSize   = ListEntry->SignatureSize - sizeof (EFI_GUID);
-    IsCert     = TRUE;
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertX509Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_X509);
     DataSize   = ListEntry->SignatureSize - sizeof (EFI_GUID);
@@ -4093,6 +4177,9 @@ FormatHelpInfo (
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertSha1Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_SHA1);
     DataSize   = 20;
+  } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertSha224Guid)) {
+    ListTypeId = STRING_TOKEN (STR_LIST_TYPE_SHA224);
+    DataSize   = 28;
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertSha256Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_SHA256);
     DataSize   = 32;
@@ -4102,6 +4189,9 @@ FormatHelpInfo (
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertSha512Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_SHA512);
     DataSize   = 64;
+  } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertSm3Guid)) {
+    ListTypeId = STRING_TOKEN (STR_LIST_TYPE_SM3);
+    DataSize   = 32;
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertX509Sha256Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_X509_SHA256);
     DataSize   = 32;
@@ -4113,6 +4203,10 @@ FormatHelpInfo (
   } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertX509Sha512Guid)) {
     ListTypeId = STRING_TOKEN (STR_LIST_TYPE_X509_SHA512);
     DataSize   = 64;
+    Time       = (EFI_TIME *)(DataEntry->SignatureData + DataSize);
+  } else if (CompareGuid (&ListEntry->SignatureType, &gEfiCertX509Sm3Guid)) {
+    ListTypeId = STRING_TOKEN (STR_LIST_TYPE_X509_SM3);
+    DataSize   = 32;
     Time       = (EFI_TIME *)(DataEntry->SignatureData + DataSize);
   } else {
     Status = EFI_UNSUPPORTED;
@@ -4187,7 +4281,7 @@ FormatHelpInfo (
     UnicodeSPrint (
       TimeString,
       sizeof (TimeString),
-      L"%d-%d-%d %d:%d:%d",
+      L"%04d-%02d-%02d %02d:%02d:%02d",
       Time->Year,
       Time->Month,
       Time->Day,
@@ -4374,7 +4468,7 @@ LoadSignatureData (
       NULL
       );
 
-    ZeroMem (NameBuffer, 100);
+    ZeroMem (NameBuffer, BUFFER_MAX_SIZE);
     DataWalker = (EFI_SIGNATURE_DATA *)((UINT8 *)DataWalker + ListWalker->SignatureSize);
   }
 
@@ -4683,7 +4777,7 @@ SecureBootCallback (
   CHAR16                          *PkCN16;
   UINT8                           *SecureBootMode;
   UINT8                           *SetupMode;
-  CHAR16                          PromptString[100];
+  CHAR16                          PromptString[BUFFER_MAX_SIZE];
   EFI_DEVICE_PATH_PROTOCOL        *File;
   UINTN                           NameLength;
   UINT16                          *FilePostFix;
@@ -4693,6 +4787,7 @@ SecureBootCallback (
   EFI_HII_POPUP_PROTOCOL          *HiiPopup;
   EFI_HII_POPUP_SELECTION         UserSelection;
   CHAR16                          *UnknownCert;
+  EFI_STRING                      PkString;
 
   Status               = EFI_SUCCESS;
   RStatus              = RETURN_SUCCESS;
@@ -4742,42 +4837,54 @@ SecureBootCallback (
 
         GetVariable2 (EFI_PLATFORM_KEY_NAME, &gEfiGlobalVariableGuid, (VOID **)&PkList, NULL);
         if (PkList != NULL) {
-          // Extract the PK certificate from the list
-          PkCert = (EFI_SIGNATURE_DATA *)((UINT8 *)PkList + sizeof (EFI_SIGNATURE_LIST) + PkList->SignatureHeaderSize);
+          if (CompareGuid (&PkList->SignatureType, &gEfiCertRsa2048Guid)) {
+            PkString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_LIST_TYPE_RSA2048), NULL);
+            HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), PkString, NULL);
+          } else if (CompareGuid (&PkList->SignatureType, &gEfiCertX509Guid)) {
+            // Extract the PK certificate from the list
+            PkCert = (EFI_SIGNATURE_DATA *)((UINT8 *)PkList + sizeof (EFI_SIGNATURE_LIST) + PkList->SignatureHeaderSize);
 
-          // Get the required buffer size
-          UINTN cnSize = 0;
-          X509GetCommonName (
-            (UINT8*)PkCert->SignatureData,
-            (UINTN)PkList->SignatureSize,
-            NULL,
-            &cnSize
-            );
+            // Get the required buffer size
+            UINTN cnSize = 0;
+            X509GetCommonName (
+              (UINT8*)PkCert->SignatureData,
+              (UINTN)PkList->SignatureSize,
+              NULL,
+              &cnSize
+              );
 
-          PkCN8 = AllocateZeroPool (cnSize * sizeof(CHAR8));
-          if (PkCN8 == NULL) {
-            Status = EFI_OUT_OF_RESOURCES;
-            goto EXIT;
-          }
-          PkCN16 = AllocateZeroPool (cnSize * sizeof(CHAR16));
-          if (PkCN16 == NULL) {
-            Status = EFI_OUT_OF_RESOURCES;
-            goto EXIT;
-          }
+            PkCN8 = AllocateZeroPool (cnSize * sizeof(CHAR8));
+            if (PkCN8 == NULL) {
+              Status = EFI_OUT_OF_RESOURCES;
+              goto EXIT;
+            }
+            PkCN16 = AllocateZeroPool (cnSize * sizeof(CHAR16));
+            if (PkCN16 == NULL) {
+              Status = EFI_OUT_OF_RESOURCES;
+              goto EXIT;
+            }
 
-          RStatus = X509GetCommonName (
-            (UINT8*)PkCert->SignatureData,
-            (UINTN)PkList->SignatureSize,
-            PkCN8,
-            &cnSize
-            );
+            RStatus = X509GetCommonName (
+              (UINT8*)PkCert->SignatureData,
+              (UINTN)PkList->SignatureSize,
+              PkCN8,
+              &cnSize
+              );
 
-          if (!EFI_ERROR (RStatus)) {
-            AsciiStrToUnicodeStrS (PkCN8, PkCN16, cnSize);
-            HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), PkCN16, NULL);
+            if (!EFI_ERROR (RStatus)) {
+              AsciiStrToUnicodeStrS (PkCN8, PkCN16, cnSize);
+              HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), PkCN16, NULL);
+            } else {
+              HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), UnknownCert, NULL);
+            }
           } else {
-            HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), UnknownCert, NULL);
+            // PK is recommended to be a X509 or an RSA2048. But if other
+            // Signature Type is enrolled here, display a different string:
+            HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), L"Unknown PK type", NULL);
           }
+        } else {
+          // No PK
+          HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_PK_NAME), L"None", NULL);
         }
       }
 
