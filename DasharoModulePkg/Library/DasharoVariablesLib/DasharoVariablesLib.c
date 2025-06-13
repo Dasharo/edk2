@@ -72,6 +72,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_HYPER_THREADING, FixedPcdGetBool (PcdShowCpuMenu) && FixedPcdGetBool (PcdShowCpuHyperThreading) },
   { DASHARO_VAR_QUIET_BOOT, FixedPcdGetBool (PcdQuietBootFeatureEnabled) },
   { DASHARO_VAR_FAST_BOOT,  FixedPcdGetBool (PcdFastBootFeatureEnabled) },
+  { DASHARO_VAR_USB_PORT_POWER, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption) },
   { DASHARO_VAR_DGPU_STATE, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption) },
 };
 
@@ -190,6 +191,9 @@ GetVariableInfo (
     Data.Boolean = FALSE;
     Size = sizeof (Data.Boolean);
     ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
+  } else if (StrCmp (VarName, DASHARO_VAR_USB_PORT_POWER) == 0) {
+    Data.Uint8 = DASHARO_USB_POWER_ON_WHEN_POWERED;
+    Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_DGPU_STATE) == 0) {
     Data.Uint8 = DASHARO_DGPU_ENABLED;
     Size = sizeof (Data.Uint8);
