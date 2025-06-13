@@ -132,14 +132,18 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_CERT_TYPE_X509_SHA512_GUID            #language en-US "X509_SHA512_GUID"
 
 #string STR_LIST_TYPE_RSA2048_SHA256              #language en-US "RSA2048_SHA256"
+#string STR_LIST_TYPE_RSA2048                     #language en-US "RSA2048"
 #string STR_LIST_TYPE_X509                        #language en-US "X509"
 #string STR_LIST_TYPE_SHA1                        #language en-US "SHA1"
+#string STR_LIST_TYPE_SHA224                      #language en-US "SHA224"
 #string STR_LIST_TYPE_SHA256                      #language en-US "SHA256"
 #string STR_LIST_TYPE_SHA384                      #language en-US "SHA384"
 #string STR_LIST_TYPE_SHA512                      #language en-US "SHA512"
+#string STR_LIST_TYPE_SM3                         #language en-US "SM3"
 #string STR_LIST_TYPE_X509_SHA256                 #language en-US "X509_SHA256"
 #string STR_LIST_TYPE_X509_SHA384                 #language en-US "X509_SHA384"
 #string STR_LIST_TYPE_X509_SHA512                 #language en-US "X509_SHA512"
+#string STR_LIST_TYPE_X509_SM3                    #language en-US "X509_SM3"
 #string STR_LIST_TYPE_UNKNOWN                     #language en-US "UnKnown"
 
 #string STR_SIGNATURE_LIST_NAME_FORMAT            #language en-US "Signature List, Entry-%d"
@@ -149,5 +153,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_SIGNATURE_DATA_HELP_FORMAT_CN         #language en-US "%s(%d bytes):\nCN = %s\n"
 #string STR_SIGNATURE_DATA_HELP_FORMAT_HASH       #language en-US "%s(%d bytes):\n%s\n"
 #string STR_SIGNATURE_DATA_HELP_FORMAT_TIME       #language en-US "Revocation Time:\n%s"
+#string STR_SIGNATURE_DATA_HASH_NAME_FORMAT       #language en-US "Image hash %g"
+#string STR_SIGNATURE_CERT_HASH_NAME_FORMAT       #language en-US "Certificate hash %g"
+#string STR_SIGNATURE_DATA_RSA_NAME_FORMAT        #language en-US "RSA2048 key %g"
+#string STR_SIGNATURE_DATA_RSA_HASH_NAME_FORMAT   #language en-US "RSA2048 SHA256 hash %g"
 
 #string STR_SIGNATURE_DELETE_ALL_CONFIRM          #language en-US "Press 'Y' to delete all signature List."

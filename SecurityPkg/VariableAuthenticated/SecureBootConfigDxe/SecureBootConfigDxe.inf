@@ -76,11 +76,19 @@
 
   ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
   ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
+  gEfiCertRsa2048Sha256Guid
+
+  ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
+  ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
   gEfiCertX509Guid
 
   ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
   ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
   gEfiCertSha1Guid
+
+  ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
+  ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
+  gEfiCertSha224Guid
 
   ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
   ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
@@ -93,6 +101,10 @@
   ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
   ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
   gEfiCertSha512Guid
+
+  ## SOMETIMES_CONSUMES      ## GUID            # Unique ID for the type of the signature.
+  ## SOMETIMES_PRODUCES      ## GUID            # Unique ID for the type of the signature.
+  gEfiCertSm3Guid
 
   ## SOMETIMES_CONSUMES      ## Variable:L"db"
   ## SOMETIMES_PRODUCES      ## Variable:L"db"
@@ -118,6 +130,7 @@
   gEfiCertX509Sha256Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
   gEfiCertX509Sha384Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
   gEfiCertX509Sha512Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
+  gEfiCertX509Sm3Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
 
 [Protocols]
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
