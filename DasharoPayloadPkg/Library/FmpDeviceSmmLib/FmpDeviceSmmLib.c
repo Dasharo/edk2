@@ -981,7 +981,7 @@ FmpDeviceSetImageWithStatus (
       "%a(): failed to read current firmware\n",
       __FUNCTION__
       ));
-    return EFI_OUT_OF_RESOURCES;
+    return EFI_END_OF_MEDIA;
   }
 
   IncrementProgress (Progress, TotalSteps, ReadSteps, &Step, &ShouldReportProgress);
