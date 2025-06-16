@@ -248,6 +248,7 @@ INF  OvmfPkg/VirtioKeyboardDxe/VirtioKeyboard.inf
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/MicCorUEFCA2011_2011-06-27.crt
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/windows_uefi_ca_2023.crt
     SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/microsoft_uefi_ca_2023.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/microsoft_option_rom_uefi_ca_2023.crt
     SECTION UI = "DefaultDbCert"
   }
 
