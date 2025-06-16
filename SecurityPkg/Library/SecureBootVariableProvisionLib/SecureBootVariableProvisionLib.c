@@ -25,6 +25,11 @@
 #include <Library/DxeServicesLib.h>
 #include <Library/AuthVariableLib.h>
 
+#define EFI_MICROSOFT_OWNER_GUID \
+  { 0x77FA9ABD, 0x0359, 0x4D32, {0xBD, 0x60, 0x28, 0xF4, 0xE7, 0x8F, 0x78, 0x4B} }
+
+EFI_GUID gEfiMicrosoftOwnerGuid = EFI_MICROSOFT_OWNER_GUID;
+
 /**
   Create a EFI Signature List with data fetched from section specified as a argument.
   Found keys are verified using RsaGetPublicKeyFromX509().
@@ -55,10 +60,12 @@ SecureBootFetchData (
   UINTN                         Index;
   SECURE_BOOT_CERTIFICATE_INFO  *CertInfo;
   SECURE_BOOT_CERTIFICATE_INFO  *NewCertInfo;
+  EFI_GUID                      *OwnerGuid;
 
   KeyIndex      = 0;
   *SigListOut   = NULL;
   *SigListsSize = 0;
+  OwnerGuid     = NULL;
   CertInfo      = AllocatePool (sizeof (SECURE_BOOT_CERTIFICATE_INFO));
   NewCertInfo   = CertInfo;
   while (1) {
@@ -118,8 +125,14 @@ SecureBootFetchData (
     goto Cleanup;
   }
 
+  // MS Certificates owner GUID in DB/KEK must be 77fa9abd-0359-4d32-bd60-28f4e78f784b.
+  if (CompareGuid(KeyFileGuid, &gDefaultdbFileGuid) ||
+      CompareGuid(KeyFileGuid, &gDefaultKEKFileGuid)) {
+    OwnerGuid = &gEfiMicrosoftOwnerGuid;
+  }
+
   // Now that we collected all certs from FV, convert it into sig list
-  Status = SecureBootCreateDataFromInput (SigListsSize, SigListOut, KeyIndex, CertInfo);
+  Status = SecureBootCreateDataFromInput (SigListsSize, SigListOut, KeyIndex, CertInfo, OwnerGuid);
   if (EFI_ERROR (Status)) {
     goto Cleanup;
   }

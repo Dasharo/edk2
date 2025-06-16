@@ -356,7 +356,7 @@ SecureBootCreateDataFromInputSimple (
   KeyInfo.Data     = TestData;
   KeyInfo.DataSize = sizeof (TestData);
 
-  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 1, &KeyInfo);
+  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 1, &KeyInfo, NULL);
 
   UT_ASSERT_NOT_EFI_ERROR (Status);
 
@@ -403,10 +403,10 @@ SecureBootCreateDataFromInputNull (
     .DataSize = 0
   };
 
-  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 0, NULL);
+  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 0, NULL, NULL);
   UT_ASSERT_STATUS_EQUAL (Status, EFI_INVALID_PARAMETER);
 
-  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 1, &KeyInfo);
+  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 1, &KeyInfo, NULL);
   UT_ASSERT_STATUS_EQUAL (Status, EFI_NOT_FOUND);
 
   return UNIT_TEST_PASSED;
@@ -448,7 +448,7 @@ SecureBootCreateDataFromInputMultiple (
   KeyInfo[1].Data     = TestData2;
   KeyInfo[1].DataSize = sizeof (TestData2);
 
-  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 2, KeyInfo);
+  Status = SecureBootCreateDataFromInput (&SigListSize, &SigList, 2, KeyInfo, NULL);
   UT_ASSERT_NOT_EFI_ERROR (Status);
 
   UT_ASSERT_NOT_NULL (SigList);

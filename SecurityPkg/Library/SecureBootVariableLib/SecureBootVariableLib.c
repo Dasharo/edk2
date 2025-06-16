@@ -58,9 +58,10 @@ EFI_TIME  mDefaultPayloadTimestamp = {
 
 /** Creates EFI Signature List structure.
 
-  @param[in]      Data     A pointer to signature data.
-  @param[in]      Size     Size of signature data.
-  @param[out]     SigList  Created Signature List.
+  @param[in]      Data           A pointer to signature data.
+  @param[in]      Size           Size of signature data.
+  @param[out]     SigList        Created Signature List.
+  @param[in]      OwnerGuid      Optional OwnerGuid of the Signature List
 
   @retval  EFI_SUCCESS           Signature List was created successfully.
   @retval  EFI_OUT_OF_RESOURCES  Failed to allocate memory.
@@ -70,7 +71,8 @@ EFI_STATUS
 CreateSigList (
   IN VOID                 *Data,
   IN UINTN                Size,
-  OUT EFI_SIGNATURE_LIST  **SigList
+  OUT EFI_SIGNATURE_LIST  **SigList,
+  IN  EFI_GUID            *OwnerGuid OPTIONAL
   )
 {
   UINTN               SigListSize;
@@ -98,7 +100,11 @@ CreateSigList (
   // Copy key data
   //
   SigData = (EFI_SIGNATURE_DATA *)(TmpSigList + 1);
-  CopyGuid (&SigData->SignatureOwner, &gEfiGlobalVariableGuid);
+  if (OwnerGuid == NULL) {
+    CopyGuid (&SigData->SignatureOwner, &gEfiGlobalVariableGuid);
+  } else {
+    CopyGuid (&SigData->SignatureOwner, OwnerGuid);
+  }
   CopyMem (&SigData->SignatureData[0], Data, Size);
 
   *SigList = TmpSigList;
@@ -157,6 +163,8 @@ ConcatenateSigList (
   @param[in]        KeyInfoCount   The number of certificate pointer and size pairs inside KeyInfo.
   @param[in]        KeyInfo        A pointer to all certificates, in the format of DER-encoded,
                                    to be concatenated into signature lists.
+  @param[in]        OwnerGuid      A pointer to OwnerGUID, to be used when creating the signature
+                                   list. NULL means gEfiGlobalVariableGuid will be used.
 
   @retval EFI_SUCCESS              Created signature list from payload successfully.
   @retval EFI_NOT_FOUND            Section with key has not been found.
@@ -170,7 +178,8 @@ SecureBootCreateDataFromInput (
   OUT UINTN                               *SigListsSize,
   OUT EFI_SIGNATURE_LIST                  **SigListOut,
   IN  UINTN                               KeyInfoCount,
-  IN  CONST SECURE_BOOT_CERTIFICATE_INFO  *KeyInfo
+  IN  CONST SECURE_BOOT_CERTIFICATE_INFO  *KeyInfo,
+  IN  EFI_GUID                            *OwnerGuid OPTIONAL
   )
 {
   EFI_SIGNATURE_LIST  *EfiSig;
@@ -206,7 +215,7 @@ SecureBootCreateDataFromInput (
         return EFI_OUT_OF_RESOURCES;
       }
 
-      Status = CreateSigList (Buffer, Size, &TmpEfiSig);
+      Status = CreateSigList (Buffer, Size, &TmpEfiSig, OwnerGuid);
 
       if (EFI_ERROR (Status)) {
         FreePool (Buffer);

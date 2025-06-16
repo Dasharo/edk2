@@ -81,6 +81,8 @@ IsSecureBootEnabled (
   @param[in]        KeyInfoCount   The number of certificate pointer and size pairs inside KeyInfo.
   @param[in]        KeyInfo        A pointer to all certificates, in the format of DER-encoded,
                                    to be concatenated into signature lists.
+  @param[in]        OwnerGuid      A pointer to OwnerGUID, to be used when creating the signature
+                                   list. NULL means gEfiGlobalVariableGuid will be used.
 
   @retval EFI_SUCCESS              Created signature list from payload successfully.
   @retval EFI_NOT_FOUND            Section with key has not been found.
@@ -94,7 +96,8 @@ SecureBootCreateDataFromInput (
   OUT UINTN                               *SigListsSize,
   OUT EFI_SIGNATURE_LIST                  **SigListOut,
   IN  UINTN                               KeyInfoCount,
-  IN  CONST SECURE_BOOT_CERTIFICATE_INFO  *KeyInfo
+  IN  CONST SECURE_BOOT_CERTIFICATE_INFO  *KeyInfo,
+  IN  EFI_GUID                            *OwnerGuid OPTIONAL
   );
 
 /**
