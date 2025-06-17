@@ -115,6 +115,7 @@
   DEFINE USE_UEFIVAR_BACKED_TPM_PPI     = FALSE
   DEFINE CAPSULE_SUPPORT                = FALSE
   DEFINE CAPSULE_MAIN_FW_GUID           =
+  DEFINE GRAPHICAL_CAPSULE_PROGRESS     = TRUE
 
   #
   # Network definition
@@ -236,7 +237,11 @@
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeCapsuleLib.inf
   # At the moment there are no update checks to do, so null-library suffices
   CapsuleUpdatePolicyLib|FmpDevicePkg/Library/CapsuleUpdatePolicyLibNull/CapsuleUpdatePolicyLibNull.inf
+!if $(GRAPHICAL_CAPSULE_PROGRESS) == TRUE
   DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibGraphics/DisplayUpdateProgressLibGraphics.inf
+!else
+  DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibText/DisplayUpdateProgressLibText.inf
+!endif
   FmpAuthenticationLib|SecurityPkg/Library/FmpAuthenticationLibPkcs7/FmpAuthenticationLibPkcs7.inf
   FmpDependencyCheckLib|FmpDevicePkg/Library/FmpDependencyCheckLib/FmpDependencyCheckLib.inf
   # No need to save/restore FMP dependencies until they are utilized
