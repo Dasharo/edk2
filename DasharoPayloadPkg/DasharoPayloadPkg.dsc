@@ -135,6 +135,7 @@
 
   DEFINE AMD_GOP_DRIVER_GUID    = 2C4CB22B-E0F8-4457-A238-576A3D0201D6
   DEFINE AMD_GOP_VBIOS_GUID     = C38A9A34-2005-496E-94F2-8E1020B8FC6E
+  DEFINE GRAPHICAL_CAPSULE_PROGRESS     = TRUE
 
   #
   # Network definition
@@ -287,7 +288,11 @@
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibFmp/DxeCapsuleLib.inf
   # At the moment there are no update checks to do, so null-library suffices
   CapsuleUpdatePolicyLib|FmpDevicePkg/Library/CapsuleUpdatePolicyLibNull/CapsuleUpdatePolicyLibNull.inf
+!if $(GRAPHICAL_CAPSULE_PROGRESS) == TRUE
   DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibGraphics/DisplayUpdateProgressLibGraphics.inf
+!else
+  DisplayUpdateProgressLib|MdeModulePkg/Library/DisplayUpdateProgressLibText/DisplayUpdateProgressLibText.inf
+!endif
   FmpAuthenticationLib|SecurityPkg/Library/FmpAuthenticationLibPkcs7/FmpAuthenticationLibPkcs7.inf
   FmpDependencyCheckLib|FmpDevicePkg/Library/FmpDependencyCheckLib/FmpDependencyCheckLib.inf
   # No need to save/restore FMP dependencies until they are utilized
