@@ -55,7 +55,7 @@ CallSmm (
   CONST UINTN  Rbx = Arg;
   UINTN        Result;
 
-  Result = TriggerSmi (Rax, Rbx, 5);
+  Result = TriggerSmi (Rax, Rbx, 10);
   if (Result == Rax) {
     return EFI_NO_RESPONSE;
   } else if (Result == SMMSTORE_RET_SUCCESS) {
