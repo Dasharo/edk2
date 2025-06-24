@@ -1,0 +1,15 @@
+// /** @file
+// Sovereign Boot Provisioning Wizard.
+//
+// This application helps in configuring UEFI Secure Boot.
+//
+// Copyright (c) 2025, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+// **/
+
+
+#string STR_MODULE_ABSTRACT             #language en-US "Sovereign Boot Provisioning Wizard"
+
+#string STR_MODULE_DESCRIPTION          #language en-US "This application helps in configuring UEFI Secure Boot."
