@@ -1053,6 +1053,8 @@
 !endif
 !endif
 
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+
   #
   # Hash2
   #
