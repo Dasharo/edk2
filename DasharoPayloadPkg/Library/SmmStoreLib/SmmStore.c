@@ -64,6 +64,12 @@ CallSmm (
     return EFI_UNSUPPORTED;
   }
 
+  DEBUG ((
+    DEBUG_ERROR,
+    "%a: Unexpected response from SMM: 0x%x\n",
+    __FUNCTION__,
+    Result
+    ));
   return EFI_DEVICE_ERROR;
 }
 
