@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "AuthServiceInternal.h"
 #include <DasharoOptions.h>
+#include <Library/HobLib.h>
 
 ///
 /// Global database array for scratch
@@ -248,8 +249,10 @@ AuthVariableLibInitialize (
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
   }
 
-  // Disable Secure Boot if FUM enabled in the project and currently active
-  if (PcdGetBool (PcdShowFum) && !EFI_ERROR (Status))
+  //
+  // Disable Secure Boot if FUM enabled is in effect.
+  //
+  if ((PcdGetBool (PcdShowFum) || GetBootModeHob () == BOOT_ON_FLASH_UPDATE) && !EFI_ERROR (Status))
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
 
   Status = AuthServiceInternalUpdateVariable (
