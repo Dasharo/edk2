@@ -15,6 +15,7 @@
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiLib.h>
 #include <Library/SmmStoreLib.h>
 #include "SmmStore.h"
 
@@ -64,12 +65,11 @@ CallSmm (
     return EFI_UNSUPPORTED;
   }
 
-  DEBUG ((
-    DEBUG_ERROR,
+  AsciiPrint (
     "%a: Unexpected response from SMM: 0x%x\n",
     __FUNCTION__,
     Result
-    ));
+    );
   return EFI_DEVICE_ERROR;
 }
 

@@ -10,6 +10,7 @@
 #include <Library/SmmStoreLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/UefiBootServicesTableLib.h>
 
 typedef enum {
   REGION_MIGRATED,
@@ -72,6 +73,24 @@ GetFmap (
   return TRUE;
 }
 
+STATIC
+VOID
+DrainInput (
+  VOID
+)
+{
+  EFI_INPUT_KEY Key;
+
+  //
+  // Drain any queued keys.
+  //
+  while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {
+    //
+    // just throw away Key
+    //
+  }
+}
+
 /**
   Read current firmware in full and return as newly allocated pool memory.
 
@@ -79,7 +98,7 @@ GetFmap (
 **/
 VOID *
 EFIAPI
-ReadCurrentFirmware (
+ReadCurrentFirmwareImpl (
   VOID
   )
 {
@@ -89,6 +108,7 @@ ReadCurrentFirmware (
   UINTN       Block;
   UINTN       BlockSize;
   UINTN       NumBytes;
+  UINTN       Try;
 
   Status = SmmStoreLibGetBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
@@ -112,6 +132,8 @@ ReadCurrentFirmware (
     return NULL;
   }
 
+  AsciiPrint ("%a(): Allocating buffer of %d bytes\n", __FUNCTION__, FwSize);
+
   Image = AllocatePool (FwSize);
   if (Image == NULL) {
     DEBUG ((
@@ -122,30 +144,80 @@ ReadCurrentFirmware (
     return NULL;
   }
 
+  AsciiPrint ("%a(): Starting to read from flash\n", __FUNCTION__);
+
   for (Block = 0; Block < FwSize / BlockSize; Block++) {
-    NumBytes = BlockSize;
-    Status = SmmStoreLibReadAnyBlock (
-               Block,
-               0,
-               &NumBytes,
-               Image + Block * BlockSize
-               );
-    if (EFI_ERROR (Status) || NumBytes != BlockSize) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a(): read %d out of %d bytes of flash at 0x%x (%r)\n",
-        __FUNCTION__,
-        NumBytes,
-        BlockSize,
-        Block * BlockSize,
-        Status
-        ));
+    for (Try = 0; Try < 3; Try++) {
+      NumBytes = BlockSize;
+      Status = SmmStoreLibReadAnyBlock (
+                 Block,
+                 0,
+                 &NumBytes,
+                 Image + Block * BlockSize
+                 );
+      if (EFI_ERROR (Status) || NumBytes != BlockSize) {
+        AsciiPrint (
+          "%a(): try %d: read %d out of %d bytes of flash at 0x%x (%r)\n",
+          __FUNCTION__,
+          Try,
+          NumBytes,
+          BlockSize,
+          Block * BlockSize,
+          Status
+          );
+      } else {
+        break;
+      }
+    }
+
+    if (Try == 3) {
       FreePool (Image);
       return NULL;
+    }
+
+    if (Block == 0) {
+      AsciiPrint ("%a(): start of firmware:\n", __FUNCTION__);
+      BOOLEAN allFF = TRUE;
+      for (int i = 0; i < 0x100; i += 0x10) {
+        AsciiPrint ("0x%08x: ", i);
+        for (int j = 0; j < 16; ++j) {
+          if (Image[i + j] != 0xffU)
+            allFF = FALSE;
+          AsciiPrint ("%02x ", Image[i + j]);
+        }
+        AsciiPrint ("\n");
+      }
+      if (allFF)
+        AsciiPrint ("%a(): firmware is not fully readable!\n", __FUNCTION__);
     }
   }
 
   return Image;
+}
+
+VOID *
+EFIAPI
+ReadCurrentFirmware (
+  VOID
+  )
+{
+  EFI_EVENT Events[1];
+  UINTN          Index;
+
+  VOID *Result = ReadCurrentFirmwareImpl ();
+
+  DrainInput ();
+
+  if (Result == NULL)
+    AsciiPrint ("%a(): ERROR READING FIRMWARE\n", __FUNCTION__);
+  else
+    AsciiPrint ("%a(): READ FIRMWARE WITHOUT ISSUES\n", __FUNCTION__);
+
+  AsciiPrint ("%a(): PRESS A KEY TO CONTINUE\n", __FUNCTION__);
+  Events[0] = gST->ConIn->WaitForKey;
+  (VOID)gBS->WaitForEvent (1, Events, &Index);
+
+  return Result;
 }
 
 /**
