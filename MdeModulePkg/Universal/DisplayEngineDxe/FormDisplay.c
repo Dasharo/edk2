@@ -2085,11 +2085,14 @@ DisplayMenuString (
     return;
   }
 
-  //
-  // Print the highlight menu string.
-  // First print the highlight string.
-  //
-  SetDisplayAttribute (MenuOption, TRUE);
+  // Only highlight non-empty strings
+  Highlight = StrLen(MenuOption->Description) != 0;
+  // Sometimes empty strings are defined as single character strings with space
+  if (StrLen(MenuOption->Description) == 1 && MenuOption->Description[0] == L' ') {
+    Highlight = FALSE;
+  }
+
+  SetDisplayAttribute (MenuOption, Highlight);
   PrintStringAt (Col, Row, String);
 
   //
