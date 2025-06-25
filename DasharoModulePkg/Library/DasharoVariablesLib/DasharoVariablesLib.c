@@ -32,7 +32,8 @@ typedef struct {
   DASHARO_VAR_DATA  Data;  // Value for the variable.
   UINTN             Size;  // Number of bytes of Data actually used.
 
-  UINT32  Attributes;  // EFI variable attributes for this variable.
+  UINT32            Attributes;  // EFI variable attributes for this variable.
+  EFI_GUID          *Guid;       // GUID for this variable
 } VAR_INFO;
 
 typedef struct {
@@ -76,6 +77,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_FAST_BOOT,  FixedPcdGetBool (PcdFastBootFeatureEnabled) },
   { DASHARO_VAR_USB_PORT_POWER, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption) },
   { DASHARO_VAR_DGPU_STATE, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption) },
+  { SV_BOOT_CONFIG_VAR, FixedPcdGetBool (PcdSovereignBootEnabled) },
 };
 
 /**
@@ -95,10 +97,12 @@ GetVariableInfo (
   DASHARO_VAR_DATA  Data;
   UINTN             Size;
   UINT32            ExtraAttrs;
+  EFI_GUID          *VarGuid;
 
   SetMem (&Data, sizeof (Data), 0);
   Size = 0;
   ExtraAttrs = 0;
+  VarGuid = &gDasharoSystemFeaturesGuid;
 
   if (StrCmp (VarName, DASHARO_VAR_BATTERY_CONFIG) == 0) {
     Data.Battery.StartThreshold = 95;
@@ -203,6 +207,11 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_DGPU_STATE) == 0) {
     Data.Uint8 = DASHARO_DGPU_ENABLED;
     Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, SV_BOOT_CONFIG_VAR) == 0) {
+    Data.SvBoot.SvBootEnabled = FixedPcdGetBool (PcdSovereignBootDefaultState);
+    Data.SvBoot.SvBootProvisioned = FALSE;
+    Size = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+    VarGuid = &gSovereignBootWizardFormSetGuid;
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));
     ASSERT ((0 && "No default value set for a variable."));
@@ -211,6 +220,7 @@ GetVariableInfo (
   Value.Data = Data;
   Value.Size = Size;
   Value.Attributes = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE | ExtraAttrs;
+  Value.Guid = VarGuid;
 
   return Value;
 }
@@ -269,7 +279,7 @@ ResetVariable (
 
   Status = gRT->SetVariable (
       VarName,
-      &gDasharoSystemFeaturesGuid,
+      VarInfo.Guid,
       VarInfo.Attributes,
       VarInfo.Size,
       &VarInfo.Data
@@ -288,16 +298,19 @@ ResetVariable (
 STATIC
 VOID
 InitVariable (
-  CHAR16  *VarName
+  CHAR16   *VarName
   )
 {
   EFI_STATUS  Status;
   UINTN       BufferSize;
+  VAR_INFO    VarInfo;
+
+  VarInfo = GetVariableInfo (VarName);
 
   BufferSize = 0;
   Status = gRT->GetVariable (
       VarName,
-      &gDasharoSystemFeaturesGuid,
+      VarInfo.Guid,
       NULL,
       &BufferSize,
       NULL
@@ -510,13 +523,27 @@ DasharoMeasureVariables (
   VOID
   )
 {
+  EFI_STATUS  RetStatus;
   EFI_STATUS  Status;
 
-  Status = MeasureVariables (&gDasharoSystemFeaturesGuid);
-  if (Status == EFI_SUCCESS)
-    Status = MeasureVariables (&gApuConfigurationFormsetGuid);
+  RetStatus = EFI_SUCCESS;
 
-  return Status;
+  Status = MeasureVariables (&gDasharoSystemFeaturesGuid);
+  if (EFI_ERROR (Status)) {
+    RetStatus = Status;
+  }
+
+  Status |= MeasureVariables (&gApuConfigurationFormsetGuid);
+  if (EFI_ERROR (Status)) {
+    RetStatus = Status;
+  }
+
+  Status |= MeasureVariables (&gSovereignBootWizardFormSetGuid);
+  if (EFI_ERROR (Status)) {
+    RetStatus = Status;
+  }
+
+  return RetStatus;
 }
 
 /**
