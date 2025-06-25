@@ -1347,10 +1347,11 @@ LibUpdateFileExplorePage (
         EFI_IFR_FLAG_CALLBACK,
         (UINT16)(mNewFolderQuestionId++)
         );
-      HiiCreateTextOpCode (
+      HiiCreateSubTitleOpCode (
         mLibStartOpCodeHandle,
         STRING_TOKEN (STR_NULL_STRING),
         STRING_TOKEN (STR_NULL_STRING),
+        0,
         0
         );
       CreateNewFile = TRUE;
