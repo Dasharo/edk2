@@ -15,8 +15,8 @@ Revision History
 
 **/
 
-#ifndef _DRIVER_SAMPLE_H_
-#define _DRIVER_SAMPLE_H_
+#ifndef _SV_BOOT_WIZARD_H_
+#define _SV_BOOT_WIZARD_H_
 
 #include <Uefi.h>
 
