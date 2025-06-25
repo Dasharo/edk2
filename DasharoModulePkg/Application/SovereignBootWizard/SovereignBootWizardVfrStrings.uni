@@ -21,8 +21,8 @@
 #langdef en-US  "English"
 
 #string STR_FORM_SET_TITLE                       #language en-US "Sovereign Boot Provisioning Wizard"
-#string STR_FORM_SET_TITLE_HELP                  #language en-US ""
-#string STR_EMPTY_STRING                         #language en-US ""
+#string STR_FORM_SET_TITLE_HELP                  #language en-US " "
+#string STR_EMPTY_STRING                         #language en-US " "
 #string STR_EXIT_TEXT                            #language en-US "[Exit]"
 
 #string FUNCTION_NINE_STRING                     #language en-US  "F9=Reset to Defaults"
@@ -30,7 +30,8 @@
 
 // Welcome page strings
 #string STR_FORM1_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
-#string STR_WELCOME_SUBTITLE                     #language en-US "Welcome to Sovereign Boot Provisioning Wizard!"
+#string STR_WELCOME_SUBTITLE                     #language en-US "Welcome to Sovereign Boot Provisioning Wizard!\n\n"
+                                                                 "Please select the UEFI Secure Boot scheme you would like to use:"
 
 #string STR_SELECT_SOVEREIGN_BOOT                #language en-US "Sovereign Boot"
 #string STR_SELECT_SOVEREIGN_BOOT_HELP           #language en-US ""
