@@ -44,7 +44,11 @@ formset
 
     subtitle text = STRING_TOKEN(STR_WELCOME_SUBTITLE);
 
-    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    // Empty text field so that none of the options are
+    // highlighted/selected by default.
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_EMPTY_STRING);
 
     goto SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID,
       prompt = STRING_TOKEN(STR_SELECT_SOVEREIGN_BOOT),
@@ -57,6 +61,8 @@ formset
       help = STRING_TOKEN(STR_EMPTY_STRING),
       text = STRING_TOKEN(STR_SOVEREIGN_BOOT_FEATURES);
   endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     goto SOVEREIGN_BOOT_WIZARD_MS_SECURE_BOOT_FORM_ID,
       prompt = STRING_TOKEN(STR_SELECT_DEFAULT_SECURE_BOOT),
