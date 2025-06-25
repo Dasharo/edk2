@@ -41,6 +41,7 @@
 [Guids]
   gDasharoSystemFeaturesGuid           ### CONSUMES
   gApuConfigurationFormsetGuid         ### SOMETIMES CONSUMES
+  gSovereignBootWizardFormSetGuid      ### SOMETIMES CONSUMES
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMenu
@@ -87,6 +88,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDgpuOnlyAvailable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemorySpdProfileOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState
   gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled
   gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms

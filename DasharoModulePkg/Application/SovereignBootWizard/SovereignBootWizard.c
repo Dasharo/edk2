@@ -11,9 +11,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *mPrivateData   = NULL;
 BOOLEAN mBootloadersInitted = FALSE;
 
-STATIC CHAR16 mSvBootDataVarName[] = L"SvBootData";
+STATIC CHAR16 mSvBootDataVarName[] = SV_BOOT_DATA_VAR;
 STATIC CHAR16 mVarStoreName[] = L"SvBootFormData";
-STATIC CHAR16 mSvBootConfigVarName[] = L"SvBootConfig";
+STATIC CHAR16 mSvBootConfigVarName[] = SV_BOOT_CONFIG_VAR;
 
 STATIC BOOLEAN mBootloadersShown = FALSE;
 

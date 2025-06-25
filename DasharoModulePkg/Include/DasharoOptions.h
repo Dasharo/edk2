@@ -9,6 +9,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef _DASHARO_OPTIONS_H_
 #define _DASHARO_OPTIONS_H_
 
+#include <Guid/SovereignBoot.h>
+
 //
 // Names of Dasharo-specific EFI variables in DasharoSystemFeaturesGuid
 // namespace.
@@ -124,6 +126,8 @@ typedef union {
   DASHARO_WATCHDOG_CONFIG  Watchdog;
   DASHARO_IOMMU_CONFIG     Iommu;
   DASHARO_BATTERY_CONFIG   Battery;
+
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG SvBoot;
 } DASHARO_VAR_DATA;
 
 #endif

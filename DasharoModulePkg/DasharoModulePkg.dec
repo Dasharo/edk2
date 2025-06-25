@@ -89,6 +89,8 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeMenuShowCbntStatus|FALSE|BOOLEAN|0x00000002E
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemorySpdProfileOption|FALSE|BOOLEAN|0x00000002F
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption|FALSE|BOOLEAN|0x000000030
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled|FALSE|BOOLEAN|0x000000031
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState|FALSE|BOOLEAN|0x000000032
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
