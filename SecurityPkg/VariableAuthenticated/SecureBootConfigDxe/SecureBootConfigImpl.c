@@ -4778,95 +4778,6 @@ SetupResetReminder (
   }
 }
 
-EFI_DEVICE_PATH *
-FvFilePath (
-  EFI_GUID                     *FileGuid
-  )
-{
-
-  EFI_STATUS                         Status;
-  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
-  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
-
-  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
-
-  Status = gBS->HandleProtocol (
-                  gImageHandle,
-                  &gEfiLoadedImageProtocolGuid,
-                  (VOID **) &LoadedImage
-                  );
-  ASSERT_EFI_ERROR (Status);
-  return AppendDevicePathNode (
-           DevicePathFromHandle (LoadedImage->DeviceHandle),
-           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
-           );
-}
-
-/**
-  Launch Sovereign boot Wizard
-
-  @retval TRUE   Exit caller function.
-  @retval FALSE  Not exit caller function.
-**/
-EFI_STATUS
-LaunchSovereignBootWizard (
-  VOID
-  )
-{
-  EFI_STATUS                         Status;
-  EFI_BOOT_MANAGER_LOAD_OPTION       BootOption;
-  EFI_DEVICE_PATH_PROTOCOL           *FilePath;
-  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA  SvBootData;
-
-  FilePath = FvFilePath (&gSovereignBootWizardFormSetGuid);
-  if (FilePath == NULL) {
-    return EFI_NOT_FOUND;
-  }
-
-  Status = EfiBootManagerInitializeLoadOption (
-              &BootOption,
-              0,
-              LoadOptionTypeBoot,
-              LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
-              L"Soverign Boot Wizard",
-              FilePath,
-              NULL,
-              0
-              );
-
-  if (!EFI_ERROR (Status)) {
-    //
-    // Since current no boot from removable media directly is allowed
-    //
-    gST->ConOut->ClearScreen (gST->ConOut);
-    //
-    // Check whether need to reset system.
-    //
-    SetupResetReminder ();
-    //
-    // Set the Sovereign Boot Wizard launch cause
-    //
-    SvBootData.AppLaunchCause = SV_BOOT_LAUNCH_VIA_SETUP;
-    gRT->SetVariable (
-      SV_BOOT_DATA_VAR,
-      &gSovereignBootWizardFormSetGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS,
-      sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA),
-      &SvBootData
-      );
-
-    EfiBootManagerBoot (&BootOption);
-    //
-    // Remove the boot option after we return from the wizard
-    //
-    EfiBootManagerDeleteLoadOptionVariable (BootOption.OptionNumber, BootOption.OptionType);
-
-    EfiBootManagerFreeLoadOption (&BootOption);
-  }
-
-  return Status;
-}
-
 /**
   This function is called to provide results data to the driver.
 
@@ -5700,7 +5611,8 @@ SecureBootCallback (
       }
       case KEY_LAUNCH_SOVEREIGN_BOOT_WIZARD:
       {
-        Status = LaunchSovereignBootWizard ();
+        SetupResetReminder ();
+        Status = EfiBootManagerLaunchSovereignBootWizard (SV_BOOT_LAUNCH_VIA_SETUP);
         break;
       }
       default:
