@@ -19,6 +19,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/DevicePath.h>
 #include <Protocol/DebugPort.h>
 #include <Protocol/LoadFile.h>
+#include <Protocol/LoadedImage.h>
+#include <Protocol/FormBrowserEx2.h>
 
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -35,6 +37,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/BaseCryptLib.h>
 #include <Library/FileExplorerLib.h>
 #include <Library/PeCoffLib.h>
+#include <Library/UefiBootManagerLib.h>
 
 #include <Guid/MdeModuleHii.h>
 #include <Guid/AuthenticatedVariableFormat.h>
@@ -42,6 +45,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/ImageAuthentication.h>
 #include <Guid/FileInfo.h>
 #include <Guid/WinCertificate.h>
+#include <Guid/SovereignBoot.h>
 
 #include "SecureBootConfigNvData.h"
 

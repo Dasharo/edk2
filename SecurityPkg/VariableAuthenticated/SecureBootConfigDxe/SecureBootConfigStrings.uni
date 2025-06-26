@@ -27,6 +27,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_SECURE_RESET_TO_DEFAULTS       #language en-US "> Reset to default Secure Boot Keys"
 
 #string STR_RESET_TO_DEFAULTS_POPUP        #language en-US "Secure Boot Keys & databases will be initialized from defaults.\n Are you sure?"
+#string STR_SV_RESET_TO_DEFAULTS_POPUP     #language en-US "Disabling Sovereign Boot will restore default Secure Boot Keys & databases.\n Are you sure?"
 
 #string STR_SECURE_ERASE_ALL_KEYS_HELP     #language en-US "Erases all Secure Boot keys and leaves the related variables empty.\nYou will need to provision the keys to use Secure Boot again or reset the Secure Boot keys to defaults."
 #string STR_SECURE_ERASE_ALL_KEYS          #language en-US "> Erase all Secure Boot Keys"
@@ -151,3 +152,19 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #string STR_SIGNATURE_DATA_HELP_FORMAT_TIME       #language en-US "Revocation Time:\n%s"
 
 #string STR_SIGNATURE_DELETE_ALL_CONFIRM          #language en-US "Press 'Y' to delete all signature List."
+
+/* Sovereign Boot strings */
+
+#string STR_SOVEREIGN_BOOT_OPTIONS                #language en-US "*** Sovereign Boot Options ***"
+#string STR_ENABLE_SOVEREIGN_BOOT_PROMPT          #language en-US "Enable Sovereign Boot"
+#string STR_ENABLE_SOVEREIGN_BOOT_HELP            #language en-US "Enables/disables Sovereign Boot in the firmware boot flow. "
+                                                                  "When enabled, the firmware will invoke Sovereign Boot Wizard on the first boot, "
+                                                                  "or when defautl settings are restored (if Sovereign Boot is configured to be "
+                                                                  "enabled by default) or when UEFI Secure Boto fails to verify a boot image.\n\n"
+                                                                  "Sovereign Boot Wizard assist in configuring Secure Boot in an easy and "
+                                                                  "comprehensible way for less technical users.\n\n"
+                                                                  "If unsure, disable it, to use the default firmware keys and be able to boot "
+                                                                  "Windows and most common Linux distributions when Secure Boot is enabled."
+
+#string STR_LAUNCH_SOVEREIGN_BOOT_WIZARD_HELP     #language en-US "Manually invoke Sovereign Boot Wizard to modify/augment the Sovereign Boot settings."
+#string STR_LAUNCH_SOVEREIGN_BOOT_WIZARD_PROMPT   #language en-US "> Launch Sovereign Boot Wizard"
