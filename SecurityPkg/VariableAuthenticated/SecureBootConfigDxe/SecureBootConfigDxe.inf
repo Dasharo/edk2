@@ -37,6 +37,7 @@
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
   CryptoPkg/CryptoPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -44,6 +45,7 @@
   BaseCryptLib
   MemoryAllocationLib
   UefiLib
+  UefiBootManagerLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
   UefiDriverEntryPoint
@@ -60,6 +62,8 @@
 
 [FixedPcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState
 
 [Guids]
   ## SOMETIMES_CONSUMES      ## Variable:L"CustomMode"
@@ -119,11 +123,14 @@
   gEfiCertX509Sha384Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
   gEfiCertX509Sha512Guid                        ## SOMETIMES_PRODUCES  ## GUID  # Unique ID for the type of the certificate.
 
+  gSovereignBootWizardFormSetGuid               ## SOMETIMES CONSUMES
+
 [Protocols]
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
   gEfiDevicePathProtocolGuid                    ## PRODUCES
   gEfiHiiPopupProtocolGuid
   gEfiRealTimeClockArchProtocolGuid             ## CONSUMES
+  gEdkiiFormBrowserEx2ProtocolGuid              ## SOMETIMES_CONSUMES
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND
