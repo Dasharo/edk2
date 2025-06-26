@@ -55,6 +55,7 @@
   PlatformBootManagerLib
   PcdLib
   PrintLib
+  HobLib
 
 [Guids]
   gEfiGlobalVariableGuid                        ## SOMETIMES_PRODUCES ## Variable:L"BootNext" (The number of next boot option)
@@ -77,6 +78,7 @@
   gEfiEventReadyToBootGuid                      ## CONSUMES           ## Event
   gDasharoSystemFeaturesGuid                    ## CONSUMES ## Variable:L"QuietBoot"
                                                 ## CONSUMES ## Variable:L"FastBoot"
+  gSovereignBootWizardFormSetGuid               ## SOMETIMES_CONSUMES ## Variable:L"SvBootConfig"
 
 [Protocols]
   gEfiBdsArchProtocolGuid                       ## PRODUCES
@@ -104,6 +106,10 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdPlatformRecoverySupport           ## CONSUMES
   gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled                  ## CONSUMES
   gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled                 ## CONSUMES
+
+[FixedPcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState
 
 [Depex]
   TRUE

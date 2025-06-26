@@ -14,6 +14,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/ConnectConInEvent.h>
 #include <Guid/StatusCodeDataTypeVariable.h>
 #include <Guid/EventGroup.h>
+#include <Guid/SovereignBoot.h>
+
+#include <Pi/PiBootMode.h>
+#include <Pi/PiHob.h>
 
 #include <Protocol/Bds.h>
 #include <Protocol/LoadedImage.h>
@@ -22,6 +26,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/HobLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/UefiLib.h>
