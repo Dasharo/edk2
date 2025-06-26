@@ -299,6 +299,58 @@ SaveSecureBootVariable (
 }
 
 /**
+  Set Sovereign Boot configuration into variable space.
+
+  @param[in] SvBootEnable          The satte of Sovereign Boot.
+
+  @retval    EFI_SUCCESS           The operation is finished successfully.
+  @retval    Others                Other errors as indicated.
+
+**/
+EFI_STATUS
+SaveSovereignBootVariable (
+  IN BOOLEAN  SvBootEnable
+  )
+{
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG  SvBootConfig;
+  EFI_STATUS                       Status;
+  UINT32                           Attrs;
+  UINTN                            VarSize;
+
+  VarSize = sizeof(SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+
+  Status = gRT->GetVariable (
+                  SV_BOOT_CONFIG_VAR,
+                  &gSovereignBootWizardFormSetGuid,
+                  &Attrs,
+                  &VarSize,
+                  &SvBootConfig
+                  );
+
+  if (EFI_ERROR (Status) || 
+      Attrs != (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS) ||
+      VarSize != sizeof(SOVEREIGN_BOOT_WIZARD_NV_CONFIG)
+     ) {
+    SvBootConfig.SvBootProvisioned = FALSE;
+  }
+
+  if (SvBootConfig.SvBootEnabled == SvBootEnable) {
+    return EFI_SUCCESS;
+  }
+
+  SvBootConfig.SvBootEnabled = SvBootEnable;
+
+  Status = gRT->SetVariable (
+                  SV_BOOT_CONFIG_VAR,
+                  &gSovereignBootWizardFormSetGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG),
+                  &SvBootConfig
+                  );
+  return Status;
+}
+
+/**
   This code checks if the encode type and key strength of X.509
   certificate is qualified.
 
@@ -3461,9 +3513,12 @@ SecureBootExtractConfigFromVariable (
   UINT8     *SecureBootMode;
   EFI_TIME  CurrTime;
 
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG *SvBootConfig;
+
   SecureBootEnable = NULL;
   SetupMode        = NULL;
   SecureBootMode   = NULL;
+  SvBootConfig     = NULL;
 
   //
   // Initialize the Date and Time using system time.
@@ -3532,6 +3587,21 @@ SecureBootExtractConfigFromVariable (
     ConfigData->SecureBootMode = STANDARD_SECURE_BOOT_MODE;
   } else {
     ConfigData->SecureBootMode = *(SecureBootMode);
+  }
+
+  ConfigData->SvBootAvailable = FixedPcdGetBool (PcdSovereignBootEnabled);
+  ConfigData->SvBootEnable = FixedPcdGetBool (PcdSovereignBootDefaultState);
+  ConfigData->SvBootProvisioned = FALSE;
+
+  if (ConfigData->SvBootAvailable) {
+    
+      GetVariable2 (SV_BOOT_CONFIG_VAR, &gSovereignBootWizardFormSetGuid, (VOID **)&SvBootConfig, NULL);
+
+      if (SvBootConfig != NULL) {
+        ConfigData->SvBootEnable = SvBootConfig->SvBootEnabled;
+        ConfigData->SvBootProvisioned = SvBootConfig->SvBootProvisioned;
+        FreePool (SvBootConfig);
+      }
   }
 
   if (SecureBootEnable != NULL) {
@@ -3729,6 +3799,13 @@ SecureBootRouteConfig (
   //
   if (!IfrNvData.HideSecureBoot) {
     Status = SaveSecureBootVariable (IfrNvData.AttemptSecureBoot);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  if (IfrNvData.SvBootAvailable) {
+    Status = SaveSovereignBootVariable (IfrNvData.SvBootEnable);
     if (EFI_ERROR (Status)) {
       return Status;
     }
@@ -4726,6 +4803,140 @@ KeyEraseAll (
 }
 
 /**
+
+  Check whether a reset is needed, if reset is needed, Popup a menu to notice user.
+
+**/
+VOID
+SetupResetReminder (
+  VOID
+  )
+{
+  EFI_INPUT_KEY                           Key;
+  CHAR16                                  *StringBuffer1;
+  CHAR16                                  *StringBuffer2;
+  EFI_STATUS                              Status;
+  EDKII_FORM_BROWSER_EXTENSION2_PROTOCOL  *FormBrowserEx2;
+
+  //
+  // Use BrowserEx2 protocol to check whether reset is required.
+  //
+  Status = gBS->LocateProtocol (&gEdkiiFormBrowserEx2ProtocolGuid, NULL, (VOID **)&FormBrowserEx2);
+
+  //
+  // check any reset required change is applied? if yes, reset system
+  //
+  if (!EFI_ERROR (Status) && FormBrowserEx2->IsResetRequired ()) {
+    StringBuffer1 = AllocateZeroPool (MAX_CHAR * sizeof (CHAR16));
+    ASSERT (StringBuffer1 != NULL);
+    StringBuffer2 = AllocateZeroPool (MAX_CHAR * sizeof (CHAR16));
+    ASSERT (StringBuffer2 != NULL);
+    StrCpyS (StringBuffer1, MAX_CHAR, L"Configuration changed. Reset to apply it Now.");
+    StrCpyS (StringBuffer2, MAX_CHAR, L"Press ENTER to reset");
+    //
+    // Popup a menu to notice user
+    //
+    do {
+      CreatePopUp (EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, &Key, StringBuffer1, StringBuffer2, NULL);
+    } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+
+    FreePool (StringBuffer1);
+    FreePool (StringBuffer2);
+
+    gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+  }
+}
+
+EFI_DEVICE_PATH *
+FvFilePath (
+  EFI_GUID                     *FileGuid
+  )
+{
+
+  EFI_STATUS                         Status;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+  return AppendDevicePathNode (
+           DevicePathFromHandle (LoadedImage->DeviceHandle),
+           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
+           );
+}
+
+/**
+  Launch Sovereign boot Wizard
+
+  @retval TRUE   Exit caller function.
+  @retval FALSE  Not exit caller function.
+**/
+EFI_STATUS
+LaunchSovereignBootWizard (
+  VOID
+  )
+{
+  EFI_STATUS                         Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION       BootOption;
+  EFI_DEVICE_PATH_PROTOCOL           *FilePath;
+  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA  SvBootData;
+
+  FilePath = FvFilePath (&gSovereignBootWizardFormSetGuid);
+  if (FilePath == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = EfiBootManagerInitializeLoadOption (
+              &BootOption,
+              0,
+              LoadOptionTypeBoot,
+              LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
+              L"Soverign Boot Wizard",
+              FilePath,
+              NULL,
+              0
+              );
+
+  if (!EFI_ERROR (Status)) {
+    //
+    // Since current no boot from removable media directly is allowed
+    //
+    gST->ConOut->ClearScreen (gST->ConOut);
+    //
+    // Check whether need to reset system.
+    //
+    SetupResetReminder ();
+    //
+    // Set the Sovereign Boot Wizard launch cause
+    //
+    SvBootData.AppLaunchCause = SV_BOOT_LAUNCH_VIA_SETUP;
+    gRT->SetVariable (
+      SV_BOOT_DATA_VAR,
+      &gSovereignBootWizardFormSetGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS,
+      sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA),
+      &SvBootData
+      );
+
+    EfiBootManagerBoot (&BootOption);
+    //
+    // Remove the boot option after we return from the wizard
+    //
+    EfiBootManagerDeleteLoadOptionVariable (BootOption.OptionNumber, BootOption.OptionType);
+
+    EfiBootManagerFreeLoadOption (&BootOption);
+  }
+
+  return Status;
+}
+
+/**
   This function is called to provide results data to the driver.
 
   @param[in]  This               Points to the EFI_HII_CONFIG_ACCESS_PROTOCOL.
@@ -4944,6 +5155,34 @@ SecureBootCallback (
               L"Configuration changed, please reset the platform to take effect!",
               NULL
               );
+          }
+        }
+
+        break;
+
+      case KEY_SOVEREIGN_BOOT_ENABLE:
+        Status = EFI_SUCCESS;
+        if (!Value->b) {
+          Status = gBS->LocateProtocol (&gEfiHiiPopupProtocolGuid, NULL, (VOID **)&HiiPopup);
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
+
+          Status = HiiPopup->CreatePopup (
+                             HiiPopup,
+                             EfiHiiPopupStyleInfo,
+                             EfiHiiPopupTypeYesNo,
+                             Private->HiiHandle,
+                             STRING_TOKEN (STR_SV_RESET_TO_DEFAULTS_POPUP),
+                             &UserSelection
+                             );
+          if (UserSelection == EfiHiiPopupSelectionNo) {
+            // If the user decided not to disable Sovereign Boot,
+            // restore the enabled state and don't reset keys.
+            if (GetBrowserDataResult) {
+              Value->b = TRUE;
+              IfrNvData->SvBootEnable = TRUE;
+            }
           }
         }
 
@@ -5478,6 +5717,30 @@ SecureBootCallback (
           SecureBootExtractConfigFromVariable (Private, IfrNvData);
         }
         break;
+      } 
+      case KEY_SOVEREIGN_BOOT_ENABLE:
+      {
+        Status = SaveSovereignBootVariable (Value->b);
+        *ActionRequest = EFI_BROWSER_ACTION_REQUEST_FORM_APPLY;
+        // If disabling, we need to restore Secure Boot keys
+        if (!Value->b) {
+          Status = KeyEnrollReset (IfrNvData);
+
+          //
+          // Update secure boot strings after key reset
+          //
+          if (Status == EFI_SUCCESS) {
+            Status = UpdateSecureBootString (Private);
+            SecureBootExtractConfigFromVariable (Private, IfrNvData);
+          }
+        }
+
+        break;
+      }
+      case KEY_LAUNCH_SOVEREIGN_BOOT_WIZARD:
+      {
+        Status = LaunchSovereignBootWizard ();
+        break;
       }
       default:
         break;
@@ -5503,6 +5766,18 @@ SecureBootCallback (
           EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
           &Key,
           L"Could not restore Secure Boot to default state!",
+          NULL
+          );
+      }
+      break;
+    }
+    case KEY_SOVEREIGN_BOOT_ENABLE: {
+      Value->u8 = FixedPcdGetBool (PcdSovereignBootDefaultState);
+      if (EFI_ERROR (SaveSovereignBootVariable(Value->u8))) {
+        CreatePopUp (
+          EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+          &Key,
+          L"Could not restore Sovereign Boot to default state!",
           NULL
           );
       }
