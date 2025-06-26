@@ -75,6 +75,10 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity           ## CONSUMES
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits         ## CONSUMES
 
+[FixedPcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState
+
 [Pcd.IA32, Pcd.X64]
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock
 
@@ -95,3 +99,4 @@
   gGrubFileGuid
   gEfiTtyTermGuid
   gDasharoSystemFeaturesGuid
+  gSovereignBootWizardFormSetGuid
