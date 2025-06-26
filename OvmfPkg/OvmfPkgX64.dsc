@@ -45,6 +45,7 @@
   DEFINE OPAL_PASSWORD_ENABLE    = TRUE
   DEFINE DASHARO_SYSTEM_FEATURES_ENABLE = TRUE
   DEFINE SETUP_PASSWORD_ENABLE   = TRUE
+  DEFINE SOVEREIGN_BOOT_ENABLE   = FALSE
 
   #
   # Network definition
@@ -683,6 +684,12 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowDGPUPowerOption|FALSE
 
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
+
+!if $(SECURE_BOOT_ENABLE) == TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled|$(SOVEREIGN_BOOT_ENABLE)
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState|TRUE
+!endif
+      
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -1053,8 +1060,6 @@
 !endif
 !endif
 
-  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
-
   #
   # Hash2
   #
@@ -1080,6 +1085,11 @@
   SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
+
+!if $(SOVEREIGN_BOOT_ENABLE) == TRUE
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+!endif
+
 !endif
 
   OvmfPkg/PlatformDxe/Platform.inf
