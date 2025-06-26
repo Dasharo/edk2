@@ -173,7 +173,7 @@ FileIsInFv (
 }
 
 EFI_DEVICE_PATH *
-FvFilePath (
+BdsFvFilePath (
   EFI_GUID                     *FileGuid
   )
 {
@@ -221,7 +221,7 @@ RegisterBootManagerMenuAppBootOption (
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
 
-  DevicePath = FvFilePath (FileGuid);
+  DevicePath = BdsFvFilePath (FileGuid);
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
              LoadOptionNumberUnassigned,
@@ -2092,14 +2092,39 @@ PlatformBootManagerAfterConsole (
   BOOLEAN        NetBootEnabled;
   UINTN          VarSize;
   EFI_STATUS     Status;
+  UINTN          SvBootConfigSize;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG SvBootConfig;
 
   DEBUG ((DEBUG_INFO, "PlatformBootManagerAfterConsole\n"));
 
+  if (FixedPcdGetBool (PcdSovereignBootEnabled)) {
+    SvBootConfigSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+    Status = gRT->GetVariable (
+                SV_BOOT_CONFIG_VAR,
+                &gSovereignBootWizardFormSetGuid,
+                NULL,
+                &SvBootConfigSize,
+                (VOID *)&SvBootConfig
+                );
+
+    if (EFI_ERROR (Status)) {
+      SvBootConfig.SvBootEnabled = FixedPcdGetBool (PcdSovereignBootDefaultState);
+      SvBootConfig.SvBootProvisioned = FALSE;
+    }
+  } else {
+    SvBootConfig.SvBootEnabled = FALSE;
+    SvBootConfig.SvBootProvisioned = FALSE;
+  }
+
   // This is probably the earliest we can print this, as before the console is
-  // not ready yet.
-  Print(L"F2 to enter Setup\n");
-  Print(L"ESC to enter Boot Manager Menu\n");
-  Print(L"ENTER to boot directly\n");
+  // not ready yet. Don't print the hotkeys if SvBoot is enabled but not yet
+  // provisioned. We won't be able to use the hotkeys anyways in that case.
+  if (!SvBootConfig.SvBootEnabled || 
+      (SvBootConfig.SvBootEnabled && SvBootConfig.SvBootProvisioned)) {
+    Print(L"F2 to enter Setup\n");
+    Print(L"ESC to enter Boot Manager Menu\n");
+    Print(L"ENTER to boot directly\n");
+  }
 
   if (PcdGetBool (PcdOvmfFlashVariablesEnable)) {
     DEBUG ((
