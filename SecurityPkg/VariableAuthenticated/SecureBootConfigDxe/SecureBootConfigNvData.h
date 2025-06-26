@@ -75,6 +75,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define KEY_SECURE_BOOT_DELETE_ALL_DATA     0x1110
 #define KEY_SECURE_BOOT_DELETE_CHECK_DATA   0x1111
 
+#define KEY_SOVEREIGN_BOOT_ENABLE           0x1120
+#define KEY_LAUNCH_SOVEREIGN_BOOT_WIZARD    0x1121
+
 #define LABEL_KEK_DELETE              0x1200
 #define LABEL_DB_DELETE               0x1201
 #define LABEL_SIGNATURE_LIST_START    0x1202
@@ -138,6 +141,9 @@ typedef struct {
   UINT8           FileEnrollType;    // File type of signature enroll
   UINT32          ListCount;         // The count of signature list.
   UINT32          CheckedDataCount;  // The count of checked signature data.
+  BOOLEAN         SvBootAvailable;   // If Sovereign Boot is enabled in the build and should be displayed
+  BOOLEAN         SvBootEnable;      // If Sovereign Boot flow should be enforced
+  BOOLEAN         SvBootProvisioned; // If Sovereign Boot was already provisioned
 } SECUREBOOT_CONFIGURATION;
 
 #endif

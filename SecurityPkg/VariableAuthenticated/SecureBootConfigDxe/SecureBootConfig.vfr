@@ -70,6 +70,36 @@ formset
       endif;
     endif;
 
+    disableif ideqval SECUREBOOT_CONFIGURATION.SvBootAvailable == 0;
+      subtitle text = STRING_TOKEN(STR_NULL);
+      subtitle text = STRING_TOKEN(STR_NULL);
+      subtitle text = STRING_TOKEN(STR_SOVEREIGN_BOOT_OPTIONS);
+      subtitle text = STRING_TOKEN(STR_NULL);
+
+      checkbox varid = SECUREBOOT_CONFIGURATION.SvBootEnable,
+            questionid = KEY_SOVEREIGN_BOOT_ENABLE,
+            prompt = STRING_TOKEN(STR_ENABLE_SOVEREIGN_BOOT_PROMPT),
+            help   = STRING_TOKEN(STR_ENABLE_SOVEREIGN_BOOT_HELP),
+            flags  = INTERACTIVE | RESET_REQUIRED,
+      endcheckbox;
+
+      disableif ideqval SECUREBOOT_CONFIGURATION.SvBootEnable == 0;
+        subtitle text = STRING_TOKEN(STR_NULL);
+        //
+        // We may hide the menu if Sovereign Boot is not yet provisioned and allow to
+        // launch the wizard only when system is provisioned to augment the settings.
+        //
+        // suppressif ideqval SECUREBOOT_CONFIGURATION.SvBootProvisioned == 0;
+          text
+            help   = STRING_TOKEN(STR_LAUNCH_SOVEREIGN_BOOT_WIZARD_HELP),
+            text   = STRING_TOKEN(STR_LAUNCH_SOVEREIGN_BOOT_WIZARD_PROMPT),
+            flags  = INTERACTIVE,
+            key    = KEY_LAUNCH_SOVEREIGN_BOOT_WIZARD;
+        // endif;
+      endif;
+
+    endif;
+
   endform;
 
   //
