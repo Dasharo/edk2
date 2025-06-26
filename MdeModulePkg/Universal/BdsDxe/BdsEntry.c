@@ -720,6 +720,11 @@ BdsEntry (
   EFI_STATUS                      BootManagerMenuStatus;
   EFI_BOOT_MANAGER_LOAD_OPTION    PlatformDefaultBootOption;
   BOOLEAN                         PlatformDefaultBootOptionValid;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG SvBootConfig;
+  UINTN                           SvBootConfigSize;
+  EFI_BOOT_MODE                   BootMode;
+  EFI_INPUT_KEY                   Key;
+  UINTN                           KeyIndex;
 
   HotkeyTriggered = NULL;
   Status          = EFI_SUCCESS;
@@ -1096,6 +1101,71 @@ BdsEntry (
     // Directly enter the setup page.
     //
     EfiBootManagerBoot (&BootManagerMenu);
+  }
+
+  // Check Boot Mode
+  BootMode = GetBootModeHob ();
+
+  if (FixedPcdGetBool (PcdSovereignBootEnabled) && BootMode != BOOT_ON_FLASH_UPDATE) {
+    SvBootConfigSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+    Status = gRT->GetVariable (
+                SV_BOOT_CONFIG_VAR,
+                &gSovereignBootWizardFormSetGuid,
+                NULL,
+                &SvBootConfigSize,
+                (VOID *)&SvBootConfig
+                );
+
+    if (EFI_ERROR (Status)) {
+      SvBootConfig.SvBootEnabled = FixedPcdGetBool (PcdSovereignBootDefaultState);
+      SvBootConfig.SvBootProvisioned = FALSE;
+    }
+
+    // Handle Invalid state. Sovereign Boot cannot be provisioned when disabled.
+    if (!SvBootConfig.SvBootEnabled && SvBootConfig.SvBootProvisioned) {
+      SvBootConfig.SvBootProvisioned = FALSE;
+      SvBootConfigSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+      gRT->SetVariable (
+            SV_BOOT_CONFIG_VAR,
+            &gSovereignBootWizardFormSetGuid,
+            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+            SvBootConfigSize,
+            (VOID *)&SvBootConfig
+            );
+    }
+
+    // Only if Sovereing Boot is NOT provisioned or settings has been reset (booting for the first time too)
+    if (SvBootConfig.SvBootEnabled) {
+      if (!SvBootConfig.SvBootProvisioned ||
+          BootMode == BOOT_WITH_DEFAULT_SETTINGS ||
+          BootMode == BOOT_WITH_MFG_MODE_SETTINGS) 
+      {
+        Status = EfiBootManagerLaunchSovereignBootWizard (SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS);
+        if (EFI_ERROR (Status)) {
+          if (gST->ConOut != NULL) {
+            gST->ConOut->ClearScreen (gST->ConOut);
+            AsciiPrint (
+                "Booting Sovereign Boot Wizard failed due to '%r'.\n"
+                "Press any key to continue...\n",
+                Status);
+          }
+          if (gST->ConIn != NULL) {
+            Status = gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &KeyIndex);
+            ASSERT_EFI_ERROR (Status);
+            ASSERT (KeyIndex == 0);
+            while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {}
+          }
+        }
+
+        if (BootManagerMenuStatus != EFI_NOT_FOUND) {
+          // Boot to Boot Manager Menu/Setup upon Sovereign Boot Wizard exit/failure.
+          // The Wizard should always boot after provisionign is finished,
+          // unless there are no Sovereign Boot compatible boot options detected,
+          // then we still have to fallback to setup.
+          EfiBootManagerBoot (&BootManagerMenu);
+        }
+      }
+    }
   }
 
   if (!PlatformRecovery) {

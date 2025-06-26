@@ -52,6 +52,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/GlobalVariable.h>
 #include <Guid/StatusCodeDataTypeId.h>
 #include <Guid/StatusCodeDataTypeVariable.h>
+#include <Guid/SovereignBoot.h>
 
 #include <Library/PrintLib.h>
 #include <Library/DebugLib.h>
