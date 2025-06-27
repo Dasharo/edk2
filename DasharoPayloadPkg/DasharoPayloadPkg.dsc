@@ -116,6 +116,7 @@
   DEFINE CAPSULE_SUPPORT                = FALSE
   DEFINE CAPSULE_MAIN_FW_GUID           =
   DEFINE GRAPHICAL_CAPSULE_PROGRESS     = TRUE
+  DEFINE SOVEREIGN_BOOT_ENABLE          = FALSE
 
   #
   # Network definition
@@ -542,6 +543,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable|0
 !endif
 
+!if $(SECURE_BOOT_ENABLE) == TRUE
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled|$(SOVEREIGN_BOOT_ENABLE)
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState|TRUE
+!endif
+
 !if $(SOURCE_DEBUG_ENABLE)
   gEfiSourceLevelDebugPkgTokenSpaceGuid.PcdDebugLoadImageMethod|0x2
 !endif
@@ -776,6 +782,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+!if $(SOVEREIGN_BOOT_ENABLE) == TRUE
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+!endif
 !endif
 
 !if $(SETUP_PASSWORD_ENABLE) == TRUE
