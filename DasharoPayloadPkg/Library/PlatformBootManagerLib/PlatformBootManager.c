@@ -312,7 +312,7 @@ SyncFvBootOption (
 }
 
 EFI_DEVICE_PATH *
-FvFilePath (
+BdsFvFilePath (
   EFI_GUID                     *FileGuid
   )
 {
@@ -351,7 +351,7 @@ RegisterBootManagerMenuAppBootOption (
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
 
-  DevicePath = FvFilePath (&mBootMenuFile);
+  DevicePath = BdsFvFilePath (&mBootMenuFile);
   // Use LOAD_OPTION_HIDDEN to not display Boot Manager Menu App in
   // "One Time Boot" menu.
   Status = EfiBootManagerInitializeLoadOption (
@@ -396,7 +396,7 @@ UnregisterBootManagerMenuAppBootOption (
   INTN                             OptionIndex;
   EFI_BOOT_MANAGER_LOAD_OPTION     *BootOptions;
 
-  DevicePath = FvFilePath (&mBootMenuFile);
+  DevicePath = BdsFvFilePath (&mBootMenuFile);
   // Use LOAD_OPTION_HIDDEN to not display Boot Manager Menu App in
   // "One Time Boot" menu.
   Status = EfiBootManagerInitializeLoadOption (
@@ -1702,17 +1702,18 @@ PlatformBootManagerAfterConsole (
   VOID
 )
 {
-  EFI_STATUS                     Status;
-  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  Black;
-  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  White;
-  CHAR16                         *BootMenuKey;
-  CHAR16                         *SetupMenuKey;
-  BOOLEAN                        NetBootEnabled;
-  BOOLEAN                        FUMEnabled;
-  BOOLEAN                        BootMenuEnable;
-  UINTN                          VarSize;
-  EFI_EVENT                      Event;
-  EFI_INPUT_KEY                  Enter;
+  EFI_STATUS                      Status;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL   Black;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL   White;
+  CHAR16                          *BootMenuKey;
+  CHAR16                          *SetupMenuKey;
+  BOOLEAN                         NetBootEnabled;
+  BOOLEAN                         FUMEnabled;
+  BOOLEAN                         BootMenuEnable;
+  UINTN                           VarSize;
+  EFI_EVENT                       Event;
+  EFI_INPUT_KEY                   Enter;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG SvBootConfig;
 
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
@@ -1863,9 +1864,32 @@ PlatformBootManagerAfterConsole (
           &BootMenuEnable
         );
 
+  if (FixedPcdGetBool (PcdSovereignBootEnabled)) {
+    VarSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+    Status = gRT->GetVariable (
+                SV_BOOT_CONFIG_VAR,
+                &gSovereignBootWizardFormSetGuid,
+                NULL,
+                &VarSize,
+                (VOID *)&SvBootConfig
+                );
+
+    if (EFI_ERROR (Status)) {
+      SvBootConfig.SvBootEnabled = FixedPcdGetBool (PcdSovereignBootDefaultState);
+      SvBootConfig.SvBootProvisioned = FALSE;
+    }
+  } else {
+    SvBootConfig.SvBootEnabled = FALSE;
+    SvBootConfig.SvBootProvisioned = FALSE;
+  }
+
   // Print the prompt and SOL strings only if Quiet Boot and Fast Boot are disabled.
   // Do not refresh the logo, it should stay intact.
-  if (!mFastBoot && !mQuietBoot) {
+  // Don't print the hotkeys if SvBoot is enabled but not yet
+  // provisioned. We won't be able to use the hotkeys anyways in that case.^M
+  if (!mFastBoot && !mQuietBoot && 
+      (!SvBootConfig.SvBootEnabled ||
+        (SvBootConfig.SvBootEnabled && SvBootConfig.SvBootProvisioned))) {
 
     if (PcdGetBool (PcdPrintSolStrings))
       PrintSolStrings();
