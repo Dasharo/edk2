@@ -274,6 +274,9 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   INF  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   INF  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+!if $(SOVEREIGN_BOOT_ENABLE) == TRUE
+  INF  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+!endif
 
   # gDefaultKEKFileGuid
   FILE FREEFORM = 6F64916E-9F7A-4C35-B952-CD041EFB05A3 {
