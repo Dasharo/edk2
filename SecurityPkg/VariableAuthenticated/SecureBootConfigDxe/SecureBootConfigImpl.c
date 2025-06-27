@@ -59,6 +59,7 @@ HII_VENDOR_DEVICE_PATH  mSecureBootHiiVendorDevicePath = {
 };
 
 BOOLEAN  mIsEnterSecureBootForm = FALSE;
+BOOLEAN  mResetSvBootState = FALSE;
 
 //
 // OID ASN.1 Value for Hash Algorithms
@@ -301,7 +302,7 @@ SaveSecureBootVariable (
 /**
   Set Sovereign Boot configuration into variable space.
 
-  @param[in] SvBootEnable          The satte of Sovereign Boot.
+  @param[in] SvBootEnable          The state of Sovereign Boot.
 
   @retval    EFI_SUCCESS           The operation is finished successfully.
   @retval    Others                Other errors as indicated.
@@ -347,6 +348,53 @@ SaveSovereignBootVariable (
                   sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG),
                   &SvBootConfig
                   );
+  return Status;
+}
+
+/**
+  Resets Sovereign Boot configuration and saves it into variable space.
+
+  @retval    EFI_SUCCESS           The operation is finished successfully.
+  @retval    Others                Other errors as indicated.
+
+**/
+EFI_STATUS
+ResetSovereignBootState (
+  SECUREBOOT_CONFIG_PRIVATE_DATA  *Private
+  )
+{
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG  SvBootConfig;
+  EFI_STATUS                       Status;
+  UINT32                           Attrs;
+  UINTN                            VarSize;
+
+  VarSize = sizeof(SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+
+  Status = gRT->GetVariable (
+                  SV_BOOT_CONFIG_VAR,
+                  &gSovereignBootWizardFormSetGuid,
+                  &Attrs,
+                  &VarSize,
+                  &SvBootConfig
+                  );
+
+  if (EFI_ERROR (Status) || 
+      Attrs != (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS) ||
+      VarSize != sizeof(SOVEREIGN_BOOT_WIZARD_NV_CONFIG)
+     ) {
+    SvBootConfig.SvBootEnabled = FixedPcdGetBool (PcdSovereignBootDefaultState);
+  }
+
+  SvBootConfig.SvBootProvisioned = FALSE;
+
+  Status = gRT->SetVariable (
+                  SV_BOOT_CONFIG_VAR,
+                  &gSovereignBootWizardFormSetGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG),
+                  &SvBootConfig
+                  );
+
   return Status;
 }
 
@@ -3528,6 +3576,12 @@ SecureBootExtractConfigFromVariable (
         ConfigData->SvBootProvisioned = SvBootConfig->SvBootProvisioned;
         FreePool (SvBootConfig);
       }
+
+      HiiSetString (
+        Private->HiiHandle,
+        STRING_TOKEN (STR_SOVEREIGN_BOOT_STATE_CONTENT),
+        ConfigData->SvBootProvisioned ? L"Yes" : L"No",
+        NULL);
   }
 
   if (SecureBootEnable != NULL) {
@@ -4989,6 +5043,21 @@ SecureBootCallback (
     goto EXIT;
   }
 
+  if (Action == EFI_BROWSER_ACTION_SUBMITTED) {
+    Status = EFI_UNSUPPORTED;
+    if (QuestionId == KEY_SOVEREIGN_BOOT_PROVISIONED) {
+      Status = EFI_SUCCESS;
+      if (mResetSvBootState && !Value->b) {
+        Status = ResetSovereignBootState (Private);
+        if (GetBrowserDataResult) {
+          SecureBootExtractConfigFromVariable (Private, IfrNvData);
+        }
+        mResetSvBootState = FALSE;
+      }
+    }
+    goto EXIT;
+  }
+
   if ((Action != EFI_BROWSER_ACTION_CHANGED) &&
       (Action != EFI_BROWSER_ACTION_CHANGING) &&
       (Action != EFI_BROWSER_ACTION_FORM_CLOSE) &&
@@ -5547,6 +5616,16 @@ SecureBootCallback (
           Status = KeyEnrollReset ();
         }
 
+        if (EFI_ERROR (Status)) {
+          return Status;
+        }
+
+        // Resetting the keys need to reset the Sovereign Boot state
+        // as we will no longer have the trusted keys in db
+        if (FixedPcdGetBool (PcdSovereignBootEnabled)) {
+          Status = ResetSovereignBootState (Private);
+        }
+
         //
         // Update secure boot strings after key reset
         //
@@ -5573,6 +5652,17 @@ SecureBootCallback (
         if (UserSelection == EfiHiiPopupSelectionYes) {
           Status = KeyEraseAll ();
         }
+
+        if (EFI_ERROR (Status)) {
+          return Status;
+        }
+
+        // Erasing the keys need to reset the Sovereign Boot state
+        // as we will no longer have the trusted keys in db
+        if (FixedPcdGetBool (PcdSovereignBootEnabled)) {
+          Status = ResetSovereignBootState (Private);
+        }
+
         //
         // Update secure boot strings after key reset
         //
@@ -5589,12 +5679,19 @@ SecureBootCallback (
         // If disabling, we need to restore Secure Boot keys
         if (!Value->b) {
           Status = KeyEnrollReset ();
-
+          if (EFI_ERROR (Status)) {
+            break;
+          }
+          // Reset the Sovereign Boot provisioning state
+          Status = ResetSovereignBootState (Private);
+          if (EFI_ERROR (Status)) {
+            break;
+          }
           //
           // Update secure boot strings after key reset
           //
-          if (Status == EFI_SUCCESS) {
-            Status = UpdateSecureBootString (Private);
+          Status = UpdateSecureBootString (Private);
+          if (GetBrowserDataResult) {
             SecureBootExtractConfigFromVariable (Private, IfrNvData);
           }
         }
@@ -5645,6 +5742,13 @@ SecureBootCallback (
           NULL
           );
       }
+      break;
+    }
+    case KEY_SOVEREIGN_BOOT_PROVISIONED:
+    {
+      Status = EFI_SUCCESS;
+      Value->b = FALSE;
+      mResetSvBootState = TRUE;
       break;
     }
     default:

@@ -83,6 +83,22 @@ formset
             flags  = INTERACTIVE | RESET_REQUIRED,
       endcheckbox;
 
+      // Hidden checkbox for provisioned state, to be used in callback
+      // whe nefautl settigns are restored.
+      suppressif TRUE;
+        checkbox varid = SECUREBOOT_CONFIGURATION.SvBootProvisioned,
+              questionid = KEY_SOVEREIGN_BOOT_PROVISIONED,
+              prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_PRIVISIONED_PROMPT),
+              help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_PRIVISIONED_HELP),
+              flags  = INTERACTIVE | RESET_REQUIRED,
+        endcheckbox;
+      endif;
+
+      text
+        help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_STATE_HELP),
+        text   = STRING_TOKEN(STR_SOVEREIGN_BOOT_STATE_PROMPT),
+          text   = STRING_TOKEN(STR_SOVEREIGN_BOOT_STATE_CONTENT);
+
       disableif ideqval SECUREBOOT_CONFIGURATION.SvBootEnable == 0;
         subtitle text = STRING_TOKEN(STR_NULL);
         //
