@@ -457,6 +457,7 @@ SovereignBootWizardInit (
   EFI_DEVICE_PATH_TO_TEXT_PROTOCOL       *DevPathToText;
   CHAR16                                 *NewString;
   EFI_HANDLE                             AppHandle;
+  EFI_FORM_ID                            FormId;
 
   NewString = NULL;
   AppHandle = NULL;
@@ -630,9 +631,9 @@ SovereignBootWizardInit (
       ConfigData->AppLaunchCause = SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS;
     }
   } else {
-    // If not provisioned, the launch cause can only be undefined or boot with defaults
+    // If not provisioned, the launch cause can not be verification failure
     if (!SvConfig->SvBootProvisioned &&
-        ConfigData->AppLaunchCause >= SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED)
+        ConfigData->AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED)
     {
       ConfigData->AppLaunchCause = SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS;
     }
@@ -641,6 +642,31 @@ SovereignBootWizardInit (
   // Handle invalid value
   if (ConfigData->AppLaunchCause >= SV_BOOT_LAUNCH_MAX) {
     ConfigData->AppLaunchCause = SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS;
+  }
+
+  switch (ConfigData->AppLaunchCause) {
+  case SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS:
+    NewString = HiiGetString(HiiHandle, STRING_TOKEN (STR_LAUNCH_CAUSE_DEFAULT_SETTINGS), NULL);
+    break;
+  case SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED:
+    // Override the "do not trust key" to avoid displaying "next bootloader"
+    NewString = HiiGetString(HiiHandle, STRING_TOKEN (STR_DO_NOT_TRUST_KEY2), NULL);
+    if (NewString != NULL) {
+      HiiSetString(HiiHandle, STRING_TOKEN (STR_DO_NOT_TRUST_KEY), NewString, NULL);
+    }
+
+    NewString = HiiGetString(HiiHandle, STRING_TOKEN (STR_LAUNCH_CAUSE_VERIFICATION_FAILED), NULL);
+    break;
+  case SV_BOOT_LAUNCH_VIA_SETUP:
+    NewString = HiiGetString(HiiHandle, STRING_TOKEN (STR_LAUNCH_CAUSE_SETUP), NULL);
+    break;
+  default:
+    NewString = NULL;
+    break;
+  }
+
+  if (NewString != NULL) {
+    HiiSetString(HiiHandle, STRING_TOKEN (STR_LAUNCH_REASON), NewString, NULL);
   }
 
   //
@@ -655,6 +681,16 @@ SovereignBootWizardInit (
     FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
   }
 
+  if (SvConfig->SvBootProvisioned) {
+    if (ConfigData->AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      FormId = SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID;
+    } else {
+      FormId = SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID;
+    }
+  } else {
+    FormId = SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID;
+  }
+
   //
   // turn off the watchdog timer
   //
@@ -666,9 +702,7 @@ SovereignBootWizardInit (
                             &HiiHandle,
                             1,
                             &gSovereignBootWizardFormSetGuid,
-                            SvConfig->SvBootProvisioned ?
-                              SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID :
-                              SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID,
+                            FormId,
                             NULL,
                             NULL
                             );

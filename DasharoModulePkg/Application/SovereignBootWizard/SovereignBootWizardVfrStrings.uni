@@ -28,10 +28,19 @@
 #string FUNCTION_NINE_STRING                     #language en-US  "F9=Reset to Defaults"
 #string FUNCTION_TEN_STRING                      #language en-US  "F10=Save"
 
+
+// Application launch causes
+#string STR_LAUNCH_REASON                        #language en-US "\n"
+#string STR_LAUNCH_CAUSE_DEFAULT_SETTINGS        #language en-US "You see this window because you are booting for the first time or restored default system settings.\n\n"
+#string STR_LAUNCH_CAUSE_SETUP                   #language en-US "You see this window because you have explicitly requested to launch the Wizard via system setup.\n"
+                                                                 "If you ended up here by mistake, please exit the application to avoid making changes to your system configuration.\n\n"
+#string STR_LAUNCH_CAUSE_VERIFICATION_FAILED     #language en-US "You see this window because the system attempted to boot an untrusted image.\n\n"
+
 // Welcome page strings
 #string STR_FORM1_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
-#string STR_WELCOME_SUBTITLE                     #language en-US "Welcome to Sovereign Boot Provisioning Wizard!\n\n"
-                                                                 "Please select the UEFI Secure Boot scheme you would like to use:"
+#string STR_WELCOME_SUBTITLE                     #language en-US "Welcome to Sovereign Boot Provisioning Wizard!\n"
+#string STR_WELCOME_PROMPT                       #language en-US "The Wizard will assist in setting up the UEFI Secure Boot feature. "
+                                                                 "Please select the UEFI Secure Boot scheme you would like to use:\n"
 
 #string STR_SELECT_SOVEREIGN_BOOT                #language en-US "Sovereign Boot"
 #string STR_SELECT_SOVEREIGN_BOOT_HELP           #language en-US ""
@@ -42,12 +51,12 @@
 #string STR_SELECT_DEFAULT_SECURE_BOOT_HELP      #language en-US ""
 #string STR_MS_SECURE_BOOT_FEATURES              #language en-US "* Trust firmware's default certificates\n"
                                                                  "* Compatible with common operating systems\n"
-                                                                 "* Does not modify current Secure Boot settings"
+                                                                 "* Enrolls firmware's default Secure Boot keys"
 
 // Configuration page strings
 #string STR_FORM2_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
 
-#string STR_CONFIG_SUBTITLE                      #language en-US "A new bootloader key has been detected."
+#string STR_CONFIG_SUBTITLE                      #language en-US "A new bootloader/key has been detected."
 
 #string STR_BOOTOPT_DESCRIPTION                  #language en-US "Description: "
 #string STR_HW_PATH                              #language en-US "Hardware path: "
@@ -57,8 +66,9 @@
 #string STR_TRUST_QUESTION                       #language en-US "Do you want to trust this key/image and continue booting?"
 
 #string STR_DO_NOT_TRUST_KEY                     #language en-US "[Do NOT trust, next key/bootloader]"
-#string STR_TRUST_KEY_AND_BOOT                   #language en-US "[Trust this key and boot]"
-#string STR_TRUST_KEY                            #language en-US "[Trust this key, next key/bootloader]"
+#string STR_DO_NOT_TRUST_KEY2                    #language en-US "[Do NOT trust]"
+#string STR_TRUST_KEY_AND_BOOT                   #language en-US "[Trust this key/image and boot]"
+#string STR_TRUST_KEY                            #language en-US "[Trust this key/image, next key/bootloader]"
 #string STR_SHOW_KEY_DETAILS                     #language en-US "[Show key/certificate details]"
 
 // Interactive mode strings
