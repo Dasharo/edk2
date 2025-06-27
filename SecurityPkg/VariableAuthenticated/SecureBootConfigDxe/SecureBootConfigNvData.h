@@ -77,6 +77,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define KEY_SOVEREIGN_BOOT_ENABLE           0x1120
 #define KEY_LAUNCH_SOVEREIGN_BOOT_WIZARD    0x1121
+#define KEY_SOVEREIGN_BOOT_PROVISIONED      0x1122
 
 #define LABEL_KEK_DELETE              0x1200
 #define LABEL_DB_DELETE               0x1201
