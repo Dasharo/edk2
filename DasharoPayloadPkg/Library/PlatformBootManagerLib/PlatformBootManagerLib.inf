@@ -73,6 +73,7 @@
   gEdkiiSCOTermGuid
   gEfiPcAnsiGuid
   gDasharoSystemFeaturesGuid
+  gSovereignBootWizardFormSetGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES
@@ -115,3 +116,5 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
   gDasharoSystemFeaturesTokenSpaceGuid.PcdFumAutoIpxeBoot
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState
