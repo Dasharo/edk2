@@ -43,6 +43,9 @@ formset
        title  = STRING_TOKEN(STR_FORM1_TITLE);
 
     subtitle text = STRING_TOKEN(STR_WELCOME_SUBTITLE);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+    subtitle text = STRING_TOKEN(STR_WELCOME_PROMPT);
 
     // Empty text field so that none of the options are
     // highlighted/selected by default.
@@ -92,8 +95,13 @@ formset
   form formid = SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID,
        title  = STRING_TOKEN(STR_FORM2_TITLE);
 
+  disableif ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
     subtitle text = STRING_TOKEN(STR_CONFIG_SUBTITLE);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+  endif;
+  disableif NOT ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+  endif;
 
     subtitle text = STRING_TOKEN(STR_BOOTOPT_DESCRIPTION);
     subtitle text = STRING_TOKEN(STR_HW_PATH);
@@ -118,11 +126,13 @@ formset
       flags  = INTERACTIVE,
       key    = TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID;
 
+  disableif ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_TRUST_KEY),
       flags  = INTERACTIVE,
       key    = TRUST_KEY_FORM2_QUESTION_ID;
+  endif;
 
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
@@ -153,8 +163,8 @@ formset
         title  = STRING_TOKEN(STR_FORM9_TITLE);
 
     subtitle text = STRING_TOKEN(STR_INTERACTIVE_MODE_SUBTITLE);
-
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
 
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
