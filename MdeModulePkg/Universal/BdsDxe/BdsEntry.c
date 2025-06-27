@@ -1134,12 +1134,16 @@ BdsEntry (
             );
     }
 
+    DEBUG ((EFI_D_INFO, "Sovereign Boot Wizard state:\n\tEnabled: %d\n\tProvisioned %d\n",
+            SvBootConfig.SvBootEnabled, SvBootConfig.SvBootProvisioned));
+
     // Only if Sovereing Boot is NOT provisioned or settings has been reset (booting for the first time too)
     if (SvBootConfig.SvBootEnabled) {
       if (!SvBootConfig.SvBootProvisioned ||
           BootMode == BOOT_WITH_DEFAULT_SETTINGS ||
           BootMode == BOOT_WITH_MFG_MODE_SETTINGS) 
       {
+        DEBUG ((EFI_D_INFO, "Sovereign Boot: System is not provisioned or boots with default settings. Launching Wizard...\n"));
         Status = EfiBootManagerLaunchSovereignBootWizard (SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS);
         if (EFI_ERROR (Status)) {
           if (gST->ConOut != NULL) {
