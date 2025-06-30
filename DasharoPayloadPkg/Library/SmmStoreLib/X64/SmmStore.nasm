@@ -25,6 +25,9 @@ ASM_PFX(TriggerSmi):
 @Trigger:
     out     0b2h, al                    ; write to APM port to trigger SMI
 
+    nop
+    nop
+
 ; There might ba a delay between writing the Smi trigger register and
 ; entering SMM, in which case the Smi handler will do nothing as only
 ; synchronous Smis are handled. In addition when there's no Smi handler
