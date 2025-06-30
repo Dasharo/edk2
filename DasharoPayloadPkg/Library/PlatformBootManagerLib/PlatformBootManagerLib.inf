@@ -81,6 +81,8 @@
   gEfiBootLogoProtocolGuid        ## CONSUMES
   gEfiDxeSmmReadyToLockProtocolGuid
   gEfiSmmAccess2ProtocolGuid
+  gEfiUsbIoProtocolGuid
+  gEfiSimpleTextInProtocolGuid
   gEfiPciRootBridgeIoProtocolGuid ## CONSUMES
   gEfiDevicePathProtocolGuid      ## CONSUMES
   gEfiSmbiosProtocolGuid          ## CONSUMES
