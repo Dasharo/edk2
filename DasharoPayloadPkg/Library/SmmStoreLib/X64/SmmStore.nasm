@@ -33,6 +33,14 @@ ASM_PFX(TriggerSmi):
 ; As there's no livesign from SMM, just wait a bit for the handler to fire,
 ; and then try again.
 
+; There is a chance that adding NOPs has the effect of increasing the
+; probability of success. The reasoning is that SMI might not happen if an
+; interrupt occurs due to IRET in the handler suppressing the SMI, thus extra
+; instructions could give the interrupt a higher chance of being processed.
+    nop
+    nop
+    nop
+
     cmp     rax, rcx                    ; Check if rax was modified by SMM
     jne     @Return                     ; SMM modified rax, return now
     push    rcx                         ; save rcx to stack
