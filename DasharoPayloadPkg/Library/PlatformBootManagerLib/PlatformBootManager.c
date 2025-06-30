@@ -18,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/HobLib.h>
 #include <Coreboot.h>
 #include <DasharoOptions.h>
+#include <Protocol/UsbIo.h>
 
 EFI_GUID mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -26,6 +27,127 @@ EFI_GUID mBootMenuFile = {
 // Defined and initialized in BdsDxe
 extern BOOLEAN mQuietBoot;
 extern BOOLEAN mFastBoot;
+
+STATIC
+EFI_STATUS
+RegisterFtdiUsbUart (
+  OUT EFI_DEVICE_PATH_PROTOCOL **OutDevicePath
+)
+{
+  EFI_STATUS                Status;
+  EFI_HANDLE                *UsbHandles = NULL;
+  UINTN                     UsbHandleCount = 0;
+  UINTN                     UsbIndex;
+
+  EFI_USB_IO_PROTOCOL       *UsbIo;
+  USB_DEVICE_DESCRIPTOR     DeviceDescriptor;
+  EFI_DEVICE_PATH_PROTOCOL  *UsbDevicePath;
+
+  EFI_HANDLE                *ConsoleHandles = NULL;
+  UINTN                     ConsoleHandleCount = 0;
+  UINTN                     Index;
+  EFI_DEVICE_PATH_PROTOCOL  *FullDevicePath;
+  EFI_DEVICE_PATH_PROTOCOL  *Node;
+  CHAR16                    *DevPathStr;
+  UINTN                     PrefixSize;
+
+  BOOLEAN                   FtdiFound = FALSE;
+
+  Status = gBS->LocateHandleBuffer (
+    ByProtocol,
+    &gEfiUsbIoProtocolGuid,
+    NULL,
+    &UsbHandleCount,
+    &UsbHandles
+  );
+  if (EFI_ERROR (Status) || UsbHandleCount == 0) {
+    DEBUG ((DEBUG_INFO, "No USB handles found\n"));
+    return EFI_NOT_FOUND;
+  }
+
+  for (UsbIndex = 0; UsbIndex < UsbHandleCount; UsbIndex++) {
+    Status = gBS->HandleProtocol (
+      UsbHandles[UsbIndex],
+      &gEfiUsbIoProtocolGuid,
+      (VOID **)&UsbIo
+    );
+    if (EFI_ERROR (Status)) continue;
+
+    Status = UsbIo->UsbGetDeviceDescriptor (UsbIo, &DeviceDescriptor);
+    if (EFI_ERROR (Status)) continue;
+
+    if (DeviceDescriptor.IdVendor != 0x0403 ||
+        (DeviceDescriptor.IdProduct != 0x6001 && DeviceDescriptor.IdProduct != 0x6010)) {
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (
+      UsbHandles[UsbIndex],
+      &gEfiDevicePathProtocolGuid,
+      (VOID **)&UsbDevicePath
+    );
+    if (EFI_ERROR (Status)) continue;
+
+    PrefixSize = GetDevicePathSize (UsbDevicePath) - END_DEVICE_PATH_LENGTH;
+
+    Status = gBS->LocateHandleBuffer (
+      ByProtocol,
+      &gEfiSimpleTextInProtocolGuid,
+      NULL,
+      &ConsoleHandleCount,
+      &ConsoleHandles
+    );
+    if (EFI_ERROR (Status)) continue;
+
+    for (Index = 0; Index < ConsoleHandleCount; Index++) {
+      Status = gBS->HandleProtocol (
+        ConsoleHandles[Index],
+        &gEfiDevicePathProtocolGuid,
+        (VOID **)&FullDevicePath
+      );
+      if (EFI_ERROR (Status)) continue;
+
+      if (CompareMem (FullDevicePath, UsbDevicePath, PrefixSize) != 0) {
+        continue;
+      }
+
+      Node = FullDevicePath;
+      while (!IsDevicePathEnd (NextDevicePathNode (Node))) {
+        Node = NextDevicePathNode (Node);
+      }
+
+      if (Node->Type != MESSAGING_DEVICE_PATH || Node->SubType != MSG_VENDOR_DP) {
+        continue;
+      }
+
+      DevPathStr = ConvertDevicePathToText (FullDevicePath, FALSE, FALSE);
+      if (DevPathStr != NULL) {
+        DEBUG ((DEBUG_INFO, "Registering FTDI terminal path: %s\n", DevPathStr));
+        FreePool (DevPathStr);
+      }
+
+      EfiBootManagerUpdateConsoleVariable (ConIn, FullDevicePath, NULL);
+      EfiBootManagerUpdateConsoleVariable (ConOut, FullDevicePath, NULL);
+      EfiBootManagerUpdateConsoleVariable (ErrOut, FullDevicePath, NULL);
+
+      *OutDevicePath = FullDevicePath;
+      
+      FtdiFound = TRUE;
+      break;
+    }
+
+    if (ConsoleHandles != NULL) {
+      FreePool (ConsoleHandles);
+      ConsoleHandles = NULL;
+    }
+  }
+
+  if (UsbHandles != NULL) {
+    FreePool (UsbHandles);
+  }
+
+  return FtdiFound ? EFI_SUCCESS : EFI_NOT_FOUND;
+}
 
 VOID
 InstallReadyToLock (
@@ -1619,7 +1741,16 @@ PlatformBootManagerAfterConsole (
 
     // With fast boot, we can't call ConnectAll as it would connect all consoles.
     EfiBootManagerConnectAll ();
-  }
+    
+    // Detect and register FTDI USB-UART converters
+    // The FTDI can only be detected after all protocols are bound thanks to
+    // the ConnectAll, but then it has to be connected separately
+    EFI_DEVICE_PATH_PROTOCOL *FtdiPath;
+    if (EFI_SUCCESS == RegisterFtdiUsbUart(&FtdiPath)) {
+      // Connect just the FTDI path
+      EfiBootManagerConnectDevicePath(FtdiPath, NULL);
+    }
+}
 
   EfiBootManagerRefreshAllBootOption ();
 
