@@ -64,7 +64,7 @@ PrintBannerInfo (
     gScreenDimensions.RightColumn,
     gScreenDimensions.TopRow,
     FRONT_PAGE_HEADER_HEIGHT - 1 + gScreenDimensions.TopRow,
-    BANNER_TEXT | BANNER_BACKGROUND
+    GetBannerColor()
     );
 
   //
@@ -152,7 +152,7 @@ PrintFramework (
       gScreenDimensions.RightColumn,
       gScreenDimensions.BottomRow - STATUS_BAR_HEIGHT - gFooterHeight,
       gScreenDimensions.BottomRow - STATUS_BAR_HEIGHT - 1,
-      KEYHELP_TEXT | KEYHELP_BACKGROUND
+      GetKeyHelpColor()
       );
     return;
   }
@@ -170,7 +170,7 @@ PrintFramework (
   // ?                                                                             ?
   // +------------------------------------------------------------------------------+
   //
-  gST->ConOut->SetAttribute (gST->ConOut, TITLE_TEXT | TITLE_BACKGROUND);
+  gST->ConOut->SetAttribute (gST->ConOut, GetTitleColor());
   Character = BOXDRAW_DOWN_RIGHT;
 
   PrintCharAt (gScreenDimensions.LeftColumn, gScreenDimensions.TopRow, Character);

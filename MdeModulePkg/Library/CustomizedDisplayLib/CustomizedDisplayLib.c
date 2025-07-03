@@ -153,7 +153,7 @@ RefreshKeyHelp (
     return;
   }
 
-  gST->ConOut->SetAttribute (gST->ConOut, KEYHELP_TEXT | KEYHELP_BACKGROUND);
+  gST->ConOut->SetAttribute (gST->ConOut, GetKeyHelpColor());
 
   if ((FormData->Attribute & HII_DISPLAY_MODAL) != 0) {
     return;
@@ -532,7 +532,7 @@ CreateDialog (
       //
       // Passing in a space results in the assumption that this is where typing will occur
       //
-      ClearLines (Start + 1, End - 1, Index + 1, Index + 1, POPUP_INVERSE_TEXT | POPUP_INVERSE_BACKGROUND);
+      ClearLines (Start + 1, End - 1, Index + 1, Index + 1, GetPopupInverseColor());
       PrintStringAt (
         ((DimensionsWidth - LibGetStringWidth (String) / 2) / 2) + gScreenDimensions.LeftColumn + 1,
         Index + 1,
@@ -796,7 +796,21 @@ GetPopupColor (
   VOID
   )
 {
-  return POPUP_TEXT | POPUP_BACKGROUND;
+  return PcdGet8 (PcdBrowserPopupTextColor) | PcdGet8 (PcdBrowserPopupBackgroundColor);
+}
+
+/**
+  Get OEM/Vendor specific title colors.
+
+  @retval  Byte code color setting for popup color.
+**/
+UINT8
+EFIAPI
+GetTitleColor (
+  VOID
+  )
+{
+  return PcdGet8 (PcdBrowserTitleTextColor) | PcdGet8 (PcdBrowserTitleBackgroundColor);
 }
 
 /**
@@ -810,7 +824,7 @@ GetPopupInverseColor (
   VOID
   )
 {
-  return POPUP_INVERSE_TEXT | POPUP_INVERSE_BACKGROUND;
+  return PcdGet8 (PcdBrowserPopupInverseTextColor) | PcdGet8 (PcdBrowserPopupInverseBackgroundColor);
 }
 
 /**
@@ -824,9 +838,8 @@ GetPickListColor (
   VOID
   )
 {
-  return PICKLIST_HIGHLIGHT_TEXT | PICKLIST_HIGHLIGHT_BACKGROUND;
+  return PcdGet8 (PcdBrowserPickListTextColor) | PcdGet8 (PcdBrowserPickListBackgroundColor);
 }
-
 /**
   Get OEM/Vendor specific arrow color attribute.
 
@@ -838,7 +851,7 @@ GetArrowColor (
   VOID
   )
 {
-  return ARROW_TEXT | ARROW_BACKGROUND;
+  return PcdGet8 (PcdBrowserArrowTextColor) | PcdGet8 (PcdBrowserArrowBackgroundColor);
 }
 
 /**
@@ -852,7 +865,7 @@ GetInfoTextColor (
   VOID
   )
 {
-  return INFO_TEXT | FIELD_BACKGROUND;
+  return PcdGet8 (PcdBrowserInfoTextColor) | PcdGet8 (PcdBrowserInfoBackgroundColor);
 }
 
 /**
@@ -866,7 +879,7 @@ GetHelpTextColor (
   VOID
   )
 {
-  return HELP_TEXT | FIELD_BACKGROUND;
+  return PcdGet8 (PcdBrowserHelpTextColor) | PcdGet8 (PcdBrowserHelpBackgroundColor);
 }
 
 /**
@@ -880,7 +893,7 @@ GetGrayedTextColor (
   VOID
   )
 {
-  return FIELD_TEXT_GRAYED | FIELD_BACKGROUND;
+  return FIELD_TEXT_GRAYED | PcdGet8 (PcdBrowserFieldBackgroundColor);
 }
 
 /**
@@ -908,7 +921,7 @@ GetFieldTextColor (
   VOID
   )
 {
-  return PcdGet8 (PcdBrowserFieldTextColor) | FIELD_BACKGROUND;
+  return PcdGet8 (PcdBrowserFieldTextColor) | PcdGet8 (PcdBrowserFieldBackgroundColor);
 }
 
 /**
@@ -922,7 +935,35 @@ GetSubTitleTextColor (
   VOID
   )
 {
-  return PcdGet8 (PcdBrowserSubtitleTextColor) | FIELD_BACKGROUND;
+  return PcdGet8 (PcdBrowserSubtitleTextColor) | PcdGet8 (PcdBrowserFieldBackgroundColor);
+}
+
+/**
+  Get OEM/Vendor specific banner text color attribute.
+
+  @retval  Byte code color setting for banner text color.
+**/
+UINT8
+EFIAPI
+GetBannerColor (
+  VOID
+  )
+{
+  return PcdGet8 (PcdBrowserBannerTextColor) | PcdGet8 (PcdBrowserBannerBackgroundColor);
+}
+
+/**
+  Get OEM/Vendor specific key help text color attribute.
+
+  @retval  Byte code color setting for key help text color.
+**/
+UINT8
+EFIAPI
+GetKeyHelpColor (
+  VOID
+  )
+{
+  return PcdGet8 (PcdBrowserKeyHelpTextColor) | PcdGet8 (PcdBrowserKeyHelpBackgroundColor);
 }
 
 /**
