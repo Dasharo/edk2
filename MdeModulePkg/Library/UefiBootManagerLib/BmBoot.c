@@ -1877,7 +1877,7 @@ EfiBootManagerLaunchSovereignBootWizard (
               0,
               LoadOptionTypeBoot,
               LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
-              L"Soverign Boot Wizard",
+              L"Sovereign Boot Wizard",
               FilePath,
               NULL,
               0

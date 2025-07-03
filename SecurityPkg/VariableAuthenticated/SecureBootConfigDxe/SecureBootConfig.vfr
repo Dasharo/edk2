@@ -84,7 +84,7 @@ formset
       endcheckbox;
 
       // Hidden checkbox for provisioned state, to be used in callback
-      // whe nefautl settigns are restored.
+      // when default settings are restored.
       suppressif TRUE;
         checkbox varid = SECUREBOOT_CONFIGURATION.SvBootProvisioned,
               questionid = KEY_SOVEREIGN_BOOT_PROVISIONED,
