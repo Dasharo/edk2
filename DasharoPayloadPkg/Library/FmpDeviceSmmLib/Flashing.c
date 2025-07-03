@@ -108,7 +108,6 @@ ReadCurrentFirmwareImpl (
   UINTN       Block;
   UINTN       BlockSize;
   UINTN       NumBytes;
-  UINTN       Try;
 
   Status = SmmStoreLibGetBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
@@ -146,39 +145,29 @@ ReadCurrentFirmwareImpl (
 
   AsciiPrint ("%a(): Starting to read from flash\n", __FUNCTION__);
 
+  UINTN Fails = 0;
   for (Block = 0; Block < FwSize / BlockSize; Block++) {
-    for (Try = 0; Try < 3; Try++) {
-      NumBytes = BlockSize;
-      Status = SmmStoreLibReadAnyBlock (
-                 Block,
-                 0,
-                 &NumBytes,
-                 Image + Block * BlockSize
-                 );
-      if (EFI_ERROR (Status) || NumBytes != BlockSize) {
-        AsciiPrint (
-          "%a(): try %d: read %d out of %d bytes of flash at 0x%x (%r)\n",
-          __FUNCTION__,
-          Try,
-          NumBytes,
-          BlockSize,
-          Block * BlockSize,
-          Status
-          );
-      } else {
-        break;
-      }
-    }
-
-    if (Try == 3) {
-      FreePool (Image);
-      return NULL;
-    }
-
-    if (Block == 0) {
+    NumBytes = BlockSize;
+    Status = SmmStoreLibReadAnyBlock (
+               Block,
+               0,
+               &NumBytes,
+               Image + Block * BlockSize
+               );
+    if (EFI_ERROR (Status) || NumBytes != BlockSize) {
+      ++Fails;
+      AsciiPrint (
+        "%a(): read %d out of %d bytes of flash at 0x%x (%r)\n",
+        __FUNCTION__,
+        NumBytes,
+        BlockSize,
+        Block * BlockSize,
+        Status
+        );
+    } else if (Block == 0) {
       AsciiPrint ("%a(): start of firmware:\n", __FUNCTION__);
       BOOLEAN allFF = TRUE;
-      for (int i = 0; i < 0x100; i += 0x10) {
+      for (int i = 0; i < 0x40; i += 0x10) {
         AsciiPrint ("0x%08x: ", i);
         for (int j = 0; j < 16; ++j) {
           if (Image[i + j] != 0xffU)
@@ -190,6 +179,11 @@ ReadCurrentFirmwareImpl (
       if (allFF)
         AsciiPrint ("%a(): firmware is not fully readable!\n", __FUNCTION__);
     }
+  }
+
+  if (Fails != 0) {
+     FreePool (Image);
+     Image = NULL;
   }
 
   return Image;
