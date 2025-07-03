@@ -19,7 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // Application launch causes. Determine the logic and screens showed
 // when the application is launched.
 // We want different screens and messages when:
-// 1. SV Boot is proviosioned by image fails to verify.
+// 1. SV Boot is provisioned but image fails to verify.
 // 2. SV Boot is not yet provisioned or platform booting with default settings.
 // 3. Application is launched from setup
 #define SV_BOOT_LAUNCH_UNDEFINED                        0
