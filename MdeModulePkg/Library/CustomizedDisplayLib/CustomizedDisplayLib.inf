@@ -55,6 +55,25 @@
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserSubtitleTextColor               ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundColor            ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextHighlightColor         ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor   ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFrontPageFormSetGuid                   ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleBackgroundColor            ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupBackgroundColor            ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor                  ## CONSUMES

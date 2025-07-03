@@ -674,6 +674,30 @@
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
 !endif
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor|0x20
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextHighlightColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleBackgroundColor|0x20
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupBackgroundColor|0x20
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupTextColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpTextColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpBackgroundColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor|0x0E
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoBackgroundColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserSubtitleTextColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerBackgroundColor|0x20
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerTextColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpTextColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpBackgroundColor|0x20
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor|0x00
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x06
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x20
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS
