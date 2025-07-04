@@ -2021,6 +2021,25 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0C|UINT8|0x00010311
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x70|UINT8|0x00010312
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 } | VOID* | 0x00010400
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  | { 0x00, 0x00, 0x00, 0x98 } | VOID* | 0x00010401
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen | { 0x00, 0x00, 0x98, 0x00 } | VOID* | 0x00010402
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan  | { 0x00, 0x00, 0x98, 0x98 } | VOID* | 0x00010403
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed   | { 0x00, 0x98, 0x00, 0x00 } | VOID* | 0x00010404
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta    | { 0x00, 0x98, 0x00, 0x98 } | VOID* | 0x00010405
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown      | { 0x00, 0x98, 0x98, 0x00 } | VOID* | 0x00010406
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray  | { 0x00, 0x98, 0x98, 0x98 } | VOID* | 0x00010407
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray   | { 0x00, 0x30, 0x30, 0x30 } | VOID* | 0x00010408
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue       | { 0x00, 0x00, 0x00, 0xFF } | VOID* | 0x00010409
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLime       | { 0x00, 0x00, 0xFF, 0x00 } | VOID* | 0x0001040A
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan       | { 0x00, 0xFF, 0xFF, 0x00 } | VOID* | 0x0001040B
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed        | { 0x00, 0xFF, 0x00, 0x00 } | VOID* | 0x0001040C
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteFuchsia    | { 0x00, 0xFF, 0x00, 0xFF } | VOID* | 0x0001040D
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow     | { 0x00, 0xFF, 0xFF, 0x00 } | VOID* | 0x0001040E
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite      | { 0x00, 0xFF, 0xFF, 0xFF } | VOID* | 0x0001040F
+
+
+
   ## Time in second to delay for SATA devices to spin-up for recovery.
   # @Prompt SATA spin-up delay time in second for recovery path.
   gEfiMdeModulePkgTokenSpaceGuid.PcdSataSpinUpDelayInSecForRecoveryPath|15|UINT16|0x0001005B

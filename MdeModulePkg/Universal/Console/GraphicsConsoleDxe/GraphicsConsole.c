@@ -60,29 +60,53 @@ EFI_GUID  mFontPackageListGuid = {
   0xf5f219d3, 0x7006, 0x4648, { 0xac, 0x8d, 0xd6, 0x1d, 0xfb, 0x7b, 0xc6, 0xad }
 };
 
+
 CHAR16  mCrLfString[3] = { CHAR_CARRIAGE_RETURN, CHAR_LINEFEED, CHAR_NULL };
 
-EFI_GRAPHICS_OUTPUT_BLT_PIXEL  mGraphicsEfiColors[16] = {
-  //
-  // B    G    R   reserved
-  //
-  { 0x00, 0x00, 0x00, 0x00 },  // BLACK
-  { 0x98, 0x00, 0x00, 0x00 },  // LIGHTBLUE
-  { 0x00, 0x98, 0x00, 0x00 },  // LIGHGREEN
-  { 0x98, 0x98, 0x00, 0x00 },  // LIGHCYAN
-  { 0x00, 0x00, 0x98, 0x00 },  // LIGHRED
-  { 0x98, 0x00, 0x98, 0x00 },  // MAGENTA
-  { 0x00, 0x98, 0x98, 0x00 },  // BROWN
-  { 0x98, 0x98, 0x98, 0x00 },  // LIGHTGRAY
-  { 0x30, 0x30, 0x30, 0x00 },  // DARKGRAY - BRIGHT BLACK
-  { 0xff, 0x00, 0x00, 0x00 },  // BLUE
-  { 0x00, 0xff, 0x00, 0x00 },  // LIME
-  { 0xff, 0xff, 0x00, 0x00 },  // CYAN
-  { 0x00, 0x00, 0xff, 0x00 },  // RED
-  { 0xff, 0x00, 0xff, 0x00 },  // FUCHSIA
-  { 0x00, 0xff, 0xff, 0x00 },  // YELLOW
-  { 0xff, 0xff, 0xff, 0x00 }   // WHITE
-};
+EFI_GRAPHICS_OUTPUT_BLT_PIXEL  mGraphicsEfiColors[16];
+
+/**
+  test
+  @param  dest                Protocol instance pointer.
+  @param  source          Handle of device to test.
+**/
+VOID
+CopyGraphicsPaletteColor(
+  OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL* dest,
+  IN VOID* source
+) {
+  dest->Reserved = ((UINT8*)source)[0];
+  dest->Red = ((UINT8*)source)[1];
+  dest->Green = ((UINT8*)source)[2];
+  dest->Blue = ((UINT8*)source)[3];
+}
+
+/**
+  test
+**/
+VOID
+InitGraphicsColors (
+  VOID
+  )
+{
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[0],  PcdGetPtr(PcdGraphicsConsoleColorPaletteBlack));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[1],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightBlue));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[2],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGreen));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[3],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightCyan));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[4],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightRed));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[5],  PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[6],  PcdGetPtr(PcdGraphicsConsoleColorPaletteBrown));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[7],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[8],  PcdGetPtr(PcdGraphicsConsoleColorPaletteDarkGray));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[9],  PcdGetPtr(PcdGraphicsConsoleColorPaletteBlue));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[10], PcdGetPtr(PcdGraphicsConsoleColorPaletteLime));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[11], PcdGetPtr(PcdGraphicsConsoleColorPaletteCyan));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[12], PcdGetPtr(PcdGraphicsConsoleColorPaletteRed));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[13], PcdGetPtr(PcdGraphicsConsoleColorPaletteFuchsia));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[14], PcdGetPtr(PcdGraphicsConsoleColorPaletteYellow));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[15], PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite));
+}
+
 
 EFI_NARROW_GLYPH  mCursorGlyph = {
   0x0000,
@@ -145,7 +169,7 @@ GraphicsConsoleControllerDriverSupported (
                   );
 
   if (EFI_ERROR (Status) && FeaturePcdGet (PcdUgaConsumeSupport)) {
-    //
+    //for
     // Open Graphics Output Protocol failed, try to open UGA Draw Protocol
     //
     Status = gBS->OpenProtocol (
@@ -365,6 +389,8 @@ InitializeGraphicsConsoleTextMode (
   //
   *TextModeCount = ValidCount;
   *TextModeData  = NewModeBuffer;
+
+  InitGraphicsColors();
   return EFI_SUCCESS;
 }
 
