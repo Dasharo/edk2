@@ -700,24 +700,24 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor|0x0F
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupBackgroundColor|0x60
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupTextColor|0x0F
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor|0x02
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor|0x02
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor|0x30
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor|0x06
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpTextColor|0x07
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpBackgroundColor|0x30
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor|0x07
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor|0x06
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoBackgroundColor|0x30
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor|0x07
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor|0x06
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundColor|0x30
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserSubtitleTextColor|0x02
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerBackgroundColor|0x60
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerTextColor|0x0F
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpTextColor|0x02
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpBackgroundColor|0x60
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor|0x07
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor|0x06
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor|0x30
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0F
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x60
-  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x70
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x07
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 }
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  | { 0x00, 0x00, 0x00, 0x98 }
