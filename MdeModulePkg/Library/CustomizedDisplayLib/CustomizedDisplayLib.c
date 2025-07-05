@@ -895,7 +895,7 @@ GetGrayedTextColor (
   VOID
   )
 {
-  return FIELD_TEXT_GRAYED | PcdGet8 (PcdBrowserFieldBackgroundColor);
+  return PcdGet8 (PcdBrowserFieldGrayedTestColor) | PcdGet8 (PcdBrowserFieldBackgroundColor);
 }
 
 /**

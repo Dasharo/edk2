@@ -77,3 +77,4 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor                  ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor                  ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor                  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor                  ## CONSUMES
