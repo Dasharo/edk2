@@ -15,12 +15,13 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = DxeImageVerificationLib
+  BASE_NAME                      = DxeImageVerificationHandler
   MODULE_UNI_FILE                = DxeImageVerificationLib.uni
-  FILE_GUID                      = B9EB99BB-D7BE-466C-96DB-5994FBA95FB3
+  FILE_GUID                      = 0CA970E1-43FA-4402-BC0A-81AF336BFFD6
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = DxeImageVerificationLib|DXE_DRIVER DXE_RUNTIME_DRIVER DXE_SMM_DRIVER UEFI_APPLICATION UEFI_DRIVER
+  LIBRARY_CLASS                  = NULL|DXE_DRIVER DXE_RUNTIME_DRIVER DXE_SMM_DRIVER UEFI_APPLICATION UEFI_DRIVER
+  CONSTRUCTOR                    = DxeImageVerificationLibConstructor
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -30,6 +31,7 @@
 
 [Sources]
   DxeImageVerificationLib.c
+  DxeImageVerificationHandler.c
   ImageVerificationLibInternal.h
   Measurement.c
 
@@ -87,3 +89,8 @@
   gEfiCertX509Sha384Guid                ## SOMETIMES_CONSUMES    ## GUID     # Unique ID for the type of the signature.
   gEfiCertX509Sha512Guid                ## SOMETIMES_CONSUMES    ## GUID     # Unique ID for the type of the signature.
   gEfiCertPkcs7Guid                     ## SOMETIMES_CONSUMES    ## GUID     # Unique ID for the type of the certificate.
+
+[Pcd]
+  gEfiSecurityPkgTokenSpaceGuid.PcdOptionRomImageVerificationPolicy          ## SOMETIMES_CONSUMES
+  gEfiSecurityPkgTokenSpaceGuid.PcdRemovableMediaImageVerificationPolicy     ## SOMETIMES_CONSUMES
+  gEfiSecurityPkgTokenSpaceGuid.PcdFixedMediaImageVerificationPolicy         ## SOMETIMES_CONSUMES

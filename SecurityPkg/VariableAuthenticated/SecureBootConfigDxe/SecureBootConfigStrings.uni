@@ -50,6 +50,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #string STR_DBX_CERTIFICATE_FORMAT_PROMPT  #language en-US "Signature Format"
 #string STR_DBX_CERTIFICATE_FORMAT_HELP    #language en-US "X509 DER-Cert enrolled. Select different option to enroll it into DBX."
+#string STR_DBX_CERTIFICATE_FORMAT_SHA1    #language en-US "X509 CERT SHA1"
+#string STR_DBX_CERTIFICATE_FORMAT_SHA224  #language en-US "X509 CERT SHA224"
 #string STR_DBX_CERTIFICATE_FORMAT_SHA256  #language en-US "X509 CERT SHA256"
 #string STR_DBX_CERTIFICATE_FORMAT_SHA384  #language en-US "X509 CERT SHA384"
 #string STR_DBX_CERTIFICATE_FORMAT_SHA512  #language en-US "X509 CERT SHA512"

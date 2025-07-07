@@ -340,6 +340,7 @@
   SmmRelocationLib|UefiCpuPkg/Library/SmmRelocationLib/SmmRelocationLib.inf
   HobPrintLib|MdeModulePkg/Library/HobPrintLib/HobPrintLib.inf
   BuildFdtLib|UefiPayloadPkg/Library/BuildFdtLib/BuildFdtLib.inf
+  DxeImageVerificationLib|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
 
 [LibraryClasses.common]
 !if $(BOOTSPLASH_IMAGE)
@@ -741,7 +742,7 @@
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
       <LibraryClasses>
 !if $(SECURE_BOOT_ENABLE) == TRUE
-      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
+      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationHandler.inf
 !endif
   }
 !endif

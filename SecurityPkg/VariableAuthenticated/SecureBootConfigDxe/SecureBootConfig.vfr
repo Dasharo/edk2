@@ -570,10 +570,16 @@ formset
             varid       = SECUREBOOT_CONFIGURATION.CertificateFormat,
             prompt      = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_PROMPT),
             help        = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_HELP),
-            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA256), value = 0x1, flags = DEFAULT;
-            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA384), value = 0x2, flags = 0;
-            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA512), value = 0x3, flags = 0;
-            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_RAW), value = 0x4, flags = 0;
+            disableif TRUE; // Make it depend on DISABLE_SHA1_DEPRECATED_INTERFACES?
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA1), value = 0x0, flags = 0;
+            endif;
+            suppressif TRUE; // SHA224 not implemented
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA224), value = 0x1, flags = 0;
+            endif;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA256), value = 0x2, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA384), value = 0x3, flags = 0;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA512), value = 0x4, flags = 0;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_RAW), value = 0x6, flags = 0;
       endoneof;
     endif;
 

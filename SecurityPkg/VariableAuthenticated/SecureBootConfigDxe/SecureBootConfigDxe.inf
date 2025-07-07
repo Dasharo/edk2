@@ -59,6 +59,7 @@
   PeCoffLib
   SecureBootVariableLib
   SecureBootVariableProvisionLib
+  DxeImageVerificationLib
 
 [FixedPcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdSecureBootDefaultEnable
