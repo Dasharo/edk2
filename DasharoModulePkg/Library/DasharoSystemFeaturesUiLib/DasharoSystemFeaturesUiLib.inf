@@ -102,3 +102,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIntelMeMenuShowCbntStatus
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemorySpdProfileOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdFumAutoIpxeBoot
