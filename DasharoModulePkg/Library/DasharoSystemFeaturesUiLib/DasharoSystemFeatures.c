@@ -642,6 +642,8 @@ DasharoSystemFeaturesCallback (
   EFI_STATUS                                 Status;
   EFI_INPUT_KEY                              Key;
   DASHARO_SYSTEM_FEATURES_PRIVATE_DATA       *Private;
+  CONST CHAR16                               *PressEnterMsg;
+  CONST CHAR16                               *VariableLines[3];
 
   Status = EFI_SUCCESS;
   Private = DASHARO_SYSTEM_FEATURES_PRIVATE_DATA_FROM_THIS (This);
@@ -734,6 +736,18 @@ DasharoSystemFeaturesCallback (
         if (!FixedPcdGetBool(PcdShowFum))
           return EFI_UNSUPPORTED;
 
+        PressEnterMsg = L"Press ENTER to continue and reboot or ESC to cancel...";
+        if (PcdGetBool (PcdFumAutoIpxeBoot)) {
+          VariableLines[0] = L"DTS will be started automatically through iPXE, please";
+          VariableLines[1] = L"make sure an Ethernet cable is connected before continuing.";
+          VariableLines[2] = L"";
+        } else {
+          VariableLines[0] = PressEnterMsg;
+          VariableLines[1] = L"";
+          /* This terminates list of lines. */
+          VariableLines[2] = NULL;
+        }
+
         do {
           CreatePopUp (
             EFI_BLACK | EFI_BACKGROUND_RED,
@@ -743,10 +757,10 @@ DasharoSystemFeaturesCallback (
             L"This will turn off all flash protection mechanisms",
             L"for the duration of the next boot.",
             L"",
-            L"DTS will be started automatically through iPXE, please",
-            L"make sure an Ethernet cable is connected before continuing.",
-            L"",
-            L"Press ENTER to continue and reboot or ESC to cancel...",
+            VariableLines[0],
+            VariableLines[1],
+            VariableLines[2],
+            PressEnterMsg,
             L"",
             NULL
             );
