@@ -67,37 +67,9 @@ extern  EFI_IFR_GUID_LABEL  *mEndLabel;
 #define TWO_BYTE_ENCODE  0x82
 #define BUFFER_MAX_SIZE  100
 
-//
-// SHA-256 digest size in bytes
-//
-#define SHA256_DIGEST_SIZE  32
-//
-// SHA-384 digest size in bytes
-//
-#define SHA384_DIGEST_SIZE  48
-//
-// SHA-512 digest size in bytes
-//
-#define SHA512_DIGEST_SIZE  64
-
-//
-// Set max digest size as SHA512 Output (64 bytes) by far
-//
-#define MAX_DIGEST_SIZE  SHA512_DIGEST_SIZE
-
 #define WIN_CERT_UEFI_RSA2048_SIZE  256
 #define WIN_CERT_UEFI_RSA3072_SIZE  384
 #define WIN_CERT_UEFI_RSA4096_SIZE  512
-
-//
-// Support hash types
-//
-#define HASHALG_SHA224  0x00000000
-#define HASHALG_SHA256  0x00000001
-#define HASHALG_SHA384  0x00000002
-#define HASHALG_SHA512  0x00000003
-#define HASHALG_RAW     0x00000004
-#define HASHALG_MAX     0x00000004
 
 //
 // Certificate public key minimum size (bytes)
@@ -315,11 +287,6 @@ typedef struct {
   HASH_UPDATE              HashUpdate;      ///< Pointer to Hash Update function
   HASH_FINAL               HashFinal;       ///< Pointer to Hash Final function
 } HASH_TABLE;
-
-typedef struct {
-  WIN_CERTIFICATE    Hdr;
-  UINT8              CertData[1];
-} WIN_CERTIFICATE_EFI_PKCS;
 
 /**
   This function publish the SecureBoot configuration Form.

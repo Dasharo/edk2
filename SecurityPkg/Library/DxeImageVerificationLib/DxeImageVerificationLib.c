@@ -1,5 +1,5 @@
 /** @file
-  Implement image verification services for secure boot service
+  Implement image verification services.
 
   Caution: This file requires additional review when modified.
   This library will have external input - PE/COFF image.
@@ -18,33 +18,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "DxeImageVerificationLib.h"
-
-//
-// Caution: This is used by a function which may receive untrusted input.
-// These global variables hold PE/COFF image data, and they should be validated before use.
-//
-EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION  mNtHeader;
-UINT32                               mPeCoffHeaderOffset;
-EFI_GUID                             mCertType;
-
+#include "ImageVerificationLibInternal.h"
 //
 // Information on current PE/COFF image
 //
-UINTN  mImageSize;
-UINT8  *mImageBase = NULL;
-UINT8  mImageDigest[MAX_DIGEST_SIZE];
-UINTN  mImageDigestSize;
-
-//
-// Notify string for authorization UI.
-//
-CHAR16  mNotifyString1[MAX_NOTIFY_STRING_LEN] = L"Image verification pass but not found in authorized database!";
-CHAR16  mNotifyString2[MAX_NOTIFY_STRING_LEN] = L"Launch this image anyway? (Yes/Defer/No)";
-//
-// Public Exponent of RSA Key.
-//
-CONST UINT8  mRsaE[] = { 0x01, 0x00, 0x01 };
+STATIC UINTN  LocalImageSize;
+STATIC UINT8  *LocalImageBase = NULL;
 
 //
 // OID ASN.1 Value for Hash Algorithms
@@ -69,7 +48,25 @@ HASH_TABLE  mHash[] = {
   { L"SHA512", 64, &mHashOidValue[32], 9, Sha512GetContextSize, Sha512Init, Sha512Update, Sha512Final }
 };
 
-EFI_STRING  mHashTypeStr;
+/**
+  Get the length of the digest of given hash algorithm.
+
+  @param[in]    HashAlg   Hash algorithm type.
+
+  @retval UINTN           Length of the digest of given hash algorithm.
+
+**/
+UINTN
+GetDigestLength (
+  IN  UINT32  HashAlg
+  )
+{
+  if (HashAlg >= HASHALG_MAX) {
+    return 0;
+  }
+
+  return mHash[HashAlg].DigestLength;
+}
 
 /**
   SecureBoot Hook for processing image verification.
@@ -125,11 +122,11 @@ DxeImageVerificationLibImageRead (
   }
 
   EndPosition = FileOffset + *ReadSize;
-  if (EndPosition > mImageSize) {
-    *ReadSize = (UINT32)(mImageSize - FileOffset);
+  if (EndPosition > LocalImageSize) {
+    *ReadSize = (UINT32)(LocalImageSize - FileOffset);
   }
 
-  if (FileOffset >= mImageSize) {
+  if (FileOffset >= LocalImageSize) {
     *ReadSize = 0;
   }
 
@@ -138,137 +135,90 @@ DxeImageVerificationLibImageRead (
   return EFI_SUCCESS;
 }
 
-/**
-  Get the image type.
 
-  @param[in]    File       This is a pointer to the device path of the file that is
-                           being dispatched.
-
-  @return UINT32           Image Type
-
-**/
-UINT32
-GetImageType (
-  IN  CONST EFI_DEVICE_PATH_PROTOCOL  *File
+EFI_STATUS
+GetImagePeCoffOffset (
+  IN     VOID                      *FileBase,
+  IN     UINTN                     FileSize,
+  OUT    UINT32                    *PeCoffHeaderOffset
   )
 {
-  EFI_STATUS                Status;
-  EFI_HANDLE                DeviceHandle;
-  EFI_DEVICE_PATH_PROTOCOL  *TempDevicePath;
-  EFI_BLOCK_IO_PROTOCOL     *BlockIo;
+  EFI_IMAGE_DOS_HEADER             *DosHdr;
+  PE_COFF_LOADER_IMAGE_CONTEXT     ImageContext;
+  RETURN_STATUS                    PeCoffStatus;
 
-  if (File == NULL) {
-    return IMAGE_UNKNOWN;
+  if (PeCoffHeaderOffset == NULL || FileBase == NULL || FileSize == 0) {
+    return EFI_INVALID_PARAMETER;
   }
 
-  //
-  // First check to see if File is from a Firmware Volume
-  //
-  DeviceHandle   = NULL;
-  TempDevicePath = (EFI_DEVICE_PATH_PROTOCOL *)File;
-  Status         = gBS->LocateDevicePath (
-                          &gEfiFirmwareVolume2ProtocolGuid,
-                          &TempDevicePath,
-                          &DeviceHandle
-                          );
-  if (!EFI_ERROR (Status)) {
-    Status = gBS->OpenProtocol (
-                    DeviceHandle,
-                    &gEfiFirmwareVolume2ProtocolGuid,
-                    NULL,
-                    NULL,
-                    NULL,
-                    EFI_OPEN_PROTOCOL_TEST_PROTOCOL
-                    );
-    if (!EFI_ERROR (Status)) {
-      return IMAGE_FROM_FV;
-    }
-  }
+  LocalImageSize = FileSize;
+  LocalImageBase = FileBase;
+
+  ZeroMem (&ImageContext, sizeof (ImageContext));
+  ImageContext.Handle    = (VOID *)FileBase;
+  ImageContext.ImageRead = (PE_COFF_LOADER_READ_FILE)DxeImageVerificationLibImageRead;
 
   //
-  // Next check to see if File is from a Block I/O device
+  // Get information about the image being loaded
   //
-  DeviceHandle   = NULL;
-  TempDevicePath = (EFI_DEVICE_PATH_PROTOCOL *)File;
-  Status         = gBS->LocateDevicePath (
-                          &gEfiBlockIoProtocolGuid,
-                          &TempDevicePath,
-                          &DeviceHandle
-                          );
-  if (!EFI_ERROR (Status)) {
-    BlockIo = NULL;
-    Status  = gBS->OpenProtocol (
-                     DeviceHandle,
-                     &gEfiBlockIoProtocolGuid,
-                     (VOID **)&BlockIo,
-                     NULL,
-                     NULL,
-                     EFI_OPEN_PROTOCOL_GET_PROTOCOL
-                     );
-    if (!EFI_ERROR (Status) && (BlockIo != NULL)) {
-      if (BlockIo->Media != NULL) {
-        if (BlockIo->Media->RemovableMedia) {
-          //
-          // Block I/O is present and specifies the media is removable
-          //
-          return IMAGE_FROM_REMOVABLE_MEDIA;
-        } else {
-          //
-          // Block I/O is present and specifies the media is not removable
-          //
-          return IMAGE_FROM_FIXED_MEDIA;
-        }
-      }
-    }
-  }
+  PeCoffStatus = PeCoffLoaderGetImageInfo (&ImageContext);
+  if (RETURN_ERROR (PeCoffStatus)) {
+    LocalImageBase = NULL;
+    LocalImageSize = 0;
 
-  //
-  // File is not in a Firmware Volume or on a Block I/O device, so check to see if
-  // the device path supports the Simple File System Protocol.
-  //
-  DeviceHandle   = NULL;
-  TempDevicePath = (EFI_DEVICE_PATH_PROTOCOL *)File;
-  Status         = gBS->LocateDevicePath (
-                          &gEfiSimpleFileSystemProtocolGuid,
-                          &TempDevicePath,
-                          &DeviceHandle
-                          );
-  if (!EFI_ERROR (Status)) {
     //
-    // Simple File System is present without Block I/O, so assume media is fixed.
+    // The information can't be got from the invalid PeImage
     //
-    return IMAGE_FROM_FIXED_MEDIA;
+    DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: PeImage invalid. Cannot retrieve image information.\n"));
+    return EFI_UNSUPPORTED;
   }
 
-  //
-  // File is not from an FV, Block I/O or Simple File System, so the only options
-  // left are a PCI Option ROM and a Load File Protocol such as a PXE Boot from a NIC.
-  //
-  TempDevicePath = (EFI_DEVICE_PATH_PROTOCOL *)File;
-  while (!IsDevicePathEndType (TempDevicePath)) {
-    switch (DevicePathType (TempDevicePath)) {
-      case MEDIA_DEVICE_PATH:
-        if (DevicePathSubType (TempDevicePath) == MEDIA_RELATIVE_OFFSET_RANGE_DP) {
-          return IMAGE_FROM_OPTION_ROM;
-        }
+  LocalImageBase = NULL;
+  LocalImageSize = 0;
 
-        break;
-
-      case MESSAGING_DEVICE_PATH:
-        if (DevicePathSubType (TempDevicePath) == MSG_MAC_ADDR_DP) {
-          return IMAGE_FROM_REMOVABLE_MEDIA;
-        }
-
-        break;
-
-      default:
-        break;
-    }
-
-    TempDevicePath = NextDevicePathNode (TempDevicePath);
+  DosHdr = (EFI_IMAGE_DOS_HEADER *)FileBase;
+  if (DosHdr->e_magic == EFI_IMAGE_DOS_SIGNATURE) {
+    //
+    // DOS image header is present,
+    // so read the PE header after the DOS image header.
+    //
+    *PeCoffHeaderOffset = DosHdr->e_lfanew;
+  } else {
+    *PeCoffHeaderOffset = 0;
   }
 
-  return IMAGE_UNKNOWN;
+  return EFI_SUCCESS;
+}
+
+EFI_IMAGE_OPTIONAL_HEADER_UNION *
+GetImageNtHeader (
+  IN     VOID                  *FileBase,
+  IN     UINTN                 FileSize
+  )
+{
+  EFI_STATUS                       Status;
+  UINT32                           PeCoffHeaderOffset;
+  EFI_IMAGE_OPTIONAL_HEADER_UNION  *NtHeader;
+
+  Status = GetImagePeCoffOffset (FileBase, FileSize, &PeCoffHeaderOffset);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_INFO, "PE Coff offset not found\n"));
+    return NULL;
+  }
+
+  NtHeader = (EFI_IMAGE_OPTIONAL_HEADER_UNION *)(FileBase + PeCoffHeaderOffset);
+  //
+  // Check PE/COFF image.
+  //
+  if (NtHeader->Pe32.Signature != EFI_IMAGE_NT_SIGNATURE) {
+    //
+    // It is not a valid Pe/Coff file.
+    //
+    DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Not a valid PE/COFF image.\n"));
+    return NULL;
+  }
+
+  return NtHeader;
 }
 
 /**
@@ -279,10 +229,12 @@ GetImageType (
   PE/COFF image is external input, so this function will validate its data structure
   within this image buffer before use.
 
-  Notes: PE/COFF image has been checked by BasePeCoffLib PeCoffLoaderGetImageInfo() in
-  its caller function DxeImageVerificationHandler().
-
-  @param[in]    HashAlg   Hash algorithm type.
+  @param[in]    ImageBase        Address to the file content.
+  @param[in]    ImageSize        File size.
+  @param[in]    HashAlg          Hash algorithm type.
+  @param[out]   ImageDigest      Buffer containing digest of the file.
+  @param[out]   ImageDigestSize  Size of the digest buffer.
+  @param[out]   CertType         GUID representing the hash type
 
   @retval TRUE            Successfully hash image.
   @retval FALSE           Fail in hash image.
@@ -290,21 +242,27 @@ GetImageType (
 **/
 BOOLEAN
 HashPeImage (
-  IN  UINT32  HashAlg
+  IN  VOID*    ImageBase,
+  IN  UINTN    ImageSize,
+  IN  UINT32   HashAlg,
+  OUT UINT8    *ImageDigest,
+  OUT UINTN    *ImageDigestSize,
+  OUT EFI_GUID *CertType
   )
 {
-  BOOLEAN                   Status;
-  EFI_IMAGE_SECTION_HEADER  *Section;
-  VOID                      *HashCtx;
-  UINTN                     CtxSize;
-  UINT8                     *HashBase;
-  UINTN                     HashSize;
-  UINTN                     SumOfBytesHashed;
-  EFI_IMAGE_SECTION_HEADER  *SectionHeader;
-  UINTN                     Index;
-  UINTN                     Pos;
-  UINT32                    CertSize;
-  UINT32                    NumberOfRvaAndSizes;
+  BOOLEAN                          Status;
+  EFI_IMAGE_SECTION_HEADER         *Section;
+  VOID                             *HashCtx;
+  UINTN                            CtxSize;
+  UINT8                            *HashBase;
+  UINTN                            HashSize;
+  UINTN                            SumOfBytesHashed;
+  EFI_IMAGE_SECTION_HEADER         *SectionHeader;
+  UINTN                            Index;
+  UINTN                            Pos;
+  UINT32                           CertSize;
+  UINT32                           NumberOfRvaAndSizes;
+  EFI_IMAGE_OPTIONAL_HEADER_UNION  *NtHeader;
 
   HashCtx       = NULL;
   SectionHeader = NULL;
@@ -314,39 +272,50 @@ HashPeImage (
     return FALSE;
   }
 
+  if ((ImageDigest == NULL) || (ImageDigestSize == NULL) || (CertType == NULL)) {
+    return FALSE;
+  }
+
+
+  if ((mHash[HashAlg].GetContextSize == NULL) ||
+      (mHash[HashAlg].HashInit == NULL) ||
+      (mHash[HashAlg].HashUpdate == NULL) ||
+      (mHash[HashAlg].HashFinal == NULL)) {
+    return FALSE;
+  }
+
   //
   // Initialize context of hash.
   //
-  ZeroMem (mImageDigest, MAX_DIGEST_SIZE);
+  ZeroMem (ImageDigest, MAX_DIGEST_SIZE);
 
   switch (HashAlg) {
  #ifndef DISABLE_SHA1_DEPRECATED_INTERFACES
     case HASHALG_SHA1:
-      mImageDigestSize = SHA1_DIGEST_SIZE;
-      mCertType        = gEfiCertSha1Guid;
+      *ImageDigestSize = SHA1_DIGEST_SIZE;
+      CopyGuid (CertType, &gEfiCertSha1Guid);
       break;
  #endif
 
     case HASHALG_SHA256:
-      mImageDigestSize = SHA256_DIGEST_SIZE;
-      mCertType        = gEfiCertSha256Guid;
+      *ImageDigestSize = SHA256_DIGEST_SIZE;
+      CopyGuid (CertType, &gEfiCertSha256Guid);
       break;
 
     case HASHALG_SHA384:
-      mImageDigestSize = SHA384_DIGEST_SIZE;
-      mCertType        = gEfiCertSha384Guid;
+      *ImageDigestSize = SHA384_DIGEST_SIZE;
+      CopyGuid (CertType, &gEfiCertSha384Guid);
       break;
 
     case HASHALG_SHA512:
-      mImageDigestSize = SHA512_DIGEST_SIZE;
-      mCertType        = gEfiCertSha512Guid;
+      *ImageDigestSize = SHA512_DIGEST_SIZE;
+      CopyGuid (CertType, &gEfiCertSha512Guid);
       break;
 
     default:
       return FALSE;
   }
 
-  mHashTypeStr = mHash[HashAlg].Name;
   CtxSize      = mHash[HashAlg].GetContextSize ();
 
   HashCtx = AllocatePool (CtxSize);
@@ -363,6 +332,10 @@ HashPeImage (
     goto Done;
   }
 
+  NtHeader = GetImageNtHeader (ImageBase, ImageSize);
+  if (NtHeader == NULL) {
+    goto Done;
+  }
   //
   // Measuring PE/COFF Image Header;
   // But CheckSum field and SECURITY data directory (certificate) are excluded
@@ -372,19 +345,19 @@ HashPeImage (
   // 3.  Calculate the distance from the base of the image header to the image checksum address.
   // 4.  Hash the image header from its base to beginning of the image checksum.
   //
-  HashBase = mImageBase;
-  if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+  HashBase = ImageBase;
+  if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
     //
     // Use PE32 offset.
     //
-    HashSize            = (UINTN)(&mNtHeader.Pe32->OptionalHeader.CheckSum) - (UINTN)HashBase;
-    NumberOfRvaAndSizes = mNtHeader.Pe32->OptionalHeader.NumberOfRvaAndSizes;
-  } else if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+    HashSize            = (UINTN)(&NtHeader->Pe32.OptionalHeader.CheckSum) - (UINTN)HashBase;
+    NumberOfRvaAndSizes = NtHeader->Pe32.OptionalHeader.NumberOfRvaAndSizes;
+  } else if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
     //
     // Use PE32+ offset.
     //
-    HashSize            = (UINTN)(&mNtHeader.Pe32Plus->OptionalHeader.CheckSum) - (UINTN)HashBase;
-    NumberOfRvaAndSizes = mNtHeader.Pe32Plus->OptionalHeader.NumberOfRvaAndSizes;
+    HashSize            = (UINTN)(&NtHeader->Pe32Plus.OptionalHeader.CheckSum) - (UINTN)HashBase;
+    NumberOfRvaAndSizes = NtHeader->Pe32Plus.OptionalHeader.NumberOfRvaAndSizes;
   } else {
     //
     // Invalid header magic number.
@@ -406,18 +379,18 @@ HashPeImage (
     // 6.  Since there is no Cert Directory in optional header, hash everything
     //     from the end of the checksum to the end of image header.
     //
-    if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
       //
       // Use PE32 offset.
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32->OptionalHeader.CheckSum + sizeof (UINT32);
-      HashSize = mNtHeader.Pe32->OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)mImageBase);
+      HashBase = (UINT8 *)&NtHeader->Pe32.OptionalHeader.CheckSum + sizeof (UINT32);
+      HashSize = NtHeader->Pe32.OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)ImageBase);
     } else {
       //
       // Use PE32+ offset.
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32Plus->OptionalHeader.CheckSum + sizeof (UINT32);
-      HashSize = mNtHeader.Pe32Plus->OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)mImageBase);
+      HashBase = (UINT8 *)&NtHeader->Pe32Plus.OptionalHeader.CheckSum + sizeof (UINT32);
+      HashSize = NtHeader->Pe32Plus.OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)ImageBase);
     }
 
     if (HashSize != 0) {
@@ -430,18 +403,18 @@ HashPeImage (
     //
     // 7.  Hash everything from the end of the checksum to the start of the Cert Directory.
     //
-    if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
       //
       // Use PE32 offset.
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32->OptionalHeader.CheckSum + sizeof (UINT32);
-      HashSize = (UINTN)(&mNtHeader.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY]) - (UINTN)HashBase;
+      HashBase = (UINT8 *)&NtHeader->Pe32.OptionalHeader.CheckSum + sizeof (UINT32);
+      HashSize = (UINTN)(&NtHeader->Pe32.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY]) - (UINTN)HashBase;
     } else {
       //
       // Use PE32+ offset.
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32Plus->OptionalHeader.CheckSum + sizeof (UINT32);
-      HashSize = (UINTN)(&mNtHeader.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY]) - (UINTN)HashBase;
+      HashBase = (UINT8 *)&NtHeader->Pe32Plus.OptionalHeader.CheckSum + sizeof (UINT32);
+      HashSize = (UINTN)(&NtHeader->Pe32Plus.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY]) - (UINTN)HashBase;
     }
 
     if (HashSize != 0) {
@@ -455,18 +428,18 @@ HashPeImage (
     // 8.  Skip over the Cert Directory. (It is sizeof(IMAGE_DATA_DIRECTORY) bytes.)
     // 9.  Hash everything from the end of the Cert Directory to the end of image header.
     //
-    if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+    if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
       //
       // Use PE32 offset
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY + 1];
-      HashSize = mNtHeader.Pe32->OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)mImageBase);
+      HashBase = (UINT8 *)&NtHeader->Pe32.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY + 1];
+      HashSize = NtHeader->Pe32.OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)ImageBase);
     } else {
       //
       // Use PE32+ offset.
       //
-      HashBase = (UINT8 *)&mNtHeader.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY + 1];
-      HashSize = mNtHeader.Pe32Plus->OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)mImageBase);
+      HashBase = (UINT8 *)&NtHeader->Pe32Plus.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY + 1];
+      HashSize = NtHeader->Pe32Plus.OptionalHeader.SizeOfHeaders - ((UINTN)HashBase - (UINTN)ImageBase);
     }
 
     if (HashSize != 0) {
@@ -480,24 +453,23 @@ HashPeImage (
   //
   // 10. Set the SUM_OF_BYTES_HASHED to the size of the header.
   //
-  if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+  if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
     //
     // Use PE32 offset.
     //
-    SumOfBytesHashed = mNtHeader.Pe32->OptionalHeader.SizeOfHeaders;
+    SumOfBytesHashed = NtHeader->Pe32.OptionalHeader.SizeOfHeaders;
   } else {
     //
     // Use PE32+ offset
     //
-    SumOfBytesHashed = mNtHeader.Pe32Plus->OptionalHeader.SizeOfHeaders;
+    SumOfBytesHashed = NtHeader->Pe32Plus.OptionalHeader.SizeOfHeaders;
   }
 
   Section = (EFI_IMAGE_SECTION_HEADER *)(
-                                         mImageBase +
-                                         mPeCoffHeaderOffset +
+                                         (UINTN)(NtHeader) +
                                          sizeof (UINT32) +
                                          sizeof (EFI_IMAGE_FILE_HEADER) +
-                                         mNtHeader.Pe32->FileHeader.SizeOfOptionalHeader
+                                         NtHeader->Pe32.FileHeader.SizeOfOptionalHeader
                                          );
 
   //
@@ -506,7 +478,7 @@ HashPeImage (
   //     header indicates how big the table should be. Do not include any
   //     IMAGE_SECTION_HEADERs in the table whose 'SizeOfRawData' field is zero.
   //
-  SectionHeader = (EFI_IMAGE_SECTION_HEADER *)AllocateZeroPool (sizeof (EFI_IMAGE_SECTION_HEADER) * mNtHeader.Pe32->FileHeader.NumberOfSections);
+  SectionHeader = (EFI_IMAGE_SECTION_HEADER *)AllocateZeroPool (sizeof (EFI_IMAGE_SECTION_HEADER) * NtHeader->Pe32.FileHeader.NumberOfSections);
   if (SectionHeader == NULL) {
     Status = FALSE;
     goto Done;
@@ -518,7 +490,7 @@ HashPeImage (
   //      words, sort the section headers according to the disk-file offset of
   //      the section.
   //
-  for (Index = 0; Index < mNtHeader.Pe32->FileHeader.NumberOfSections; Index++) {
+  for (Index = 0; Index < NtHeader->Pe32.FileHeader.NumberOfSections; Index++) {
     Pos = Index;
     while ((Pos > 0) && (Section->PointerToRawData < SectionHeader[Pos - 1].PointerToRawData)) {
       CopyMem (&SectionHeader[Pos], &SectionHeader[Pos - 1], sizeof (EFI_IMAGE_SECTION_HEADER));
@@ -536,13 +508,13 @@ HashPeImage (
   // 14.  Add the section's 'SizeOfRawData' to SUM_OF_BYTES_HASHED .
   // 15.  Repeat steps 13 and 14 for all the sections in the sorted table.
   //
-  for (Index = 0; Index < mNtHeader.Pe32->FileHeader.NumberOfSections; Index++) {
+  for (Index = 0; Index < NtHeader->Pe32.FileHeader.NumberOfSections; Index++) {
     Section = &SectionHeader[Index];
     if (Section->SizeOfRawData == 0) {
       continue;
     }
 
-    HashBase = mImageBase + Section->PointerToRawData;
+    HashBase = ImageBase + Section->PointerToRawData;
     HashSize = (UINTN)Section->SizeOfRawData;
 
     Status = mHash[HashAlg].HashUpdate (HashCtx, HashBase, HashSize);
@@ -559,39 +531,39 @@ HashPeImage (
   //      at file offset SUM_OF_BYTES_HASHED and its length is:
   //             FileSize  -  (CertDirectory->Size)
   //
-  if (mImageSize > SumOfBytesHashed) {
-    HashBase = mImageBase + SumOfBytesHashed;
+  if (ImageSize > SumOfBytesHashed) {
+    HashBase = ImageBase + SumOfBytesHashed;
 
     if (NumberOfRvaAndSizes <= EFI_IMAGE_DIRECTORY_ENTRY_SECURITY) {
       CertSize = 0;
     } else {
-      if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+      if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
         //
         // Use PE32 offset.
         //
-        CertSize = mNtHeader.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY].Size;
+        CertSize = NtHeader->Pe32.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY].Size;
       } else {
         //
         // Use PE32+ offset.
         //
-        CertSize = mNtHeader.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY].Size;
+        CertSize = NtHeader->Pe32Plus.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY].Size;
       }
     }
 
-    if (mImageSize > CertSize + SumOfBytesHashed) {
-      HashSize = (UINTN)(mImageSize - CertSize - SumOfBytesHashed);
+    if (ImageSize > CertSize + SumOfBytesHashed) {
+      HashSize = (UINTN)(ImageSize - CertSize - SumOfBytesHashed);
 
       Status = mHash[HashAlg].HashUpdate (HashCtx, HashBase, HashSize);
       if (!Status) {
         goto Done;
       }
-    } else if (mImageSize < CertSize + SumOfBytesHashed) {
+    } else if (ImageSize < CertSize + SumOfBytesHashed) {
       Status = FALSE;
       goto Done;
     }
   }
 
-  Status = mHash[HashAlg].HashFinal (HashCtx, mImageDigest);
+  Status = mHash[HashAlg].HashFinal (HashCtx, ImageDigest);
 
 Done:
   if (HashCtx != NULL) {
@@ -614,8 +586,13 @@ Done:
   PE/COFF image is external input, so this function will validate its data structure
   within this image buffer before use.
 
+  @param[in]  ImageBase           Pointer to the file content.
+  @param[in]  ImageSize           Size of the file.
   @param[in]  AuthData            Pointer to the Authenticode Signature retrieved from signed image.
   @param[in]  AuthDataSize        Size of the Authenticode Signature in bytes.
+  @param[out] ImageDigest         Buffer with the file digest.
+  @param[out] ImageDigestSize     Size of the file digest.
+  @param[out] CertType            GUID representing the type of hash.
 
   @retval EFI_UNSUPPORTED             Hash algorithm is not supported.
   @retval EFI_SUCCESS                 Hash successfully.
@@ -623,11 +600,23 @@ Done:
 **/
 EFI_STATUS
 HashPeImageByType (
-  IN UINT8  *AuthData,
-  IN UINTN  AuthDataSize
+  IN  VOID     *ImageBase,
+  IN  UINTN    ImageSize,
+  IN  UINT8    *AuthData,
+  IN  UINTN    AuthDataSize,
+  OUT UINT8    *ImageDigest,
+  OUT UINTN    *ImageDigestSize,
+  OUT EFI_GUID *CertType
   )
 {
   UINT8  Index;
+
+  if ((ImageBase == NULL) || (ImageSize == 0) ||
+      (AuthData == NULL) || (AuthDataSize == 0) ||
+      (ImageDigest == NULL) || (ImageDigestSize == NULL) ||
+      (CertType == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
 
   for (Index = 0; Index < HASHALG_MAX; Index++) {
     //
@@ -665,7 +654,7 @@ HashPeImageByType (
   //
   // HASH PE Image based on Hash algorithm in PE/COFF Authenticode.
   //
-  if (!HashPeImage (Index)) {
+  if (!HashPeImage (ImageBase, ImageSize, Index, ImageDigest, ImageDigestSize, CertType)) {
     return EFI_UNSUPPORTED;
   }
 
@@ -673,158 +662,98 @@ HashPeImageByType (
 }
 
 /**
-  Returns the size of a given image execution info table in bytes.
+  Calculate the hash of a certificate data with the specified hash algorithm.
 
-  This function returns the size, in bytes, of the image execution info table specified by
-  ImageExeInfoTable. If ImageExeInfoTable is NULL, then 0 is returned.
+  @param[in]    CertData  The certificate data to be hashed.
+  @param[in]    CertSize  The certificate size in bytes.
+  @param[in]    HashAlg   The specified hash algorithm.
+  @param[out]   CertHash  The output digest of the certificate
 
-  @param  ImageExeInfoTable          A pointer to a image execution info table structure.
-
-  @retval 0       If ImageExeInfoTable is NULL.
-  @retval Others  The size of a image execution info table in bytes.
-
-**/
-UINTN
-GetImageExeInfoTableSize (
-  EFI_IMAGE_EXECUTION_INFO_TABLE  *ImageExeInfoTable
-  )
-{
-  UINTN                     Index;
-  EFI_IMAGE_EXECUTION_INFO  *ImageExeInfoItem;
-  UINTN                     TotalSize;
-
-  if (ImageExeInfoTable == NULL) {
-    return 0;
-  }
-
-  ImageExeInfoItem = (EFI_IMAGE_EXECUTION_INFO *)((UINT8 *)ImageExeInfoTable + sizeof (EFI_IMAGE_EXECUTION_INFO_TABLE));
-  TotalSize        = sizeof (EFI_IMAGE_EXECUTION_INFO_TABLE);
-  for (Index = 0; Index < ImageExeInfoTable->NumberOfImages; Index++) {
-    TotalSize       += ReadUnaligned32 ((UINT32 *)&ImageExeInfoItem->InfoSize);
-    ImageExeInfoItem = (EFI_IMAGE_EXECUTION_INFO *)((UINT8 *)ImageExeInfoItem + ReadUnaligned32 ((UINT32 *)&ImageExeInfoItem->InfoSize));
-  }
-
-  return TotalSize;
-}
-
-/**
-  Create an Image Execution Information Table entry and add it to system configuration table.
-
-  @param[in]  Action          Describes the action taken by the firmware regarding this image.
-  @param[in]  Name            Input a null-terminated, user-friendly name.
-  @param[in]  DevicePath      Input device path pointer.
-  @param[in]  Signature       Input signature info in EFI_SIGNATURE_LIST data structure.
-  @param[in]  SignatureSize   Size of signature. Must be zero if Signature is NULL.
+  @retval TRUE            Successfully got the hash of the CertData.
+  @retval FALSE           Failed to get the hash of CertData.
 
 **/
-VOID
-AddImageExeInfo (
-  IN       EFI_IMAGE_EXECUTION_ACTION  Action,
-  IN       CHAR16                      *Name OPTIONAL,
-  IN CONST EFI_DEVICE_PATH_PROTOCOL    *DevicePath,
-  IN       EFI_SIGNATURE_LIST          *Signature OPTIONAL,
-  IN       UINTN                       SignatureSize
+BOOLEAN
+CalculateCertHash (
+  IN  UINT8   *CertData,
+  IN  UINTN   CertSize,
+  IN  UINT32  HashAlg,
+  OUT UINT8   *CertHash
   )
 {
-  EFI_IMAGE_EXECUTION_INFO_TABLE  *ImageExeInfoTable;
-  EFI_IMAGE_EXECUTION_INFO_TABLE  *NewImageExeInfoTable;
-  EFI_IMAGE_EXECUTION_INFO        *ImageExeInfoEntry;
-  UINTN                           ImageExeInfoTableSize;
-  UINTN                           NewImageExeInfoEntrySize;
-  UINTN                           NameStringLen;
-  UINTN                           DevicePathSize;
-  CHAR16                          *NameStr;
+  BOOLEAN  Status;
+  VOID     *HashCtx;
+  UINTN    CtxSize;
+  UINT8    *TBSCert;
+  UINTN    TBSCertSize;
 
-  ImageExeInfoTable    = NULL;
-  NewImageExeInfoTable = NULL;
-  ImageExeInfoEntry    = NULL;
-  NameStringLen        = 0;
-  NameStr              = NULL;
+  HashCtx = NULL;
+  Status  = FALSE;
 
-  if (DevicePath == NULL) {
-    return;
+  if (HashAlg >= HASHALG_MAX) {
+    return FALSE;
   }
 
-  if (Name != NULL) {
-    NameStringLen = StrSize (Name);
-  } else {
-    NameStringLen = sizeof (CHAR16);
-  }
-
-  EfiGetSystemConfigurationTable (&gEfiImageSecurityDatabaseGuid, (VOID **)&ImageExeInfoTable);
-  if (ImageExeInfoTable != NULL) {
-    //
-    // The table has been found!
-    // We must enlarge the table to accommodate the new exe info entry.
-    //
-    ImageExeInfoTableSize = GetImageExeInfoTableSize (ImageExeInfoTable);
-  } else {
-    //
-    // Not Found!
-    // We should create a new table to append to the configuration table.
-    //
-    ImageExeInfoTableSize = sizeof (EFI_IMAGE_EXECUTION_INFO_TABLE);
-  }
-
-  DevicePathSize = GetDevicePathSize (DevicePath);
-
-  //
-  // Signature size can be odd. Pad after signature to ensure next EXECUTION_INFO entry align
-  //
-  ASSERT (Signature != NULL || SignatureSize == 0);
-  NewImageExeInfoEntrySize = sizeof (EFI_IMAGE_EXECUTION_INFO) + NameStringLen + DevicePathSize + SignatureSize;
-
-  NewImageExeInfoTable = (EFI_IMAGE_EXECUTION_INFO_TABLE *)AllocateRuntimePool (ImageExeInfoTableSize + NewImageExeInfoEntrySize);
-  if (NewImageExeInfoTable == NULL) {
-    return;
-  }
-
-  if (ImageExeInfoTable != NULL) {
-    CopyMem (NewImageExeInfoTable, ImageExeInfoTable, ImageExeInfoTableSize);
-  } else {
-    NewImageExeInfoTable->NumberOfImages = 0;
-  }
-
-  NewImageExeInfoTable->NumberOfImages++;
-  ImageExeInfoEntry = (EFI_IMAGE_EXECUTION_INFO *)((UINT8 *)NewImageExeInfoTable + ImageExeInfoTableSize);
-  //
-  // Update new item's information.
-  //
-  WriteUnaligned32 ((UINT32 *)ImageExeInfoEntry, Action);
-  WriteUnaligned32 ((UINT32 *)((UINT8 *)ImageExeInfoEntry + sizeof (EFI_IMAGE_EXECUTION_ACTION)), (UINT32)NewImageExeInfoEntrySize);
-
-  NameStr = (CHAR16 *)(ImageExeInfoEntry + 1);
-  if (Name != NULL) {
-    CopyMem ((UINT8 *)NameStr, Name, NameStringLen);
-  } else {
-    ZeroMem ((UINT8 *)NameStr, sizeof (CHAR16));
-  }
-
-  CopyMem (
-    (UINT8 *)NameStr + NameStringLen,
-    DevicePath,
-    DevicePathSize
-    );
-  if (Signature != NULL) {
-    CopyMem (
-      (UINT8 *)NameStr + NameStringLen + DevicePathSize,
-      Signature,
-      SignatureSize
-      );
+  if (CertHash == NULL || CertData == NULL || CertSize == 0) {
+    return FALSE;
   }
 
   //
-  // Update/replace the image execution table.
+  // Calculate the hash value of current TBSCertificate for comparision.
   //
-  gBS->InstallConfigurationTable (&gEfiImageSecurityDatabaseGuid, (VOID *)NewImageExeInfoTable);
+  if ((mHash[HashAlg].GetContextSize == NULL) ||
+      (mHash[HashAlg].HashInit == NULL) ||
+      (mHash[HashAlg].HashUpdate == NULL) ||
+      (mHash[HashAlg].HashFinal == NULL)) {
+    return FALSE;
+  }
 
   //
-  // Free Old table data!
+  // Retrieve the TBSCertificate for Hash Calculation.
   //
-  if (ImageExeInfoTable != NULL) {
-    FreePool (ImageExeInfoTable);
+  if (!X509GetTBSCert (CertData, CertSize, &TBSCert, &TBSCertSize)) {
+    return FALSE;
   }
+
+  //
+  // 1. Initialize context of hash.
+  //
+  CtxSize = mHash[HashAlg].GetContextSize ();
+  HashCtx = AllocatePool (CtxSize);
+  if (HashCtx == NULL) {
+    return FALSE;
+  }
+
+  //
+  // 2. Initialize a hash context.
+  //
+  Status = mHash[HashAlg].HashInit (HashCtx);
+  if (!Status) {
+    goto Done;
+  }
+
+  //
+  // 3. Calculate the hash.
+  //
+  Status = mHash[HashAlg].HashUpdate (HashCtx, TBSCert, TBSCertSize);
+  if (!Status) {
+    goto Done;
+  }
+
+  //
+  // 4. Get the hash result.
+  //
+  ZeroMem (CertHash, mHash[HashAlg].DigestLength);
+  Status = mHash[HashAlg].HashFinal (HashCtx, CertHash);
+
+Done:
+  if (HashCtx != NULL) {
+    FreePool (HashCtx);
+  }
+
+  return Status;
 }
+
 
 /**
   Check whether the hash of an given X.509 certificate is in forbidden database (DBX).
@@ -844,7 +773,7 @@ EFI_STATUS
 IsCertHashFoundInDbx (
   IN  UINT8               *Certificate,
   IN  UINTN               CertSize,
-  IN  EFI_SIGNATURE_LIST  *SignatureList,
+  IN  EFI_SIGNATURE_LIST  *SignatureList, OPTIONAL
   IN  UINTN               SignatureListSize,
   OUT EFI_TIME            *RevocationTime,
   OUT BOOLEAN             *IsFound
@@ -857,29 +786,39 @@ IsCertHashFoundInDbx (
   UINTN               CertHashCount;
   UINTN               Index;
   UINT32              HashAlg;
-  VOID                *HashCtx;
   UINT8               CertDigest[MAX_DIGEST_SIZE];
   UINT8               *DbxCertHash;
   UINTN               SiglistHeaderSize;
-  UINT8               *TBSCert;
-  UINTN               TBSCertSize;
 
   Status   = EFI_ABORTED;
   *IsFound = FALSE;
   DbxList  = SignatureList;
   DbxSize  = SignatureListSize;
-  HashCtx  = NULL;
   HashAlg  = HASHALG_MAX;
 
-  if ((RevocationTime == NULL) || (DbxList == NULL)) {
-    return EFI_INVALID_PARAMETER;
-  }
+  if (DbxList == NULL) {
+    //
+    // Read signature database variable.
+    //
+    DbxSize = 0;
+    Status   = gRT->GetVariable (EFI_IMAGE_SECURITY_DATABASE1, &gEfiImageSecurityDatabaseGuid, NULL, &DbxSize, NULL);
+    if (Status != EFI_BUFFER_TOO_SMALL) {
+      return EFI_SUCCESS;
+    }
 
-  //
-  // Retrieve the TBSCertificate from the X.509 Certificate.
-  //
-  if (!X509GetTBSCert (Certificate, CertSize, &TBSCert, &TBSCertSize)) {
-    return Status;
+    DbxList = (EFI_SIGNATURE_LIST *)AllocateZeroPool (DbxSize);
+    if (DbxList == NULL) {
+      return EFI_SUCCESS;
+    }
+
+    Status = gRT->GetVariable (EFI_IMAGE_SECURITY_DATABASE1, &gEfiImageSecurityDatabaseGuid, NULL, &DbxSize, DbxList);
+    if (EFI_ERROR (Status)) {
+      goto Done;
+    }
+
+    if (SignatureListSize == 0) {
+      SignatureListSize = DbxSize;
+    }
   }
 
   while ((DbxSize > 0) && (SignatureListSize >= DbxList->SignatureListSize)) {
@@ -897,34 +836,12 @@ IsCertHashFoundInDbx (
       DbxList  = (EFI_SIGNATURE_LIST *)((UINT8 *)DbxList + DbxList->SignatureListSize);
       continue;
     }
-
     //
     // Calculate the hash value of current TBSCertificate for comparision.
     //
-    if (mHash[HashAlg].GetContextSize == NULL) {
+    if (!CalculateCertHash (Certificate, CertSize, HashAlg, CertDigest)) {
       goto Done;
     }
-
-    ZeroMem (CertDigest, MAX_DIGEST_SIZE);
-    HashCtx = AllocatePool (mHash[HashAlg].GetContextSize ());
-    if (HashCtx == NULL) {
-      goto Done;
-    }
-
-    if (!mHash[HashAlg].HashInit (HashCtx)) {
-      goto Done;
-    }
-
-    if (!mHash[HashAlg].HashUpdate (HashCtx, TBSCert, TBSCertSize)) {
-      goto Done;
-    }
-
-    if (!mHash[HashAlg].HashFinal (HashCtx, CertDigest)) {
-      goto Done;
-    }
-
-    FreePool (HashCtx);
-    HashCtx = NULL;
 
     SiglistHeaderSize = sizeof (EFI_SIGNATURE_LIST) + DbxList->SignatureHeaderSize;
     CertHash          = (EFI_SIGNATURE_DATA *)((UINT8 *)DbxList + SiglistHeaderSize);
@@ -941,10 +858,12 @@ IsCertHashFoundInDbx (
         Status   = EFI_SUCCESS;
         *IsFound = TRUE;
 
-        //
-        // Return the revocation time.
-        //
-        CopyMem (RevocationTime, (EFI_TIME *)(DbxCertHash + mHash[HashAlg].DigestLength), sizeof (EFI_TIME));
+        if (RevocationTime != NULL) {
+          //
+          // Return the revocation time.
+          //
+          CopyMem (RevocationTime, (EFI_TIME *)(DbxCertHash + mHash[HashAlg].DigestLength), sizeof (EFI_TIME));
+        }
         goto Done;
       }
 
@@ -958,8 +877,8 @@ IsCertHashFoundInDbx (
   Status = EFI_SUCCESS;
 
 Done:
-  if (HashCtx != NULL) {
-    FreePool (HashCtx);
+  if (SignatureList == NULL && DbxList != NULL) {
+    FreePool (DbxList);
   }
 
   return Status;
@@ -1237,6 +1156,8 @@ Done:
 
   @param[in]  AuthData      Pointer to the Authenticode signature retrieved from the signed image.
   @param[in]  AuthDataSize  Size of the Authenticode signature in bytes.
+  @param[in]  ImageDigest      Buffer containing digest of the file.
+  @param[in]  ImageDigestSize  Size of the digest buffer.
 
   @retval TRUE              Image is forbidden by dbx.
   @retval FALSE             Image is not forbidden by dbx.
@@ -1245,7 +1166,9 @@ Done:
 BOOLEAN
 IsForbiddenByDbx (
   IN UINT8  *AuthData,
-  IN UINTN  AuthDataSize
+  IN UINTN  AuthDataSize,
+  IN UINT8  *ImageDigest,
+  IN UINTN  ImageDigestSize
   )
 {
   EFI_STATUS          Status;
@@ -1338,8 +1261,8 @@ IsForbiddenByDbx (
                         AuthDataSize,
                         RootCert,
                         RootCertSize,
-                        mImageDigest,
-                        mImageDigestSize
+                        ImageDigest,
+                        ImageDigestSize
                         );
         if (IsForbidden) {
           DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Image is signed but signature is forbidden by DBX.\n"));
@@ -1431,8 +1354,10 @@ Done:
 /**
   Check whether the image signature can be verified by the trusted certificates in DB database.
 
-  @param[in]  AuthData      Pointer to the Authenticode signature retrieved from signed image.
-  @param[in]  AuthDataSize  Size of the Authenticode signature in bytes.
+  @param[in]  AuthData         Pointer to the Authenticode signature retrieved from signed image.
+  @param[in]  AuthDataSize     Size of the Authenticode signature in bytes.
+  @param[in]  ImageDigest      Buffer containing digest of the file.
+  @param[in]  ImageDigestSize  Size of the digest buffer.
 
   @retval TRUE         Image passed verification using certificate in db.
   @retval FALSE        Image didn't pass verification using certificate in db.
@@ -1441,7 +1366,9 @@ Done:
 BOOLEAN
 IsAllowedByDb (
   IN UINT8  *AuthData,
-  IN UINTN  AuthDataSize
+  IN UINTN  AuthDataSize,
+  IN UINT8  *ImageDigest,
+  IN UINTN  ImageDigestSize
   )
 {
   EFI_STATUS          Status;
@@ -1543,8 +1470,8 @@ IsAllowedByDb (
                          AuthDataSize,
                          RootCert,
                          RootCertSize,
-                         mImageDigest,
-                         mImageDigestSize
+                         ImageDigest,
+                         ImageDigestSize
                          );
         if (VerifyStatus) {
           //
@@ -1607,528 +1534,52 @@ Done:
 }
 
 /**
-  Provide verification service for signed images, which include both signature validation
-  and platform policy control. For signature types, both UEFI WIN_CERTIFICATE_UEFI_GUID and
-  MSFT Authenticode type signatures are supported.
+  Check whether signature is in specified database.
 
-  In this implementation, only verify external executables when in USER MODE.
-  Executables from FV is bypass, so pass in AuthenticationStatus is ignored.
+  @param[in]  FileBase            Pointer to the file content.
+  @param[in]  FileSize            Size of the file.
+  @param[inout] SecDataDir        POinter to a pointer to the Image Security Directory.
 
-  The image verification policy is:
-    If the image is signed,
-      At least one valid signature or at least one hash value of the image must match a record
-      in the security database "db", and no valid signature nor any hash value of the image may
-      be reflected in the security database "dbx".
-    Otherwise, the image is not signed,
-      The hash value of the image must match a record in the security database "db", and
-      not be reflected in the security data base "dbx".
-
-  Caution: This function may receive untrusted input.
-  PE/COFF image is external input, so this function will validate its data structure
-  within this image buffer before use.
-
-  @param[in]    AuthenticationStatus
-                           This is the authentication status returned from the security
-                           measurement services for the input file.
-  @param[in]    File       This is a pointer to the device path of the file that is
-                           being dispatched. This will optionally be used for logging.
-  @param[in]    FileBuffer File buffer matches the input file device path.
-  @param[in]    FileSize   Size of File buffer matches the input file device path.
-  @param[in]    BootPolicy A boot policy that was used to call LoadImage() UEFI service.
-
-  @retval EFI_SUCCESS            The file specified by DevicePath and non-NULL
-                                 FileBuffer did authenticate, and the platform policy dictates
-                                 that the DXE Foundation may use the file.
-  @retval EFI_SUCCESS            The device path specified by NULL device path DevicePath
-                                 and non-NULL FileBuffer did authenticate, and the platform
-                                 policy dictates that the DXE Foundation may execute the image in
-                                 FileBuffer.
-  @retval EFI_SECURITY_VIOLATION The file specified by File did not authenticate, and
-                                 the platform policy dictates that File should be placed
-                                 in the untrusted state. The image has been added to the file
-                                 execution table.
-  @retval EFI_ACCESS_DENIED      The file specified by File and FileBuffer did not
-                                 authenticate, and the platform policy dictates that the DXE
-                                 Foundation may not use File. The image has
-                                 been added to the file execution table.
+  @retval EFI_SUCCESS             Parsed the image without any error.
+  @retval Others                  Error occurred in the image parsing.
 
 **/
 EFI_STATUS
-EFIAPI
-DxeImageVerificationHandler (
-  IN  UINT32                          AuthenticationStatus,
-  IN  CONST EFI_DEVICE_PATH_PROTOCOL  *File  OPTIONAL,
-  IN  VOID                            *FileBuffer,
-  IN  UINTN                           FileSize,
-  IN  BOOLEAN                         BootPolicy
+GetImageSecDataDir (
+  IN     VOID                      *FileBase,
+  IN     UINTN                     FileSize,
+  IN OUT EFI_IMAGE_DATA_DIRECTORY  **SecDataDir
   )
 {
-  EFI_IMAGE_DOS_HEADER          *DosHdr;
-  BOOLEAN                       IsVerified;
-  EFI_SIGNATURE_LIST            *SignatureList;
-  UINTN                         SignatureListSize;
-  EFI_SIGNATURE_DATA            *Signature;
-  EFI_IMAGE_EXECUTION_ACTION    Action;
-  WIN_CERTIFICATE               *WinCertificate;
-  UINT32                        Policy;
-  UINT8                         SecureBoot;
-  UINTN                         SecureBootSize;
-  PE_COFF_LOADER_IMAGE_CONTEXT  ImageContext;
-  UINT32                        NumberOfRvaAndSizes;
-  WIN_CERTIFICATE_EFI_PKCS      *PkcsCertData;
-  WIN_CERTIFICATE_UEFI_GUID     *WinCertUefiGuid;
-  UINT8                         *AuthData;
-  UINTN                         AuthDataSize;
-  EFI_IMAGE_DATA_DIRECTORY      *SecDataDir;
-  UINT32                        SecDataDirEnd;
-  UINT32                        SecDataDirLeft;
-  UINT32                        OffSet;
-  CHAR16                        *NameStr;
-  RETURN_STATUS                 PeCoffStatus;
-  EFI_STATUS                    HashStatus;
-  EFI_STATUS                    DbStatus;
-  EFI_STATUS                    VarStatus;
-  UINT32                        VarAttr;
-  BOOLEAN                       IsFound;
-  UINT8                         HashAlg;
-  BOOLEAN                       IsFoundInDatabase;
+  UINT32                          NumberOfRvaAndSizes;
+  EFI_IMAGE_OPTIONAL_HEADER_UNION *NtHeader;
 
-  SignatureList     = NULL;
-  SignatureListSize = 0;
-  WinCertificate    = NULL;
-  SecDataDir        = NULL;
-  PkcsCertData      = NULL;
-  Action            = EFI_IMAGE_EXECUTION_AUTH_UNTESTED;
-  IsVerified        = FALSE;
-  IsFound           = FALSE;
-  IsFoundInDatabase = FALSE;
-
-  //
-  // Check the image type and get policy setting.
-  //
-  switch (GetImageType (File)) {
-    case IMAGE_FROM_FV:
-      Policy = ALWAYS_EXECUTE;
-      break;
-
-    case IMAGE_FROM_OPTION_ROM:
-      Policy = PcdGet32 (PcdOptionRomImageVerificationPolicy);
-      break;
-
-    case IMAGE_FROM_REMOVABLE_MEDIA:
-      Policy = PcdGet32 (PcdRemovableMediaImageVerificationPolicy);
-      break;
-
-    case IMAGE_FROM_FIXED_MEDIA:
-      Policy = PcdGet32 (PcdFixedMediaImageVerificationPolicy);
-      break;
-
-    default:
-      Policy = DENY_EXECUTE_ON_SECURITY_VIOLATION;
-      break;
+  if (SecDataDir == NULL) {
+    return EFI_INVALID_PARAMETER;
   }
 
-  //
-  // If policy is always/never execute, return directly.
-  //
-  if (Policy == ALWAYS_EXECUTE) {
-    return EFI_SUCCESS;
+  NtHeader = GetImageNtHeader (FileBase, FileSize);
+  if (NtHeader == NULL) {
+    return EFI_NOT_FOUND;
   }
 
-  if (Policy == NEVER_EXECUTE) {
-    return EFI_ACCESS_DENIED;
-  }
-
-  //
-  // The policy QUERY_USER_ON_SECURITY_VIOLATION and ALLOW_EXECUTE_ON_SECURITY_VIOLATION
-  // violates the UEFI spec and has been removed.
-  //
-  ASSERT (Policy != QUERY_USER_ON_SECURITY_VIOLATION && Policy != ALLOW_EXECUTE_ON_SECURITY_VIOLATION);
-  if ((Policy == QUERY_USER_ON_SECURITY_VIOLATION) || (Policy == ALLOW_EXECUTE_ON_SECURITY_VIOLATION)) {
-    CpuDeadLoop ();
-  }
-
-  SecureBootSize = sizeof (SecureBoot);
-  VarStatus      = gRT->GetVariable (EFI_SECURE_BOOT_MODE_NAME, &gEfiGlobalVariableGuid, &VarAttr, &SecureBootSize, &SecureBoot);
-  //
-  // Skip verification if SecureBoot variable doesn't exist.
-  //
-  if (VarStatus == EFI_NOT_FOUND) {
-    return EFI_SUCCESS;
-  }
-
-  //
-  // Skip verification if SecureBoot is disabled but not AuditMode
-  //
-  if ((VarStatus == EFI_SUCCESS) &&
-      (VarAttr == (EFI_VARIABLE_BOOTSERVICE_ACCESS |
-                   EFI_VARIABLE_RUNTIME_ACCESS)) &&
-      (SecureBoot == SECURE_BOOT_MODE_DISABLE))
-  {
-    return EFI_SUCCESS;
-  }
-
-  //
-  // Read the Dos header.
-  //
-  if (FileBuffer == NULL) {
-    return EFI_ACCESS_DENIED;
-  }
-
-  mImageBase = (UINT8 *)FileBuffer;
-  mImageSize = FileSize;
-
-  ZeroMem (&ImageContext, sizeof (ImageContext));
-  ImageContext.Handle    = (VOID *)FileBuffer;
-  ImageContext.ImageRead = (PE_COFF_LOADER_READ_FILE)DxeImageVerificationLibImageRead;
-
-  //
-  // Get information about the image being loaded
-  //
-  PeCoffStatus = PeCoffLoaderGetImageInfo (&ImageContext);
-  if (RETURN_ERROR (PeCoffStatus)) {
-    //
-    // The information can't be got from the invalid PeImage
-    //
-    DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: PeImage invalid. Cannot retrieve image information.\n"));
-    goto Failed;
-  }
-
-  DosHdr = (EFI_IMAGE_DOS_HEADER *)mImageBase;
-  if (DosHdr->e_magic == EFI_IMAGE_DOS_SIGNATURE) {
-    //
-    // DOS image header is present,
-    // so read the PE header after the DOS image header.
-    //
-    mPeCoffHeaderOffset = DosHdr->e_lfanew;
-  } else {
-    mPeCoffHeaderOffset = 0;
-  }
-
-  //
-  // Check PE/COFF image.
-  //
-  mNtHeader.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)(mImageBase + mPeCoffHeaderOffset);
-  if (mNtHeader.Pe32->Signature != EFI_IMAGE_NT_SIGNATURE) {
-    //
-    // It is not a valid Pe/Coff file.
-    //
-    DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Not a valid PE/COFF image.\n"));
-    goto Failed;
-  }
-
-  if (mNtHeader.Pe32->OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
+  if (NtHeader->Pe32.OptionalHeader.Magic == EFI_IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
     //
     // Use PE32 offset.
     //
-    NumberOfRvaAndSizes = mNtHeader.Pe32->OptionalHeader.NumberOfRvaAndSizes;
+    NumberOfRvaAndSizes = NtHeader->Pe32.OptionalHeader.NumberOfRvaAndSizes;
     if (NumberOfRvaAndSizes > EFI_IMAGE_DIRECTORY_ENTRY_SECURITY) {
-      SecDataDir = (EFI_IMAGE_DATA_DIRECTORY *)&mNtHeader.Pe32->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY];
+      *SecDataDir = (EFI_IMAGE_DATA_DIRECTORY *)&NtHeader->Pe32.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY];
     }
   } else {
     //
     // Use PE32+ offset.
     //
-    NumberOfRvaAndSizes = mNtHeader.Pe32Plus->OptionalHeader.NumberOfRvaAndSizes;
+    NumberOfRvaAndSizes = NtHeader->Pe32Plus.OptionalHeader.NumberOfRvaAndSizes;
     if (NumberOfRvaAndSizes > EFI_IMAGE_DIRECTORY_ENTRY_SECURITY) {
-      SecDataDir = (EFI_IMAGE_DATA_DIRECTORY *)&mNtHeader.Pe32Plus->OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY];
+      *SecDataDir = (EFI_IMAGE_DATA_DIRECTORY *)&NtHeader->Pe32Plus.OptionalHeader.DataDirectory[EFI_IMAGE_DIRECTORY_ENTRY_SECURITY];
     }
   }
 
-  //
-  // Start Image Validation.
-  //
-  if ((SecDataDir == NULL) || (SecDataDir->Size == 0)) {
-    //
-    // This image is not signed. The hash value of the image must match a record in the security database "db",
-    // and not be reflected in the security data base "dbx".
-    //
-    HashAlg = sizeof (mHash) / sizeof (HASH_TABLE);
-    while (HashAlg > 0) {
-      HashAlg--;
-      if ((mHash[HashAlg].GetContextSize == NULL) || (mHash[HashAlg].HashInit == NULL) || (mHash[HashAlg].HashUpdate == NULL) || (mHash[HashAlg].HashFinal == NULL)) {
-        continue;
-      }
-
-      if (!HashPeImage (HashAlg)) {
-        continue;
-      }
-
-      DbStatus = IsSignatureFoundInDatabase (
-                   EFI_IMAGE_SECURITY_DATABASE1,
-                   mImageDigest,
-                   &mCertType,
-                   mImageDigestSize,
-                   &IsFound
-                   );
-      if (EFI_ERROR (DbStatus) || IsFound) {
-        //
-        // Image Hash is in forbidden database (DBX).
-        //
-        DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Image is not signed and %s hash of image is forbidden by DBX.\n", mHashTypeStr));
-        goto Failed;
-      }
-
-      DbStatus = IsSignatureFoundInDatabase (
-                   EFI_IMAGE_SECURITY_DATABASE,
-                   mImageDigest,
-                   &mCertType,
-                   mImageDigestSize,
-                   &IsFound
-                   );
-      if (!EFI_ERROR (DbStatus) && IsFound) {
-        //
-        // Image Hash is in allowed database (DB).
-        //
-        IsFoundInDatabase = TRUE;
-      }
-    }
-
-    if (IsFoundInDatabase) {
-      return EFI_SUCCESS;
-    }
-
-    //
-    // Image Hash is not found in both forbidden and allowed database.
-    //
-    DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Image is not signed and %s hash of image is not found in DB/DBX.\n", mHashTypeStr));
-    goto Failed;
-  }
-
-  //
-  // Verify the signature of the image, multiple signatures are allowed as per PE/COFF Section 4.7
-  // "Attribute Certificate Table".
-  // The first certificate starts at offset (SecDataDir->VirtualAddress) from the start of the file.
-  //
-  SecDataDirEnd = SecDataDir->VirtualAddress + SecDataDir->Size;
-  for (OffSet = SecDataDir->VirtualAddress;
-       OffSet < SecDataDirEnd;
-       OffSet += (WinCertificate->dwLength + ALIGN_SIZE (WinCertificate->dwLength)))
-  {
-    SecDataDirLeft = SecDataDirEnd - OffSet;
-    if (SecDataDirLeft <= sizeof (WIN_CERTIFICATE)) {
-      break;
-    }
-
-    WinCertificate = (WIN_CERTIFICATE *)(mImageBase + OffSet);
-    if ((SecDataDirLeft < WinCertificate->dwLength) ||
-        (SecDataDirLeft - WinCertificate->dwLength <
-         ALIGN_SIZE (WinCertificate->dwLength)))
-    {
-      break;
-    }
-
-    //
-    // Verify the image's Authenticode signature, only DER-encoded PKCS#7 signed data is supported.
-    //
-    if (WinCertificate->wCertificateType == WIN_CERT_TYPE_PKCS_SIGNED_DATA) {
-      //
-      // The certificate is formatted as WIN_CERTIFICATE_EFI_PKCS which is described in the
-      // Authenticode specification.
-      //
-      PkcsCertData = (WIN_CERTIFICATE_EFI_PKCS *)WinCertificate;
-      if (PkcsCertData->Hdr.dwLength <= sizeof (PkcsCertData->Hdr)) {
-        break;
-      }
-
-      AuthData     = PkcsCertData->CertData;
-      AuthDataSize = PkcsCertData->Hdr.dwLength - sizeof (PkcsCertData->Hdr);
-    } else if (WinCertificate->wCertificateType == WIN_CERT_TYPE_EFI_GUID) {
-      //
-      // The certificate is formatted as WIN_CERTIFICATE_UEFI_GUID which is described in UEFI Spec.
-      //
-      WinCertUefiGuid = (WIN_CERTIFICATE_UEFI_GUID *)WinCertificate;
-      if (WinCertUefiGuid->Hdr.dwLength <= OFFSET_OF (WIN_CERTIFICATE_UEFI_GUID, CertData)) {
-        break;
-      }
-
-      if (!CompareGuid (&WinCertUefiGuid->CertType, &gEfiCertPkcs7Guid)) {
-        continue;
-      }
-
-      AuthData     = WinCertUefiGuid->CertData;
-      AuthDataSize = WinCertUefiGuid->Hdr.dwLength - OFFSET_OF (WIN_CERTIFICATE_UEFI_GUID, CertData);
-    } else {
-      if (WinCertificate->dwLength < sizeof (WIN_CERTIFICATE)) {
-        break;
-      }
-
-      continue;
-    }
-
-    HashStatus = HashPeImageByType (AuthData, AuthDataSize);
-    if (EFI_ERROR (HashStatus)) {
-      continue;
-    }
-
-    //
-    // Check the digital signature against the revoked certificate in forbidden database (dbx).
-    //
-    if (IsForbiddenByDbx (AuthData, AuthDataSize)) {
-      Action     = EFI_IMAGE_EXECUTION_AUTH_SIG_FAILED;
-      IsVerified = FALSE;
-      break;
-    }
-
-    //
-    // Check the digital signature against the valid certificate in allowed database (db).
-    //
-    if (!IsVerified) {
-      if (IsAllowedByDb (AuthData, AuthDataSize)) {
-        IsVerified = TRUE;
-      }
-    }
-
-    //
-    // Check the image's hash value.
-    //
-    DbStatus = IsSignatureFoundInDatabase (
-                 EFI_IMAGE_SECURITY_DATABASE1,
-                 mImageDigest,
-                 &mCertType,
-                 mImageDigestSize,
-                 &IsFound
-                 );
-    if (EFI_ERROR (DbStatus) || IsFound) {
-      Action = EFI_IMAGE_EXECUTION_AUTH_SIG_FOUND;
-      DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Image is signed but %s hash of image is found in DBX.\n", mHashTypeStr));
-      IsVerified = FALSE;
-      break;
-    }
-
-    if (!IsVerified) {
-      DbStatus = IsSignatureFoundInDatabase (
-                   EFI_IMAGE_SECURITY_DATABASE,
-                   mImageDigest,
-                   &mCertType,
-                   mImageDigestSize,
-                   &IsFound
-                   );
-      if (!EFI_ERROR (DbStatus) && IsFound) {
-        IsVerified = TRUE;
-      } else {
-        Action = EFI_IMAGE_EXECUTION_AUTH_SIG_NOT_FOUND;
-        DEBUG ((DEBUG_INFO, "DxeImageVerificationLib: Image is signed but signature is not allowed by DB and %s hash of image is not found in DB/DBX.\n", mHashTypeStr));
-      }
-    }
-  }
-
-  if (OffSet != SecDataDirEnd) {
-    //
-    // The Size in Certificate Table or the attribute certificate table is corrupted.
-    //
-    IsVerified = FALSE;
-  }
-
-  if (IsVerified) {
-    return EFI_SUCCESS;
-  }
-
-  if ((Action == EFI_IMAGE_EXECUTION_AUTH_SIG_FAILED) || (Action == EFI_IMAGE_EXECUTION_AUTH_SIG_FOUND)) {
-    //
-    // Get image hash value as signature of executable.
-    //
-    SignatureListSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1 + mImageDigestSize;
-    SignatureList     = (EFI_SIGNATURE_LIST *)AllocateZeroPool (SignatureListSize);
-    if (SignatureList == NULL) {
-      SignatureListSize = 0;
-      goto Failed;
-    }
-
-    SignatureList->SignatureHeaderSize = 0;
-    SignatureList->SignatureListSize   = (UINT32)SignatureListSize;
-    SignatureList->SignatureSize       = (UINT32)(sizeof (EFI_SIGNATURE_DATA) - 1 + mImageDigestSize);
-    CopyMem (&SignatureList->SignatureType, &mCertType, sizeof (EFI_GUID));
-    Signature = (EFI_SIGNATURE_DATA *)((UINT8 *)SignatureList + sizeof (EFI_SIGNATURE_LIST));
-    CopyMem (Signature->SignatureData, mImageDigest, mImageDigestSize);
-  }
-
-Failed:
-  //
-  // Policy decides to defer or reject the image; add its information in image
-  // executable information table in either case.
-  //
-  NameStr = ConvertDevicePathToText (File, FALSE, TRUE);
-  AddImageExeInfo (Action, NameStr, File, SignatureList, SignatureListSize);
-  if (NameStr != NULL) {
-    DEBUG ((DEBUG_INFO, "The image doesn't pass verification: %s\n", NameStr));
-    FreePool (NameStr);
-  }
-
-  if (SignatureList != NULL) {
-    FreePool (SignatureList);
-  }
-
-  if (Policy == DEFER_EXECUTE_ON_SECURITY_VIOLATION) {
-    return EFI_SECURITY_VIOLATION;
-  }
-
-  return EFI_ACCESS_DENIED;
-}
-
-/**
-  On Ready To Boot Services Event notification handler.
-
-  Add the image execution information table if it is not in system configuration table.
-
-  @param[in]  Event     Event whose notification function is being invoked
-  @param[in]  Context   Pointer to the notification function's context
-
-**/
-VOID
-EFIAPI
-OnReadyToBoot (
-  IN      EFI_EVENT  Event,
-  IN      VOID       *Context
-  )
-{
-  EFI_IMAGE_EXECUTION_INFO_TABLE  *ImageExeInfoTable;
-  UINTN                           ImageExeInfoTableSize;
-
-  EfiGetSystemConfigurationTable (&gEfiImageSecurityDatabaseGuid, (VOID **)&ImageExeInfoTable);
-  if (ImageExeInfoTable != NULL) {
-    return;
-  }
-
-  ImageExeInfoTableSize = sizeof (EFI_IMAGE_EXECUTION_INFO_TABLE);
-  ImageExeInfoTable     = (EFI_IMAGE_EXECUTION_INFO_TABLE *)AllocateRuntimePool (ImageExeInfoTableSize);
-  if (ImageExeInfoTable == NULL) {
-    return;
-  }
-
-  ImageExeInfoTable->NumberOfImages = 0;
-  gBS->InstallConfigurationTable (&gEfiImageSecurityDatabaseGuid, (VOID *)ImageExeInfoTable);
-}
-
-/**
-  Register security measurement handler.
-
-  @param  ImageHandle   ImageHandle of the loaded driver.
-  @param  SystemTable   Pointer to the EFI System Table.
-
-  @retval EFI_SUCCESS   The handlers were registered successfully.
-**/
-EFI_STATUS
-EFIAPI
-DxeImageVerificationLibConstructor (
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  )
-{
-  EFI_EVENT  Event;
-
-  //
-  // Register the event to publish the image execution table.
-  //
-  EfiCreateEventReadyToBootEx (
-    TPL_CALLBACK,
-    OnReadyToBoot,
-    NULL,
-    &Event
-    );
-
-  return RegisterSecurity2Handler (
-           DxeImageVerificationHandler,
-           EFI_AUTH_OPERATION_VERIFY_IMAGE | EFI_AUTH_OPERATION_IMAGE_REQUIRED
-           );
+  return EFI_SUCCESS;
 }
