@@ -1688,7 +1688,7 @@ PlatformBootManagerAfterConsole (
     DEBUG((DEBUG_INFO, "Registering iPXE boot option for FUM\n"));
     SyncFvBootOption (PcdGetPtr (PcdiPXEFile),
                       (CHAR16 *) PcdGetPtr(PcdiPXEOptionName),
-                      TRUE,
+                      PcdGetBool (PcdFumAutoIpxeBoot),
                       FALSE);
   } else if (mFastBoot) {
     DEBUG((DEBUG_INFO, "Unregistering iPXE boot option on fast boot path\n"));
