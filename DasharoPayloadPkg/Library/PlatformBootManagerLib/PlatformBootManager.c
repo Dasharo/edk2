@@ -1720,11 +1720,6 @@ PlatformBootManagerAfterConsole (
   gST->ConOut->EnableCursor (gST->ConOut, FALSE);
   gST->ConOut->ClearScreen (gST->ConOut);
 
-  WarnIfBatteryLow ();
-  WarnIfRecoveryBoot ();
-  FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
-
-
   BootLogoEnableLogo ();
 
   //
@@ -1750,7 +1745,11 @@ PlatformBootManagerAfterConsole (
       // Connect just the FTDI path
       EfiBootManagerConnectDevicePath(FtdiPath, NULL);
     }
-}
+  }
+
+  WarnIfBatteryLow ();
+  WarnIfRecoveryBoot ();
+  FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
 
   EfiBootManagerRefreshAllBootOption ();
 
