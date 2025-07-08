@@ -36,7 +36,7 @@ Revision History:
 #define SOVEREIGN_BOOT_WIZARD_FORM_QUESTION_ID_BASE      0x1000
 // Welcome form
 #define WELCOME_FORM_QUESTION_ID_BASE                   0x1100
-#define SELECT_SOVEREIGN_BOOT_QUESTION_ID                0x1101
+#define SELECT_SOVEREIGN_BOOT_QUESTION_ID               0x1101
 #define SELECT_DEFAULT_SECURE_BOOT_QUESTION_ID          0x1102
 
 // Configuration form
