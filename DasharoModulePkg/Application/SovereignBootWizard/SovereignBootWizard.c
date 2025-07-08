@@ -210,6 +210,112 @@ RouteConfig (
   return EFI_SUCCESS;
 }
 
+EFI_STATUS
+DeleteAllSecureBootVariables (
+  VOID
+  )
+{
+  EFI_STATUS  Status, TempStatus;
+
+  Status = DeletePlatformKey ();
+  DEBUG ((DEBUG_INFO, "%a - PK Delete = %r\n", __func__, Status));
+  // If the PK is not found, then our work here is done.
+  if (Status == EFI_NOT_FOUND) {
+    Status = EFI_SUCCESS;
+  }
+  // If any other error occurred, let's inform the caller that the PK delete in particular failed.
+  else if (EFI_ERROR (Status)) {
+    Status = EFI_ABORTED;
+  }
+
+  //
+  // If any of THESE steps have an error, report the error but attempt to delete all keys.
+  // Using TempStatus will prevent an error from being trampled by an EFI_SUCCESS.
+  // Overwrite Status ONLY if TempStatus is an error.
+  //
+  // If the error is EFI_NOT_FOUND, we can safely ignore it since we were trying to delete
+  // the variables anyway.
+  //
+  TempStatus = DeleteKEK ();
+  DEBUG ((DEBUG_INFO, "%a - KEK Delete = %r\n", __func__, TempStatus));
+  if (EFI_ERROR (TempStatus) && (TempStatus != EFI_NOT_FOUND)) {
+    Status = EFI_ACCESS_DENIED;
+  }
+
+  TempStatus = DeleteDb ();
+  DEBUG ((DEBUG_INFO, "%a - db Delete = %r\n", __func__, TempStatus));
+  if (EFI_ERROR (TempStatus) && (TempStatus != EFI_NOT_FOUND)) {
+    Status = EFI_ACCESS_DENIED;
+  }
+
+  TempStatus = DeleteDbx ();
+  DEBUG ((DEBUG_INFO, "%a - dbx Delete = %r\n", __func__, TempStatus));
+  if (EFI_ERROR (TempStatus) && (TempStatus != EFI_NOT_FOUND)) {
+    Status = EFI_ACCESS_DENIED;
+  }
+
+  TempStatus = DeleteDbt ();
+  DEBUG ((DEBUG_INFO, "%a - dbt Delete = %r\n", __func__, TempStatus));
+  if (EFI_ERROR (TempStatus) && (TempStatus != EFI_NOT_FOUND)) {
+    Status = EFI_ACCESS_DENIED;
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+EnrollDefaultSecureBootVariables (
+  VOID
+  )
+{
+  EFI_STATUS Status;
+
+  Status = EnrollDbFromDefault ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = EnrollDbxFromDefault ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  // Default dbt may not exists and is not critical error if fails
+  EnrollDbtFromDefault ();
+
+  Status = EnrollKEKFromDefault ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  return EnrollPKFromDefault ();
+}
+
+EFI_STATUS
+RestoreSecureBootDefaults (
+  VOID
+  )
+{
+  EFI_STATUS Status;
+
+  Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = DeleteAllSecureBootVariables ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = EnrollDefaultSecureBootVariables ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -244,8 +350,10 @@ Callback (
   )
 {
   EFI_STATUS                           Status;
-  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA    *PrivateData;
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData;
   EFI_INPUT_KEY                        Key;
+  UINTN                                BufferSize;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG      SvConfig;
 
   if (((Value == NULL) && (Action != EFI_BROWSER_ACTION_FORM_OPEN) && (Action != EFI_BROWSER_ACTION_FORM_CLOSE)) ||
       (ActionRequest == NULL))
@@ -263,18 +371,45 @@ Callback (
       switch (QuestionId) {
         case SELECT_DEFAULT_SECURE_BOOT_QUESTION_ID:
         {
-          // TODO:
           // 1. Set the Sovering Boot option to disabled.
           // 2. Unset the system provisioned state (just in case it was
           //    provisioned before).
+          BufferSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+          SetMem(&SvConfig, BufferSize, 0);
+          Status = gRT->SetVariable (
+                          mSvBootConfigVarName,
+                          &gSovereignBootWizardFormSetGuid,
+                          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                          BufferSize,
+                          &SvConfig
+                          );
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
           // 3. Restore default keys if necessary. Maybe use NV VendorKeys to
           //    indicate if key restoration is required.
+          Status = RestoreSecureBootDefaults ();
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
           // 4. Reset the system to boot in a fresh state. Can't really avoid
           //    the reset as we cannot exit the form in any other action than
           //    EFI_BROWSER_ACTION_CHANGED, but it can't be invoked for
           //    EFI_IFR_TYPE_ACTION nor EFI_IFR_TYPE_REF. Also we should reset
-          //    in case Secure Boto keys get restored to defaults. We can show
+          //    in case Secure Boot keys get restored to defaults. We can show
           //    a pop-up to inform about the actions we make here.
+          do {
+            CreatePopUp (
+              EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+              &Key,
+              L"",
+              L"Default Secure Boot configuration has been restored.",
+              L"",
+              L"Press ENTER to reset the system ...",
+              L"",
+              NULL
+              );
+          } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
 
           gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
           break;

@@ -36,6 +36,7 @@ Revision History
 #include <Guid/MdeModuleHii.h>
 #include <Guid/ImageAuthentication.h>
 #include <Guid/FileSystemVolumeLabelInfo.h>
+#include <Guid/AuthenticatedVariableFormat.h>
 
 #include <UefiSecureBoot.h>
 
