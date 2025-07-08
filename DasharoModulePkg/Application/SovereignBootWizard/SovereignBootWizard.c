@@ -316,6 +316,33 @@ RestoreSecureBootDefaults (
   return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
 }
 
+EFI_STATUS
+PrepareSbVariablesForSvBoot (
+  VOID
+  )
+{
+  EFI_STATUS Status;
+
+  Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = DeleteAllSecureBootVariables ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  // For Sovereign Boot we want to keep dbx to prohibit booting
+  // known revoked, buggy and malicious images.
+  Status = EnrollDbxFromDefault ();
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -405,13 +432,21 @@ Callback (
               L"",
               L"Default Secure Boot configuration has been restored.",
               L"",
-              L"Press ENTER to reset the system ...",
+              L"Press ENTER to reset the system...",
               L"",
               NULL
               );
           } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
 
           gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+          break;
+        }
+        case SELECT_SOVEREIGN_BOOT_QUESTION_ID:
+        {
+          // When selecting Sovereign Boot, we have to wipe out the SB
+          // variables except keeping default dbx. Then the wizard will
+          // proceed with enrolling trusted keys into db.
+          Status = PrepareSbVariablesForSvBoot ();
           break;
         }
         default:
@@ -440,7 +475,7 @@ Callback (
                   L"",
                   L"No more bootloaders found.",
                   L"",
-                  L"Press ENTER to continue ...",
+                  L"Press ENTER to continue...",
                   L"",
                   NULL
                   );
@@ -471,7 +506,7 @@ Callback (
                   L"",
                   L"Could not get bootloader description.",
                   L"",
-                  L"Press ENTER to continue ...",
+                  L"Press ENTER to continue...",
                   L"",
                   NULL
                   );
@@ -503,9 +538,6 @@ Callback (
     {
       switch (QuestionId) {
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
-        case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
-        case TRUST_KEY_FORM2_QUESTION_ID:
-        case SHOW_KEY_DETAILS_FORM2_QUESTION_ID:
           if (!mBootloadersInitted) {
             Status = GetBootOptions (PrivateData);
             DEBUG ((EFI_D_INFO, "GetBootOptions: %r\n", mBootloaderIndex, Status));
@@ -524,7 +556,7 @@ Callback (
                   L"",
                   L"Could not find any bootloaders.",
                   L"",
-                  L"Press ENTER to continue ...",
+                  L"Press ENTER to continue...",
                   L"",
                   NULL
                   );
