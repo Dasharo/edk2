@@ -95,6 +95,7 @@ typedef struct {
   EFI_HII_POPUP_PROTOCOL                 *HiiPopup;
 
   EFI_FORM_BROWSER2_PROTOCOL             *FormBrowser2;
+  EDKII_FORM_BROWSER_EXTENSION2_PROTOCOL *FormBrowserEx2;
 
   EFI_HII_CONFIG_ACCESS_PROTOCOL         ConfigAccess;
 
