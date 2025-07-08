@@ -381,6 +381,7 @@ Callback (
   EFI_INPUT_KEY                        Key;
   UINTN                                BufferSize;
   SOVEREIGN_BOOT_WIZARD_NV_CONFIG      SvConfig;
+  BROWSER_SETTING_SCOPE                Scope;
 
   if (((Value == NULL) && (Action != EFI_BROWSER_ACTION_FORM_OPEN) && (Action != EFI_BROWSER_ACTION_FORM_CLOSE)) ||
       (ActionRequest == NULL))
@@ -461,6 +462,14 @@ Callback (
         case EXIT_FORM2_QUESTION_ID:
         case EXIT_FORM3_QUESTION_ID:
         case EXIT_FORM9_QUESTION_ID:
+          if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+            Scope = FormSetLevel;
+          } else {
+            Scope = SystemLevel;
+          }
+          PrivateData->FormBrowserEx2->SetScope (Scope);
+          Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+
           *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
           break;
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
@@ -483,11 +492,13 @@ Callback (
               // TODO: Here
               // 1. If nothing has been selected as trusted so far, warn popup.
               // 2. Create ephemeral PK. Enroll it and enable Secure Boot.
-              // 3. Set the SV boto variable to provisioned state.
+              // 3. Set the SV boot variable to provisioned state.
               // 4. Boot the first trusted bootloader.
 
-              // No more bootloaders, reset the bootloader index and
-              // go to ineractive mode form for now.
+              // No more bootloaders, exit the formset, reset the bootloader
+              // index and go to ineractive mode form for now.
+              PrivateData->FormBrowserEx2->SetScope (FormSetLevel);
+              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
               mBootloaderIndex = 0;
               Status = PrivateData->FormBrowser2->SendForm (
                             PrivateData->FormBrowser2,
@@ -605,7 +616,6 @@ SovereignBootWizardInit (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  EFI_STATUS                             FormBrowserStatus;
   EFI_STATUS                             Status;
   EFI_HII_HANDLE                         HiiHandle;
   EFI_SCREEN_DESCRIPTOR                  Screen;
@@ -681,6 +691,13 @@ SovereignBootWizardInit (
   }
 
   mPrivateData->FormBrowser2 = FormBrowser2;
+
+  Status = gBS->LocateProtocol (&gEdkiiFormBrowserEx2ProtocolGuid, NULL, (VOID **)&FormBrowserEx2);
+  if (EFI_ERROR (Status)) {
+    ASSERT_EFI_ERROR (Status);
+    return Status;
+  }
+  mPrivateData->FormBrowserEx2 = FormBrowserEx2;
 
   //
   // Locate ConfigRouting protocol
@@ -839,13 +856,12 @@ SovereignBootWizardInit (
   //
   // Override Hotkeys, F9 and F10 won't be needed by this application
   //
-  FormBrowserStatus = gBS->LocateProtocol (&gEdkiiFormBrowserEx2ProtocolGuid, NULL, (VOID **)&FormBrowserEx2);
-  if (!EFI_ERROR (FormBrowserStatus)) {
+  if (mPrivateData->FormBrowserEx2 != NULL) {
     HotKey.UnicodeChar = CHAR_NULL;
     HotKey.ScanCode    = SCAN_F9;
-    FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
+    mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
     HotKey.ScanCode = SCAN_F10;
-    FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
+    mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
   }
 
   if (SvConfig->SvBootProvisioned) {
@@ -876,7 +892,7 @@ SovereignBootWizardInit (
 
   ASSERT_EFI_ERROR (Status);
 
-  if (!EFI_ERROR (FormBrowserStatus)) {
+  if (mPrivateData->FormBrowserEx2 != NULL) {
     //
     // Register the default HotKey F9 and F10 again.
     //
@@ -884,13 +900,13 @@ SovereignBootWizardInit (
     HotKey.ScanCode    = SCAN_F10;
     NewString          = HiiGetString (HiiHandle, STRING_TOKEN (FUNCTION_TEN_STRING), NULL);
     ASSERT (NewString != NULL);
-    FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_SUBMIT, 0, NewString);
+    mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_SUBMIT, 0, NewString);
     FreePool (NewString);
 
     HotKey.ScanCode = SCAN_F9;
     NewString       = HiiGetString (HiiHandle, STRING_TOKEN (FUNCTION_NINE_STRING), NULL);
     ASSERT (NewString != NULL);
-    FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_DEFAULT, EFI_HII_DEFAULT_CLASS_STANDARD, NewString);
+    mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_DEFAULT, EFI_HII_DEFAULT_CLASS_STANDARD, NewString);
     FreePool (NewString);
   }
 
