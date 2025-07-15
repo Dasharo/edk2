@@ -888,7 +888,8 @@ BlPeiEntryPoint (
   }
 
   if (GetFirstHob (EFI_HOB_TYPE_UEFI_CAPSULE) != NULL) {
-    Status = PeiServicesSetBootMode (BOOT_ON_FLASH_UPDATE);
+    DEBUG ((DEBUG_WARN, "Capsule present, but overriding BOOT_ON_FLASH_UPDATE for debugging\n"));
+    Status = PeiServicesSetBootMode (BOOT_WITH_FULL_CONFIGURATION);
     ASSERT_EFI_ERROR (Status);
   }
 
