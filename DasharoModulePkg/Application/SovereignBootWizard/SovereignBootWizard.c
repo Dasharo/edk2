@@ -39,7 +39,8 @@ STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
   }
 };
 
-STATIC UINTN mBootloaderIndex = 0;
+UINTN mBootloaderIndex = 0;
+UINTN mCertIndex = 0;
 
 EFI_STATUS
 EFIAPI
@@ -392,8 +393,6 @@ Callback (
   Status      = EFI_SUCCESS;
   PrivateData = SOVEREIGN_BOOT_WIZARD_PRIVATE_FROM_THIS (This);
 
-  DEBUG ((EFI_D_INFO, "Callback: Action %x QuestionID %x Type %x\n", Action, QuestionId, Type));
-
   switch (Action) {
     case EFI_BROWSER_ACTION_CHANGING:
       switch (QuestionId) {
@@ -475,7 +474,7 @@ Callback (
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
         case TRUST_KEY_FORM2_QUESTION_ID:
           if (mBootloadersInitted) {
-            Status = UpdateBootloaderPage (PrivateData, ++mBootloaderIndex);
+            Status = UpdateBootloaderPage (PrivateData);
             if (Status == EFI_NO_MEDIA) {
               do {
                 CreatePopUp (
@@ -555,7 +554,7 @@ Callback (
             if (!EFI_ERROR (Status)) {
               mBootloadersInitted = TRUE;
               if (!mBootloadersShown) {
-                Status = UpdateBootloaderPage (PrivateData, mBootloaderIndex);
+                Status = UpdateBootloaderPage (PrivateData);
                 DEBUG ((EFI_D_INFO, "UpdateBootloaderPage(%d): %r\n", mBootloaderIndex, Status));
                 mBootloadersShown = !EFI_ERROR (Status);
               }
@@ -596,6 +595,13 @@ Callback (
       Status = EFI_UNSUPPORTED;
       break;
   }
+
+  HiiSetBrowserData (
+    &gSovereignBootWizardFormSetGuid,
+    mVarStoreName,
+    sizeof (SOVEREIGN_BOOT_WIZARD_FORM_DATA),
+    (CONST UINT8 *)&PrivateData->FormData,
+    NULL);
 
   return Status;
 }

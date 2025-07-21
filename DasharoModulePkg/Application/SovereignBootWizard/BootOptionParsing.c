@@ -310,8 +310,8 @@ GetBootOptions (
 
     LoadOptionPtr += sizeof (UINT32);
 
-    NewLoadContext->FilePathListLength = *(UINT16 *)LoadOptionPtr;
-    LoadOptionPtr                     += sizeof (UINT16);
+    NewLoadContext->FilePathLength = *(UINT16 *)LoadOptionPtr;
+    LoadOptionPtr                 += sizeof (UINT16);
 
     StringSize = StrSize (L"Description: ") + StrSize ((UINT16 *)LoadOptionPtr) + sizeof(CHAR16);
     NewLoadContext->Description = AllocateZeroPool (StringSize);
@@ -323,20 +323,20 @@ GetBootOptions (
 
     LoadOptionPtr += StrSize ((UINT16 *)LoadOptionPtr);
 
-    NewLoadContext->FilePathList = AllocateZeroPool (NewLoadContext->FilePathListLength);
-    ASSERT (NewLoadContext->FilePathList != NULL);
+    NewLoadContext->FilePath = AllocateZeroPool (NewLoadContext->FilePathLength);
+    ASSERT (NewLoadContext->FilePath != NULL);
     CopyMem (
-      NewLoadContext->FilePathList,
+      NewLoadContext->FilePath,
       (EFI_DEVICE_PATH_PROTOCOL *)LoadOptionPtr,
-      NewLoadContext->FilePathListLength
+      NewLoadContext->FilePathLength
       );
 
     // Hardware Path to the disk
-    HwDevicePath = StripFilePath (NewLoadContext->FilePathList);
+    HwDevicePath = StripFilePath (NewLoadContext->FilePath);
     if (HwDevicePath == NULL) {
       // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
       // and is automatically expanded by UEFI boot manager
-      PathString = UiDevicePathToStr (Private->DevPathToText, NewLoadContext->FilePathList);
+      PathString = UiDevicePathToStr (Private->DevPathToText, NewLoadContext->FilePath);
     } else {
       PathString = UiDevicePathToStr (Private->DevPathToText, HwDevicePath);
       FreePool (HwDevicePath);
@@ -351,12 +351,13 @@ GetBootOptions (
 
     // File path on the disk
     if (HwDevicePath != NULL) {
-      PathString = UiDevicePathToStr (Private->DevPathToText, ExtractFilePath (NewLoadContext->FilePathList));
+      PathString = UiDevicePathToStr (Private->DevPathToText, ExtractFilePath (NewLoadContext->FilePath));
       ASSERT (PathString != NULL);
     } else {
       // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
       // and is automatically expanded by UEFI boot manager
       PathString = EFI_REMOVABLE_MEDIA_FILE_NAME;
+      NewLoadContext->NeedsPathExpansion = TRUE;
     }
     StringSize = StrSize (L"File path: ") + StrSize (PathString) + sizeof(CHAR16);
     NewMenuEntry->FilePathString = AllocateZeroPool (StringSize);
@@ -366,6 +367,8 @@ GetBootOptions (
       FreePool (PathString);
     }
     NewMenuEntry->FilePathStringToken = HiiSetString (Private->HiiHandle, 0, NewMenuEntry->FilePathString, NULL);
+
+    FillSecurityContext(NewMenuEntry);
 
     InsertTailList (&BootOptionMenu.Head, &NewMenuEntry->Link);
     MenuCount++;
@@ -422,15 +425,15 @@ GetMenuEntry (
 
 EFI_STATUS
 UpdateBootloaderPage (
-  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
-  IN  UINTN                              OptionNumber
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   )
 {
   BM_MENU_ENTRY    *BootloaderEntry;
   BM_LOAD_CONTEXT  *BootloaderContext;
   EFI_STRING       NewString;
+  EFI_STATUS       Status;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, OptionNumber);
+  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -445,24 +448,33 @@ UpdateBootloaderPage (
   if (NewString != NULL) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), NewString, NULL);
   } else {
-    return EFI_NOT_FOUND;
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
   }
 
   NewString = HiiGetString (Private->HiiHandle, BootloaderEntry->DevicePathStringToken, NULL);
   if (NewString != NULL) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_HW_PATH), NewString, NULL);
   } else {
-    return EFI_NOT_FOUND;
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
   }
 
   NewString = HiiGetString (Private->HiiHandle, BootloaderEntry->FilePathStringToken, NULL);
   if (NewString != NULL) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_FILE_PATH), NewString, NULL);
   } else {
-    return EFI_NOT_FOUND;
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
   }
 
-  // TODO fingerprint and key details
+  Status = UpdateCertInfo (Private, mBootloaderIndex, mCertIndex);
+  mCertIndex++;
+  if (Status == EFI_NO_MEDIA || ((mCertIndex > 1) && Private->FormData.ImageUnsigned)) {
+    DEBUG ((EFI_D_INFO, "No more keys/certs for bootloader %u (current certificate %u)\n",
+       mBootloaderIndex, mCertIndex - 1));
+    // No more keys/certs to show for this bootloader, proceed to the next one
+    mCertIndex = 0;
+    mBootloaderIndex++;
+    Status = UpdateBootloaderPage(Private);
+  }
 
-  return EFI_SUCCESS;
+  return Status;
 }

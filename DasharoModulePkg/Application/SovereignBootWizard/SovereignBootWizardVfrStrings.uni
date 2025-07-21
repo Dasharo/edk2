@@ -61,7 +61,8 @@
 #string STR_BOOTOPT_DESCRIPTION                  #language en-US "Description: "
 #string STR_HW_PATH                              #language en-US "Hardware path: "
 #string STR_FILE_PATH                            #language en-US "File path: "
-#string STR_KEY_FINGERPRINT                      #language en-US "Key fingerprint (SHA-256): "
+#string STR_KEY_FINGERPRINT                      #language en-US "Certificate fingerprint (SHA-256):"
+#string STR_KEY_FINGERPRINT_HASH                 #language en-US ""
 
 #string STR_TRUST_QUESTION                       #language en-US "Do you want to trust this key/image and continue booting?"
 
