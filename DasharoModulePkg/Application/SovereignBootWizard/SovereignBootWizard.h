@@ -20,6 +20,7 @@ Revision History
 
 #include <Uefi.h>
 
+#include <PiDxe.h>
 #include <Pi/PiBootMode.h>
 #include <Pi/PiHob.h>
 
@@ -43,6 +44,8 @@ Revision History
 #include <Library/DebugLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/BaseCryptLib.h>
+#include <Library/DxeServicesLib.h>
 #include <Library/HobLib.h>
 #include <Library/UefiBootManagerLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -56,7 +59,7 @@ Revision History
 #include <Library/PeCoffLib.h>
 #include <Library/SecureBootVariableLib.h>
 #include <Library/SecureBootVariableProvisionLib.h>
-
+#include <Library/DxeImageVerificationLib.h>
 
 #include "SovereignBootWizardHii.h"
 
@@ -70,8 +73,8 @@ extern UINT8  SovereignBootWizardStrings[];
 
 #define SOVEREIGN_BOOT_PRIVATE_SIGNATURE          SIGNATURE_32 ('S', 'B', 'p', 's')
 #define SOVEREIGN_BOOT_MENU_OPTION_SIGNATURE      SIGNATURE_32 ('m', 'e', 'n', 'u')
-#define SOVEREIGN_BOOT_LOAD_OPTION_SIGNATURE      SIGNATURE_32 ('l', 'o', 'a', 'd')
 #define SOVEREIGN_BOOT_MENU_ENTRY_SIGNATURE       SIGNATURE_32 ('e', 'n', 't', 'r')
+#define SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE       SIGNATURE_32 ('c', 'e', 'r', 't')
 
 #define SOVEREIGN_BOOT_LOAD_CONTEXT_SELECT      0x0
 #define SOVEREIGN_BOOT_FILE_CONTEXT_SELECT      0x2
@@ -81,9 +84,9 @@ typedef struct {
 
   EFI_HANDLE                             AppHandle;
   EFI_HII_HANDLE                         HiiHandle;
-  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA       ConfigData;
-  SOVEREIGN_BOOT_WIZARD_NV_CONFIG         NvConfig;
-  SOVEREIGN_BOOT_WIZARD_FORM_DATA         FormData;
+  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA      ConfigData;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG        NvConfig;
+  SOVEREIGN_BOOT_WIZARD_FORM_DATA        FormData;
 
   EFI_STRING_ID                          NameStringId[NAME_VALUE_NAME_NUMBER];
   EFI_STRING                             NameValueName[NAME_VALUE_NAME_NUMBER];
@@ -130,21 +133,54 @@ typedef struct {
   EFI_STRING_ID    DevicePathStringToken;
   EFI_STRING_ID    FilePathStringToken;
   UINTN            ContextSelection;
-  VOID             *VariableContext;
+  VOID             *VariableContext; // BM_LOAD_CONTEXT
+  VOID             *SecurityContext; // BM_SECURITY_CONTEXT
 } BM_MENU_ENTRY;
 
 typedef struct {
   BOOLEAN                     IsBootNext;
-  BOOLEAN                     Deleted;
+  BOOLEAN                     NeedsPathExpansion;
 
   BOOLEAN                     IsLegacy;
   BOOLEAN                     IsFvOption;
 
   UINT32                      Attributes;
-  UINT16                      FilePathListLength;
+  UINT16                      FilePathLength;
   UINT16                      *Description;
-  EFI_DEVICE_PATH_PROTOCOL    *FilePathList;
+  EFI_DEVICE_PATH_PROTOCOL    *FilePath;
 } BM_LOAD_CONTEXT;
+
+typedef struct {
+  UINT32                      Signature;
+
+  BOOLEAN                     CertIsInDbx;
+  BOOLEAN                     CertIsInDb;
+  BOOLEAN                     ImageIsVerified;
+
+  UINTN                       CertDataSize;
+  UINT8                       *CertData;
+
+  UINTN                       CertDigestSize;
+  UINT8                       *CertDigest;
+
+  EFI_GUID                    CertType;
+
+  LIST_ENTRY                  CertLink;
+} BM_CERT_ENTRY;
+
+typedef struct {
+  BOOLEAN                     ImageIsInDbx;
+  BOOLEAN                     ImageIsInDb;
+  BOOLEAN                     ImageIsSigned;
+
+  UINT32                      AuthenticationStatus;
+  UINT32                      NumCertificates;
+
+  UINTN                       ImageDigestSize;
+  UINT8                       *ImageDigest;
+
+  LIST_ENTRY                  Certs;
+} BM_SECURITY_CONTEXT;
 
 typedef struct {
   EFI_HANDLE                      Handle;
@@ -161,6 +197,8 @@ typedef struct {
 } BM_FILE_CONTEXT;
 
 extern BM_MENU_OPTION            BootOptionMenu;
+extern UINTN                     mBootloaderIndex;
+extern UINTN                     mCertIndex;
 
 EFI_STATUS
 GetBootOptions (
@@ -175,8 +213,25 @@ GetMenuEntry (
 
 EFI_STATUS
 UpdateBootloaderPage (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
+  );
+
+EFI_STATUS
+FillSecurityContext (
+  IN  BM_MENU_ENTRY  *Entry
+  );
+
+BM_CERT_ENTRY *
+GetCertEntry (
+  BM_MENU_ENTRY  *MenuEntry,
+  UINTN           CertNumber
+  );
+
+EFI_STATUS
+UpdateCertInfo (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
-  IN  UINTN                              OptionNumber
+  IN  UINTN                               OptionNumber,
+  IN  UINTN                               CertNumber
   );
 
 #endif

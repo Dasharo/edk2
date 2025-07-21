@@ -57,7 +57,7 @@ Revision History:
 
 // Form Data
 typedef struct {
-  UINT8               Unused;
+  BOOLEAN  ImageUnsigned;
 } SOVEREIGN_BOOT_WIZARD_FORM_DATA;
 
 #pragma pack()

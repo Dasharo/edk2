@@ -27,6 +27,7 @@
 
 [Sources]
   BootOptionParsing.c
+  SignatureParsing.c
   SovereignBootWizard.c
   SovereignBootWizardHii.h
   SovereignBootWizardVfrStrings.uni
@@ -38,12 +39,14 @@
   MdeModulePkg/MdeModulePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
   SecurityPkg/SecurityPkg.dec
+  CryptoPkg/CryptoPkg.dec
 
 [LibraryClasses]
   BaseLib
   BaseCryptLib
   MemoryAllocationLib
   UefiBootManagerLib
+  DxeServicesLib
   UefiBootServicesTableLib
   UefiApplicationEntryPoint
   UefiRuntimeServicesTableLib
@@ -57,6 +60,7 @@
   PeCoffLib
   SecureBootVariableLib
   SecureBootVariableProvisionLib
+  DxeImageVerificationLib
 
 [Guids]
   gSovereignBootWizardFormSetGuid
