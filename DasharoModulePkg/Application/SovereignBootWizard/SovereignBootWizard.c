@@ -344,6 +344,110 @@ PrepareSbVariablesForSvBoot (
   return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
 }
 
+EFI_STATUS
+AddKeyOrHashAsTrustedOrUntrusted (
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  BOOLEAN                              Trust
+  )
+{
+  EFI_STRING                           Message;
+  EFI_HII_POPUP_SELECTION              UserSelection;
+  EFI_STRING                           HeaderString;
+  EFI_STRING                           HashString;
+  EFI_STRING                           PopupMessage;
+  UINTN                                PopupMessageSize;
+  EFI_STATUS                           Status;
+
+
+  Message = HiiGetString (
+              PrivateData->HiiHandle,
+              Trust ? STRING_TOKEN(STR_SV_TRUST_KEY_QUESTION) : STRING_TOKEN(STR_SV_UNTRUST_KEY_QUESTION),
+              NULL);
+  HeaderString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT), NULL);
+  HashString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT_HASH), NULL);
+
+  // Size of the whole message plus couple new lines
+  PopupMessageSize = StrSize(Message) + StrSize(HeaderString) + StrSize(HashString) + 6;
+  PopupMessage = (CHAR16 *) AllocateZeroPool(PopupMessageSize);
+
+  if (PopupMessage == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  UnicodeSPrint (PopupMessage, PopupMessageSize, L"%s\n%s\n%s", Message, HeaderString, HashString);
+  HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SV_TRUST_KEY_POPUP), PopupMessage, NULL) ;
+
+  Status = PrivateData->HiiPopup->CreatePopup (
+             PrivateData->HiiPopup,
+             EfiHiiPopupStyleInfo,
+             EfiHiiPopupTypeYesNo,
+             PrivateData->HiiHandle,
+             STRING_TOKEN (STR_SV_TRUST_KEY_POPUP),
+             &UserSelection
+             );
+  if (UserSelection == EfiHiiPopupSelectionYes) {
+    // Add key or hash to DB or DBX
+    if (Trust) {
+
+    } else {
+
+    }
+  }
+
+  FreePool (PopupMessage);
+
+  return Status;
+}
+
+EFI_STATUS
+BootTheBootloader (
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData
+  )
+{
+  SV_MENU_ENTRY                        *BootloaderEntry;
+  SV_LOAD_CONTEXT                      *BootloaderContext;
+  EFI_BOOT_MANAGER_LOAD_OPTION         BootOption;
+  EFI_STATUS                           Status;
+
+  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  BootloaderContext = (SV_LOAD_CONTEXT *)BootloaderEntry->VariableContext;
+  if (BootloaderContext == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  Status = EfiBootManagerInitializeLoadOption (
+            &BootOption,
+            LoadOptionNumberUnassigned,
+            LoadOptionTypeBoot,
+            LOAD_OPTION_ACTIVE,
+            BootloaderContext->Description,
+            BootloaderContext->FilePath,
+            BootloaderContext->OptionalData,
+            BootloaderContext->OptionalDataSize
+            );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_INFO, "Failed to prepare load option: %r\n", Status));
+    return Status;
+  }
+
+  if (gST->ConOut != NULL) {
+    gST->ConOut->ClearScreen (gST->ConOut);
+  }
+
+  DEBUG ((EFI_D_INFO, "Booting %s\n", BootloaderContext->Description));
+  EfiBootManagerBoot (&BootOption);
+  EfiBootManagerFreeLoadOption (&BootOption);
+
+  // In case we get back from the booted bootloader, we have to update the
+  // page so that it will display next bootloader or key.
+  return UpdateBootloaderPage (PrivateData);
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -449,6 +553,19 @@ Callback (
           Status = PrepareSbVariablesForSvBoot ();
           break;
         }
+        case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
+        {
+          // Add cert or image hash to DBX
+          Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, FALSE);
+          break;
+        }
+        case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
+        case TRUST_KEY_FORM2_QUESTION_ID:
+        {
+          // Add cert or image hash to DB
+          Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, TRUE);
+          break;
+        }
         default:
           break;
       }
@@ -537,6 +654,12 @@ Callback (
           } else {
             Status = EFI_NO_MEDIA;
           }
+          break;
+        case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
+          // All is left here is to enroll PK to enable Secure Boot, set
+          // Sovereign Boot to provisioned and boot.
+
+          Status = BootTheBootloader (PrivateData);
           break;
         default:
           break;

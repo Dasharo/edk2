@@ -50,10 +50,10 @@ VOID
 VerifyImageHashInDatabases (
   IN  VOID                      *FileBuffer,
   IN  UINTN                     FileSize,
-  IN  BM_SECURITY_CONTEXT       *SecCtx
+  IN  SV_SECURITY_CONTEXT       *SecCtx
   )
 {
-  EFI_STATUS                    DbStatus;
+  EFI_STATUS                    Status;
   BOOLEAN                       IsFound;
   UINT8                         HashAlg;
   UINT8                         ImageDigest[MAX_DIGEST_SIZE];
@@ -68,26 +68,26 @@ VerifyImageHashInDatabases (
       continue;
     }
 
-    DbStatus = IsSignatureFoundInDatabase (
+    Status = IsSignatureFoundInDatabase (
                   EFI_IMAGE_SECURITY_DATABASE1,
                   ImageDigest,
                   &CertType,
                   ImageDigestSize,
                   &IsFound
                   );
-    if (!EFI_ERROR (DbStatus) || IsFound) {
-      SecCtx->ImageIsInDb = TRUE;
+    if (!EFI_ERROR (Status) && IsFound) {
+      SecCtx->ImageIsInDbx = TRUE;
     }
 
-    DbStatus = IsSignatureFoundInDatabase (
+    Status = IsSignatureFoundInDatabase (
                   EFI_IMAGE_SECURITY_DATABASE,
                   ImageDigest,
                   &CertType,
                   ImageDigestSize,
                   &IsFound
                   );
-    if (!EFI_ERROR (DbStatus) && IsFound) {
-      SecCtx->ImageIsInDbx = TRUE;
+    if (!EFI_ERROR (Status) && IsFound) {
+      SecCtx->ImageIsInDb = TRUE;
     }
   }
 }
@@ -96,7 +96,7 @@ VOID
 FillCertificateEntries (
   IN      VOID                      *FileBuffer,
   IN      UINTN                     FileSize,
-  IN OUT  BM_SECURITY_CONTEXT       *SecCtx,
+  IN OUT  SV_SECURITY_CONTEXT       *SecCtx,
   IN      EFI_IMAGE_DATA_DIRECTORY  *SecDataDir
   )
 {
@@ -111,7 +111,7 @@ FillCertificateEntries (
   EFI_STATUS                    HashStatus;
   UINT8                         ImageDigest[MAX_DIGEST_SIZE];
   UINTN                         ImageDigestSize;
-  BM_CERT_ENTRY                 *NewCertEntry;
+  SV_CERT_ENTRY                 *NewCertEntry;
   UINT8                         *CertBuffer;
   UINTN                         BufferLength;
   UINT8                         *TrustedCert;
@@ -187,7 +187,7 @@ FillCertificateEntries (
       continue;
     }
 
-    NewCertEntry = (BM_CERT_ENTRY *) AllocateZeroPool (sizeof(BM_CERT_ENTRY));
+    NewCertEntry = (SV_CERT_ENTRY *) AllocateZeroPool (sizeof(SV_CERT_ENTRY));
 
     if (NewCertEntry == NULL) {
       DEBUG ((EFI_D_ERROR, "Not enough free memory for certificate data\n"));
@@ -210,21 +210,17 @@ FillCertificateEntries (
       continue;
     }
 
+    // Free unused cert chain
+    Pkcs7FreeSigners (CertBuffer);
+
     // Save the buffer to the signer's certificate
     NewCertEntry->CertData = TrustedCert;
     NewCertEntry->CertDataSize = TrustedCertLength;
 
-    // Free unused cert chain
-    Pkcs7FreeSigners (CertBuffer);
-
-    NewCertEntry->CertDigest = (UINT8 *)AllocateZeroPool(SHA256_DIGEST_SIZE);
-    if (NewCertEntry->CertDigest != NULL) {
-      CalculateCertHash(
-        NewCertEntry->CertData,
-        NewCertEntry->CertDataSize,
-        HASHALG_SHA256,
-        NewCertEntry->CertDigest);
+    if (CalculateCertHash (TrustedCert, TrustedCertLength, HASHALG_SHA256, NewCertEntry->CertDigest)) {
       NewCertEntry->CertDigestSize = SHA256_DIGEST_SIZE;
+    } else {
+      DEBUG ((EFI_D_INFO, "Could not calculate TBS certificate hash\n"));
     }
 
     HashStatus = HashPeImageByType (
@@ -239,26 +235,19 @@ FillCertificateEntries (
       if (TrustedCert != NULL) {
         Pkcs7FreeSigners (TrustedCert);
       }
-      FreePool (NewCertEntry->CertDigest);
       FreePool (NewCertEntry);
       DEBUG ((EFI_D_ERROR, "Failed to calculate image hash\n"));
       continue;
     }
 
-    //
-    // Check the digital signature against the valid certificate in allowed database (db).
-    if (IsAllowedByDb (AuthData, AuthDataSize, ImageDigest, ImageDigestSize)) {
-      NewCertEntry->ImageIsVerified = TRUE;
-      NewCertEntry->CertIsInDb = TRUE;
-    }
+    // Verify the digital signature amnd check against databases
+    NewCertEntry->CertIsInDb = IsAllowedByDb (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+    NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+    NewCertEntry->ImageIsVerified = AuthenticodeVerify (
+                                      AuthData, AuthDataSize,
+                                      TrustedCert, TrustedCertLength,
+                                      ImageDigest, ImageDigestSize);
 
-    //
-    // Check the digital signature against the revoked certificate in forbidden database (dbx).
-    //
-    if (IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize)) {
-      NewCertEntry->ImageIsVerified = FALSE;
-      NewCertEntry->CertIsInDbx = TRUE;
-    }
 
     DEBUG ((EFI_D_INFO, "Certificate Details:\n"
       "\tImageIsVerified: %u\n"
@@ -291,25 +280,22 @@ FillCertificateEntries (
 **/
 EFI_STATUS
 FillSecurityContext (
-  IN  BM_MENU_ENTRY  *Entry
+  IN  SV_MENU_ENTRY  *Entry
   )
 {
-  BM_SECURITY_CONTEXT           *SecCtx;
-  BM_LOAD_CONTEXT               *LoadCtx;
+  SV_SECURITY_CONTEXT           *SecCtx;
+  SV_LOAD_CONTEXT               *LoadCtx;
   EFI_IMAGE_DATA_DIRECTORY      *SecDir;
   EFI_DEVICE_PATH_PROTOCOL      *FullFilePath;
   VOID                          *ImageBase;
   UINTN                         ImageSize;
   UINT32                        AuthStatus;
   EFI_STATUS                    Status;
-  EFI_GUID                      CertType;
 
   FullFilePath = NULL;
-  LoadCtx = (BM_LOAD_CONTEXT *)Entry->VariableContext;
-  SecCtx = (BM_SECURITY_CONTEXT *)AllocateZeroPool(sizeof(BM_SECURITY_CONTEXT));
+  LoadCtx = (SV_LOAD_CONTEXT *)Entry->VariableContext;
+  SecCtx = (SV_SECURITY_CONTEXT *)AllocateZeroPool(sizeof(SV_SECURITY_CONTEXT));
   Entry->SecurityContext = SecCtx;
-
-  DEBUG ((EFI_D_INFO, "%a: Processing %s\n", __FUNCTION__, LoadCtx->Description));
 
   if (SecCtx == NULL) {
     DEBUG ((EFI_D_INFO, "Not enough memory for security context\n"));
@@ -352,8 +338,12 @@ FillSecurityContext (
 
   // Always calculate SHA256 hash of the image and store it for display and
   // possible trust/distrust choice.
-  SecCtx->ImageDigest = (UINT8 *)AllocateZeroPool(SHA256_DIGEST_SIZE);
-  HashPeImage (ImageBase, ImageSize, HASHALG_SHA256, SecCtx->ImageDigest, &SecCtx->ImageDigestSize, &CertType);
+  HashPeImage (ImageBase,
+               ImageSize,
+               HASHALG_SHA256,
+               SecCtx->ImageDigest,
+               &SecCtx->ImageDigestSize,
+               &SecCtx->HashType);
 
   //
   // Start Image Validation.
@@ -375,19 +365,18 @@ FillSecurityContext (
   FillCertificateEntries (ImageBase, ImageSize, SecCtx, SecDir);
   Status = EFI_SUCCESS;
 
+ON_EXIT:
   DEBUG ((EFI_D_INFO, "Image Details:\n"
-    "\tImageIsInDbx: %u\n"
-    "\tImageIsInDb: %u\n"
-    "\tImageIsSigned: %u\n"
-    "\tAuthenticationStatus: %u\n"
-    "\tNumCertificates: %u\n",
+    "  ImageIsInDbx: %u\n"
+    "  ImageIsInDb: %u\n"
+    "  ImageIsSigned: %u\n"
+    "  AuthenticationStatus: %u\n"
+    "  NumCertificates: %u\n",
     SecCtx->ImageIsInDbx,
     SecCtx->ImageIsInDb,
     SecCtx->ImageIsSigned,
     SecCtx->AuthenticationStatus,
     SecCtx->NumCertificates));
-
-ON_EXIT:
 
   if (ImageBase != NULL) {
     FreePool (ImageBase);
@@ -408,18 +397,18 @@ ON_EXIT:
   @return The Menu Entry.
 
 **/
-BM_CERT_ENTRY *
+SV_CERT_ENTRY *
 GetCertEntry (
-  BM_MENU_ENTRY  *MenuEntry,
+  SV_MENU_ENTRY  *MenuEntry,
   UINTN           CertNumber
   )
 {
-  BM_CERT_ENTRY        *NewCertEntry;
-  BM_SECURITY_CONTEXT  *SecCtx;
+  SV_CERT_ENTRY        *NewCertEntry;
+  SV_SECURITY_CONTEXT  *SecCtx;
   UINTN                Index;
   LIST_ENTRY           *List;
 
-  SecCtx = (BM_SECURITY_CONTEXT *) MenuEntry->SecurityContext;
+  SecCtx = (SV_SECURITY_CONTEXT *) MenuEntry->SecurityContext;
 
   if (SecCtx == NULL) {
     return NULL;
@@ -434,7 +423,7 @@ GetCertEntry (
     List = List->ForwardLink;
   }
 
-  NewCertEntry = CR (List, BM_CERT_ENTRY, CertLink, SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE);
+  NewCertEntry = CR (List, SV_CERT_ENTRY, CertLink, SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE);
 
   return NewCertEntry;
 }
@@ -490,9 +479,9 @@ UpdateCertInfo (
   IN  UINTN                               CertNumber
   )
 {
-  BM_MENU_ENTRY        *BootloaderEntry;
-  BM_CERT_ENTRY        *CertificateEntry;
-  BM_SECURITY_CONTEXT  *SecurityContext;
+  SV_MENU_ENTRY        *BootloaderEntry;
+  SV_CERT_ENTRY        *CertificateEntry;
+  SV_SECURITY_CONTEXT  *SecurityContext;
   EFI_STRING           NewString;
   EFI_STRING           OldString;
   EFI_STATUS           Status;
@@ -502,7 +491,7 @@ UpdateCertInfo (
     return EFI_NO_MEDIA;
   }
 
-  SecurityContext = (BM_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
   if (SecurityContext == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -514,7 +503,7 @@ UpdateCertInfo (
 
   // Image is unsigned? Show its hash instead of certificates
   if (Private->FormData.ImageUnsigned) {
-    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Image is unsigned !!!\nImage hash (SHA-256):", NULL);
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Image hash (SHA-256):\n!!! Image is unsigned !!!", NULL);
 
     Status = ParseHashValue (SecurityContext->ImageDigest, SecurityContext->ImageDigestSize, &NewString);
     if (!EFI_ERROR (Status) && (NewString != NULL)) {
