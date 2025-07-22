@@ -120,7 +120,7 @@ typedef struct {
   UINTN         Signature;
   LIST_ENTRY    Head;
   UINTN         MenuNumber;
-} BM_MENU_OPTION;
+} SV_MENU_OPTION;
 
 typedef struct {
   UINTN            Signature;
@@ -133,9 +133,9 @@ typedef struct {
   EFI_STRING_ID    DevicePathStringToken;
   EFI_STRING_ID    FilePathStringToken;
   UINTN            ContextSelection;
-  VOID             *VariableContext; // BM_LOAD_CONTEXT
-  VOID             *SecurityContext; // BM_SECURITY_CONTEXT
-} BM_MENU_ENTRY;
+  VOID             *VariableContext; // SV_LOAD_CONTEXT
+  VOID             *SecurityContext; // SV_SECURITY_CONTEXT
+} SV_MENU_ENTRY;
 
 typedef struct {
   BOOLEAN                     IsBootNext;
@@ -148,7 +148,9 @@ typedef struct {
   UINT16                      FilePathLength;
   UINT16                      *Description;
   EFI_DEVICE_PATH_PROTOCOL    *FilePath;
-} BM_LOAD_CONTEXT;
+  UINT8                       *OptionalData;
+  UINTN                       OptionalDataSize;
+} SV_LOAD_CONTEXT;
 
 typedef struct {
   UINT32                      Signature;
@@ -156,19 +158,25 @@ typedef struct {
   BOOLEAN                     CertIsInDbx;
   BOOLEAN                     CertIsInDb;
   BOOLEAN                     ImageIsVerified;
+  BOOLEAN                     CertIsMicrosoft;
+
+  // Placed exactly at offset 8 for alignment
+  UINT8                       CertDigest[MAX_DIGEST_SIZE];
+  UINTN                       CertDigestSize;
 
   UINTN                       CertDataSize;
   UINT8                       *CertData;
 
-  UINTN                       CertDigestSize;
-  UINT8                       *CertDigest;
-
   EFI_GUID                    CertType;
 
   LIST_ENTRY                  CertLink;
-} BM_CERT_ENTRY;
+} SV_CERT_ENTRY;
 
 typedef struct {
+  // Place first for 8 byte alignment
+  UINT8                       ImageDigest[MAX_DIGEST_SIZE];
+  UINTN                       ImageDigestSize;
+
   BOOLEAN                     ImageIsInDbx;
   BOOLEAN                     ImageIsInDb;
   BOOLEAN                     ImageIsSigned;
@@ -176,27 +184,12 @@ typedef struct {
   UINT32                      AuthenticationStatus;
   UINT32                      NumCertificates;
 
-  UINTN                       ImageDigestSize;
-  UINT8                       *ImageDigest;
+  EFI_GUID                    HashType;
 
   LIST_ENTRY                  Certs;
-} BM_SECURITY_CONTEXT;
+} SV_SECURITY_CONTEXT;
 
-typedef struct {
-  EFI_HANDLE                      Handle;
-  EFI_DEVICE_PATH_PROTOCOL        *DevicePath;
-  EFI_FILE_HANDLE                 FHandle;
-  UINT16                          *FileName;
-  EFI_FILE_SYSTEM_VOLUME_LABEL    *Info;
-
-  BOOLEAN                         IsRoot;
-  BOOLEAN                         IsDir;
-  BOOLEAN                         IsRemovableMedia;
-  BOOLEAN                         IsLoadFile;
-  BOOLEAN                         IsBootLegacy;
-} BM_FILE_CONTEXT;
-
-extern BM_MENU_OPTION            BootOptionMenu;
+extern SV_MENU_OPTION            BootOptionMenu;
 extern UINTN                     mBootloaderIndex;
 extern UINTN                     mCertIndex;
 
@@ -205,9 +198,9 @@ GetBootOptions (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
-BM_MENU_ENTRY *
+SV_MENU_ENTRY *
 GetMenuEntry (
-  BM_MENU_OPTION  *MenuOption,
+  SV_MENU_OPTION  *MenuOption,
   UINTN           MenuNumber
   );
 
@@ -218,12 +211,12 @@ UpdateBootloaderPage (
 
 EFI_STATUS
 FillSecurityContext (
-  IN  BM_MENU_ENTRY  *Entry
+  IN  SV_MENU_ENTRY  *Entry
   );
 
-BM_CERT_ENTRY *
+SV_CERT_ENTRY *
 GetCertEntry (
-  BM_MENU_ENTRY  *MenuEntry,
+  SV_MENU_ENTRY  *MenuEntry,
   UINTN           CertNumber
   );
 
