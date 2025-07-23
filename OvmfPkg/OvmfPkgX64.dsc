@@ -1088,7 +1088,10 @@
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
 
 !if $(SOVEREIGN_BOOT_ENABLE) == TRUE
-  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf {
+    <LibraryClasses>
+    BaseCryptLib|CryptoPkg/Library/BaseCryptLibMbedTls/BaseCryptLib.inf
+  }
 !endif
 
 !endif
