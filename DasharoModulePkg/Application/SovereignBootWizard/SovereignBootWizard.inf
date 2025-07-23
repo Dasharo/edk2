@@ -80,6 +80,7 @@
   gEfiHiiPopupProtocolGuid                      ## CONSUMES
   gEfiDevicePathToTextProtocolGuid              ## CONSUMES
   gEfiFirmwareVolume2ProtocolGuid               ## CONSUMES
+  gEfiRealTimeClockArchProtocolGuid             ## SOMETIMES_CONSUMES
 
 [UserExtensions.TianoCore."ExtraFiles"]
   SovereignBootWizardExtra.uni
