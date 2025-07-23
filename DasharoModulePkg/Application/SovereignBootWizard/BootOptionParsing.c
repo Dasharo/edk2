@@ -415,7 +415,7 @@ GetBootOptions (
     FreePool (BootOrderList);
   }
 
-  DEBUG ((EFI_D_INFO, "Found %d boot options \n", MenuCount));
+  DEBUG ((DEBUG_INFO, "Found %d boot options \n", MenuCount));
 
   BootOptionMenu.MenuNumber = MenuCount;
   return EFI_SUCCESS;
@@ -463,17 +463,42 @@ UpdateBootloaderPage (
   )
 {
   SV_MENU_ENTRY    *BootloaderEntry;
-  SV_LOAD_CONTEXT  *BootloaderContext;
   EFI_STRING       NewString;
   EFI_STATUS       Status;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
-  if (BootloaderEntry == NULL) {
-    return EFI_NO_MEDIA;
+  while (mBootloaderIndex < BootOptionMenu.MenuNumber) {
+    BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+    if (BootloaderEntry == NULL) {
+      return EFI_NO_MEDIA;
+    }
+
+    // Filling security context is time-consuming and may cause unnecessary
+    // delays. Also we should parse the certificates dynamically as user gives
+    // their choices, so that the keys appearing will always have up to date
+    // state (trusted/untrusted), so they can be skipped.
+    if (BootloaderEntry->SecurityContext == NULL) {
+      Status = FillSecurityContext(BootloaderEntry);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "Failed to fill security context for bootloader %u\n", mBootloaderIndex));
+        return EFI_NO_MEDIA;
+      }
+    }
+
+    Status = UpdateCertInfo (Private, mBootloaderIndex);
+    DEBUG ((DEBUG_INFO, "UpdateCertInfo state: %r\n", Status));
+    if (Status == EFI_NO_MEDIA) {
+      DEBUG ((DEBUG_INFO, "No more keys/certificates for bootloader %u\n", mBootloaderIndex));
+      // No more keys/certs to show for this bootloader, proceed to the next one
+      mCertIndex = 0;
+      mBootloaderIndex++;
+      continue;
+    }
+
+    break;
   }
 
-  BootloaderContext = (SV_LOAD_CONTEXT *)BootloaderEntry->VariableContext;
-  if (BootloaderContext == NULL) {
+  if (mBootloaderIndex >= BootOptionMenu.MenuNumber) {
+    DEBUG ((DEBUG_INFO, "No more keys/certificates/bootloaders to show\n"));
     return EFI_NO_MEDIA;
   }
 
@@ -499,24 +524,6 @@ UpdateBootloaderPage (
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
   }
 
-  // Filling security context is time-consuming and may cause unnecessary
-  // delays. Also we should parse the certificates dynamically as user gives
-  // their choices, so that the keys appearing will always have up to date
-  // state (trusted/untrusted), so they can be skipped.
-  if (BootloaderEntry->SecurityContext == NULL) {
-    FillSecurityContext(BootloaderEntry);
-  }
-
-  Status = UpdateCertInfo (Private, mBootloaderIndex, mCertIndex);
-  mCertIndex++;
-  if (Status == EFI_NO_MEDIA || ((mCertIndex > 1) && Private->FormData.ImageUnsigned)) {
-    DEBUG ((EFI_D_INFO, "No more keys/certs for bootloader %u (current certificate %u)\n",
-       mBootloaderIndex, mCertIndex - 1));
-    // No more keys/certs to show for this bootloader, proceed to the next one
-    mCertIndex = 0;
-    mBootloaderIndex++;
-    Status = UpdateBootloaderPage(Private);
-  }
-
+  DEBUG ((DEBUG_INFO, "Bootloader state %r\n", Status));
   return Status;
 }
