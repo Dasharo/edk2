@@ -598,7 +598,12 @@ DasharoCapsulesCanPersistAcrossReset (
   // update.  A more reliable solution would be to pass this information from
   // coreboot.
   //
-  return MeMode == DASHARO_ME_MODE_DISABLE_HAP;
+  if (MeMode != DASHARO_ME_MODE_DISABLE_HAP) {
+    Print (L"[FIRMWARE WARNING] Capsule updates are only supported while Intel ME is in HAP mode!\n");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 EFI_STATUS
