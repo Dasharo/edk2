@@ -8,6 +8,18 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "SovereignBootWizard.h"
 
+// The Sovereign Boot Wizard must be linked with Mbed TLS BaseCryptLib!
+// The output of X509GetValidity can have different format depending on
+// the library provider!
+typedef struct {
+    INT32 Year;
+    INT32 Month;
+    INT32 Day;
+    INT32 Hour;
+    INT32 Minute;
+    INT32 Second;
+} MBED_TLS_DATETIME_OBECT;
+
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *mPrivateData   = NULL;
 BOOLEAN mBootloadersInitted = FALSE;
 
@@ -344,6 +356,275 @@ PrepareSbVariablesForSvBoot (
   return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
 }
 
+/**
+  Helper function to populate an EFI_TIME instance.
+
+  @param[in] Time   FileContext cached in SecureBootConfig driver
+
+**/
+STATIC
+EFI_STATUS
+GetCurrentTime (
+  IN EFI_TIME  *Time
+  )
+{
+  EFI_STATUS  Status;
+  VOID        *TestPointer;
+
+  if (Time == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = gBS->LocateProtocol (&gEfiRealTimeClockArchProtocolGuid, NULL, &TestPointer);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  ZeroMem (Time, sizeof (EFI_TIME));
+  Status = gRT->GetTime (Time, NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(), GetTime() failed, status = '%r'\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
+  Time->Pad1       = 0;
+  Time->Nanosecond = 0;
+  Time->TimeZone   = 0;
+  Time->Daylight   = 0;
+  Time->Pad2       = 0;
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Enroll a new hash into Signature Database (DB or DBX).
+
+  @param[in] PrivateData     The module's private data.
+  @param[in] VariableName    Variable name of signature database, must be
+                             EFI_IMAGE_SECURITY_DATABASE or EFI_IMAGE_SECURITY_DATABASE1.
+
+  @retval   EFI_SUCCESS            New X509 is enrolled successfully.
+  @retval   EFI_OUT_OF_RESOURCES   Could not allocate needed resources.
+
+**/
+EFI_STATUS
+EnrollHashToSigDB (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData,
+  IN CHAR16                              *VariableName
+  )
+{
+  EFI_SIGNATURE_LIST                   *SigDBHash;
+  EFI_SIGNATURE_DATA                   *SigDBHashData;
+  EFI_CERT_X509_SHA256                 *SigDBCertHashData;
+  UINTN                                DataSize;
+  UINTN                                SigDBSize;
+  UINT32                               Attr;
+  EFI_TIME                             Time;
+  SV_MENU_ENTRY                        *BootloaderEntry;
+  SV_SECURITY_CONTEXT                  *SecurityContext;
+  SV_CERT_ENTRY                        *CertificateEntry;
+  EFI_STATUS                           Status;
+  UINT8                                CertValidFrom[64];
+  UINTN                                CertValidFromLen;
+  UINT8                                CertValidTo[64];
+  UINTN                                CertValidToLen;
+  MBED_TLS_DATETIME_OBECT              *CertValidToTime;
+  MBED_TLS_DATETIME_OBECT              CurrentTime;
+  EFI_INPUT_KEY                        Key;
+
+  BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+  if (SecurityContext == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  if (SecurityContext->ImageIsSigned) {
+    CertificateEntry = GetCertEntry (BootloaderEntry, mCertIndex);
+    if (CertificateEntry == NULL) {
+      return EFI_NO_MEDIA;
+    }
+  }
+
+  DataSize      = 0;
+  SigDBSize     = 0;
+  SigDBHash     = NULL;
+  SigDBHashData = NULL;
+  SigDBSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1;
+
+  if (SecurityContext->ImageIsSigned) {
+    SigDBSize += sizeof (EFI_CERT_X509_SHA256);
+  } else {
+    SigDBSize += SHA256_DIGEST_SIZE;
+  }
+
+  SigDBHash = (EFI_SIGNATURE_LIST *) AllocateZeroPool (SigDBSize);
+  if (SigDBHash == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  //
+  // Fill Certificate Database parameters.
+  //
+  SigDBHash->SignatureListSize   = (UINT32)SigDBSize;
+  SigDBHash->SignatureHeaderSize = 0;
+  SigDBHash->SignatureSize       = (UINT32)(SigDBSize - sizeof (EFI_SIGNATURE_LIST));
+
+  SigDBHashData = (EFI_SIGNATURE_DATA *)((UINT8 *)SigDBHash + sizeof (EFI_SIGNATURE_LIST));
+  CopyGuid (&SigDBHashData->SignatureOwner, &gSovereignBootWizardFormSetGuid);
+  if (SecurityContext->ImageIsSigned) {
+    CopyGuid (&SigDBHash->SignatureType, &CertificateEntry->CertType);
+    SigDBCertHashData = (EFI_CERT_X509_SHA256 *)SigDBHashData->SignatureData;
+    CopyMem ((UINT8 *)(SigDBCertHashData->ToBeSignedHash), CertificateEntry->CertDigest, CertificateEntry->CertDigestSize);
+
+    // If enrolling certificate hash to DBX, set to revoke always (keep revocation time 0).
+    // If enrolling to DB, set the revocation time to the expiry date
+    if (StrCmp(VariableName, EFI_IMAGE_SECURITY_DATABASE) == 0) {
+      CertValidFromLen = 64;
+      CertValidToLen  = 64;
+
+      if (!X509GetValidity(CertificateEntry->CertData,
+                          CertificateEntry->CertDataSize,
+                          CertValidFrom,
+                          &CertValidFromLen,
+                          CertValidTo,
+                          &CertValidToLen)) {
+        DEBUG ((DEBUG_ERROR, "Could not get certificate validity\n"));
+        Status = EFI_NOT_FOUND;
+        goto ON_EXIT;
+      }
+
+      if (CertValidToLen == 0 || CertValidToLen != sizeof (MBED_TLS_DATETIME_OBECT)) {
+        DEBUG ((DEBUG_ERROR, "Invalid certificate validity length\n"));
+        Status = EFI_BAD_BUFFER_SIZE;
+        goto ON_EXIT;
+      }
+
+      CertValidToTime = (MBED_TLS_DATETIME_OBECT *)CertValidTo;
+      SigDBCertHashData->TimeOfRevocation.Year = (UINT16)(CertValidToTime->Year & 0xFFFF);
+      SigDBCertHashData->TimeOfRevocation.Month = (UINT8)(CertValidToTime->Month & 0xFF);
+      SigDBCertHashData->TimeOfRevocation.Day = (UINT8)(CertValidToTime->Day & 0xFF);
+      SigDBCertHashData->TimeOfRevocation.Hour = (UINT8)(CertValidToTime->Hour & 0xFF);
+      SigDBCertHashData->TimeOfRevocation.Minute = (UINT8)(CertValidToTime->Minute & 0xFF);
+      SigDBCertHashData->TimeOfRevocation.Second = (UINT8)(CertValidToTime->Second & 0xFF);
+    }
+  } else {
+    CopyGuid (&SigDBHash->SignatureType, &SecurityContext->HashType);
+    CopyMem ((UINT8 *)(SigDBHashData->SignatureData), SecurityContext->ImageDigest, SecurityContext->ImageDigestSize);
+  }
+
+  //
+  // Check if signature database entry has been already populated.
+  // If true, use EFI_VARIABLE_APPEND_WRITE attribute to append the
+  // new signature data to original variable
+  //
+  Attr = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_RUNTIME_ACCESS
+         | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS;
+  Status = GetCurrentTime (&Time);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Fail to fetch valid time data: %r\n", Status));
+    goto ON_EXIT;
+  }
+
+  // Do not allow to add expired certificate to DB
+  if (SecurityContext->ImageIsSigned &&
+      (StrCmp(VariableName, EFI_IMAGE_SECURITY_DATABASE) == 0)) {
+    CurrentTime.Year = (INT32)Time.Year;
+    CurrentTime.Month = (INT32)Time.Month;
+    CurrentTime.Day = (INT32)Time.Day;
+    CurrentTime.Hour = (INT32)Time.Hour;
+    CurrentTime.Minute = (INT32)Time.Minute;
+    CurrentTime.Second = (INT32)Time.Second;
+
+
+    if (X509CompareDateTime (&CurrentTime, CertValidToTime) >= 0) {
+        do {
+          CreatePopUp (
+            EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+            &Key,
+            L"",
+            L"The certificate you want to trust has expired.",
+            L"Can not add it to trusted signature database.",
+            L"",
+            L"Press ENTER to abort the process...",
+            L"",
+            NULL
+            );
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+
+        Status = EFI_SUCCESS;
+        goto ON_EXIT;
+    }
+  }
+
+  Status = CreateTimeBasedPayload (&SigDBSize, (UINT8 **)&SigDBHash, &Time);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to create time-based data payload: %r\n", Status));
+    goto ON_EXIT;
+  }
+
+  Status = gRT->GetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  NULL,
+                  &DataSize,
+                  NULL
+                  );
+  if (Status == EFI_BUFFER_TOO_SMALL) {
+    Attr |= EFI_VARIABLE_APPEND_WRITE;
+  } else if (Status != EFI_NOT_FOUND) {
+    DEBUG ((DEBUG_ERROR, "Failed to get %s variable size: %r\n", VariableName, Status));
+    goto ON_EXIT;
+  }
+
+  Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to set custom Secure Boot mode: %r\n", Status));
+    goto ON_EXIT;
+  }
+
+  Status = gRT->SetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  Attr,
+                  SigDBSize,
+                  SigDBHash
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to write the %s variable: %r\n", VariableName, Status));
+  } else {
+    // If image is unsigned we have to increment the bootloader index to show
+    // next one. Otherwise move to next certificate.
+    if (!SecurityContext->ImageIsSigned) {
+      mBootloaderIndex++;
+      mCertIndex = 0;
+      DEBUG ((DEBUG_INFO, "Moving to next bootloader %u\n", mBootloaderIndex));
+    } else {
+      mCertIndex++;
+      DEBUG ((DEBUG_INFO, "Moving to next certificate %u for bootloader %u\n", mCertIndex, mBootloaderIndex));
+    }
+  }
+
+  Status = SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
+
+ON_EXIT:
+
+  if (SigDBHash != NULL) {
+    FreePool (SigDBHash);
+  }
+
+  return Status;
+}
+
 EFI_STATUS
 AddKeyOrHashAsTrustedOrUntrusted (
   SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
@@ -357,7 +638,8 @@ AddKeyOrHashAsTrustedOrUntrusted (
   EFI_STRING                           PopupMessage;
   UINTN                                PopupMessageSize;
   EFI_STATUS                           Status;
-
+  CHAR16                               ErrorMessage[MAXIMUM_VALUE_CHARACTERS + 8];
+  EFI_INPUT_KEY                        Key;
 
   Message = HiiGetString (
               PrivateData->HiiHandle,
@@ -388,9 +670,31 @@ AddKeyOrHashAsTrustedOrUntrusted (
   if (UserSelection == EfiHiiPopupSelectionYes) {
     // Add key or hash to DB or DBX
     if (Trust) {
-
+      Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE);
     } else {
+      Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE1);
+    }
 
+    if (EFI_ERROR (Status)) {
+      UnicodeSPrint (
+        ErrorMessage,
+        (MAXIMUM_VALUE_CHARACTERS + 8) * sizeof (CHAR16),
+        L"Error: %r",
+        Status);
+
+      CreatePopUp (
+        EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+        &Key,
+        L"",
+        Trust ? L"Could not add the certificate/image as trusted" :
+                L"Could not add the certificate/image as untrusted",
+        L"",
+        ErrorMessage,
+        L"",
+        L"Press any key to close this window...",
+        L"",
+        NULL
+        );
     }
   }
 
@@ -431,7 +735,7 @@ BootTheBootloader (
             );
 
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Failed to prepare load option: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "Failed to prepare load option: %r\n", Status));
     return Status;
   }
 
@@ -439,7 +743,7 @@ BootTheBootloader (
     gST->ConOut->ClearScreen (gST->ConOut);
   }
 
-  DEBUG ((EFI_D_INFO, "Booting %s\n", BootloaderContext->Description));
+  DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
   EfiBootManagerBoot (&BootOption);
   EfiBootManagerFreeLoadOption (&BootOption);
 
@@ -673,12 +977,10 @@ Callback (
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
           if (!mBootloadersInitted) {
             Status = GetBootOptions (PrivateData);
-            DEBUG ((EFI_D_INFO, "GetBootOptions: %r\n", mBootloaderIndex, Status));
             if (!EFI_ERROR (Status)) {
               mBootloadersInitted = TRUE;
               if (!mBootloadersShown) {
                 Status = UpdateBootloaderPage (PrivateData);
-                DEBUG ((EFI_D_INFO, "UpdateBootloaderPage(%d): %r\n", mBootloaderIndex, Status));
                 mBootloadersShown = !EFI_ERROR (Status);
               }
             } else {

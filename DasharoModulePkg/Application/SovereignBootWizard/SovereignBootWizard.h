@@ -161,7 +161,7 @@ typedef struct {
   BOOLEAN                     CertIsMicrosoft;
 
   // Placed exactly at offset 8 for alignment
-  UINT8                       CertDigest[MAX_DIGEST_SIZE];
+  UINT8                       CertDigest[SHA256_DIGEST_SIZE];
   UINTN                       CertDigestSize;
 
   UINTN                       CertDataSize;
@@ -174,7 +174,7 @@ typedef struct {
 
 typedef struct {
   // Place first for 8 byte alignment
-  UINT8                       ImageDigest[MAX_DIGEST_SIZE];
+  UINT8                       ImageDigest[SHA256_DIGEST_SIZE];
   UINTN                       ImageDigestSize;
 
   BOOLEAN                     ImageIsInDbx;
@@ -223,8 +223,7 @@ GetCertEntry (
 EFI_STATUS
 UpdateCertInfo (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
-  IN  UINTN                               OptionNumber,
-  IN  UINTN                               CertNumber
+  IN  UINTN                               OptionNumber
   );
 
 #endif

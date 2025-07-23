@@ -117,6 +117,7 @@ FillCertificateEntries (
   UINT8                         *TrustedCert;
   UINTN                         TrustedCertLength;
   UINTN                         CertCount;
+  EFI_GUID                      CertType;
 
   CertCount = 0;
   //
@@ -131,7 +132,7 @@ FillCertificateEntries (
   {
     SecDataDirLeft = SecDataDirEnd - Offset;
     if (SecDataDirLeft <= sizeof (WIN_CERTIFICATE)) {
-      DEBUG ((EFI_D_INFO, "Image Security Data Size too small\n"));
+      DEBUG ((DEBUG_ERROR, "Image Security Data Size too small\n"));
       break;
     }
 
@@ -140,7 +141,7 @@ FillCertificateEntries (
         (SecDataDirLeft - WinCertificate->dwLength <
          ALIGN_SIZE (WinCertificate->dwLength)))
     {
-      DEBUG ((EFI_D_INFO, "Image Security Data Size too small\n"));
+      DEBUG ((DEBUG_ERROR, "Image Security Data Size too small\n"));
       break;
     }
 
@@ -154,7 +155,7 @@ FillCertificateEntries (
       //
       PkcsCertData = (WIN_CERTIFICATE_EFI_PKCS *)WinCertificate;
       if (PkcsCertData->Hdr.dwLength <= sizeof (PkcsCertData->Hdr)) {
-        DEBUG ((EFI_D_INFO, "PKCS Cert Data too small\n"));
+        DEBUG ((DEBUG_ERROR, "PKCS Cert Data too small\n"));
         break;
       }
 
@@ -166,12 +167,12 @@ FillCertificateEntries (
       //
       WinCertUefiGuid = (WIN_CERTIFICATE_UEFI_GUID *)WinCertificate;
       if (WinCertUefiGuid->Hdr.dwLength <= OFFSET_OF (WIN_CERTIFICATE_UEFI_GUID, CertData)) {
-        DEBUG ((EFI_D_INFO, "WIN Cert UEFI Data too small\n"));
+        DEBUG ((DEBUG_ERROR, "WIN Cert UEFI Data too small\n"));
         break;
       }
 
       if (!CompareGuid (&WinCertUefiGuid->CertType, &gEfiCertPkcs7Guid)) {
-        DEBUG ((EFI_D_INFO, "Cert Type not PKCS7\n"));
+        DEBUG ((DEBUG_ERROR, "Cert Type not PKCS7\n"));
         continue;
       }
 
@@ -179,18 +180,18 @@ FillCertificateEntries (
       AuthDataSize = WinCertUefiGuid->Hdr.dwLength - OFFSET_OF (WIN_CERTIFICATE_UEFI_GUID, CertData);
     } else {
       if (WinCertificate->dwLength < sizeof (WIN_CERTIFICATE)) {
-        DEBUG ((EFI_D_INFO, "Unknown Cert Data too small\n"));
+        DEBUG ((DEBUG_ERROR, "Unknown Cert Data too small\n"));
         break;
       }
 
-      DEBUG ((EFI_D_INFO, "Unknown Cert Data, skipping\n"));
+      DEBUG ((DEBUG_INFO, "Unknown Cert Data, skipping\n"));
       continue;
     }
 
     NewCertEntry = (SV_CERT_ENTRY *) AllocateZeroPool (sizeof(SV_CERT_ENTRY));
 
     if (NewCertEntry == NULL) {
-      DEBUG ((EFI_D_ERROR, "Not enough free memory for certificate data\n"));
+      DEBUG ((DEBUG_ERROR, "Not enough free memory for certificate data\n"));
       return;
     }
 
@@ -201,12 +202,12 @@ FillCertificateEntries (
                           &CertBuffer, &BufferLength,
                           &TrustedCert, &TrustedCertLength)) {
       FreePool (NewCertEntry);
-      DEBUG ((EFI_D_INFO, "Could not get PKCS7 signers\n"));
+      DEBUG ((DEBUG_ERROR, "Could not get PKCS7 signers\n"));
       continue;
     }
     if ((BufferLength == 0) || (CertBuffer == NULL) || ((*CertBuffer) == 0)) {
       FreePool (NewCertEntry);
-      DEBUG ((EFI_D_INFO, "PKCS7 signers data invalid\n"));
+      DEBUG ((DEBUG_ERROR, "PKCS7 signers data invalid\n"));
       continue;
     }
 
@@ -219,8 +220,9 @@ FillCertificateEntries (
 
     if (CalculateCertHash (TrustedCert, TrustedCertLength, HASHALG_SHA256, NewCertEntry->CertDigest)) {
       NewCertEntry->CertDigestSize = SHA256_DIGEST_SIZE;
+      CopyGuid (&NewCertEntry->CertType, &gEfiCertX509Sha256Guid);
     } else {
-      DEBUG ((EFI_D_INFO, "Could not calculate TBS certificate hash\n"));
+      DEBUG ((DEBUG_ERROR, "Could not calculate TBS certificate hash\n"));
     }
 
     HashStatus = HashPeImageByType (
@@ -230,7 +232,7 @@ FillCertificateEntries (
                    AuthDataSize,
                    ImageDigest,
                    &ImageDigestSize,
-                   &NewCertEntry->CertType);
+                   &CertType);
     if (EFI_ERROR (HashStatus)) {
       if (TrustedCert != NULL) {
         Pkcs7FreeSigners (TrustedCert);
@@ -240,7 +242,7 @@ FillCertificateEntries (
       continue;
     }
 
-    // Verify the digital signature amnd check against databases
+    // Verify the digital signature and check against databases
     NewCertEntry->CertIsInDb = IsAllowedByDb (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
     NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
     NewCertEntry->ImageIsVerified = AuthenticodeVerify (
@@ -249,13 +251,15 @@ FillCertificateEntries (
                                       ImageDigest, ImageDigestSize);
 
 
-    DEBUG ((EFI_D_INFO, "Certificate Details:\n"
-      "\tImageIsVerified: %u\n"
-      "\tCertIsInDb: %u\n"
-      "\tCertIsInDbx: %u\n",
+    DEBUG ((DEBUG_INFO, "Certificate Details:\n"
+      "  ImageIsVerified: %u\n"
+      "  CertIsInDb: %u\n"
+      "  CertIsInDbx: %u\n"
+      "  CertIsMicrosoft: %u\n",
       NewCertEntry->ImageIsVerified,
       NewCertEntry->CertIsInDb,
-      NewCertEntry->CertIsInDbx));
+      NewCertEntry->CertIsInDbx,
+      NewCertEntry->CertIsMicrosoft));
 
     InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
     CertCount++;
@@ -294,19 +298,17 @@ FillSecurityContext (
 
   FullFilePath = NULL;
   LoadCtx = (SV_LOAD_CONTEXT *)Entry->VariableContext;
-  SecCtx = (SV_SECURITY_CONTEXT *)AllocateZeroPool(sizeof(SV_SECURITY_CONTEXT));
+  SecCtx = (SV_SECURITY_CONTEXT *)AllocateZeroPool (sizeof(SV_SECURITY_CONTEXT));
   Entry->SecurityContext = SecCtx;
 
   if (SecCtx == NULL) {
-    DEBUG ((EFI_D_INFO, "Not enough memory for security context\n"));
+    DEBUG ((DEBUG_ERROR, "Not enough memory for security context\n"));
     return EFI_OUT_OF_RESOURCES;
   }
 
   // Expand the Device PAth to the file if needed
   if (LoadCtx->NeedsPathExpansion) {
     FullFilePath = EfiBootManagerGetNextLoadOptionDevicePath (LoadCtx->FilePath, FullFilePath);
-    DEBUG ((EFI_D_INFO, "Expanded file path %s\n",
-      ConvertDevicePathToText(FullFilePath, FALSE, TRUE)));
   } else {
     FullFilePath = LoadCtx->FilePath;
   }
@@ -326,13 +328,13 @@ FillSecurityContext (
   }
 
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Failed to read file: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "Failed to read file: %r\n", Status));
     goto ON_EXIT;
   }
 
   Status = GetImageSecDataDir (ImageBase, ImageSize, &SecDir);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Failed to get Image Security Data\n"));
+    DEBUG ((DEBUG_ERROR, "Failed to get Image Security Data\n"));
     goto ON_EXIT;
   }
 
@@ -352,7 +354,7 @@ FillSecurityContext (
 
   // No certificates, end here
   if ((SecDir == NULL) || (SecDir->Size == 0)) {
-    DEBUG ((EFI_D_INFO, "No Image Security Data, image is unsigned\n"));
+    DEBUG ((DEBUG_INFO, "No Image Security Data, image is unsigned\n"));
     SecCtx->ImageIsSigned = FALSE;
     SecCtx->NumCertificates = 0;
     goto ON_EXIT;
@@ -366,7 +368,7 @@ FillSecurityContext (
   Status = EFI_SUCCESS;
 
 ON_EXIT:
-  DEBUG ((EFI_D_INFO, "Image Details:\n"
+  DEBUG ((DEBUG_INFO, "Image Details:\n"
     "  ImageIsInDbx: %u\n"
     "  ImageIsInDb: %u\n"
     "  ImageIsSigned: %u\n"
@@ -475,8 +477,7 @@ ParseHashValue (
 EFI_STATUS
 UpdateCertInfo (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
-  IN  UINTN                               OptionNumber,
-  IN  UINTN                               CertNumber
+  IN  UINTN                               OptionNumber
   )
 {
   SV_MENU_ENTRY        *BootloaderEntry;
@@ -501,8 +502,19 @@ UpdateCertInfo (
 
   OldString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NULL);
 
+  if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
+    DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
+    // Free previous string if any
+    if (OldString != NULL) {
+      FreePool (OldString);
+    }
+
+    return EFI_NO_MEDIA;
+  }
+
   // Image is unsigned? Show its hash instead of certificates
   if (Private->FormData.ImageUnsigned) {
+
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Image hash (SHA-256):\n!!! Image is unsigned !!!", NULL);
 
     Status = ParseHashValue (SecurityContext->ImageDigest, SecurityContext->ImageDigestSize, &NewString);
@@ -521,8 +533,38 @@ UpdateCertInfo (
   }
 
   // Image is signed, show its certificate(s)
-  CertificateEntry = GetCertEntry(BootloaderEntry, CertNumber);
-  if (CertificateEntry == NULL) {
+  while (mCertIndex < SecurityContext->NumCertificates) {
+    CertificateEntry = GetCertEntry(BootloaderEntry, mCertIndex);
+    if (CertificateEntry == NULL) {
+      DEBUG ((DEBUG_ERROR, "Certificate %u not found\n", mCertIndex));
+      // Free previous string if any
+      if (OldString != NULL) {
+        FreePool (OldString);
+      }
+
+      return EFI_NO_MEDIA;
+    }
+
+    // Do not show already trusted/utrusted or microsoft certificates
+    if (CertificateEntry->CertIsInDb ||
+        CertificateEntry->CertIsInDbx ||
+        CertificateEntry->CertIsMicrosoft) {
+      DEBUG ((DEBUG_INFO, "Certificate %u already (un)trusted or belongs to Microsoft\n", mCertIndex));
+      mCertIndex++;
+      continue;
+    }
+
+    break;
+  }
+
+  // Haven't found any cert to show
+  if (mCertIndex >= SecurityContext->NumCertificates) {
+    DEBUG ((DEBUG_INFO, "Could not find a cerificate to show for bootloader %u\n", OptionNumber));
+    // Free previous string if any
+    if (OldString != NULL) {
+      FreePool (OldString);
+    }
+
     return EFI_NO_MEDIA;
   }
 
