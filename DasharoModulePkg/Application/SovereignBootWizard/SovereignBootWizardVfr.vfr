@@ -135,12 +135,16 @@ formset
       key    = TRUST_KEY_FORM2_QUESTION_ID;
   endif;
 
-  grayoutif ideqval SvBootFormData.ImageUnsigned == 1;
-    text
+  subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+  suppressif ideqval SvBootFormData.ImageUnsigned == 1;
+    goto SOVEREIGN_BOOT_WIZARD_KEY_DETAILS_FORM_ID,
+      prompt = STRING_TOKEN(STR_SHOW_KEY_DETAILS),
       help   = STRING_TOKEN(STR_EMPTY_STRING),
-      text   = STRING_TOKEN(STR_SHOW_KEY_DETAILS),
       flags  = INTERACTIVE,
       key    = SHOW_KEY_DETAILS_FORM2_QUESTION_ID;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
   endif;
 
     text
@@ -158,6 +162,53 @@ formset
   form formid = SOVEREIGN_BOOT_WIZARD_MS_SECURE_BOOT_FORM_ID,
        title  = STRING_TOKEN(STR_FORM1_TITLE);
   endform;
+
+
+  form formid = SOVEREIGN_BOOT_WIZARD_KEY_DETAILS_FORM_ID,
+       title  = STRING_TOKEN(STR_FORM4_TITLE);
+
+    grayoutif TRUE;
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_SERIAL_NUMBER),
+          text   = STRING_TOKEN(STR_CERT_SERIAL_NUMBER2);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_ISSUER),
+          text   = STRING_TOKEN(STR_CERT_ISSUER2);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_VALIDITY_BEFORE),
+          text   = STRING_TOKEN(STR_VALIDITY_BEFORE_DATE);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_VALIDITY_AFTER),
+          text   = STRING_TOKEN(STR_VALIDITY_AFTER_DATE);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_SUBJECT),
+          text   = STRING_TOKEN(STR_CERT_SUBJECT2);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_KEY_MODULUS);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_KEY_MODULUS_HEX);
+
+      text
+        help   = STRING_TOKEN(STR_EMPTY_STRING),
+        text   = STRING_TOKEN(STR_CERT_KEY_EXPONENT),
+          text   = STRING_TOKEN(STR_CERT_KEY_EXPONENT2);
+
+    endif;
+  endform;
+
 
   //
   // Advanced mode window
