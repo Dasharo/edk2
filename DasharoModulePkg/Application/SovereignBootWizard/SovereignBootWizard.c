@@ -8,18 +8,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "SovereignBootWizard.h"
 
-// The Sovereign Boot Wizard must be linked with Mbed TLS BaseCryptLib!
-// The output of X509GetValidity can have different format depending on
-// the library provider!
-typedef struct {
-    INT32 Year;
-    INT32 Month;
-    INT32 Day;
-    INT32 Hour;
-    INT32 Minute;
-    INT32 Second;
-} MBED_TLS_DATETIME_OBECT;
-
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *mPrivateData   = NULL;
 BOOLEAN mBootloadersInitted = FALSE;
 
@@ -870,6 +858,12 @@ Callback (
           Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, TRUE);
           break;
         }
+        case SHOW_KEY_DETAILS_FORM2_QUESTION_ID:
+        {
+          // Update the strings when opening certificate details form
+          Status = UpdateCertDetails (PrivateData);
+          break;
+        }
         default:
           break;
       }
@@ -1009,7 +1003,6 @@ Callback (
             }
           }
           break;
-
         default:
           break;
       }

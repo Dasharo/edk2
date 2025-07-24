@@ -116,6 +116,18 @@ typedef struct {
 
 #pragma pack()
 
+// The Sovereign Boot Wizard must be linked with Mbed TLS BaseCryptLib!
+// The output of X509GetValidity can have different format depending on
+// the library provider!
+typedef struct {
+    INT32 Year;
+    INT32 Month;
+    INT32 Day;
+    INT32 Hour;
+    INT32 Minute;
+    INT32 Second;
+} MBED_TLS_DATETIME_OBECT;
+
 typedef struct {
   UINTN         Signature;
   LIST_ENTRY    Head;
@@ -224,6 +236,11 @@ EFI_STATUS
 UpdateCertInfo (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
   IN  UINTN                               OptionNumber
+  );
+
+EFI_STATUS
+UpdateCertDetails (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
 #endif

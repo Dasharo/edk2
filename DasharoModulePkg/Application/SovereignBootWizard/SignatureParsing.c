@@ -431,7 +431,7 @@ GetCertEntry (
 }
 
 /**
-  Parse hash value from EFI_SIGNATURE_DATA, and save in the CHAR16 type array.
+  Parse hash value from buffer, and save in the CHAR16 type array.
   The buffer is callee allocated and should be freed by the caller.
 
   @param[in]    Digest                    The pointer to the hash value.
@@ -461,14 +461,86 @@ ParseHashValue (
   // Each byte will split two Hex-number.
   //
   TotalSize = (DigestSize * 2 * sizeof (CHAR16));
+  // One extra byte for NULL termination
+  TotalSize +=  sizeof (CHAR16);
 
   *BufferToReturn = AllocateZeroPool (TotalSize);
   if (*BufferToReturn == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
-  for (Index = 0, BufferIndex = 0; Index < DigestSize; Index = Index + 1) {
+  for (Index = 0, BufferIndex = 0; Index < DigestSize; Index++) {
     BufferIndex += UnicodeSPrint (&(*BufferToReturn)[BufferIndex], TotalSize - sizeof (CHAR16) * BufferIndex, L"%02x", Digest[Index]);
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Parse key modulus from buffer, and save in the CHAR16 type array.
+  The buffer is callee allocated and should be freed by the caller.
+
+  @param[in]    Digest                    The pointer to the hash value.
+  @param[in]    DigestSize                The size of the hash.
+  @param[out]   BufferToReturn            Buffer to save the hash value.
+
+  @retval       EFI_INVALID_PARAMETER     Invalid Hash or Buffer.
+  @retval       EFI_OUT_OF_RESOURCES      A memory allocation failed.
+  @retval       EFI_SUCCESS               Operation success.
+**/
+EFI_STATUS
+ParseKeyModulus (
+  IN  UINT8                  *Digest,
+  IN  UINTN                  DigestSize,
+  OUT CHAR16                 **BufferToReturn
+  )
+{
+  UINTN  Index;
+  UINTN  BufferIndex;
+  UINTN  TotalSize;
+  UINTN  BytesPerLine;
+  UINTN  Line;
+
+  if ((Digest == NULL) || (DigestSize == 0) || (BufferToReturn == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  BufferIndex = 0;
+  BytesPerLine = 16;
+  Line = ((DigestSize + BytesPerLine - 1) / BytesPerLine);
+
+  //
+  // Each byte will be split into two hex numbers + colon delimiter. Each line
+  // will start with 4 spaces and end with newline (/r/n) so need another 6
+  // chars per line.
+  //
+  TotalSize = ((DigestSize * 3) + (Line * 6)) * sizeof (CHAR16);
+  // One extra byte for NULL termination
+  TotalSize +=  sizeof (CHAR16);
+
+  *BufferToReturn = AllocateZeroPool (TotalSize);
+  if (*BufferToReturn == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  BufferIndex += UnicodeSPrint (
+                   &(*BufferToReturn)[BufferIndex],
+                   TotalSize - sizeof (CHAR16) * BufferIndex,
+                   L"    ");
+  for (Index = 0; Index < DigestSize; Index++) {
+    if ((Index > 0) && (Index % BytesPerLine == 0)) {
+      BufferIndex += UnicodeSPrint (
+                       &(*BufferToReturn)[BufferIndex],
+                       TotalSize - sizeof (CHAR16) * BufferIndex,
+                       L"\n    ");
+    }
+
+    BufferIndex += UnicodeSPrint (
+                     &(*BufferToReturn)[BufferIndex],
+                     TotalSize - sizeof (CHAR16) * BufferIndex,
+                     Index == (DigestSize - 1) ? L"%02x" : L"%02x:",
+                     Digest[Index]);
+
   }
 
   return EFI_SUCCESS;
@@ -484,7 +556,6 @@ UpdateCertInfo (
   SV_CERT_ENTRY        *CertificateEntry;
   SV_SECURITY_CONTEXT  *SecurityContext;
   EFI_STRING           NewString;
-  EFI_STRING           OldString;
   EFI_STATUS           Status;
 
   BootloaderEntry   = GetMenuEntry (&BootOptionMenu, OptionNumber);
@@ -500,15 +571,8 @@ UpdateCertInfo (
   Private->FormData.ImageUnsigned = (!SecurityContext->ImageIsSigned ||
                                      (SecurityContext->NumCertificates == 0));
 
-  OldString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NULL);
-
   if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
     DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
-    // Free previous string if any
-    if (OldString != NULL) {
-      FreePool (OldString);
-    }
-
     return EFI_NO_MEDIA;
   }
 
@@ -518,15 +582,11 @@ UpdateCertInfo (
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Image hash (SHA-256):\n!!! Image is unsigned !!!", NULL);
 
     Status = ParseHashValue (SecurityContext->ImageDigest, SecurityContext->ImageDigestSize, &NewString);
-    if (!EFI_ERROR (Status) && (NewString != NULL)) {
+    if (!EFI_ERROR (Status)) {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NewString, NULL);
+      FreePool (NewString);
     } else {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), L"Image hash could not be obtained.", NULL);
-    }
-
-    // Free previous string if any
-    if (OldString != NULL) {
-      FreePool (OldString);
     }
 
     return EFI_SUCCESS;
@@ -537,11 +597,6 @@ UpdateCertInfo (
     CertificateEntry = GetCertEntry(BootloaderEntry, mCertIndex);
     if (CertificateEntry == NULL) {
       DEBUG ((DEBUG_ERROR, "Certificate %u not found\n", mCertIndex));
-      // Free previous string if any
-      if (OldString != NULL) {
-        FreePool (OldString);
-      }
-
       return EFI_NO_MEDIA;
     }
 
@@ -560,29 +615,252 @@ UpdateCertInfo (
   // Haven't found any cert to show
   if (mCertIndex >= SecurityContext->NumCertificates) {
     DEBUG ((DEBUG_INFO, "Could not find a cerificate to show for bootloader %u\n", OptionNumber));
-    // Free previous string if any
-    if (OldString != NULL) {
-      FreePool (OldString);
-    }
-
     return EFI_NO_MEDIA;
   }
 
   HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Certificate fingerprint (SHA-256):", NULL);
 
   Status = ParseHashValue (CertificateEntry->CertDigest, CertificateEntry->CertDigestSize, &NewString);
-  if (!EFI_ERROR (Status) && (NewString != NULL)) {
+  if (!EFI_ERROR (Status)) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NewString, NULL);
+    FreePool (NewString);
   } else {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), L"Could not obtain certificate fingerprint", NULL);
   }
 
-  // Free previous string if any
-  if (OldString != NULL) {
-    FreePool (OldString);
+  return EFI_SUCCESS;
+}
+
+VOID
+UpdateCertValidtyStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  CHAR16                                  DateBuffer[30];
+  UINT8                                   CertValidFrom[64];
+  UINTN                                   CertValidFromLen;
+  UINT8                                   CertValidTo[64];
+  UINTN                                   CertValidToLen;
+  MBED_TLS_DATETIME_OBECT                 *CertValidTime;
+
+  CertValidFromLen = 64;
+  CertValidToLen  = 64;
+
+  if (X509GetValidity(CertificateEntry->CertData,
+                      CertificateEntry->CertDataSize,
+                      CertValidFrom,
+                      &CertValidFromLen,
+                      CertValidTo,
+                      &CertValidToLen)) {
+
+    CertValidTime = (MBED_TLS_DATETIME_OBECT *)CertValidTo;
+    SetMem (DateBuffer, sizeof (DateBuffer), 0);
+    UnicodeSPrint (
+      DateBuffer,
+      sizeof (DateBuffer),
+      L"%04u-%02u-%02u %02u:%02u:%02u",
+      (UINT16)(CertValidTime->Year & 0xFFFF),
+      (UINT8)(CertValidTime->Month & 0xFF),
+      (UINT8)(CertValidTime->Day & 0xFF),
+      (UINT8)(CertValidTime->Hour & 0xFF),
+      (UINT8)(CertValidTime->Minute & 0xFF),
+      (UINT8)(CertValidTime->Second & 0xFF));
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_AFTER_DATE), DateBuffer, NULL);
+
+    CertValidTime = (MBED_TLS_DATETIME_OBECT *)CertValidFrom;
+    SetMem (DateBuffer, sizeof (DateBuffer), 0);
+    UnicodeSPrint (
+      DateBuffer,
+      sizeof (DateBuffer),
+      L"%04u-%02u-%02u %02u:%02u:%02u",
+      (UINT16)(CertValidTime->Year & 0xFFFF),
+      (UINT8)(CertValidTime->Month & 0xFF),
+      (UINT8)(CertValidTime->Day & 0xFF),
+      (UINT8)(CertValidTime->Hour & 0xFF),
+      (UINT8)(CertValidTime->Minute & 0xFF),
+      (UINT8)(CertValidTime->Second & 0xFF));
+
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_BEFORE_DATE), DateBuffer, NULL);
+
+  } else {
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_AFTER_DATE),  L"Unknown", NULL);
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_BEFORE_DATE), L"Unknown", NULL);
+  }
+}
+
+VOID
+UpdateCertIssuerAndSubjectStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  CHAR8                                   StringBuffer[500];
+  UINTN                                   StringBufferSize;
+  CHAR16                                  *NewString;
+
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_ISSUER2), L"Unknown", NULL);
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_SUBJECT2), L"Unknown", NULL);
+
+  StringBufferSize = sizeof (StringBuffer);
+  SetMem (StringBuffer, StringBufferSize, 0);
+  if (!RETURN_ERROR (X509GetIssuerCommonName (CertificateEntry->CertData,
+                                              CertificateEntry->CertDataSize,
+                                              StringBuffer,
+                                              &StringBufferSize))) {
+
+    NewString = (CHAR16 *)AllocateZeroPool ((StringBufferSize + 1) * sizeof(CHAR16));
+    if (NewString != NULL) {
+      if (!RETURN_ERROR (AsciiStrToUnicodeStrS (StringBuffer, NewString, StringBufferSize + 1))) {
+        HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_ISSUER2), NewString, NULL);
+      }
+      FreePool (NewString);
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "Could not get Issuer name\n"));
   }
 
-  // TODO  key details
+  StringBufferSize = sizeof (StringBuffer);
+  SetMem (StringBuffer, StringBufferSize, 0);
+  if (!RETURN_ERROR (X509GetCommonName (CertificateEntry->CertData,
+                                        CertificateEntry->CertDataSize,
+                                        StringBuffer,
+                                        &StringBufferSize))) {
+
+    NewString = (CHAR16 *)AllocateZeroPool ((StringBufferSize + 1) * sizeof(CHAR16));
+    if (NewString != NULL) {
+      if (!RETURN_ERROR (AsciiStrToUnicodeStrS (StringBuffer, NewString, StringBufferSize + 1))) {
+        HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_SUBJECT2), NewString, NULL);
+      }
+      FreePool (NewString);
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "Could not get Subject name\n"));
+  }
+}
+
+VOID
+UpdateCertSerialNumberString (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  UINT8                                   StringBuffer[200];
+  UINTN                                   StringBufferSize;
+  CHAR16                                  *NewString;
+
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_SERIAL_NUMBER2), L"Unknown", NULL);
+
+  StringBufferSize = sizeof (StringBuffer);
+  SetMem (StringBuffer, StringBufferSize, 0);
+  if (X509GetSerialNumber(CertificateEntry->CertData,
+                          CertificateEntry->CertDataSize,
+                          StringBuffer,
+                          &StringBufferSize)) {
+
+    // Serial number is NULL terminated. But this NULL termination is not a
+    // part of the serial number itself, thus we should parse one byte less.
+    if (!EFI_ERROR (ParseHashValue (StringBuffer, StringBufferSize - 1, &NewString))) {
+      HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_SERIAL_NUMBER2), NewString, NULL);
+      FreePool (NewString);
+    }
+  }
+}
+
+VOID
+UpdateCertKeyStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  UINT8                                   *ModulusBuffer;
+  CHAR16                                  *NewString;
+  UINT32                                  Exponent;
+  UINT16                                  ExponentString[20];
+  VOID                                    *X509PubKey;
+  UINTN                                   PubKeyModSize;
+  UINTN                                   PubKeyExpSize;
+
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), L"Unknown", NULL);
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_EXPONENT2), L"Unknown", NULL);
+
+  if (!RsaGetPublicKeyFromX509 (CertificateEntry->CertData, CertificateEntry->CertDataSize, &X509PubKey)) {
+    DEBUG ((DEBUG_ERROR, "Error occurred while parsing the pubkey from certificate.\n"));
+    return;
+  }
+
+  if (X509PubKey == NULL) {
+    DEBUG ((DEBUG_ERROR, "X509 key is NULL\n"));
+    return;
+  }
+
+  Exponent = 0;
+  PubKeyModSize = 0;
+  PubKeyExpSize = 0;
+
+  RsaGetKey (X509PubKey, RsaKeyN, NULL, &PubKeyModSize);
+  RsaGetKey (X509PubKey, RsaKeyE, NULL, &PubKeyExpSize);
+
+  if (PubKeyExpSize > 4) {
+    DEBUG ((DEBUG_ERROR, "Key exponent size too big\n"));
+    RsaFree (X509PubKey);
+    return;
+  }
+
+  ModulusBuffer = (UINT8 *) AllocateZeroPool (PubKeyModSize);
+  if (ModulusBuffer == NULL) {
+    DEBUG ((DEBUG_ERROR, "Could not allocate memory for modulus\n"));
+    RsaFree (X509PubKey);
+    return;
+  }
+
+  if (!RsaGetKey (X509PubKey, RsaKeyN, ModulusBuffer, &PubKeyModSize)) {
+    DEBUG ((DEBUG_ERROR, "Could not get key modulus\n"));
+    goto ON_EXIT;
+  }
+
+  if (!RsaGetKey (X509PubKey, RsaKeyE, (UINT8 *)&Exponent, &PubKeyExpSize)) {
+    DEBUG ((DEBUG_ERROR, "Could not get key exponent\n"));
+    goto ON_EXIT;
+  }
+
+  if (!EFI_ERROR (ParseKeyModulus (ModulusBuffer, PubKeyModSize, &NewString))) {
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), NewString, NULL);
+    FreePool (NewString);
+  }
+
+  SetMem(ExponentString, sizeof (ExponentString), 0);
+  UnicodeSPrint(ExponentString, sizeof (ExponentString), L"0x%X", Exponent);
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_EXPONENT2), ExponentString, NULL);
+
+
+ON_EXIT:
+  RsaFree (X509PubKey);
+  FreePool (ModulusBuffer);
+}
+
+EFI_STATUS
+UpdateCertDetails (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
+  )
+{
+  SV_MENU_ENTRY                           *BootloaderEntry;
+  SV_CERT_ENTRY                           *CertificateEntry;
+
+  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  CertificateEntry = GetCertEntry(BootloaderEntry, mCertIndex);
+  if (CertificateEntry == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  UpdateCertValidtyStrings (Private, CertificateEntry);
+  UpdateCertIssuerAndSubjectStrings (Private, CertificateEntry);
+  UpdateCertSerialNumberString (Private, CertificateEntry);
+  UpdateCertKeyStrings (Private, CertificateEntry);
 
   return EFI_SUCCESS;
 }

@@ -65,7 +65,7 @@
 #string STR_KEY_FINGERPRINT_HASH                 #language en-US ""
 
 #string STR_TRUST_QUESTION                       #language en-US "Do you want to trust this key/image and continue booting?"
-#string STR_SV_TRUST_KEY_POPUP                   #language en-US " " // will be updated dynamically with a hash
+#string STR_SV_TRUST_KEY_POPUP                   #language en-US ""
 #string STR_SV_TRUST_KEY_QUESTION                #language en-US "Are you sure you want to trust the following"
 #string STR_SV_UNTRUST_KEY_QUESTION              #language en-US "Are you sure you do NOT want to trust the following"
 
@@ -73,7 +73,28 @@
 #string STR_DO_NOT_TRUST_KEY2                    #language en-US "[ Do NOT trust ]"
 #string STR_TRUST_KEY_AND_BOOT                   #language en-US "[ Trust this key/image and boot ]"
 #string STR_TRUST_KEY                            #language en-US "[ Trust this key/image, next key/bootloader ]"
-#string STR_SHOW_KEY_DETAILS                     #language en-US "[ Show key/certificate details ]"
+#string STR_SHOW_KEY_DETAILS                     #language en-US "Show key/certificate details"
+
+// Configuration page strings
+#string STR_FORM4_TITLE                          #language en-US "Certificate Details"
+
+#string STR_VALIDITY_BEFORE                      #language en-US "Valid Not Before:"
+#string STR_VALIDITY_AFTER                       #language en-US "Valid Not After:"
+#string STR_VALIDITY_BEFORE_DATE                 #language en-US ""
+#string STR_VALIDITY_AFTER_DATE                  #language en-US ""
+
+#string STR_CERT_ISSUER                          #language en-US "Issuer Common Name (CN):"
+#string STR_CERT_ISSUER2                         #language en-US ""
+#string STR_CERT_SUBJECT                         #language en-US "Subject Common Name (CN):"
+#string STR_CERT_SUBJECT2                        #language en-US ""
+
+#string STR_CERT_SERIAL_NUMBER                   #language en-US "Serial Number (HEX):"
+#string STR_CERT_SERIAL_NUMBER2                  #language en-US ""
+
+#string STR_CERT_KEY_MODULUS                     #language en-US "Key Modulus:"
+#string STR_CERT_KEY_MODULUS_HEX                 #language en-US ""
+#string STR_CERT_KEY_EXPONENT                    #language en-US "Key Exponent:"
+#string STR_CERT_KEY_EXPONENT2                   #language en-US ""
 
 // Interactive mode strings
 #string STR_FORM9_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
