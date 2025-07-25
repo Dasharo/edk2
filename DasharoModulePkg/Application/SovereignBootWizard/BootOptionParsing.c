@@ -47,38 +47,28 @@ UiDevicePathToStr (
 }
 
 /**
-  Check if it's a Device Path pointing to FV file.
-
-  The function doesn't guarantee the device path points to existing FV file.
+  Check if it's a Device Path pointing to HDD.
 
   @param  DevicePath     Input device path.
 
-  @retval TRUE   The device path is a FV File Device Path.
-  @retval FALSE  The device path is NOT a FV File Device Path.
+  @retval TRUE   The device path is a HDD Device Path.
+  @retval FALSE  The device path is NOT a HDD File Device Path.
 **/
 BOOLEAN
-IsFvFilePath (
+IsHddFilePath (
   IN EFI_DEVICE_PATH_PROTOCOL  *DevicePath
   )
 {
-  EFI_STATUS                Status;
-  EFI_HANDLE                Handle;
-  EFI_DEVICE_PATH_PROTOCOL  *Node;
   EFI_DEVICE_PATH_PROTOCOL  *Path;
-
-  Node   = DevicePath;
-  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &Node, &Handle);
-  if (!EFI_ERROR (Status)) {
-    return TRUE;
-  }
 
   Path = DevicePath;
 
-  if ((DevicePathType (Path) == HARDWARE_DEVICE_PATH) && (DevicePathSubType (Path) == HW_MEMMAP_DP)) {
-    Path = NextDevicePathNode (Path);
-    if ((DevicePathType (Path) == MEDIA_DEVICE_PATH) && (DevicePathSubType (Path) == MEDIA_PIWG_FW_FILE_DP)) {
-      return IsDevicePathEnd (NextDevicePathNode (Path));
+  while (!IsDevicePathEnd (Path)) {
+    if ((DevicePathType (Path) == MEDIA_DEVICE_PATH) && (DevicePathSubType (Path) == MEDIA_HARDDRIVE_DP)) {
+        return TRUE;
     }
+
+    Path = NextDevicePathNode (Path);
   }
 
   return FALSE;
@@ -279,8 +269,8 @@ GetBootOptions (
     //
     DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)Ptr;
 
-    // Skip boot options that point to FV
-    if (IsFvFilePath (DevicePath)) {
+    // Skip boot options that do not point to disks
+    if (!IsHddFilePath (DevicePath)) {
       FreePool (LoadOptionFromVar);
       continue;
     }

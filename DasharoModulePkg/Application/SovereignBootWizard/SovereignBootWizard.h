@@ -204,6 +204,7 @@ typedef struct {
 extern SV_MENU_OPTION            BootOptionMenu;
 extern UINTN                     mBootloaderIndex;
 extern UINTN                     mCertIndex;
+extern INTN                      mFirstTrustedBootloader;
 
 EFI_STATUS
 GetBootOptions (
@@ -257,6 +258,24 @@ EFI_STATUS
 AddKeyOrHashAsTrustedOrUntrusted (
   SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
   BOOLEAN                              Trust
+  );
+
+EFI_STATUS
+CreateSigList (
+  IN VOID                 *Data,
+  IN UINTN                Size,
+  IN EFI_GUID             *SigType,
+  OUT EFI_SIGNATURE_LIST  **SigList
+  );
+
+BOOLEAN
+IsDbEmpty (
+  VOID
+  );
+
+EFI_STATUS
+FinalizeSvBootProvisioning (
+  VOID
   );
 
 #endif

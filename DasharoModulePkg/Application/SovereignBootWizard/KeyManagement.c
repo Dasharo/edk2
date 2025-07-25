@@ -186,6 +186,54 @@ GetCurrentTime (
   return EFI_SUCCESS;
 }
 
+/** Creates EFI Signature List structure.
+
+  @param[in]      Data     A pointer to signature data.
+  @param[in]      Size     Size of signature data.
+  @param[in]      SigType  GUID representing signature type.
+  @param[out]     SigList  Created Signature List.
+
+  @retval  EFI_SUCCESS           Signature List was created successfully.
+  @retval  EFI_OUT_OF_RESOURCES  Failed to allocate memory.
+**/
+EFI_STATUS
+CreateSigList (
+  IN VOID                 *Data,
+  IN UINTN                Size,
+  IN EFI_GUID             *SigType,
+  OUT EFI_SIGNATURE_LIST  **SigList
+  )
+{
+  UINTN               SigListSize;
+  EFI_SIGNATURE_LIST  *TmpSigList;
+  EFI_SIGNATURE_DATA  *SigData;
+
+  //
+  // Allocate data for Signature Database
+  //
+  SigListSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1 + Size;
+  TmpSigList  = (EFI_SIGNATURE_LIST *)AllocateZeroPool (SigListSize);
+  if (TmpSigList == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  TmpSigList->SignatureListSize   = (UINT32)SigListSize;
+  TmpSigList->SignatureSize       = (UINT32)(sizeof (EFI_SIGNATURE_DATA) - 1 + Size);
+  TmpSigList->SignatureHeaderSize = 0;
+  CopyGuid (&TmpSigList->SignatureType, SigType);
+
+  //
+  // Copy key data
+  //
+  SigData = (EFI_SIGNATURE_DATA *)(TmpSigList + 1);
+  CopyGuid (&SigData->SignatureOwner, &gSovereignBootWizardFormSetGuid);
+  CopyMem (&SigData->SignatureData[0], Data, Size);
+
+  *SigList = TmpSigList;
+
+  return EFI_SUCCESS;
+}
+
 /**
   Enroll a new hash into Signature Database (DB or DBX).
 
@@ -204,8 +252,7 @@ EnrollHashToSigDB (
   )
 {
   EFI_SIGNATURE_LIST                   *SigDBHash;
-  EFI_SIGNATURE_DATA                   *SigDBHashData;
-  EFI_CERT_X509_SHA256                 *SigDBCertHashData;
+  EFI_CERT_X509_SHA256                 SigCertHashData;
   UINTN                                DataSize;
   UINTN                                SigDBSize;
   UINT32                               Attr;
@@ -218,9 +265,9 @@ EnrollHashToSigDB (
   UINTN                                CertValidFromLen;
   UINT8                                CertValidTo[64];
   UINTN                                CertValidToLen;
-  MBED_TLS_DATETIME_OBECT              *CertValidToTime;
   MBED_TLS_DATETIME_OBECT              CurrentTime;
   EFI_INPUT_KEY                        Key;
+  BOOLEAN                              Trust;
 
   BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
@@ -242,69 +289,50 @@ EnrollHashToSigDB (
   DataSize      = 0;
   SigDBSize     = 0;
   SigDBHash     = NULL;
-  SigDBHashData = NULL;
+  Trust = (StrCmp(VariableName, EFI_IMAGE_SECURITY_DATABASE) == 0);
+
   SigDBSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1;
 
   if (SecurityContext->ImageIsSigned) {
-    SigDBSize += sizeof (EFI_CERT_X509_SHA256);
+    // EDK2 only checks X509 certificates in DB, so enroll whole cert to DB.
+    // Otherwise enroll SHA256 to DBX to save space.
+    if (Trust) {
+      SigDBSize += CertificateEntry->CertDataSize;
+      Status = CreateSigList (
+        CertificateEntry->CertData,
+        CertificateEntry->CertDataSize,
+        &gEfiCertX509Guid,
+        &SigDBHash
+        );
+    } else {
+      SigDBSize += sizeof (EFI_CERT_X509_SHA256);
+      // If enrolling certificate hash to DBX, set to revoke always (keep revocation time 0).
+      SetMem (&SigCertHashData.TimeOfRevocation, 0, sizeof(SigCertHashData.TimeOfRevocation));
+      CopyMem (&SigCertHashData.ToBeSignedHash, CertificateEntry->CertDigest, CertificateEntry->CertDigestSize);
+      Status = CreateSigList (
+        &SigCertHashData,
+        sizeof (EFI_CERT_X509_SHA256),
+        &CertificateEntry->CertType,
+        &SigDBHash
+        );
+    }
   } else {
     SigDBSize += SHA256_DIGEST_SIZE;
+    Status = CreateSigList (
+      SecurityContext->ImageDigest,
+      SecurityContext->ImageDigestSize,
+      &SecurityContext->HashType,
+      &SigDBHash
+      );
   }
 
-  SigDBHash = (EFI_SIGNATURE_LIST *) AllocateZeroPool (SigDBSize);
   if (SigDBHash == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_EXIT;
   }
 
-  //
-  // Fill Certificate Database parameters.
-  //
-  SigDBHash->SignatureListSize   = (UINT32)SigDBSize;
-  SigDBHash->SignatureHeaderSize = 0;
-  SigDBHash->SignatureSize       = (UINT32)(SigDBSize - sizeof (EFI_SIGNATURE_LIST));
-
-  SigDBHashData = (EFI_SIGNATURE_DATA *)((UINT8 *)SigDBHash + sizeof (EFI_SIGNATURE_LIST));
-  CopyGuid (&SigDBHashData->SignatureOwner, &gSovereignBootWizardFormSetGuid);
-  if (SecurityContext->ImageIsSigned) {
-    CopyGuid (&SigDBHash->SignatureType, &CertificateEntry->CertType);
-    SigDBCertHashData = (EFI_CERT_X509_SHA256 *)SigDBHashData->SignatureData;
-    CopyMem ((UINT8 *)(SigDBCertHashData->ToBeSignedHash), CertificateEntry->CertDigest, CertificateEntry->CertDigestSize);
-
-    // If enrolling certificate hash to DBX, set to revoke always (keep revocation time 0).
-    // If enrolling to DB, set the revocation time to the expiry date
-    if (StrCmp(VariableName, EFI_IMAGE_SECURITY_DATABASE) == 0) {
-      CertValidFromLen = 64;
-      CertValidToLen  = 64;
-
-      if (!X509GetValidity(CertificateEntry->CertData,
-                          CertificateEntry->CertDataSize,
-                          CertValidFrom,
-                          &CertValidFromLen,
-                          CertValidTo,
-                          &CertValidToLen)) {
-        DEBUG ((DEBUG_ERROR, "Could not get certificate validity\n"));
-        Status = EFI_NOT_FOUND;
-        goto ON_EXIT;
-      }
-
-      if (CertValidToLen == 0 || CertValidToLen != sizeof (MBED_TLS_DATETIME_OBECT)) {
-        DEBUG ((DEBUG_ERROR, "Invalid certificate validity length\n"));
-        Status = EFI_BAD_BUFFER_SIZE;
-        goto ON_EXIT;
-      }
-
-      CertValidToTime = (MBED_TLS_DATETIME_OBECT *)CertValidTo;
-      SigDBCertHashData->TimeOfRevocation.Year = (UINT16)(CertValidToTime->Year & 0xFFFF);
-      SigDBCertHashData->TimeOfRevocation.Month = (UINT8)(CertValidToTime->Month & 0xFF);
-      SigDBCertHashData->TimeOfRevocation.Day = (UINT8)(CertValidToTime->Day & 0xFF);
-      SigDBCertHashData->TimeOfRevocation.Hour = (UINT8)(CertValidToTime->Hour & 0xFF);
-      SigDBCertHashData->TimeOfRevocation.Minute = (UINT8)(CertValidToTime->Minute & 0xFF);
-      SigDBCertHashData->TimeOfRevocation.Second = (UINT8)(CertValidToTime->Second & 0xFF);
-    }
-  } else {
-    CopyGuid (&SigDBHash->SignatureType, &SecurityContext->HashType);
-    CopyMem ((UINT8 *)(SigDBHashData->SignatureData), SecurityContext->ImageDigest, SecurityContext->ImageDigestSize);
+  if (EFI_ERROR (Status)) {
+    goto ON_EXIT;
   }
 
   //
@@ -321,8 +349,7 @@ EnrollHashToSigDB (
   }
 
   // Do not allow to add expired certificate to DB
-  if (SecurityContext->ImageIsSigned &&
-      (StrCmp(VariableName, EFI_IMAGE_SECURITY_DATABASE) == 0)) {
+  if (SecurityContext->ImageIsSigned && Trust) {
     CurrentTime.Year = (INT32)Time.Year;
     CurrentTime.Month = (INT32)Time.Month;
     CurrentTime.Day = (INT32)Time.Day;
@@ -330,8 +357,27 @@ EnrollHashToSigDB (
     CurrentTime.Minute = (INT32)Time.Minute;
     CurrentTime.Second = (INT32)Time.Second;
 
+    // If enrolling to DB, check the expiry date
+    CertValidFromLen = 64;
+    CertValidToLen  = 64;
+    if (!X509GetValidity(CertificateEntry->CertData,
+                         CertificateEntry->CertDataSize,
+                         CertValidFrom,
+                         &CertValidFromLen,
+                         CertValidTo,
+                         &CertValidToLen)) {
+      DEBUG ((DEBUG_ERROR, "Could not get certificate validity\n"));
+      Status = EFI_NOT_FOUND;
+      goto ON_EXIT;
+    }
 
-    if (X509CompareDateTime (&CurrentTime, CertValidToTime) >= 0) {
+    if (CertValidToLen == 0 || CertValidToLen != sizeof (MBED_TLS_DATETIME_OBECT)) {
+      DEBUG ((DEBUG_ERROR, "Invalid certificate validity length\n"));
+      Status = EFI_BAD_BUFFER_SIZE;
+      goto ON_EXIT;
+    }
+
+    if (X509CompareDateTime (&CurrentTime, CertValidTo) >= 0) {
         do {
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -455,6 +501,9 @@ AddKeyOrHashAsTrustedOrUntrusted (
     // Add key or hash to DB or DBX
     if (Trust) {
       Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE);
+      if (!EFI_ERROR (Status) && (mFirstTrustedBootloader == -1)) {
+        mFirstTrustedBootloader = (INTN)mBootloaderIndex;
+      }
     } else {
       Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE1);
     }
@@ -480,9 +529,231 @@ AddKeyOrHashAsTrustedOrUntrusted (
         NULL
         );
     }
+  } else {
+    Status = EFI_ABORTED;
   }
 
   FreePool (PopupMessage);
+
+  return Status;
+}
+
+STATIC EFI_STATUS
+EnrollEphemeralPk (
+  VOID
+  )
+{
+  VOID                                 *RsaCtx;
+  EFI_SIGNATURE_LIST                   *SigList;
+  EFI_SIGNATURE_DATA                   *SigData;
+  UINTN                                SigListSize;
+  UINTN	                               KeySize;
+  EFI_STATUS                           Status;
+  UINT32                               Attr;
+  EFI_TIME                             Time;
+  CONST UINT32                         Exponent = 0x10001;
+
+  KeySize = 2048;
+  SigList = NULL;
+
+  RsaCtx = RsaNew ();
+  if (RsaCtx == NULL) {
+    DEBUG ((DEBUG_ERROR, "Failed to allocate RSA context\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  DEBUG ((DEBUG_ERROR, "Generating ephemeral PK...\n"));
+
+  // Size of the exponent must be 3, because it is treated as big endian. It
+  // also has a side effect that no matter the endianness of the host, the
+  // exponent will be correct.
+  if (!RsaGenerateKey (RsaCtx, KeySize, (CONST UINT8 *)&Exponent, sizeof(Exponent) - 1)) {
+    DEBUG ((DEBUG_ERROR, "Failed to generate RSA key\n"));
+    return EFI_DEVICE_ERROR;
+  }
+
+  DEBUG ((DEBUG_ERROR, "PK generation done. Contrsuting signature list and enroling it\n"));
+
+  KeySize = KeySize / 8;
+  SigListSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1 + KeySize;
+  SigList = (EFI_SIGNATURE_LIST *) AllocateZeroPool (SigListSize);
+  if (SigList == NULL) {
+    DEBUG ((DEBUG_ERROR, "Failed to allocate signature list for PK\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  SigList->SignatureHeaderSize = 0;
+  SigList->SignatureListSize = SigListSize;
+  SigList->SignatureSize = (UINT32)(SigListSize - sizeof (EFI_SIGNATURE_LIST));
+  CopyGuid(&SigList->SignatureType, &gEfiCertRsa2048Guid);
+
+  SigData = (EFI_SIGNATURE_DATA *)((UINT8 *)SigList + sizeof (EFI_SIGNATURE_LIST));
+  CopyGuid(&SigData->SignatureOwner, &gSovereignBootWizardFormSetGuid);
+
+  if (!RsaGetKey(RsaCtx, RsaKeyN, SigData->SignatureData, &KeySize)) {
+    DEBUG ((DEBUG_ERROR, "Failed toget RSA public key modulus\n"));
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  if (KeySize != (2048 / 8)) {
+    DEBUG ((DEBUG_ERROR, "Invalid RSA key modulus size\n"));
+    Status = EFI_BAD_BUFFER_SIZE;
+    goto ON_EXIT;
+  }
+
+  Status = GetCurrentTime (&Time);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Could not get current time\n"));
+    goto ON_EXIT;
+  }
+
+  Attr = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_RUNTIME_ACCESS
+         | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS;
+
+  Status = CreateTimeBasedPayload (&SigListSize, (UINT8 **)&SigList, &Time);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to create time-based data payload: %r\n", Status));
+    goto ON_EXIT;
+  }
+
+  Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to set custom Secure Boot mode: %r\n", Status));
+    goto ON_EXIT;
+  }
+
+  Status = gRT->SetVariable (
+                  EFI_PLATFORM_KEY_NAME,
+                  &gEfiGlobalVariableGuid,
+                  Attr,
+                  SigListSize,
+                  SigList
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to write the PK variable: %r\n", Status));
+  }
+
+  Status = SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
+
+ON_EXIT:
+
+  if (SigList != NULL) {
+    FreePool (SigList);
+  }
+
+  if (RsaCtx != NULL) {
+    RsaFree (RsaCtx);
+  }
+
+  return Status;
+}
+
+BOOLEAN
+IsDbEmpty (
+  VOID
+)
+{
+  EFI_STATUS Status;
+  UINTN      DataSize;
+
+  DataSize = 0;
+
+  Status = gRT->GetVariable (
+                  EFI_IMAGE_SECURITY_DATABASE,
+                  &gEfiImageSecurityDatabaseGuid,
+                  NULL,
+                  &DataSize,
+                  NULL
+                  );
+  if (Status == EFI_BUFFER_TOO_SMALL) {
+    // Variable exists and size is greater than 0, so not empty
+    return FALSE;
+  } else if (Status == EFI_SUCCESS && DataSize > 0) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+EFI_STATUS
+FinalizeSvBootProvisioning (
+  VOID
+  )
+{
+  EFI_INPUT_KEY                        Key;
+  EFI_STATUS                           Status;
+  UINTN                                DataSize;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG      SvConfig;
+
+  if (IsDbEmpty ()) {
+    CreatePopUp (
+      EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+      &Key,
+      L"",
+      L"Trusted signature database is empty, because you have not trusted any bootloader",
+      L"Can not finalize Sovereign Boot provisioning.",
+      L"",
+      L"Press any key to close this window...",
+      L"",
+      NULL
+      );
+
+    return EFI_ABORTED;
+  }
+
+  CreatePopUp (
+    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+    NULL,
+    L"",
+    L"Generating ephemeral key, it may take a while...",
+    L"",
+    NULL
+    );
+
+  Status = EnrollEphemeralPk ();
+  if (EFI_ERROR (Status)) {
+    CreatePopUp (
+      EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+      &Key,
+      L"",
+      L"Failed to enroll ephemeral Platform Key, Secure Boot will not be enabled.",
+      L"Can not finalize Sovereign Boot provisioning.",
+      L"",
+      L"Press any key to close this window...",
+      L"",
+      NULL
+      );
+
+    return EFI_ABORTED;
+  }
+
+  DataSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+  SvConfig.SvBootEnabled = TRUE;
+  SvConfig.SvBootProvisioned = TRUE;
+  Status = gRT->SetVariable (
+                  SV_BOOT_CONFIG_VAR,
+                  &gSovereignBootWizardFormSetGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  DataSize,
+                  &SvConfig
+                  );
+
+  if (EFI_ERROR (Status)) {
+    CreatePopUp (
+      EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+      &Key,
+      L"",
+      L"Failed to update, Sovereign Boot internal state to provisioned.",
+      L"The wizard will show up again on next boot to provision again.",
+      L"",
+      L"Press any key to close this window...",
+      L"",
+      NULL
+      );
+
+    return EFI_ABORTED;
+  }
 
   return Status;
 }
