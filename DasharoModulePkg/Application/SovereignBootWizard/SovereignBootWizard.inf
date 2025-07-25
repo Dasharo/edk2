@@ -65,10 +65,14 @@
 
 [Guids]
   gSovereignBootWizardFormSetGuid
+  gEfiCertRsa2048Guid
+  gEfiCertPkcs7Guid
+  gEfiCertX509Sha256Guid
+  gEfiImageSecurityDatabaseGuid
+  gEfiGlobalVariableGuid
 
 [Protocols]
   ## PRODUCES # SovereignBootWizardFormSet
-  ## PRODUCES # SovereignBootWizardInventory
   gEfiDevicePathProtocolGuid
   gEfiHiiStringProtocolGuid                     ## CONSUMES
   gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES

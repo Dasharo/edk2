@@ -68,24 +68,26 @@ VerifyImageHashInDatabases (
       continue;
     }
 
+    IsFound = FALSE;
     Status = IsSignatureFoundInDatabase (
-                  EFI_IMAGE_SECURITY_DATABASE1,
-                  ImageDigest,
-                  &CertType,
-                  ImageDigestSize,
-                  &IsFound
-                  );
-    if (!EFI_ERROR (Status) && IsFound) {
+                EFI_IMAGE_SECURITY_DATABASE1,
+                ImageDigest,
+                &CertType,
+                ImageDigestSize,
+                &IsFound
+                );
+    if (EFI_ERROR (Status) || IsFound) {
       SecCtx->ImageIsInDbx = TRUE;
     }
 
+    IsFound = FALSE;
     Status = IsSignatureFoundInDatabase (
-                  EFI_IMAGE_SECURITY_DATABASE,
-                  ImageDigest,
-                  &CertType,
-                  ImageDigestSize,
-                  &IsFound
-                  );
+                EFI_IMAGE_SECURITY_DATABASE,
+                ImageDigest,
+                &CertType,
+                ImageDigestSize,
+                &IsFound
+                );
     if (!EFI_ERROR (Status) && IsFound) {
       SecCtx->ImageIsInDb = TRUE;
     }
@@ -118,6 +120,9 @@ FillCertificateEntries (
   UINTN                         TrustedCertLength;
   UINTN                         CertCount;
   EFI_GUID                      CertType;
+  UINTN                         Index;
+  EFI_STATUS                    Status;
+  BOOLEAN                       IsFound;
 
   CertCount = 0;
   //
@@ -242,9 +247,28 @@ FillCertificateEntries (
       continue;
     }
 
+    //
     // Verify the digital signature and check against databases
-    NewCertEntry->CertIsInDb = IsAllowedByDb (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+    //
+
+    // EDK2 checks the DB only against full X509 certificates
+    IsFound = FALSE;
+    Status = IsSignatureFoundInDatabase (
+                  EFI_IMAGE_SECURITY_DATABASE,
+                  NewCertEntry->CertData,
+                  &gEfiCertX509Guid,
+                  NewCertEntry->CertDataSize,
+                  &IsFound
+                  );
+    DEBUG ((DEBUG_INFO, "IsSignatureFoundInDatabase: %u, %r\n", IsFound, Status));
+    if (!EFI_ERROR (Status) && IsFound) {
+      NewCertEntry->CertIsInDb = TRUE;
+    } else {
+      NewCertEntry->CertIsInDb = FALSE;
+    }
+
     NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+    // TODO, doesn't work. Iterate over whole EFI_CERT_STACK of CertBuffer?
     NewCertEntry->ImageIsVerified = AuthenticodeVerify (
                                       AuthData, AuthDataSize,
                                       TrustedCert, TrustedCertLength,
@@ -260,6 +284,12 @@ FillCertificateEntries (
       NewCertEntry->CertIsInDb,
       NewCertEntry->CertIsInDbx,
       NewCertEntry->CertIsMicrosoft));
+
+    DEBUG ((DEBUG_INFO, "Certificate hash:\n"));
+    for (Index = 0; Index < NewCertEntry->CertDigestSize; Index++) {
+      DEBUG ((DEBUG_INFO, "%02X", NewCertEntry->CertDigest[Index]));
+    }
+    DEBUG ((DEBUG_INFO, "\n"));
 
     InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
     CertCount++;
