@@ -27,6 +27,7 @@
 
 [Sources]
   BootOptionParsing.c
+  KeyManagement.c
   SignatureParsing.c
   SovereignBootWizard.c
   SovereignBootWizardHii.h
