@@ -41,6 +41,7 @@ STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
 
 UINTN mBootloaderIndex = 0;
 UINTN mCertIndex = 0;
+INTN mFirstTrustedBootloader = -1;
 
 EFI_STATUS
 EFIAPI
@@ -213,7 +214,8 @@ RouteConfig (
 
 EFI_STATUS
 BootTheBootloader (
-  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  UINTN                                BootloaderIndex
   )
 {
   SV_MENU_ENTRY                        *BootloaderEntry;
@@ -221,7 +223,7 @@ BootTheBootloader (
   EFI_BOOT_MANAGER_LOAD_OPTION         BootOption;
   EFI_STATUS                           Status;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, BootloaderIndex);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -251,13 +253,13 @@ BootTheBootloader (
     gST->ConOut->ClearScreen (gST->ConOut);
   }
 
+  // TODO: Make this bootloader the first boot priority
+
   DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
   EfiBootManagerBoot (&BootOption);
   EfiBootManagerFreeLoadOption (&BootOption);
 
-  // In case we get back from the booted bootloader, we have to update the
-  // page so that it will display next bootloader or key.
-  return UpdateBootloaderPage (PrivateData);
+  return EFI_SUCCESS;
 }
 
 /**
@@ -371,7 +373,6 @@ Callback (
           Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, FALSE);
           break;
         }
-        case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
         case TRUST_KEY_FORM2_QUESTION_ID:
         {
           // Add cert or image hash to DB
@@ -416,34 +417,81 @@ Callback (
                   EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
                   &Key,
                   L"",
-                  L"No more bootloaders found.",
+                  L"No more bootloaders found, to finalize provisioning process",
+                  L"the Wizard will create ephemeral PK and enable UEFI Secure Boot.",
                   L"",
                   L"Press ENTER to continue...",
                   L"",
                   NULL
                   );
               } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-              // TODO: Here
+
               // 1. If nothing has been selected as trusted so far, warn popup.
               // 2. Create ephemeral PK. Enroll it and enable Secure Boot.
               // 3. Set the SV boot variable to provisioned state.
-              // 4. Boot the first trusted bootloader.
+              // FinalizeSvBootProvisioning will handle all above
+              Status = FinalizeSvBootProvisioning ();
+              if (!EFI_ERROR (Status)) {
+                if (mFirstTrustedBootloader != -1) {
+                  do {
+                    CreatePopUp (
+                      EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+                      &Key,
+                      L"",
+                      L"Sovereign Boot provisioning successful.",
+                      L"The Wizard will now boot the first trusted bootloader.",
+                      L"",
+                      L"Press ENTER to boot...",
+                      L"",
+                      NULL
+                      );
+                  } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+                  // 4. Boot the first trusted bootloader.
+                  BootTheBootloader(PrivateData, (UINTN)mFirstTrustedBootloader);
+                  // If we return from the bootloader, exit the form completely.
+                  mBootloaderIndex = 0;
+                  if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+                    Scope = FormSetLevel;
+                  } else {
+                    Scope = SystemLevel;
+                  }
+                  PrivateData->FormBrowserEx2->SetScope (Scope);
+                  Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
 
-              // No more bootloaders, exit the formset, reset the bootloader
-              // index and go to ineractive mode form for now.
-              PrivateData->FormBrowserEx2->SetScope (FormSetLevel);
-              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
-              mBootloaderIndex = 0;
-              Status = PrivateData->FormBrowser2->SendForm (
-                            PrivateData->FormBrowser2,
-                            &PrivateData->HiiHandle,
-                            1,
-                            &gSovereignBootWizardFormSetGuid,
-                            SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
-                            NULL,
-                            ActionRequest
-                            );
-            } else if (Status == EFI_NOT_FOUND) {
+                  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
+                } else {
+                  do {
+                    CreatePopUp (
+                      EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+                      &Key,
+                      L"",
+                      L"Could not find first trusted bootloader.",
+                      L"Wizard will reset the system and let firmware decide what to boot next\n",
+                      L"Press ENTER to reset the system...",
+                      L"",
+                      NULL
+                      );
+                  } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+
+                  gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+                }
+              } else {
+                // Unexpected failure when finalizing the provisioning, reset
+                // bootloader index and go back to welcome form
+                mBootloaderIndex = 0;
+                PrivateData->FormBrowserEx2->SetScope (FormSetLevel);
+                PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+                Status = PrivateData->FormBrowser2->SendForm (
+                              PrivateData->FormBrowser2,
+                              &PrivateData->HiiHandle,
+                              1,
+                              &gSovereignBootWizardFormSetGuid,
+                              SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID,
+                              NULL,
+                              ActionRequest
+                              );
+              }
+            } else if (EFI_ERROR(Status)) {
               do {
                 CreatePopUp (
                   EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -469,15 +517,42 @@ Callback (
                             ActionRequest
                             );
             }
-          } else {
-            Status = EFI_NO_MEDIA;
           }
           break;
         case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
+          // Add cert or image hash to DB
+          Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, TRUE);
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
           // All is left here is to enroll PK to enable Secure Boot, set
           // Sovereign Boot to provisioned and boot.
-
-          Status = BootTheBootloader (PrivateData);
+          Status = FinalizeSvBootProvisioning ();
+          if (!EFI_ERROR (Status)) {
+            CreatePopUp (
+              EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+              NULL,
+              L"",
+              L"Sovereign Boot provisioning successful.",
+              L"The Wizard will now boot the selected bootloader.",
+              L"",
+              NULL
+              );
+            Status = BootTheBootloader (PrivateData, mBootloaderIndex);
+          } else {
+            // Unexpected failure when finalizing the provisioning, reset
+            // bootloader index and go back to welcome form
+            mBootloaderIndex = 0;
+            Status = PrivateData->FormBrowser2->SendForm (
+                          PrivateData->FormBrowser2,
+                          &PrivateData->HiiHandle,
+                          1,
+                          &gSovereignBootWizardFormSetGuid,
+                          SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID,
+                          NULL,
+                          ActionRequest
+                          );
+          }
           break;
         default:
           break;
@@ -505,7 +580,7 @@ Callback (
                   L"",
                   L"Could not find any bootloaders.",
                   L"",
-                  L"Press ENTER to continue...",
+                  L"Press ENTER to exit Sovereign Boot configuration...",
                   L"",
                   NULL
                   );
@@ -677,7 +752,7 @@ SovereignBootWizardInit (
   mPrivateData->HiiPopup = PopupHandler;
 
   Status = gBS->LocateProtocol (&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevPathToText);
-    if (EFI_ERROR (Status)) {
+  if (EFI_ERROR (Status)) {
     ASSERT_EFI_ERROR (Status);
     return Status;
   }
@@ -692,7 +767,15 @@ SovereignBootWizardInit (
                   &mPrivateData->ConfigAccess,
                   NULL
                   );
-  ASSERT_EFI_ERROR (Status);
+
+  if (Status == EFI_ALREADY_STARTED) {
+    Status = EFI_SUCCESS;
+  }
+
+  if (EFI_ERROR (Status)) {
+    SovereignBootWizardUnload (ImageHandle);
+    return Status;
+  }
 
   mPrivateData->AppHandle = AppHandle;
 
