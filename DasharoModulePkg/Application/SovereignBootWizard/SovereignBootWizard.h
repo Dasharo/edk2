@@ -243,4 +243,20 @@ UpdateCertDetails (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
+EFI_STATUS
+RestoreSecureBootDefaults (
+  VOID
+  );
+
+EFI_STATUS
+PrepareSbVariablesForSvBoot (
+  VOID
+  );
+
+EFI_STATUS
+AddKeyOrHashAsTrustedOrUntrusted (
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  BOOLEAN                              Trust
+  );
+
 #endif
