@@ -324,7 +324,7 @@ FmpGetFirmwareImageDescriptor (
                          );
   if (Status != EFI_BUFFER_TOO_SMALL) {
     DEBUG ((DEBUG_ERROR, "EsrtFmpDxe: Unexpected Failure in GetImageInfo.  Status = %r\n", Status));
-    return NULL;
+    ImageInfoSize = 0x1000;
   }
 
   FmpImageInfoBuf = AllocateZeroPool (ImageInfoSize);
