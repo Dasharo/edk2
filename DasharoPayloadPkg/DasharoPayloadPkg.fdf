@@ -416,6 +416,9 @@ FILE DRIVER = CAB058DF-E938-4F85-8978-1F7E6AABDB96 {
 INF  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
 !endif
 
+INF  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+INF  MdeModulePkg/Universal/EsrtFmpDxe/EsrtFmpDxe.inf
+
 ################################################################################
 #
 # Rules are use with the [FV] section's module INF type to define

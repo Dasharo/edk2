@@ -819,6 +819,8 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf
   DasharoPayloadPkg/CapsuleChargerCheckDxe/CapsuleChargerCheckDxe.inf
 !endif
+  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+  MdeModulePkg/Universal/EsrtFmpDxe/EsrtFmpDxe.inf
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
 !endif
