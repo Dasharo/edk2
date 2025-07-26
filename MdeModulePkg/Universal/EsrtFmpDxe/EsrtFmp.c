@@ -461,14 +461,9 @@ CreateFmpBasedEsrt (
     OrgFmpImageInfoBuf = FmpImageInfoBuf;
     while (FmpImageInfoCount > 0) {
       //
-      // If the descriptor has the IN USE bit set, create ESRT entry otherwise ignore.
+      // Create ESRT entry
       //
-      if ((FmpImageInfoBuf->AttributesSetting & FmpImageInfoBuf->AttributesSupported & IMAGE_ATTRIBUTE_IN_USE) == IMAGE_ATTRIBUTE_IN_USE) {
-        //
-        // Create ESRT entry
-        //
-        CreateEsrtEntry (Table, HardwareInstances, &NumberOfDescriptors, FmpImageInfoBuf, FmpImageInfoDescriptorVer);
-      }
+      CreateEsrtEntry (Table, HardwareInstances, &NumberOfDescriptors, FmpImageInfoBuf, FmpImageInfoDescriptorVer);
 
       FmpImageInfoCount--;
       //
