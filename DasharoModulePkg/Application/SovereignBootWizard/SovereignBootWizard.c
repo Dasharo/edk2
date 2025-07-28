@@ -221,15 +221,20 @@ BootTheBootloader (
   SV_MENU_ENTRY                        *BootloaderEntry;
   SV_LOAD_CONTEXT                      *BootloaderContext;
   EFI_BOOT_MANAGER_LOAD_OPTION         BootOption;
+  EFI_BOOT_MANAGER_LOAD_OPTION         *BootOptions;
+  UINTN                                BootOptionCount;
+  INTN                                 OptionIndex;
   EFI_STATUS                           Status;
 
   BootloaderEntry   = GetMenuEntry (&BootOptionMenu, BootloaderIndex);
   if (BootloaderEntry == NULL) {
+    DEBUG ((DEBUG_INFO, "Bootloader %u entry not found\n", BootloaderIndex));
     return EFI_NO_MEDIA;
   }
 
   BootloaderContext = (SV_LOAD_CONTEXT *)BootloaderEntry->VariableContext;
   if (BootloaderContext == NULL) {
+    DEBUG ((DEBUG_INFO, "Bootloader %u load context not found\n", BootloaderIndex));
     return EFI_NO_MEDIA;
   }
 
@@ -238,7 +243,7 @@ BootTheBootloader (
             LoadOptionNumberUnassigned,
             LoadOptionTypeBoot,
             LOAD_OPTION_ACTIVE,
-            BootloaderContext->Description,
+            &BootloaderContext->Description[StrLen(L"Description: ")],
             BootloaderContext->FilePath,
             BootloaderContext->OptionalData,
             BootloaderContext->OptionalDataSize
@@ -249,15 +254,39 @@ BootTheBootloader (
     return Status;
   }
 
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &BootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+
+  OptionIndex = EfiBootManagerFindLoadOption (
+                  &BootOption,
+                  BootOptions,
+                  BootOptionCount
+                  );
+
   if (gST->ConOut != NULL) {
     gST->ConOut->ClearScreen (gST->ConOut);
   }
 
   // TODO: Make this bootloader the first boot priority
+  if (OptionIndex == -1) {
+    Status = EfiBootManagerAddLoadOptionVariable (&BootOption, MAX_UINTN);
+    if (EFI_ERROR (Status)) {
+      EfiBootManagerFreeLoadOption (&BootOption);
+      EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+      DEBUG ((DEBUG_ERROR, "Failed to add load option variable: %r\n", Status));
+      return Status;
+    }
+    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description[StrLen(L"Description: ")]));
+    EfiBootManagerBoot (&BootOption);
+  } else {
+    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description[StrLen(L"Description: ")]));
+    EfiBootManagerBoot (&BootOptions[OptionIndex]);
+  }
 
-  DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
-  EfiBootManagerBoot (&BootOption);
   EfiBootManagerFreeLoadOption (&BootOption);
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
   return EFI_SUCCESS;
 }
@@ -301,6 +330,7 @@ Callback (
   UINTN                                BufferSize;
   SOVEREIGN_BOOT_WIZARD_NV_CONFIG      SvConfig;
   BROWSER_SETTING_SCOPE                Scope;
+  UINTN                                BootloaderToBoot;
 
   if (((Value == NULL) && (Action != EFI_BROWSER_ACTION_FORM_OPEN) && (Action != EFI_BROWSER_ACTION_FORM_CLOSE)) ||
       (ActionRequest == NULL))
@@ -412,6 +442,15 @@ Callback (
           if (mBootloadersInitted) {
             Status = UpdateBootloaderPage (PrivateData);
             if (Status == EFI_NO_MEDIA) {
+              // If we failed image verification and do not trust the image, simply exit
+              if (QuestionId == DO_NOT_TRUST_KEY_FORM2_QUESTION_ID &&
+                  PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+                  PrivateData->FormBrowserEx2->SetScope (SystemLevel);
+                  Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+
+                  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
+                  return Status;
+              }
               do {
                 CreatePopUp (
                   EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -520,11 +559,36 @@ Callback (
           }
           break;
         case TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID:
+          BootloaderToBoot = mBootloaderIndex;
           // Add cert or image hash to DB
           Status = AddKeyOrHashAsTrustedOrUntrusted(PrivateData, TRUE);
           if (EFI_ERROR (Status)) {
+            // If we are already provisioned and fail, simply exit the wizard.
+            // If the image verification fails, a string will be shown on the
+            // screen by the boot manager.
+            if (PrivateData->NvConfig.SvBootProvisioned) {
+              if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+                Scope = FormSetLevel;
+              } else {
+                Scope = SystemLevel;
+              }
+              PrivateData->FormBrowserEx2->SetScope (Scope);
+              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+
+              *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
+            }
             return Status;
           }
+          // If we failed image verification and decided to trust the image, simply boot it
+          if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+              Status = BootTheBootloader (PrivateData, BootloaderToBoot);
+              PrivateData->FormBrowserEx2->SetScope (SystemLevel);
+              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+
+              *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
+              return Status;
+          }
+
           // All is left here is to enroll PK to enable Secure Boot, set
           // Sovereign Boot to provisioned and boot.
           Status = FinalizeSvBootProvisioning ();
@@ -538,7 +602,18 @@ Callback (
               L"",
               NULL
               );
-            Status = BootTheBootloader (PrivateData, mBootloaderIndex);
+            gBS->Stall (2 * 1000 * 1000);
+            Status = BootTheBootloader (PrivateData, BootloaderToBoot);
+            // Do not go back to wizard after booting
+            if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+              Scope = FormSetLevel;
+            } else {
+              Scope = SystemLevel;
+            }
+            PrivateData->FormBrowserEx2->SetScope (Scope);
+            Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+
+            *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
           } else {
             // Unexpected failure when finalizing the provisioning, reset
             // bootloader index and go back to welcome form
@@ -645,8 +720,8 @@ SovereignBootWizardInit (
   EFI_CONFIG_KEYWORD_HANDLER_PROTOCOL    *HiiKeywordHandler;
   EFI_HII_POPUP_PROTOCOL                 *PopupHandler;
   UINTN                                  BufferSize;
-  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA       *ConfigData;
-  SOVEREIGN_BOOT_WIZARD_NV_CONFIG         *SvConfig;
+  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA      *ConfigData;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG        *SvConfig;
   EFI_BOOT_MODE                          BootMode;
   EFI_INPUT_KEY                          HotKey;
   EDKII_FORM_BROWSER_EXTENSION2_PROTOCOL *FormBrowserEx2;
@@ -833,6 +908,13 @@ SovereignBootWizardInit (
   BufferSize = sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA);
   Status     = gRT->GetVariable (mSvBootDataVarName, &gSovereignBootWizardFormSetGuid, NULL, &BufferSize, ConfigData);
   if (EFI_ERROR (Status)) {
+    // Ensure the variable is set if there was an error reading it.
+    gRT->SetVariable (
+      mSvBootDataVarName,
+      &gSovereignBootWizardFormSetGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS,
+      BufferSize,
+      ConfigData);
     // Unknown launch cause, try to determine if it is first launch or not
     if (!SvConfig->SvBootProvisioned ||
         BootMode == BOOT_WITH_DEFAULT_SETTINGS ||
@@ -848,6 +930,12 @@ SovereignBootWizardInit (
     {
       ConfigData->AppLaunchCause = SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS;
     }
+  }
+
+  // If the variable was not set properly, the wizard was probably launched by
+  // mistake. The correct path to launch the wizard always sets the variable.
+  if (ConfigData->AppLaunchCause == SV_BOOT_LAUNCH_UNDEFINED) {
+    return SovereignBootWizardUnload (ImageHandle);
   }
 
   // Handle invalid value
@@ -980,6 +1068,8 @@ SovereignBootWizardUnload (
       FreePool (mPrivateData->NameValueName[Index]);
     }
   }
+
+  // TODO: Free all pools from certificate, bootloader contexts and entries
 
   FreePool (mPrivateData);
   mPrivateData = NULL;
