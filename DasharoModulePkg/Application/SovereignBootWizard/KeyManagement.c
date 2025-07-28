@@ -307,7 +307,7 @@ EnrollHashToSigDB (
     } else {
       SigDBSize += sizeof (EFI_CERT_X509_SHA256);
       // If enrolling certificate hash to DBX, set to revoke always (keep revocation time 0).
-      SetMem (&SigCertHashData.TimeOfRevocation, 0, sizeof(SigCertHashData.TimeOfRevocation));
+      SetMem (&SigCertHashData.TimeOfRevocation, sizeof(EFI_TIME), 0);
       CopyMem (&SigCertHashData.ToBeSignedHash, CertificateEntry->CertDigest, CertificateEntry->CertDigestSize);
       Status = CreateSigList (
         &SigCertHashData,
@@ -392,7 +392,7 @@ EnrollHashToSigDB (
             );
         } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
 
-        Status = EFI_SUCCESS;
+        Status = EFI_ABORTED;
         goto ON_EXIT;
     }
   }
@@ -432,9 +432,14 @@ EnrollHashToSigDB (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to write the %s variable: %r\n", VariableName, Status));
   } else {
-    // If image is unsigned we have to increment the bootloader index to show
-    // next one. Otherwise move to next certificate.
-    if (!SecurityContext->ImageIsSigned) {
+    if (Trust) {
+      mFirstTrustedBootloader = (INTN)mBootloaderIndex;
+    }
+    // If image is unsigned or added as untrusted we have to increment the
+    // bootloader index to show next one. No point in displaying other
+    // signatures if one of them is already in DBX, as the image will not
+    // pass Secure Boot verification. Otherwise move to next certificate.
+    if (!SecurityContext->ImageIsSigned || !Trust) {
       mBootloaderIndex++;
       mCertIndex = 0;
       DEBUG ((DEBUG_INFO, "Moving to next bootloader %u\n", mBootloaderIndex));
@@ -499,16 +504,13 @@ AddKeyOrHashAsTrustedOrUntrusted (
              );
   if (UserSelection == EfiHiiPopupSelectionYes) {
     // Add key or hash to DB or DBX
-    if (Trust) {
-      Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE);
-      if (!EFI_ERROR (Status) && (mFirstTrustedBootloader == -1)) {
-        mFirstTrustedBootloader = (INTN)mBootloaderIndex;
-      }
-    } else {
-      Status = EnrollHashToSigDB (PrivateData, EFI_IMAGE_SECURITY_DATABASE1);
-    }
 
-    if (EFI_ERROR (Status)) {
+    Status = EnrollHashToSigDB (
+               PrivateData,
+               Trust ? EFI_IMAGE_SECURITY_DATABASE : EFI_IMAGE_SECURITY_DATABASE1
+               );
+
+    if (EFI_ERROR (Status) && Status != EFI_ABORTED) {
       UnicodeSPrint (
         ErrorMessage,
         (MAXIMUM_VALUE_CHARACTERS + 8) * sizeof (CHAR16),
@@ -572,7 +574,7 @@ EnrollEphemeralPk (
     return EFI_DEVICE_ERROR;
   }
 
-  DEBUG ((DEBUG_ERROR, "PK generation done. Contrsuting signature list and enroling it\n"));
+  DEBUG ((DEBUG_ERROR, "PK generation done. Constructing signature list and enroling it\n"));
 
   KeySize = KeySize / 8;
   SigListSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1 + KeySize;
@@ -590,7 +592,7 @@ EnrollEphemeralPk (
   SigData = (EFI_SIGNATURE_DATA *)((UINT8 *)SigList + sizeof (EFI_SIGNATURE_LIST));
   CopyGuid(&SigData->SignatureOwner, &gSovereignBootWizardFormSetGuid);
 
-  if (!RsaGetKey(RsaCtx, RsaKeyN, SigData->SignatureData, &KeySize)) {
+  if (!RsaGetKey(RsaCtx, RsaKeyN, &SigData->SignatureData[0], &KeySize)) {
     DEBUG ((DEBUG_ERROR, "Failed toget RSA public key modulus\n"));
     Status = EFI_OUT_OF_RESOURCES;
     goto ON_EXIT;
@@ -701,15 +703,6 @@ FinalizeSvBootProvisioning (
 
     return EFI_ABORTED;
   }
-
-  CreatePopUp (
-    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
-    NULL,
-    L"",
-    L"Generating ephemeral key, it may take a while...",
-    L"",
-    NULL
-    );
 
   Status = EnrollEphemeralPk ();
   if (EFI_ERROR (Status)) {

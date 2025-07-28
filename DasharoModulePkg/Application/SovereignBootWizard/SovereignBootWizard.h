@@ -169,7 +169,7 @@ typedef struct {
 
   BOOLEAN                     CertIsInDbx;
   BOOLEAN                     CertIsInDb;
-  BOOLEAN                     ImageIsVerified;
+  BOOLEAN                     SignatureValid;
   BOOLEAN                     CertIsMicrosoft;
 
   // Placed exactly at offset 8 for alignment
@@ -192,6 +192,7 @@ typedef struct {
   BOOLEAN                     ImageIsInDbx;
   BOOLEAN                     ImageIsInDb;
   BOOLEAN                     ImageIsSigned;
+  BOOLEAN                     ImageIsVerified;
 
   UINT32                      AuthenticationStatus;
   UINT32                      NumCertificates;

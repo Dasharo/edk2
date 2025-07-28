@@ -203,6 +203,8 @@ FillCertificateEntries (
     NewCertEntry->Signature = SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE;
 
     // Obtain the signer's certificate
+    // TODO: we need to obtain full cert chain and locate CA.
+    // Use Pkcs7GetCertificateList for that.
     if (!Pkcs7GetSigners (AuthData, AuthDataSize,
                           &CertBuffer, &BufferLength,
                           &TrustedCert, &TrustedCertLength)) {
@@ -260,7 +262,6 @@ FillCertificateEntries (
                   NewCertEntry->CertDataSize,
                   &IsFound
                   );
-    DEBUG ((DEBUG_INFO, "IsSignatureFoundInDatabase: %u, %r\n", IsFound, Status));
     if (!EFI_ERROR (Status) && IsFound) {
       NewCertEntry->CertIsInDb = TRUE;
     } else {
@@ -268,19 +269,23 @@ FillCertificateEntries (
     }
 
     NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
-    // TODO, doesn't work. Iterate over whole EFI_CERT_STACK of CertBuffer?
-    NewCertEntry->ImageIsVerified = AuthenticodeVerify (
+    // TODO, doesn't work. Iterate over whole EFI_CERT_STACK of CertBuffer to locate CA as trusted cert
+    NewCertEntry->SignatureValid = AuthenticodeVerify (
                                       AuthData, AuthDataSize,
                                       TrustedCert, TrustedCertLength,
                                       ImageDigest, ImageDigestSize);
 
+    // Mark the image as unverified if it is in DBX.
+    if (NewCertEntry->CertIsInDbx) {
+      SecCtx->ImageIsVerified = FALSE;
+    }
 
     DEBUG ((DEBUG_INFO, "Certificate Details:\n"
-      "  ImageIsVerified: %u\n"
+      "  SignatureValid: %u\n"
       "  CertIsInDb: %u\n"
       "  CertIsInDbx: %u\n"
       "  CertIsMicrosoft: %u\n",
-      NewCertEntry->ImageIsVerified,
+      NewCertEntry->SignatureValid,
       NewCertEntry->CertIsInDb,
       NewCertEntry->CertIsInDbx,
       NewCertEntry->CertIsMicrosoft));
@@ -391,6 +396,9 @@ FillSecurityContext (
   }
 
   SecCtx->ImageIsSigned = TRUE;
+  // Assume verified. If anything goes wrong with certificate parsing, it will
+  // be set to FALSE in FillCertificateEntries.
+  SecCtx->ImageIsVerified = TRUE;
 
   // Parse certificates
   InitializeListHead (&SecCtx->Certs);
@@ -402,11 +410,13 @@ ON_EXIT:
     "  ImageIsInDbx: %u\n"
     "  ImageIsInDb: %u\n"
     "  ImageIsSigned: %u\n"
+    "  ImageIsVerified: %u\n"
     "  AuthenticationStatus: %u\n"
     "  NumCertificates: %u\n",
     SecCtx->ImageIsInDbx,
     SecCtx->ImageIsInDb,
     SecCtx->ImageIsSigned,
+    SecCtx->ImageIsVerified,
     SecCtx->AuthenticationStatus,
     SecCtx->NumCertificates));
 
@@ -601,9 +611,11 @@ UpdateCertInfo (
   Private->FormData.ImageUnsigned = (!SecurityContext->ImageIsSigned ||
                                      (SecurityContext->NumCertificates == 0));
 
-  if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
-    DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
-    return EFI_NO_MEDIA;
+  if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+    if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
+      DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
+      return EFI_NO_MEDIA;
+    }
   }
 
   // Image is unsigned? Show its hash instead of certificates
@@ -622,6 +634,17 @@ UpdateCertInfo (
     return EFI_SUCCESS;
   }
 
+  if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+    // Do not show images that are not verified (one of the certs in the
+    // signatures is unstrusted/in DBX), because we won't be able to boot it
+    // anyways.
+    if (!SecurityContext->ImageIsVerified) {
+      DEBUG ((DEBUG_INFO, "Image %u already untrusted\n", mBootloaderIndex));
+      mCertIndex = 0;
+      return EFI_NO_MEDIA;
+    }
+  }
+
   // Image is signed, show its certificate(s)
   while (mCertIndex < SecurityContext->NumCertificates) {
     CertificateEntry = GetCertEntry(BootloaderEntry, mCertIndex);
@@ -632,9 +655,8 @@ UpdateCertInfo (
 
     // Do not show already trusted/utrusted or microsoft certificates
     if (CertificateEntry->CertIsInDb ||
-        CertificateEntry->CertIsInDbx ||
         CertificateEntry->CertIsMicrosoft) {
-      DEBUG ((DEBUG_INFO, "Certificate %u already (un)trusted or belongs to Microsoft\n", mCertIndex));
+      DEBUG ((DEBUG_INFO, "Certificate %u already trusted or belongs to Microsoft\n", mCertIndex));
       mCertIndex++;
       continue;
     }

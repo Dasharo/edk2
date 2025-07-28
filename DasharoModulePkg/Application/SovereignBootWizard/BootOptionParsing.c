@@ -234,6 +234,14 @@ GetBootOptions (
       continue;
     }
 
+    if (Private->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      if (BootOrderList[Index] != Private->ConfigData.BootCurrent) {
+        DEBUG ((DEBUG_INFO, "Current boot option %u not BootCurrent (%u)",
+                BootOrderList[Index], Private->ConfigData.BootCurrent));
+        continue;
+      }
+    }
+
     UnicodeSPrint (BootString, sizeof (BootString), L"Boot%04x", BootOrderList[Index]);
     //
     //  Get all loadoptions from the VAR
