@@ -1862,6 +1862,11 @@ EfiBootManagerLaunchSovereignBootWizard (
   EFI_BOOT_MANAGER_LOAD_OPTION       BootOption;
   EFI_DEVICE_PATH_PROTOCOL           *FilePath;
   SOVEREIGN_BOOT_WIZARD_CONFIG_DATA  SvBootData;
+  UINT16                             *BootCurrent;
+  UINTN                              BootCurrentSize;
+
+  BootCurrent = NULL;
+  BootCurrentSize = 0;
 
   if (!FixedPcdGetBool (PcdSovereignBootEnabled)) {
     return EFI_NOT_FOUND;
@@ -1874,7 +1879,7 @@ EfiBootManagerLaunchSovereignBootWizard (
 
   Status = EfiBootManagerInitializeLoadOption (
               &BootOption,
-              0,
+              LoadOptionNumberUnassigned,
               LoadOptionTypeBoot,
               LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
               L"Sovereign Boot Wizard",
@@ -1885,6 +1890,18 @@ EfiBootManagerLaunchSovereignBootWizard (
 
   if (!EFI_ERROR (Status)) {
     gST->ConOut->ClearScreen (gST->ConOut);
+
+    if (AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      Status = GetEfiGlobalVariable2 (L"BootCurrent", (VOID **)&BootCurrent, &BootCurrentSize);
+      if (!EFI_ERROR (Status) && 
+          (BootCurrent != NULL) &&
+          (BootCurrentSize == sizeof (UINT16))) {
+        SvBootData.BootCurrent = *BootCurrent;
+        FreePool (BootCurrent);
+      } else {
+        return Status;
+      }
+    }
     //
     // Set the Sovereign Boot Wizard launch cause
     //
