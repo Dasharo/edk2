@@ -35,7 +35,7 @@ extern EFI_GUID gSovereignBootWizardFormSetGuid;
 // Data passed from firmware via EFI variables (volatile, BS access)
 typedef struct {
   UINT8               AppLaunchCause;
-  UINT8               Pad;
+  BOOLEAN             AlreadyStarted;
   UINT16              BootCurrent;
 } SOVEREIGN_BOOT_WIZARD_CONFIG_DATA;
 

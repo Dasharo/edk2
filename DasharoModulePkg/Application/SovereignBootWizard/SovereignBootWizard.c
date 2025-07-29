@@ -916,6 +916,7 @@ SovereignBootWizardInit (
   Status     = gRT->GetVariable (mSvBootDataVarName, &gSovereignBootWizardFormSetGuid, NULL, &BufferSize, ConfigData);
   if (EFI_ERROR (Status)) {
     // Ensure the variable is set if there was an error reading it.
+    ConfigData->AlreadyStarted = TRUE;
     gRT->SetVariable (
       mSvBootDataVarName,
       &gSovereignBootWizardFormSetGuid,
@@ -937,6 +938,13 @@ SovereignBootWizardInit (
     {
       ConfigData->AppLaunchCause = SV_BOOT_LAUNCH_BOOT_WITH_DEFAULT_SETTINGS;
     }
+    ConfigData->AlreadyStarted = TRUE;
+    gRT->SetVariable (
+      mSvBootDataVarName,
+      &gSovereignBootWizardFormSetGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS,
+      BufferSize,
+      ConfigData);
   }
 
   // If the variable was not set properly, the wizard was probably launched by
