@@ -772,6 +772,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
     <LibraryClasses>
 !if $(SECURE_BOOT_ENABLE) == TRUE
+      # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
       NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationHandler.inf
 !endif
 !if $(TPM_ENABLE) == TRUE
@@ -787,7 +790,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(SOVEREIGN_BOOT_ENABLE) == TRUE
   DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf {
     <LibraryClasses>
-    BaseCryptLib|CryptoPkg/Library/BaseCryptLibMbedTls/BaseCryptLib.inf
+    # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
   }
 !endif
 !endif
