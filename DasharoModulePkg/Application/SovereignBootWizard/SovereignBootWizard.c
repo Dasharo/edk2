@@ -9,13 +9,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "SovereignBootWizard.h"
 
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *mPrivateData   = NULL;
-BOOLEAN mBootloadersInitted = FALSE;
+BOOLEAN mBootloadersInitted;
 
 STATIC CHAR16 mSvBootDataVarName[] = SV_BOOT_DATA_VAR;
 STATIC CHAR16 mVarStoreName[] = L"SvBootFormData";
 STATIC CHAR16 mSvBootConfigVarName[] = SV_BOOT_CONFIG_VAR;
 
-STATIC BOOLEAN mBootloadersShown = FALSE;
+STATIC BOOLEAN mBootloadersShown;
 
 STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
   {
@@ -39,9 +39,9 @@ STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
   }
 };
 
-UINTN mBootloaderIndex = 0;
-UINTN mCertIndex = 0;
-INTN mFirstTrustedBootloader = -1;
+UINTN mBootloaderIndex;
+UINTN mCertIndex;
+INTN mFirstTrustedBootloader;
 
 EFI_STATUS
 EFIAPI
@@ -437,6 +437,13 @@ Callback (
 
           *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
           break;
+        case SKIP_KEY_FORM2_QUESTION_ID:
+          if (PrivateData->FormData.ImageUnsigned) {
+            mBootloaderIndex++;
+          } else {
+            mCertIndex++;
+          }
+          // fallthrough
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
         case TRUST_KEY_FORM2_QUESTION_ID:
           if (mBootloadersInitted) {
@@ -978,6 +985,12 @@ SovereignBootWizardInit (
     HotKey.ScanCode = SCAN_F10;
     mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, 0, 0, NULL);
   }
+
+  mBootloaderIndex = 0;
+  mCertIndex = 0;
+  mFirstTrustedBootloader = -1;
+  mBootloadersInitted = FALSE;
+  mBootloadersShown = FALSE;
 
   if (SvConfig->SvBootProvisioned) {
     if (ConfigData->AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {

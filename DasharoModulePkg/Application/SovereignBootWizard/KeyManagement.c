@@ -141,51 +141,6 @@ PrepareSbVariablesForSvBoot (
   return SetSecureBootMode (STANDARD_SECURE_BOOT_MODE);
 }
 
-/**
-  Helper function to populate an EFI_TIME instance.
-
-  @param[in] Time   FileContext cached in SecureBootConfig driver
-
-**/
-STATIC
-EFI_STATUS
-GetCurrentTime (
-  IN EFI_TIME  *Time
-  )
-{
-  EFI_STATUS  Status;
-  VOID        *TestPointer;
-
-  if (Time == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  Status = gBS->LocateProtocol (&gEfiRealTimeClockArchProtocolGuid, NULL, &TestPointer);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  ZeroMem (Time, sizeof (EFI_TIME));
-  Status = gRT->GetTime (Time, NULL);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(), GetTime() failed, status = '%r'\n",
-      __func__,
-      Status
-      ));
-    return Status;
-  }
-
-  Time->Pad1       = 0;
-  Time->Nanosecond = 0;
-  Time->TimeZone   = 0;
-  Time->Daylight   = 0;
-  Time->Pad2       = 0;
-
-  return EFI_SUCCESS;
-}
-
 /** Creates EFI Signature List structure.
 
   @param[in]      Data     A pointer to signature data.
@@ -261,12 +216,6 @@ EnrollHashToSigDB (
   SV_SECURITY_CONTEXT                  *SecurityContext;
   SV_CERT_ENTRY                        *CertificateEntry;
   EFI_STATUS                           Status;
-  UINT8                                CertValidFrom[64];
-  UINTN                                CertValidFromLen;
-  UINT8                                CertValidTo[64];
-  UINTN                                CertValidToLen;
-  MBED_TLS_DATETIME_OBECT              CurrentTime;
-  EFI_INPUT_KEY                        Key;
   BOOLEAN                              Trust;
 
   BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
@@ -346,55 +295,6 @@ EnrollHashToSigDB (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Fail to fetch valid time data: %r\n", Status));
     goto ON_EXIT;
-  }
-
-  // Do not allow to add expired certificate to DB
-  if (SecurityContext->ImageIsSigned && Trust) {
-    CurrentTime.Year = (INT32)Time.Year;
-    CurrentTime.Month = (INT32)Time.Month;
-    CurrentTime.Day = (INT32)Time.Day;
-    CurrentTime.Hour = (INT32)Time.Hour;
-    CurrentTime.Minute = (INT32)Time.Minute;
-    CurrentTime.Second = (INT32)Time.Second;
-
-    // If enrolling to DB, check the expiry date
-    CertValidFromLen = 64;
-    CertValidToLen  = 64;
-    if (!X509GetValidity(CertificateEntry->CertData,
-                         CertificateEntry->CertDataSize,
-                         CertValidFrom,
-                         &CertValidFromLen,
-                         CertValidTo,
-                         &CertValidToLen)) {
-      DEBUG ((DEBUG_ERROR, "Could not get certificate validity\n"));
-      Status = EFI_NOT_FOUND;
-      goto ON_EXIT;
-    }
-
-    if (CertValidToLen == 0 || CertValidToLen != sizeof (MBED_TLS_DATETIME_OBECT)) {
-      DEBUG ((DEBUG_ERROR, "Invalid certificate validity length\n"));
-      Status = EFI_BAD_BUFFER_SIZE;
-      goto ON_EXIT;
-    }
-
-    if (X509CompareDateTime (&CurrentTime, CertValidTo) >= 0) {
-        do {
-          CreatePopUp (
-            EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
-            &Key,
-            L"",
-            L"The certificate you want to trust has expired.",
-            L"Can not add it to trusted signature database.",
-            L"",
-            L"Press ENTER to abort the process...",
-            L"",
-            NULL
-            );
-        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-
-        Status = EFI_ABORTED;
-        goto ON_EXIT;
-    }
   }
 
   Status = CreateTimeBasedPayload (&SigDBSize, (UINT8 **)&SigDBHash, &Time);

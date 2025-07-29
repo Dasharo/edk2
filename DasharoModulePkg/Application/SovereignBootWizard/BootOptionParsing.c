@@ -216,6 +216,7 @@ GetBootOptions (
   LoadOptionFromVar = NULL;
   InitializeListHead (&BootOptionMenu.Head);
 
+  DEBUG ((DEBUG_INFO, "Locating boot options\n"));
   //
   // Get the BootOrder from the Var
   //
@@ -234,10 +235,10 @@ GetBootOptions (
       continue;
     }
 
+    // TODO: Some boot options may not have entries returned by EfiBootManagerGetLoadOptions
+    // Query the Boot#### variable directly using BootCurrent index.
     if (Private->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
       if (BootOrderList[Index] != Private->ConfigData.BootCurrent) {
-        DEBUG ((DEBUG_INFO, "Current boot option %u not BootCurrent (%u)",
-                BootOrderList[Index], Private->ConfigData.BootCurrent));
         continue;
       }
     }
@@ -483,7 +484,6 @@ UpdateBootloaderPage (
     }
 
     Status = UpdateCertInfo (Private, mBootloaderIndex);
-    DEBUG ((DEBUG_INFO, "UpdateCertInfo state: %r\n", Status));
     if (Status == EFI_NO_MEDIA) {
       DEBUG ((DEBUG_INFO, "No more keys/certificates for bootloader %u\n", mBootloaderIndex));
       // No more keys/certs to show for this bootloader, proceed to the next one
@@ -522,6 +522,5 @@ UpdateBootloaderPage (
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
   }
 
-  DEBUG ((DEBUG_INFO, "Bootloader state %r\n", Status));
   return Status;
 }
