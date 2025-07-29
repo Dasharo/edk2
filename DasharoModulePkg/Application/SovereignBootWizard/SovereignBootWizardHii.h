@@ -46,6 +46,7 @@ Revision History:
 #define TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID            0x1202
 #define TRUST_KEY_FORM2_QUESTION_ID                     0x1203
 #define SHOW_KEY_DETAILS_FORM2_QUESTION_ID              0x1204
+#define SKIP_KEY_FORM2_QUESTION_ID                      0x1205
 
 #define EXIT_FORM_QUESTION_ID_BASE                      0x1F00
 #define EXIT_FORM1_QUESTION_ID                          0x1F01

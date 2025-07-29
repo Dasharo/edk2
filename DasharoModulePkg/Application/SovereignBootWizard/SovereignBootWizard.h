@@ -114,19 +114,53 @@ typedef struct {
   EFI_DEVICE_PATH_PROTOCOL    End;
 } HII_VENDOR_DEVICE_PATH;
 
+// YYMMDDHHMMSS Z
+typedef struct {
+  CHAR8 Year[2];
+  CHAR8 Month[2];
+  CHAR8 Day[2];
+  CHAR8 Hour[2];
+  CHAR8 Minute[2];
+  CHAR8 Seconds[2];
+} ASN1_UTC_TIME;
+
+typedef struct {
+  CHAR8 Year[4];
+  CHAR8 Month[2];
+  CHAR8 Day[2];
+  CHAR8 Hour[2];
+  CHAR8 Minute[2];
+  CHAR8 Seconds[2];
+} ASN1_GENERALIZED_TIME;
+
+typedef struct {
+  CHAR8 Sign;
+  CHAR8 Hour[2];
+  CHAR8 Minute[2];
+} ASN1_TIMEZONE;
+
 #pragma pack()
 
-// The Sovereign Boot Wizard must be linked with Mbed TLS BaseCryptLib!
-// The output of X509GetValidity can have different format depending on
-// the library provider!
+#define ASN1_TYPE_UTC_TIME 0x17
+#define ASN1_TYPE_GENERALIZED_TIME 0x18
+
+typedef union {
+  ASN1_UTC_TIME *UtcTime;
+  ASN1_GENERALIZED_TIME *GeneralizedTime;
+} ASN1_TIME_PTR_UNION;
+
+#define ASN1_FLAG_MSTRING 0x40
 typedef struct {
-    INT32 Year;
-    INT32 Month;
-    INT32 Day;
-    INT32 Hour;
-    INT32 Minute;
-    INT32 Second;
-} MBED_TLS_DATETIME_OBECT;
+    INT32 Length;
+    INT32 Type;
+    ASN1_TIME_PTR_UNION Data;
+    /*
+     * The value of the following field depends on the type being held.  It
+     * is mostly being used for BIT_STRING so if the input data has a
+     * non-zero 'unused bits' value, it will be handled correctly
+     */
+    UINT64 Flags;
+} OPENSSL_ASN1_TIME;
 
 typedef struct {
   UINTN         Signature;
@@ -170,9 +204,9 @@ typedef struct {
   BOOLEAN                     CertIsInDbx;
   BOOLEAN                     CertIsInDb;
   BOOLEAN                     SignatureValid;
+  BOOLEAN                     CertIsValid;
   BOOLEAN                     CertIsMicrosoft;
 
-  // Placed exactly at offset 8 for alignment
   UINT8                       CertDigest[SHA256_DIGEST_SIZE];
   UINTN                       CertDigestSize;
 
@@ -185,7 +219,6 @@ typedef struct {
 } SV_CERT_ENTRY;
 
 typedef struct {
-  // Place first for 8 byte alignment
   UINT8                       ImageDigest[SHA256_DIGEST_SIZE];
   UINTN                       ImageDigestSize;
 
@@ -277,6 +310,29 @@ IsDbEmpty (
 EFI_STATUS
 FinalizeSvBootProvisioning (
   VOID
+  );
+
+BOOLEAN
+Asn1TimeToEfiTime (
+  IN     OPENSSL_ASN1_TIME *Asn1Time,
+  IN OUT EFI_TIME          *EfiTime
+  );
+
+OPENSSL_ASN1_TIME *
+EfiTimeToAsn1Time (
+  IN EFI_TIME              *EfiTime
+  );
+
+VOID
+FormatAsn1Time (
+  IN     OPENSSL_ASN1_TIME *Time,
+  IN OUT CHAR16            *DateBuffer,
+  IN     UINTN             DateBufferSize
+  );
+
+EFI_STATUS
+GetCurrentTime (
+  IN EFI_TIME  *Time
   );
 
 #endif

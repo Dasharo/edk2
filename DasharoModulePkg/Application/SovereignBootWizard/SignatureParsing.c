@@ -94,6 +94,195 @@ VerifyImageHashInDatabases (
   }
 }
 
+STATIC BOOLEAN
+CertIsValid (
+  IN SV_CERT_ENTRY                     *CertificateEntry
+  )
+{
+  EFI_STATUS                           Status;
+  BOOLEAN                              Valid;
+  EFI_TIME                             Time;
+  UINT8                                CertValidFrom[64];
+  UINTN                                CertValidFromLen;
+  UINT8                                CertValidTo[64];
+  UINTN                                CertValidToLen;
+  OPENSSL_ASN1_TIME                    *CurrentTime;
+
+  if (CertificateEntry == NULL) {
+    return FALSE;
+  }
+
+  Valid = TRUE;
+  CurrentTime = NULL;
+
+  Status = GetCurrentTime (&Time);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Fail to fetch valid time data: %r\n", Status));
+    return FALSE;
+  }
+
+  // We should skip presenting expired or not valid certificates. Adding an
+  // expired certificate to DB will cause verification failure.
+  CurrentTime = EfiTimeToAsn1Time (&Time);
+  if (CurrentTime == NULL) {
+    DEBUG ((DEBUG_ERROR, "Fail to convert time data\n"));
+    Valid = FALSE;
+    goto ON_EXIT;
+  }
+
+  // If enrolling to DB, check the expiry date
+  CertValidFromLen = 64;
+  CertValidToLen  = 64;
+  if (!X509GetValidity(CertificateEntry->CertData,
+                       CertificateEntry->CertDataSize,
+                       CertValidFrom,
+                       &CertValidFromLen,
+                       CertValidTo,
+                       &CertValidToLen)) {
+    DEBUG ((DEBUG_ERROR, "Could not get certificate validity\n"));
+    Valid = FALSE;
+    goto ON_EXIT;
+  }
+
+  if (X509CompareDateTime (CurrentTime, CertValidTo) >= 0) {
+    DEBUG ((DEBUG_INFO, "Certificate already expired\n"));
+    Valid = FALSE;
+  }
+
+  if (X509CompareDateTime (CurrentTime, CertValidFrom) < 0) {
+    DEBUG ((DEBUG_INFO, "Certificate not yet valid\n"));
+    Valid = FALSE;
+  }
+
+ON_EXIT:
+
+  if (CurrentTime != NULL) {
+    FreePool (CurrentTime);
+  }
+
+  return Valid;
+}
+
+STATIC EFI_STATUS
+CreateNewCert (
+  IN  SV_SECURITY_CONTEXT       *SecCtx,
+  IN  UINT8                     *CertData,
+  IN  UINTN                     CertDataSize,
+  IN  VOID                      *FileBuffer,
+  IN  UINTN                     FileSize,
+  IN  UINT8                     *AuthData,
+  IN  UINTN                     AuthDataSize,
+  IN OUT SV_CERT_ENTRY          **CertEntry
+  )
+{
+  SV_CERT_ENTRY                 *NewCertEntry;
+  EFI_STATUS                    Status;
+  EFI_GUID                      CertType;
+  UINT8                         ImageDigest[MAX_DIGEST_SIZE];
+  UINTN                         ImageDigestSize;
+  BOOLEAN                       IsFound;
+  UINTN                         Index;
+
+  if ((SecCtx == NULL) || (CertData == NULL) || (FileBuffer == NULL) ||
+      (AuthData == NULL) || (CertEntry == NULL) || (CertDataSize == 0) ||
+      (FileSize == 0) || (AuthDataSize == 0)) {
+    DEBUG ((DEBUG_ERROR, "%a, Invalid parameter\n", __FUNCTION__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  NewCertEntry = (SV_CERT_ENTRY *) AllocateZeroPool (sizeof(SV_CERT_ENTRY));
+
+  if (NewCertEntry == NULL) {
+    DEBUG ((DEBUG_ERROR, "Not enough free memory for certificate entry\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  *CertEntry = NewCertEntry;
+
+  NewCertEntry->Signature = SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE;
+  NewCertEntry->CertData = AllocateCopyPool (CertDataSize, CertData);
+
+  if (NewCertEntry->CertData == NULL) {
+    DEBUG ((DEBUG_ERROR, "Not enough free memory for certificate data\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  NewCertEntry->CertDataSize = CertDataSize;
+  NewCertEntry->CertIsValid = CertIsValid(NewCertEntry);
+
+  if (CalculateCertHash (NewCertEntry->CertData, NewCertEntry->CertDataSize, HASHALG_SHA256, NewCertEntry->CertDigest)) {
+    NewCertEntry->CertDigestSize = SHA256_DIGEST_SIZE;
+    CopyGuid (&NewCertEntry->CertType, &gEfiCertX509Sha256Guid);
+  } else {
+    DEBUG ((DEBUG_ERROR, "Could not calculate TBS certificate hash\n"));
+    return EFI_DEVICE_ERROR;
+  }
+
+  Status = HashPeImageByType (
+             FileBuffer,
+             FileSize,
+             AuthData,
+             AuthDataSize,
+             ImageDigest,
+             &ImageDigestSize,
+             &CertType);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "Failed to calculate image hash\n"));
+    return Status;
+  }
+
+  //
+  // Verify the digital signature and check against databases
+  //
+
+  // EDK2 checks the DB only against full X509 certificates
+  IsFound = FALSE;
+  Status = IsSignatureFoundInDatabase (
+                EFI_IMAGE_SECURITY_DATABASE,
+                NewCertEntry->CertData,
+                &gEfiCertX509Guid,
+                NewCertEntry->CertDataSize,
+                &IsFound
+                );
+  if (!EFI_ERROR (Status) && IsFound) {
+    NewCertEntry->CertIsInDb = TRUE;
+  } else {
+    NewCertEntry->CertIsInDb = FALSE;
+  }
+
+  NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+  NewCertEntry->SignatureValid = AuthenticodeVerify (
+                                    AuthData, AuthDataSize,
+                                    NewCertEntry->CertData, NewCertEntry->CertDataSize,
+                                    ImageDigest, ImageDigestSize);
+
+  // Mark the image as unverified if it is in DBX.
+  if (NewCertEntry->CertIsInDbx) {
+    SecCtx->ImageIsVerified = FALSE;
+  }
+
+  DEBUG ((DEBUG_INFO, "Certificate Details:\n"
+    "  SignatureValid: %u\n"
+    "  CertIsInDb: %u\n"
+    "  CertIsInDbx: %u\n"
+    "  CertIsMicrosoft: %u\n"
+    "  CertIsValid: %u\n",
+    NewCertEntry->SignatureValid,
+    NewCertEntry->CertIsInDb,
+    NewCertEntry->CertIsInDbx,
+    NewCertEntry->CertIsMicrosoft,
+    NewCertEntry->CertIsValid));
+
+  DEBUG ((DEBUG_INFO, "Certificate hash:\n"));
+  for (Index = 0; Index < NewCertEntry->CertDigestSize; Index++) {
+    DEBUG ((DEBUG_INFO, "%02X", NewCertEntry->CertDigest[Index]));
+  }
+  DEBUG ((DEBUG_INFO, "\n"));
+
+  return EFI_SUCCESS;
+
+}
+
 VOID
 FillCertificateEntries (
   IN      VOID                      *FileBuffer,
@@ -110,19 +299,15 @@ FillCertificateEntries (
   UINT32                        Offset;
   UINT8                         *AuthData;
   UINTN                         AuthDataSize;
-  EFI_STATUS                    HashStatus;
-  UINT8                         ImageDigest[MAX_DIGEST_SIZE];
-  UINTN                         ImageDigestSize;
+  EFI_STATUS                    CertStatus;
   SV_CERT_ENTRY                 *NewCertEntry;
   UINT8                         *CertBuffer;
   UINTN                         BufferLength;
-  UINT8                         *TrustedCert;
-  UINTN                         TrustedCertLength;
+  UINT8                         *UnchainedCert;
+  UINTN                         UnchainedCertLength;
   UINTN                         CertCount;
-  EFI_GUID                      CertType;
-  UINTN                         Index;
-  EFI_STATUS                    Status;
-  BOOLEAN                       IsFound;
+  UINT8                         *CertPtr;
+  UINT8                         NumCert;
 
   CertCount = 0;
   //
@@ -193,115 +378,103 @@ FillCertificateEntries (
       continue;
     }
 
-    NewCertEntry = (SV_CERT_ENTRY *) AllocateZeroPool (sizeof(SV_CERT_ENTRY));
-
-    if (NewCertEntry == NULL) {
-      DEBUG ((DEBUG_ERROR, "Not enough free memory for certificate data\n"));
-      return;
-    }
-
-    NewCertEntry->Signature = SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE;
-
-    // Obtain the signer's certificate
-    // TODO: we need to obtain full cert chain and locate CA.
-    // Use Pkcs7GetCertificateList for that.
-    if (!Pkcs7GetSigners (AuthData, AuthDataSize,
-                          &CertBuffer, &BufferLength,
-                          &TrustedCert, &TrustedCertLength)) {
-      FreePool (NewCertEntry);
+    // Obtain the signer's certificates
+    if (!Pkcs7GetCertificatesList (AuthData, AuthDataSize,
+                                   &CertBuffer, &BufferLength,
+                                   &UnchainedCert, &UnchainedCertLength)) {
       DEBUG ((DEBUG_ERROR, "Could not get PKCS7 signers\n"));
       continue;
     }
-    if ((BufferLength == 0) || (CertBuffer == NULL) || ((*CertBuffer) == 0)) {
-      FreePool (NewCertEntry);
-      DEBUG ((DEBUG_ERROR, "PKCS7 signers data invalid\n"));
-      continue;
-    }
-
-    // Free unused cert chain
-    Pkcs7FreeSigners (CertBuffer);
-
-    // Save the buffer to the signer's certificate
-    NewCertEntry->CertData = TrustedCert;
-    NewCertEntry->CertDataSize = TrustedCertLength;
-
-    if (CalculateCertHash (TrustedCert, TrustedCertLength, HASHALG_SHA256, NewCertEntry->CertDigest)) {
-      NewCertEntry->CertDigestSize = SHA256_DIGEST_SIZE;
-      CopyGuid (&NewCertEntry->CertType, &gEfiCertX509Sha256Guid);
+    if ((BufferLength != 0) && (CertBuffer != NULL)) {
+      NumCert = CertBuffer[0];
     } else {
-      DEBUG ((DEBUG_ERROR, "Could not calculate TBS certificate hash\n"));
+      NumCert = 0;
     }
 
-    HashStatus = HashPeImageByType (
-                   FileBuffer,
-                   FileSize,
-                   AuthData,
-                   AuthDataSize,
-                   ImageDigest,
-                   &ImageDigestSize,
-                   &CertType);
-    if (EFI_ERROR (HashStatus)) {
-      if (TrustedCert != NULL) {
-        Pkcs7FreeSigners (TrustedCert);
+    if (NumCert == 0) {
+      DEBUG ((DEBUG_INFO, "Chained certificates not found\n"));
+    } else {
+      DEBUG ((DEBUG_INFO, "Found %u chained certificates\n", NumCert));
+    }
+
+    // Skip the number of certs
+    CertPtr = CertBuffer + 1;
+    while (NumCert > 0) {
+      NewCertEntry = NULL;
+      CertStatus = CreateNewCert (
+                     SecCtx,
+                     &CertPtr[4],
+                     *(UINT32 *)CertPtr,
+                     FileBuffer,
+                     FileSize,
+                     AuthData,
+                     AuthDataSize,
+                     &NewCertEntry
+                   );
+      if (!EFI_ERROR (CertStatus)) {
+        InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
+        CertCount++;
+      } else {
+        if (NewCertEntry != NULL) {
+          FreePool (NewCertEntry);
+        }
       }
-      FreePool (NewCertEntry);
-      DEBUG ((EFI_D_ERROR, "Failed to calculate image hash\n"));
-      continue;
+
+      CertPtr += *(UINT32 *)CertPtr; // Certificate size
+      CertPtr += sizeof (UINT32); // Certificate size field
+      NumCert--;
+    }
+    if (CertBuffer != NULL) {
+      Pkcs7FreeSigners (CertBuffer);
     }
 
-    //
-    // Verify the digital signature and check against databases
-    //
-
-    // EDK2 checks the DB only against full X509 certificates
-    IsFound = FALSE;
-    Status = IsSignatureFoundInDatabase (
-                  EFI_IMAGE_SECURITY_DATABASE,
-                  NewCertEntry->CertData,
-                  &gEfiCertX509Guid,
-                  NewCertEntry->CertDataSize,
-                  &IsFound
-                  );
-    if (!EFI_ERROR (Status) && IsFound) {
-      NewCertEntry->CertIsInDb = TRUE;
+    if ((UnchainedCertLength != 0) && (UnchainedCert != NULL)) {
+      NumCert = UnchainedCert[0];
     } else {
-      NewCertEntry->CertIsInDb = FALSE;
+      NumCert = 0;
     }
 
-    NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
-    // TODO, doesn't work. Iterate over whole EFI_CERT_STACK of CertBuffer to locate CA as trusted cert
-    NewCertEntry->SignatureValid = AuthenticodeVerify (
-                                      AuthData, AuthDataSize,
-                                      TrustedCert, TrustedCertLength,
-                                      ImageDigest, ImageDigestSize);
-
-    // Mark the image as unverified if it is in DBX.
-    if (NewCertEntry->CertIsInDbx) {
-      SecCtx->ImageIsVerified = FALSE;
+    if (NumCert == 0) {
+      DEBUG ((DEBUG_INFO, "Unchained certificates not found\n"));
+    } else {
+      DEBUG ((DEBUG_INFO, "Found %u unchained certificates\n", NumCert));
     }
 
-    DEBUG ((DEBUG_INFO, "Certificate Details:\n"
-      "  SignatureValid: %u\n"
-      "  CertIsInDb: %u\n"
-      "  CertIsInDbx: %u\n"
-      "  CertIsMicrosoft: %u\n",
-      NewCertEntry->SignatureValid,
-      NewCertEntry->CertIsInDb,
-      NewCertEntry->CertIsInDbx,
-      NewCertEntry->CertIsMicrosoft));
+    // Skip the number of certs
+    CertPtr = UnchainedCert + 1;
+    while (NumCert > 0) {
+      NewCertEntry = NULL;
+      CertStatus = CreateNewCert (
+                     SecCtx,
+                     &CertPtr[4],
+                     *(UINT32 *)CertPtr,
+                     FileBuffer,
+                     FileSize,
+                     AuthData,
+                     AuthDataSize,
+                     &NewCertEntry
+                   );
+      if (!EFI_ERROR (CertStatus)) {
+        InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
+        CertCount++;
+      } else {
+         DEBUG ((DEBUG_ERROR, "Failed to add new certificate: %r\n", CertStatus));
+        if (NewCertEntry != NULL) {
+          FreePool (NewCertEntry);
+        }
+      }
 
-    DEBUG ((DEBUG_INFO, "Certificate hash:\n"));
-    for (Index = 0; Index < NewCertEntry->CertDigestSize; Index++) {
-      DEBUG ((DEBUG_INFO, "%02X", NewCertEntry->CertDigest[Index]));
+      CertPtr += *(UINT32 *)CertPtr; // Certificate size
+      CertPtr += sizeof (UINT32); // Certificate size field
+      NumCert--;
     }
-    DEBUG ((DEBUG_INFO, "\n"));
-
-    InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
-    CertCount++;
+    if (UnchainedCert != NULL) {
+      Pkcs7FreeSigners (UnchainedCert);
+    }
   }
 
   if (Offset != SecDataDirEnd) {
-    DEBUG ((EFI_D_ERROR, "The Size in Certificate Table or the attribute certificate table is corrupted.\n"));
+    DEBUG ((DEBUG_ERROR, "The Size in Certificate Table or the attribute certificate table is corrupted.\n"));
   }
 
   SecCtx->NumCertificates = CertCount;
@@ -653,12 +826,20 @@ UpdateCertInfo (
       return EFI_NO_MEDIA;
     }
 
-    // Do not show already trusted/utrusted or microsoft certificates
-    if (CertificateEntry->CertIsInDb ||
-        CertificateEntry->CertIsMicrosoft) {
-      DEBUG ((DEBUG_INFO, "Certificate %u already trusted or belongs to Microsoft\n", mCertIndex));
-      mCertIndex++;
-      continue;
+    // Do not show already trusted/utrusted, invalid or microsoft certificates
+    if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      if (CertificateEntry->CertIsInDb || CertificateEntry->CertIsMicrosoft) {
+        DEBUG ((DEBUG_INFO, "Certificate %u already trusted, or belongs to Microsoft\n",
+                mCertIndex));
+        mCertIndex++;
+        continue;
+      }
+      if (!CertificateEntry->CertIsValid || !CertificateEntry->SignatureValid) {
+        DEBUG ((DEBUG_INFO, "Certificate %u or itssignature is invalid\n",
+                mCertIndex));
+        mCertIndex++;
+        continue;
+      }
     }
 
     break;
@@ -684,17 +865,17 @@ UpdateCertInfo (
 }
 
 VOID
-UpdateCertValidtyStrings (
+UpdateCertValidityStrings (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
   IN  SV_CERT_ENTRY                       *CertificateEntry
   )
 {
-  CHAR16                                  DateBuffer[30];
+  CHAR16                                  DateBuffer[50];
   UINT8                                   CertValidFrom[64];
   UINTN                                   CertValidFromLen;
   UINT8                                   CertValidTo[64];
   UINTN                                   CertValidToLen;
-  MBED_TLS_DATETIME_OBECT                 *CertValidTime;
+  OPENSSL_ASN1_TIME                       *CertTime;
 
   CertValidFromLen = 64;
   CertValidToLen  = 64;
@@ -706,33 +887,14 @@ UpdateCertValidtyStrings (
                       CertValidTo,
                       &CertValidToLen)) {
 
-    CertValidTime = (MBED_TLS_DATETIME_OBECT *)CertValidTo;
+    CertTime = (OPENSSL_ASN1_TIME *)CertValidTo;
     SetMem (DateBuffer, sizeof (DateBuffer), 0);
-    UnicodeSPrint (
-      DateBuffer,
-      sizeof (DateBuffer),
-      L"%04u-%02u-%02u %02u:%02u:%02u",
-      (UINT16)(CertValidTime->Year & 0xFFFF),
-      (UINT8)(CertValidTime->Month & 0xFF),
-      (UINT8)(CertValidTime->Day & 0xFF),
-      (UINT8)(CertValidTime->Hour & 0xFF),
-      (UINT8)(CertValidTime->Minute & 0xFF),
-      (UINT8)(CertValidTime->Second & 0xFF));
+    FormatAsn1Time (CertTime, DateBuffer, sizeof (DateBuffer));
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_AFTER_DATE), DateBuffer, NULL);
 
-    CertValidTime = (MBED_TLS_DATETIME_OBECT *)CertValidFrom;
+    CertTime = (OPENSSL_ASN1_TIME *)CertValidFrom;
     SetMem (DateBuffer, sizeof (DateBuffer), 0);
-    UnicodeSPrint (
-      DateBuffer,
-      sizeof (DateBuffer),
-      L"%04u-%02u-%02u %02u:%02u:%02u",
-      (UINT16)(CertValidTime->Year & 0xFFFF),
-      (UINT8)(CertValidTime->Month & 0xFF),
-      (UINT8)(CertValidTime->Day & 0xFF),
-      (UINT8)(CertValidTime->Hour & 0xFF),
-      (UINT8)(CertValidTime->Minute & 0xFF),
-      (UINT8)(CertValidTime->Second & 0xFF));
-
+    FormatAsn1Time (CertTime, DateBuffer, sizeof (DateBuffer));
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_VALIDITY_BEFORE_DATE), DateBuffer, NULL);
 
   } else {
@@ -909,7 +1071,7 @@ UpdateCertDetails (
     return EFI_NO_MEDIA;
   }
 
-  UpdateCertValidtyStrings (Private, CertificateEntry);
+  UpdateCertValidityStrings (Private, CertificateEntry);
   UpdateCertIssuerAndSubjectStrings (Private, CertificateEntry);
   UpdateCertSerialNumberString (Private, CertificateEntry);
   UpdateCertKeyStrings (Private, CertificateEntry);

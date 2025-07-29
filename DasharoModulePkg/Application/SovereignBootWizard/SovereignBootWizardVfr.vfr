@@ -133,6 +133,12 @@ formset
       text   = STRING_TOKEN(STR_TRUST_KEY),
       flags  = INTERACTIVE,
       key    = TRUST_KEY_FORM2_QUESTION_ID;
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_SKIP_KEY),
+      flags  = INTERACTIVE,
+      key    = SKIP_KEY_FORM2_QUESTION_ID;
   endif;
 
   subtitle text = STRING_TOKEN(STR_EMPTY_STRING);

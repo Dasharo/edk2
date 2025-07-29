@@ -69,10 +69,11 @@
 #string STR_SV_TRUST_KEY_QUESTION                #language en-US "Are you sure you want to trust the following"
 #string STR_SV_UNTRUST_KEY_QUESTION              #language en-US "Are you sure you do NOT want to trust the following"
 
-#string STR_DO_NOT_TRUST_KEY                     #language en-US "[ Do NOT trust, next key/bootloader ]"
+#string STR_DO_NOT_TRUST_KEY                     #language en-US "[ Do NOT trust, next bootloader ]"
 #string STR_DO_NOT_TRUST_KEY2                    #language en-US "[ Do NOT trust ]"
 #string STR_TRUST_KEY_AND_BOOT                   #language en-US "[ Trust this key/image and boot ]"
 #string STR_TRUST_KEY                            #language en-US "[ Trust this key/image, next key/bootloader ]"
+#string STR_SKIP_KEY                             #language en-US "[ Skip this key/image, next key/bootloader ]"
 #string STR_SHOW_KEY_DETAILS                     #language en-US "Show key/certificate details"
 
 // Configuration page strings
