@@ -79,6 +79,14 @@ extern UINT8  SovereignBootWizardStrings[];
 #define SOVEREIGN_BOOT_LOAD_CONTEXT_SELECT      0x0
 #define SOVEREIGN_BOOT_FILE_CONTEXT_SELECT      0x2
 
+#define FREE_NON_NULL(Pointer)  \
+  do {                                \
+    if ((Pointer) != NULL) {          \
+      FreePool((Pointer));            \
+      (Pointer) = NULL;               \
+    }                                 \
+  } while(FALSE)
+
 typedef struct {
   UINTN                                  Signature;
 
@@ -207,7 +215,7 @@ typedef struct {
   BOOLEAN                     CertIsValid;
   BOOLEAN                     CertIsMicrosoft;
 
-  UINT8                       CertDigest[SHA256_DIGEST_SIZE];
+  UINT8                       CertDigest[MAX_DIGEST_SIZE];
   UINTN                       CertDigestSize;
 
   UINTN                       CertDataSize;
@@ -219,7 +227,7 @@ typedef struct {
 } SV_CERT_ENTRY;
 
 typedef struct {
-  UINT8                       ImageDigest[SHA256_DIGEST_SIZE];
+  UINT8                       ImageDigest[MAX_DIGEST_SIZE];
   UINTN                       ImageDigestSize;
 
   BOOLEAN                     ImageIsInDbx;
@@ -295,19 +303,6 @@ AddKeyOrHashAsTrustedOrUntrusted (
   );
 
 EFI_STATUS
-CreateSigList (
-  IN VOID                 *Data,
-  IN UINTN                Size,
-  IN EFI_GUID             *SigType,
-  OUT EFI_SIGNATURE_LIST  **SigList
-  );
-
-BOOLEAN
-IsDbEmpty (
-  VOID
-  );
-
-EFI_STATUS
 FinalizeSvBootProvisioning (
   VOID
   );
@@ -333,6 +328,16 @@ FormatAsn1Time (
 EFI_STATUS
 GetCurrentTime (
   IN EFI_TIME  *Time
+  );
+
+VOID
+FreeBootMenuEntries (
+  VOID
+  );
+
+VOID
+FreeSecurityContext (
+  SV_SECURITY_CONTEXT  *SecCtx
   );
 
 #endif

@@ -121,7 +121,7 @@ ExtractConfig (
         ConfigRequestHdr,
         (UINT64) BufferSize
         );
-    FreePool (ConfigRequestHdr);
+    FREE_NON_NULL (ConfigRequestHdr);
   }
 
   // Convert fields of binary structure to string representation.
@@ -1037,13 +1037,13 @@ SovereignBootWizardInit (
     NewString          = HiiGetString (HiiHandle, STRING_TOKEN (FUNCTION_TEN_STRING), NULL);
     ASSERT (NewString != NULL);
     mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_SUBMIT, 0, NewString);
-    FreePool (NewString);
+    FREE_NON_NULL (NewString);
 
     HotKey.ScanCode = SCAN_F9;
     NewString       = HiiGetString (HiiHandle, STRING_TOKEN (FUNCTION_NINE_STRING), NULL);
     ASSERT (NewString != NULL);
     mPrivateData->FormBrowserEx2->RegisterHotKey (&HotKey, BROWSER_ACTION_DEFAULT, EFI_HII_DEFAULT_CLASS_STANDARD, NewString);
-    FreePool (NewString);
+    FREE_NON_NULL (NewString);
   }
 
   Status = SovereignBootWizardUnload (ImageHandle);
@@ -1085,14 +1085,12 @@ SovereignBootWizardUnload (
   }
 
   for (Index = 0; Index < NAME_VALUE_NAME_NUMBER; Index++) {
-    if (mPrivateData->NameValueName[Index] != NULL) {
-      FreePool (mPrivateData->NameValueName[Index]);
-    }
+    FREE_NON_NULL (mPrivateData->NameValueName[Index]);
   }
 
-  // TODO: Free all pools from certificate, bootloader contexts and entries
-
-  FreePool (mPrivateData);
+  // Free all pools from certificate, bootloader contexts and entries
+  FreeBootMenuEntries ();
+  FREE_NON_NULL (mPrivateData);
   mPrivateData = NULL;
 
   return EFI_SUCCESS;
