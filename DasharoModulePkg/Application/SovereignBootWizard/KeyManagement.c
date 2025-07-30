@@ -352,6 +352,26 @@ EnrollHashToSigDB (
       Status = EFI_ABORTED;
       goto ON_EXIT;
     }
+    if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      if (CertificateEntry->CertIsInDbx) {
+        do {
+          CreatePopUp (
+            EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+            &Key,
+            L"",
+            L"This certificate is currently untrusted.",
+            L"Removing certificates from DBX is not yet supported.",
+            L"Can not add the certificate as trusted."
+            L"",
+            L"Press ENTER to abort the process...",
+            L"",
+            NULL
+            );
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+        Status = EFI_ABORTED;
+        goto ON_EXIT;
+      }
+    }
   }
 
   Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
