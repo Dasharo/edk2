@@ -243,7 +243,7 @@ BootTheBootloader (
             LoadOptionNumberUnassigned,
             LoadOptionTypeBoot,
             LOAD_OPTION_ACTIVE,
-            &BootloaderContext->Description[StrLen(L"Description: ")],
+            BootloaderContext->Description,
             BootloaderContext->FilePath,
             BootloaderContext->OptionalData,
             BootloaderContext->OptionalDataSize
@@ -278,10 +278,10 @@ BootTheBootloader (
       DEBUG ((DEBUG_ERROR, "Failed to add load option variable: %r\n", Status));
       return Status;
     }
-    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description[StrLen(L"Description: ")]));
+    DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
     EfiBootManagerBoot (&BootOption);
   } else {
-    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description[StrLen(L"Description: ")]));
+    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description));
     EfiBootManagerBoot (&BootOptions[OptionIndex]);
   }
 
