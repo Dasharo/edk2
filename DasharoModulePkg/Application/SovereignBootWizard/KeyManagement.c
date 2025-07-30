@@ -244,9 +244,10 @@ EnrollHashToSigDB (
   SigDBSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1;
 
   if (SecurityContext->ImageIsSigned) {
-    // EDK2 only checks X509 certificates in DB, so enroll whole cert to DB.
+    // EDK2 only checks X509 certificates in DB and DBX, so enroll whole cert to DB.
+    // For DBX only non-CA (signer's) certificate can be checked.
     // Otherwise enroll SHA256 to DBX to save space.
-    if (Trust) {
+    if (Trust || (!Trust && CertificateEntry->CertIsCA)) {
       SigDBSize += CertificateEntry->CertDataSize;
       Status = CreateSigList (
         CertificateEntry->CertData,
