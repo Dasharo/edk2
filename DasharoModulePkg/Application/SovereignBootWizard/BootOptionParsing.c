@@ -17,6 +17,11 @@ SV_MENU_OPTION  BootOptionMenu = {
   0
 };
 
+STATIC VOID
+FreeBootMenuEntry (
+  SV_MENU_ENTRY    *BootloaderEntry
+  );
+
 /**
   This function converts an input device structure to a Unicode string.
 
@@ -98,7 +103,7 @@ StripFilePath (
   }
 
   // In case we did not found file path, free the duplicated path
-  FreePool (Path);
+  FREE_NON_NULL (Path);
   return NULL;
 }
 
@@ -368,20 +373,21 @@ GetBootOptions (
       PathString = UiDevicePathToStr (Private->DevPathToText, NewLoadContext->FilePath);
     } else {
       PathString = UiDevicePathToStr (Private->DevPathToText, HwDevicePath);
-      FreePool (HwDevicePath);
+      FREE_NON_NULL (HwDevicePath);
     }
     ASSERT (PathString != NULL);
     StringSize = StrSize (L"Hardware path: ") + StrSize (PathString) + sizeof(CHAR16);
     NewMenuEntry->DevicePathString = AllocateZeroPool (StringSize);
     ASSERT (NewMenuEntry->DevicePathString != NULL);
     UnicodeSPrint (NewMenuEntry->DevicePathString, StringSize, L"Hardware path: %s", PathString);
-    FreePool (PathString);
+    FREE_NON_NULL (PathString);
     NewMenuEntry->DevicePathStringToken = HiiSetString (Private->HiiHandle, 0, NewMenuEntry->DevicePathString, NULL);
 
     // File path on the disk
     if (HwDevicePath != NULL) {
       PathString = UiDevicePathToStr (Private->DevPathToText, ExtractFilePath (NewLoadContext->FilePath));
       if (PathString == NULL) {
+        FreePool (HwDevicePath);
         return EFI_OUT_OF_RESOURCES;
       }
     } else {
@@ -394,12 +400,16 @@ GetBootOptions (
     StringSize = StrSize (L"File path: ") + StrSize (PathString) + sizeof(CHAR16);
     NewMenuEntry->FilePathString = AllocateZeroPool (StringSize);
     if (NewMenuEntry->FilePathString == NULL) {
+      if (HwDevicePath != NULL) {
+        FREE_NON_NULL (PathString);
+        FreePool (HwDevicePath);
+      }
       return EFI_OUT_OF_RESOURCES;
     }
 
     UnicodeSPrint (NewMenuEntry->FilePathString, StringSize, L"File path: %s", PathString);
     if (HwDevicePath != NULL) {
-      FreePool (PathString);
+      FREE_NON_NULL (PathString);
     }
     NewMenuEntry->FilePathStringToken = HiiSetString (Private->HiiHandle, 0, NewMenuEntry->FilePathString, NULL);
 
@@ -410,9 +420,7 @@ GetBootOptions (
 
   EfiBootManagerFreeLoadOptions (BootOption, BootOptionCount);
 
-  if (BootOrderList != NULL) {
-    FreePool (BootOrderList);
-  }
+  FREE_NON_NULL (BootOrderList);
 
   DEBUG ((DEBUG_INFO, "Found %d boot options \n", MenuCount));
 
@@ -523,4 +531,62 @@ UpdateBootloaderPage (
   }
 
   return Status;
+}
+
+STATIC VOID
+FreeLoadContext (
+  SV_LOAD_CONTEXT  *LoadCtx
+  )
+{
+  if (LoadCtx == NULL) {
+    return;
+  }
+
+  FREE_NON_NULL (LoadCtx->Description);
+  FREE_NON_NULL (LoadCtx->FilePath);
+  FREE_NON_NULL (LoadCtx->OptionalData);
+}
+
+STATIC VOID
+FreeBootMenuEntry (
+  SV_MENU_ENTRY    *BootloaderEntry
+  )
+{
+  if (BootloaderEntry == NULL) {
+    return;
+  }
+
+  FreeLoadContext (BootloaderEntry->VariableContext);
+  FreeSecurityContext (BootloaderEntry->SecurityContext);
+
+  FREE_NON_NULL (BootloaderEntry->SecurityContext);
+  FREE_NON_NULL (BootloaderEntry->VariableContext);
+  FREE_NON_NULL (BootloaderEntry->DisplayString);
+  FREE_NON_NULL (BootloaderEntry->DevicePathString);
+  FREE_NON_NULL (BootloaderEntry->FilePathString);
+}
+
+
+VOID
+FreeBootMenuEntries (
+  VOID
+  )
+{
+  SV_MENU_ENTRY    *BootloaderEntry;
+
+  if (BootOptionMenu.MenuNumber == 0) {
+    return;
+  }
+
+  while (!IsListEmpty (&BootOptionMenu.Head)) {
+    BootloaderEntry = CR (
+                        BootOptionMenu.Head.ForwardLink,
+                        SV_MENU_ENTRY,
+                        Link,
+                        SOVEREIGN_BOOT_MENU_ENTRY_SIGNATURE);
+    RemoveEntryList (&BootloaderEntry->Link);
+    FreeBootMenuEntry (BootloaderEntry);
+  }
+
+  BootOptionMenu.MenuNumber = 0;
 }

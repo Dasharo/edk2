@@ -156,9 +156,7 @@ CertIsValid (
 
 ON_EXIT:
 
-  if (CurrentTime != NULL) {
-    FreePool (CurrentTime);
-  }
+  FREE_NON_NULL (CurrentTime);
 
   return Valid;
 }
@@ -415,9 +413,7 @@ FillCertificateEntries (
         InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
         CertCount++;
       } else {
-        if (NewCertEntry != NULL) {
-          FreePool (NewCertEntry);
-        }
+        FREE_NON_NULL (NewCertEntry);
       }
 
       CertPtr += *(UINT32 *)CertPtr; // Certificate size
@@ -458,10 +454,8 @@ FillCertificateEntries (
         InsertTailList (&SecCtx->Certs, &NewCertEntry->CertLink);
         CertCount++;
       } else {
-         DEBUG ((DEBUG_ERROR, "Failed to add new certificate: %r\n", CertStatus));
-        if (NewCertEntry != NULL) {
-          FreePool (NewCertEntry);
-        }
+        DEBUG ((DEBUG_ERROR, "Failed to add new certificate: %r\n", CertStatus));
+        FREE_NON_NULL (NewCertEntry);
       }
 
       CertPtr += *(UINT32 *)CertPtr; // Certificate size
@@ -531,8 +525,8 @@ FillSecurityContext (
              &AuthStatus
              );
 
-  if (LoadCtx->NeedsPathExpansion && (FullFilePath != NULL)) {
-    FreePool (FullFilePath);
+  if (LoadCtx->NeedsPathExpansion) {
+    FREE_NON_NULL (FullFilePath);
   }
 
   if (EFI_ERROR (Status)) {
@@ -593,9 +587,7 @@ ON_EXIT:
     SecCtx->AuthenticationStatus,
     SecCtx->NumCertificates));
 
-  if (ImageBase != NULL) {
-    FreePool (ImageBase);
-  }
+  FREE_NON_NULL (ImageBase);
 
   return Status;
 }
@@ -799,7 +791,7 @@ UpdateCertInfo (
     Status = ParseHashValue (SecurityContext->ImageDigest, SecurityContext->ImageDigestSize, &NewString);
     if (!EFI_ERROR (Status)) {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NewString, NULL);
-      FreePool (NewString);
+      FREE_NON_NULL (NewString);
     } else {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), L"Image hash could not be obtained.", NULL);
     }
@@ -850,7 +842,7 @@ UpdateCertInfo (
   Status = ParseHashValue (CertificateEntry->CertDigest, CertificateEntry->CertDigestSize, &NewString);
   if (!EFI_ERROR (Status)) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NewString, NULL);
-    FreePool (NewString);
+    FREE_NON_NULL (NewString);
   } else {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), L"Could not obtain certificate fingerprint", NULL);
   }
@@ -970,7 +962,7 @@ UpdateCertSerialNumberString (
     // part of the serial number itself, thus we should parse one byte less.
     if (!EFI_ERROR (ParseHashValue (StringBuffer, StringBufferSize - 1, &NewString))) {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_SERIAL_NUMBER2), NewString, NULL);
-      FreePool (NewString);
+      FREE_NON_NULL (NewString);
     }
   }
 }
@@ -1011,15 +1003,13 @@ UpdateCertKeyStrings (
 
   if (PubKeyExpSize > 4) {
     DEBUG ((DEBUG_ERROR, "Key exponent size too big\n"));
-    RsaFree (X509PubKey);
-    return;
+    goto ON_EXIT;
   }
 
   ModulusBuffer = (UINT8 *) AllocateZeroPool (PubKeyModSize);
   if (ModulusBuffer == NULL) {
     DEBUG ((DEBUG_ERROR, "Could not allocate memory for modulus\n"));
-    RsaFree (X509PubKey);
-    return;
+    goto ON_EXIT;
   }
 
   if (!RsaGetKey (X509PubKey, RsaKeyN, ModulusBuffer, &PubKeyModSize)) {
@@ -1032,10 +1022,11 @@ UpdateCertKeyStrings (
     goto ON_EXIT;
   }
 
+  NewString = NULL;
   if (!EFI_ERROR (ParseKeyModulus (ModulusBuffer, PubKeyModSize, &NewString))) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), NewString, NULL);
-    FreePool (NewString);
   }
+  FREE_NON_NULL (NewString);
 
   SetMem(ExponentString, sizeof (ExponentString), 0);
   UnicodeSPrint(ExponentString, sizeof (ExponentString), L"0x%X", Exponent);
@@ -1044,7 +1035,7 @@ UpdateCertKeyStrings (
 
 ON_EXIT:
   RsaFree (X509PubKey);
-  FreePool (ModulusBuffer);
+  FREE_NON_NULL (ModulusBuffer);
 }
 
 EFI_STATUS
@@ -1071,4 +1062,44 @@ UpdateCertDetails (
   UpdateCertKeyStrings (Private, CertificateEntry);
 
   return EFI_SUCCESS;
+}
+
+STATIC VOID
+FreeCertificateEntry (
+  SV_CERT_ENTRY        *CertEntry
+  )
+{
+  if (CertEntry == NULL) {
+    return;
+  }
+
+  FREE_NON_NULL (CertEntry->CertData);
+}
+
+VOID
+FreeSecurityContext (
+  SV_SECURITY_CONTEXT  *SecCtx
+  )
+{
+  SV_CERT_ENTRY        *CertEntry;
+
+  if (SecCtx == NULL) {
+    return;
+  }
+
+  if (SecCtx->NumCertificates == 0) {
+    return;
+  }
+
+  while (!IsListEmpty (&SecCtx->Certs)) {
+    CertEntry = CR (
+                  SecCtx->Certs.ForwardLink,
+                  SV_CERT_ENTRY,
+                  CertLink,
+                  SOVEREIGN_BOOT_CERT_ENTRY_SIGNATURE);
+    RemoveEntryList (&CertEntry->CertLink);
+    FreeCertificateEntry (CertEntry);
+  }
+
+  SecCtx->NumCertificates = 0;
 }

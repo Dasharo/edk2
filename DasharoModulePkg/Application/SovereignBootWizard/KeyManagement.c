@@ -151,7 +151,7 @@ PrepareSbVariablesForSvBoot (
   @retval  EFI_SUCCESS           Signature List was created successfully.
   @retval  EFI_OUT_OF_RESOURCES  Failed to allocate memory.
 **/
-EFI_STATUS
+STATIC EFI_STATUS
 CreateSigList (
   IN VOID                 *Data,
   IN UINTN                Size,
@@ -391,9 +391,7 @@ EnrollHashToSigDB (
 
 ON_EXIT:
 
-  if (SigDBHash != NULL) {
-    FreePool (SigDBHash);
-  }
+  FREE_NON_NULL (SigDBHash);
 
   return Status;
 }
@@ -578,9 +576,7 @@ EnrollEphemeralPk (
 
 ON_EXIT:
 
-  if (SigList != NULL) {
-    FreePool (SigList);
-  }
+  FREE_NON_NULL (SigList);
 
   if (RsaCtx != NULL) {
     RsaFree (RsaCtx);
@@ -589,7 +585,7 @@ ON_EXIT:
   return Status;
 }
 
-BOOLEAN
+STATIC BOOLEAN
 IsDbEmpty (
   VOID
 )
