@@ -217,6 +217,7 @@ EnrollHashToSigDB (
   SV_CERT_ENTRY                        *CertificateEntry;
   EFI_STATUS                           Status;
   BOOLEAN                              Trust;
+  EFI_INPUT_KEY                        Key;
 
   BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
@@ -314,6 +315,43 @@ EnrollHashToSigDB (
     Attr |= EFI_VARIABLE_APPEND_WRITE;
   } else if (Status != EFI_NOT_FOUND) {
     goto ON_EXIT;
+  }
+
+  if (SecurityContext->ImageIsSigned && Trust) {
+    if (!CertificateEntry->CertIsValid) {
+      do {
+        CreatePopUp (
+          EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+          &Key,
+          L"",
+          L"The certificate is not yet valid or expired.",
+          L"Can not add the certificate as trusted."
+          L"",
+          L"Press ENTER to abort the process...",
+          L"",
+          NULL
+          );
+      } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+      Status = EFI_ABORTED;
+      goto ON_EXIT;
+    }
+    if (!CertificateEntry->SignatureValid) {
+      do {
+        CreatePopUp (
+          EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+          &Key,
+          L"",
+          L"The image signature verification failed with this certificate.",
+          L"Can not add the certificate as trusted."
+          L"",
+          L"Press ENTER to abort the process...",
+          L"",
+          NULL
+          );
+      } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+      Status = EFI_ABORTED;
+      goto ON_EXIT;
+    }
   }
 
   Status = SetSecureBootMode (CUSTOM_SECURE_BOOT_MODE);
