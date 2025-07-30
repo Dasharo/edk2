@@ -178,6 +178,223 @@ CreateMenuEntry (
   return MenuEntry;
 }
 
+STATIC EFI_STATUS
+FillMenuEntry (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN     UINT16                              BootOptionIndex,
+  IN OUT SV_MENU_ENTRY                       **MenuEntry
+  )
+{
+  CHAR16                        BootString[10];
+  UINT8                         *LoadOptionFromVar;
+  UINTN                         BootOptionSize;
+  UINT8                         *LoadOptionPtr;
+  UINT8                         *LoadOptionEnd;
+  SV_MENU_ENTRY                 *NewMenuEntry;
+  SV_LOAD_CONTEXT               *NewLoadContext;
+  UINTN                         OptionalDataSize;
+  UINTN                         StringSize;
+  UINTN                         DescriptionSize;
+  EFI_DEVICE_PATH_PROTOCOL      *DevicePath;
+  EFI_DEVICE_PATH_PROTOCOL      *HwDevicePath;
+  UINT8                         *Ptr;
+  CHAR16                        *PathString;
+
+  if ((Private == NULL) || (MenuEntry == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  UnicodeSPrint (BootString, sizeof (BootString), L"Boot%04x", BootOptionIndex);
+  //
+  //  Get all loadoptions from the VAR
+  //
+  GetEfiGlobalVariable2 (BootString, (VOID **)&LoadOptionFromVar, &BootOptionSize);
+  if (LoadOptionFromVar == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Ptr = (UINT8 *)LoadOptionFromVar;
+
+  //
+  // Attribute = *(UINT32 *)Ptr;
+  //
+  Ptr += sizeof (UINT32);
+
+  //
+  // FilePathSize = *(UINT16 *)Ptr;
+  //
+  Ptr += sizeof (UINT16);
+
+  //
+  // Description = (CHAR16 *)Ptr;
+  //
+  DescriptionSize = StrSize ((CHAR16 *)Ptr);
+  Ptr += DescriptionSize;
+
+  //
+  // Now Ptr point to Device Path
+  //
+  DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)Ptr;
+
+  // Skip boot options that do not point to disks
+  if (!IsHddFilePath (DevicePath)) {
+    FreePool (LoadOptionFromVar);
+    return EFI_ABORTED;
+  }
+
+  NewMenuEntry = CreateMenuEntry (SOVEREIGN_BOOT_LOAD_CONTEXT_SELECT);
+  if (NewMenuEntry == NULL) {
+    FreePool (LoadOptionFromVar);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  NewLoadContext = (SV_LOAD_CONTEXT *)NewMenuEntry->VariableContext;
+
+  LoadOptionPtr = LoadOptionFromVar;
+  LoadOptionEnd = LoadOptionFromVar + BootOptionSize;
+
+  NewMenuEntry->OptionNumber = BootOptionIndex;
+
+  if ((BBS_DEVICE_PATH == DevicePath->Type) && (BBS_BBS_DP == DevicePath->SubType)) {
+    NewLoadContext->IsLegacy = TRUE;
+  } else {
+    NewLoadContext->IsLegacy = FALSE;
+  }
+
+  //
+  // LoadOption is a pointer type of UINT8
+  // for easy use with following LOAD_OPTION
+  // embedded in this struct
+  //
+  NewLoadContext->Attributes = *(UINT32 *)LoadOptionPtr;
+
+  LoadOptionPtr += sizeof (UINT32);
+
+  NewLoadContext->FilePathLength = *(UINT16 *)LoadOptionPtr;
+  LoadOptionPtr                 += sizeof (UINT16);
+
+  NewLoadContext->Description = AllocateZeroPool (DescriptionSize);
+  if (NewLoadContext->Description == NULL) {
+    FreePool (LoadOptionFromVar);
+    return EFI_OUT_OF_RESOURCES;
+  }
+  StrCpyS (NewLoadContext->Description, DescriptionSize / sizeof(CHAR16), (CONST CHAR16 *)LoadOptionPtr);
+
+  StringSize = StrSize (L"Description: ") + DescriptionSize;
+  NewMenuEntry->DisplayString = AllocateZeroPool (StringSize);
+  if (NewMenuEntry->DisplayString == NULL) {
+    FreePool (LoadOptionFromVar);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  UnicodeSPrint (NewMenuEntry->DisplayString, StringSize, L"Description: %s", LoadOptionPtr);
+  NewMenuEntry->DisplayStringToken = HiiSetString (
+                                       Private->HiiHandle,
+                                       0,
+                                       NewMenuEntry->DisplayString,
+                                       NULL);
+
+  LoadOptionPtr += StrSize ((UINT16 *)LoadOptionPtr);
+
+  NewLoadContext->FilePath = AllocateZeroPool (NewLoadContext->FilePathLength);
+  if (NewLoadContext->FilePath == NULL) {
+    FreePool (LoadOptionFromVar);
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  CopyMem (
+    NewLoadContext->FilePath,
+    (EFI_DEVICE_PATH_PROTOCOL *)LoadOptionPtr,
+    NewLoadContext->FilePathLength
+    );
+
+  LoadOptionPtr += NewLoadContext->FilePathLength;
+
+  if (LoadOptionPtr < LoadOptionEnd) {
+    OptionalDataSize = BootOptionSize -
+                        sizeof (UINT32) -
+                        sizeof (UINT16) -
+                        DescriptionSize -
+                        NewLoadContext->FilePathLength;
+    NewLoadContext->OptionalData = AllocateZeroPool (OptionalDataSize);
+
+    if (NewLoadContext->OptionalData == NULL) {
+      FreePool (LoadOptionFromVar);
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    CopyMem (
+      NewLoadContext->OptionalData,
+      LoadOptionPtr,
+      OptionalDataSize
+      );
+    NewLoadContext->OptionalDataSize = OptionalDataSize;
+  }
+
+  // Hardware Path to the disk
+  HwDevicePath = StripFilePath (NewLoadContext->FilePath);
+  if (HwDevicePath == NULL) {
+    // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
+    // and is automatically expanded by UEFI boot manager
+    PathString = UiDevicePathToStr (Private->DevPathToText, NewLoadContext->FilePath);
+    NewLoadContext->NeedsPathExpansion = TRUE;
+  } else {
+    PathString = UiDevicePathToStr (Private->DevPathToText, HwDevicePath);
+    FREE_NON_NULL (HwDevicePath);
+  }
+  ASSERT (PathString != NULL);
+  StringSize = StrSize (L"Hardware path: ") + StrSize (PathString) + sizeof(CHAR16);
+  NewMenuEntry->DevicePathString = AllocateZeroPool (StringSize);
+  ASSERT (NewMenuEntry->DevicePathString != NULL);
+  UnicodeSPrint (NewMenuEntry->DevicePathString, StringSize, L"Hardware path: %s", PathString);
+  FREE_NON_NULL (PathString);
+  NewMenuEntry->DevicePathStringToken = HiiSetString (
+                                          Private->HiiHandle,
+                                          0,
+                                          NewMenuEntry->DevicePathString,
+                                          NULL);
+
+  // File path on the disk
+  if (!NewLoadContext->NeedsPathExpansion) {
+    PathString = UiDevicePathToStr (
+                   Private->DevPathToText,
+                   ExtractFilePath (NewLoadContext->FilePath));
+    if (PathString == NULL) {
+      FREE_NON_NULL (LoadOptionFromVar);
+      return EFI_OUT_OF_RESOURCES;
+    }
+  } else {
+    // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
+    // and is automatically expanded by UEFI boot manager. However when reading
+    // the file in the application, we have to expand it ourselves.
+    PathString = EFI_REMOVABLE_MEDIA_FILE_NAME;
+  }
+  StringSize = StrSize (L"File path: ") + StrSize (PathString) + sizeof(CHAR16);
+  NewMenuEntry->FilePathString = AllocateZeroPool (StringSize);
+  if (NewMenuEntry->FilePathString == NULL) {
+    if (!NewLoadContext->NeedsPathExpansion) {
+      FREE_NON_NULL (PathString);
+    }
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  UnicodeSPrint (NewMenuEntry->FilePathString, StringSize, L"File path: %s", PathString);
+  if (!NewLoadContext->NeedsPathExpansion) {
+    FREE_NON_NULL (PathString);
+  }
+  NewMenuEntry->FilePathStringToken = HiiSetString (
+                                        Private->HiiHandle,
+                                        0,
+                                        NewMenuEntry->FilePathString,
+                                        NULL);
+
+  FREE_NON_NULL (LoadOptionFromVar);
+
+  *MenuEntry = NewMenuEntry;
+
+  return EFI_SUCCESS;
+}
+
 /**
 
   Build the BootOptionMenu according to BootOrder Variable.
@@ -195,33 +412,35 @@ GetBootOptions (
   )
 {
   UINTN                         Index;
-  CHAR16                        BootString[10];
-  UINT8                         *LoadOptionFromVar;
-  UINTN                         BootOptionSize;
   UINT16                        *BootOrderList;
   UINTN                         BootOrderListSize;
-  UINT8                         *LoadOptionPtr;
-  UINT8                         *LoadOptionEnd;
   SV_MENU_ENTRY                 *NewMenuEntry;
-  SV_LOAD_CONTEXT               *NewLoadContext;
-  UINTN                         OptionalDataSize;
-  UINTN                         StringSize;
-  UINTN                         DescriptionSize;
-  EFI_DEVICE_PATH_PROTOCOL      *DevicePath;
-  EFI_DEVICE_PATH_PROTOCOL      *HwDevicePath;
   UINTN                         MenuCount;
-  UINT8                         *Ptr;
   EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption;
   UINTN                         BootOptionCount;
-  CHAR16                        *PathString;
+  EFI_STATUS                    Status;
 
   MenuCount         = 0;
   BootOrderListSize = 0;
   BootOrderList     = NULL;
-  LoadOptionFromVar = NULL;
   InitializeListHead (&BootOptionMenu.Head);
 
   DEBUG ((DEBUG_INFO, "Locating boot options\n"));
+
+  if (Private->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+    // Some boot options may not have entries returned by EfiBootManagerGetLoadOptions
+    // Query the Boot#### variable directly using BootCurrent index.
+    Status = FillMenuEntry (Private, Private->ConfigData.BootCurrent, &NewMenuEntry);
+    if (EFI_ERROR (Status)) {
+      FreeBootMenuEntry (NewMenuEntry);
+      return Status;
+    }
+
+    InsertTailList (&BootOptionMenu.Head, &NewMenuEntry->Link);
+    BootOptionMenu.MenuNumber = 1;
+    return EFI_SUCCESS;
+  }
+
   //
   // Get the BootOrder from the Var
   //
@@ -240,182 +459,18 @@ GetBootOptions (
       continue;
     }
 
-    // TODO: Some boot options may not have entries returned by EfiBootManagerGetLoadOptions
-    // Query the Boot#### variable directly using BootCurrent index.
-    if (Private->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-      if (BootOrderList[Index] != Private->ConfigData.BootCurrent) {
+    NewMenuEntry = NULL;
+    Status = FillMenuEntry (Private, BootOption[Index].OptionNumber, &NewMenuEntry);
+    if (EFI_ERROR (Status)) {
+      FreeBootMenuEntry (NewMenuEntry);
+      if (Status == EFI_ABORTED) {
         continue;
       }
+      return Status;
     }
-
-    UnicodeSPrint (BootString, sizeof (BootString), L"Boot%04x", BootOrderList[Index]);
-    //
-    //  Get all loadoptions from the VAR
-    //
-    GetEfiGlobalVariable2 (BootString, (VOID **)&LoadOptionFromVar, &BootOptionSize);
-    if (LoadOptionFromVar == NULL) {
-      continue;
-    }
-
-    //
-    // Is a Legacy Device?
-    //
-    Ptr = (UINT8 *)LoadOptionFromVar;
-
-    //
-    // Attribute = *(UINT32 *)Ptr;
-    //
-    Ptr += sizeof (UINT32);
-
-    //
-    // FilePathSize = *(UINT16 *)Ptr;
-    //
-    Ptr += sizeof (UINT16);
-
-    //
-    // Description = (CHAR16 *)Ptr;
-    //
-    DescriptionSize = StrSize ((CHAR16 *)Ptr);
-    Ptr += DescriptionSize;
-
-    //
-    // Now Ptr point to Device Path
-    //
-    DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)Ptr;
-
-    // Skip boot options that do not point to disks
-    if (!IsHddFilePath (DevicePath)) {
-      FreePool (LoadOptionFromVar);
-      continue;
-    }
-
-    NewMenuEntry = CreateMenuEntry (SOVEREIGN_BOOT_LOAD_CONTEXT_SELECT);
-    if (NewMenuEntry == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    NewLoadContext = (SV_LOAD_CONTEXT *)NewMenuEntry->VariableContext;
-
-    LoadOptionPtr = LoadOptionFromVar;
-    LoadOptionEnd = LoadOptionFromVar + BootOptionSize;
-
-    NewMenuEntry->OptionNumber = BootOrderList[Index];
-
-    if ((BBS_DEVICE_PATH == DevicePath->Type) && (BBS_BBS_DP == DevicePath->SubType)) {
-      NewLoadContext->IsLegacy = TRUE;
-    } else {
-      NewLoadContext->IsLegacy = FALSE;
-    }
-
-    //
-    // LoadOption is a pointer type of UINT8
-    // for easy use with following LOAD_OPTION
-    // embedded in this struct
-    //
-    NewLoadContext->Attributes = *(UINT32 *)LoadOptionPtr;
-
-    LoadOptionPtr += sizeof (UINT32);
-
-    NewLoadContext->FilePathLength = *(UINT16 *)LoadOptionPtr;
-    LoadOptionPtr                 += sizeof (UINT16);
-
-    StringSize = StrSize (L"Description: ") + DescriptionSize + sizeof(CHAR16);
-    NewLoadContext->Description = AllocateZeroPool (StringSize);
-    if (NewLoadContext->Description == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    UnicodeSPrint (NewLoadContext->Description, StringSize, L"Description: %s", LoadOptionPtr);
-
-    NewMenuEntry->DisplayString      = NewLoadContext->Description;
-    NewMenuEntry->DisplayStringToken = HiiSetString (Private->HiiHandle, 0, NewLoadContext->Description, NULL);
-
-    LoadOptionPtr += StrSize ((UINT16 *)LoadOptionPtr);
-
-    NewLoadContext->FilePath = AllocateZeroPool (NewLoadContext->FilePathLength);
-    if (NewLoadContext->FilePath == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    CopyMem (
-      NewLoadContext->FilePath,
-      (EFI_DEVICE_PATH_PROTOCOL *)LoadOptionPtr,
-      NewLoadContext->FilePathLength
-      );
-
-    LoadOptionPtr += NewLoadContext->FilePathLength;
-
-    if (LoadOptionPtr < LoadOptionEnd) {
-      OptionalDataSize = BootOptionSize -
-                         sizeof (UINT32) -
-                         sizeof (UINT16) -
-                         DescriptionSize -
-                         NewLoadContext->FilePathLength;
-      NewLoadContext->OptionalData = AllocateZeroPool (OptionalDataSize);
-
-      if (NewLoadContext->OptionalData == NULL) {
-        return EFI_OUT_OF_RESOURCES;
-      }
-
-      CopyMem (
-        NewLoadContext->OptionalData,
-        LoadOptionPtr,
-        OptionalDataSize
-        );
-      NewLoadContext->OptionalDataSize = OptionalDataSize;
-    }
-
-    // Hardware Path to the disk
-    HwDevicePath = StripFilePath (NewLoadContext->FilePath);
-    if (HwDevicePath == NULL) {
-      // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
-      // and is automatically expanded by UEFI boot manager
-      PathString = UiDevicePathToStr (Private->DevPathToText, NewLoadContext->FilePath);
-    } else {
-      PathString = UiDevicePathToStr (Private->DevPathToText, HwDevicePath);
-      FREE_NON_NULL (HwDevicePath);
-    }
-    ASSERT (PathString != NULL);
-    StringSize = StrSize (L"Hardware path: ") + StrSize (PathString) + sizeof(CHAR16);
-    NewMenuEntry->DevicePathString = AllocateZeroPool (StringSize);
-    ASSERT (NewMenuEntry->DevicePathString != NULL);
-    UnicodeSPrint (NewMenuEntry->DevicePathString, StringSize, L"Hardware path: %s", PathString);
-    FREE_NON_NULL (PathString);
-    NewMenuEntry->DevicePathStringToken = HiiSetString (Private->HiiHandle, 0, NewMenuEntry->DevicePathString, NULL);
-
-    // File path on the disk
-    if (HwDevicePath != NULL) {
-      PathString = UiDevicePathToStr (Private->DevPathToText, ExtractFilePath (NewLoadContext->FilePath));
-      if (PathString == NULL) {
-        FreePool (HwDevicePath);
-        return EFI_OUT_OF_RESOURCES;
-      }
-    } else {
-      // In case there is no file device path, it means it is /EFI/BOOT/BOOTX64.efi
-      // and is automatically expanded by UEFI boot manager. However when reading
-      // the file in the application, we have to expand it ourselves.
-      PathString = EFI_REMOVABLE_MEDIA_FILE_NAME;
-      NewLoadContext->NeedsPathExpansion = TRUE;
-    }
-    StringSize = StrSize (L"File path: ") + StrSize (PathString) + sizeof(CHAR16);
-    NewMenuEntry->FilePathString = AllocateZeroPool (StringSize);
-    if (NewMenuEntry->FilePathString == NULL) {
-      if (HwDevicePath != NULL) {
-        FREE_NON_NULL (PathString);
-        FreePool (HwDevicePath);
-      }
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    UnicodeSPrint (NewMenuEntry->FilePathString, StringSize, L"File path: %s", PathString);
-    if (HwDevicePath != NULL) {
-      FREE_NON_NULL (PathString);
-    }
-    NewMenuEntry->FilePathStringToken = HiiSetString (Private->HiiHandle, 0, NewMenuEntry->FilePathString, NULL);
 
     InsertTailList (&BootOptionMenu.Head, &NewMenuEntry->Link);
     MenuCount++;
-    FreePool (LoadOptionFromVar);
   }
 
   EfiBootManagerFreeLoadOptions (BootOption, BootOptionCount);
