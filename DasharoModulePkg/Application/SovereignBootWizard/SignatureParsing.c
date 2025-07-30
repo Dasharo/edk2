@@ -834,12 +834,6 @@ UpdateCertInfo (
         mCertIndex++;
         continue;
       }
-      if (!CertificateEntry->CertIsValid || !CertificateEntry->SignatureValid) {
-        DEBUG ((DEBUG_INFO, "Certificate %u or itssignature is invalid\n",
-                mCertIndex));
-        mCertIndex++;
-        continue;
-      }
     }
 
     break;
