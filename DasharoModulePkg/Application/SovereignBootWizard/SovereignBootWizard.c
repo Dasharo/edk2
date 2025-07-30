@@ -513,6 +513,7 @@ Callback (
                       L"",
                       L"Could not find first trusted bootloader.",
                       L"Wizard will reset the system and let firmware decide what to boot next\n",
+                      L"",
                       L"Press ENTER to reset the system...",
                       L"",
                       NULL
