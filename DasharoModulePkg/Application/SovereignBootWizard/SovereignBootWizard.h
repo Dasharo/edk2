@@ -214,6 +214,7 @@ typedef struct {
   BOOLEAN                     SignatureValid;
   BOOLEAN                     CertIsValid;
   BOOLEAN                     CertIsMicrosoft;
+  BOOLEAN                     CertIsCA;
 
   UINT8                       CertDigest[MAX_DIGEST_SIZE];
   UINTN                       CertDigestSize;
