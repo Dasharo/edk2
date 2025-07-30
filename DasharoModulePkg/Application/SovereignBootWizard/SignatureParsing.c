@@ -161,6 +161,63 @@ ON_EXIT:
   return Valid;
 }
 
+STATIC BOOLEAN
+CertIsCA (
+  IN SV_CERT_ENTRY                     *CertificateEntry
+  )
+{
+  UINT8                         *Constraints;
+  UINTN                         ConstraintsSize;
+
+  ConstraintsSize = 0;
+  Constraints = NULL;
+
+  X509GetExtendedBasicConstraints (CertificateEntry->CertData,
+                                   CertificateEntry->CertDataSize,
+                                   NULL,
+                                   &ConstraintsSize);
+
+  if (ConstraintsSize == 0) {
+    return FALSE;
+  }
+
+  Constraints = AllocateZeroPool (ConstraintsSize);
+  if (Constraints == NULL) {
+    return FALSE;
+  }
+
+  if (X509GetExtendedBasicConstraints (CertificateEntry->CertData,
+                                       CertificateEntry->CertDataSize,
+                                       Constraints,
+                                       &ConstraintsSize)) {
+    if (ConstraintsSize < 2) {
+      FreePool (Constraints);
+      return FALSE;
+    }
+    // If SEQUENCE byte found and length is 0, the not CA
+    if ((Constraints[0] == 0x30) && (Constraints[1] == 0x00)) {
+      FreePool (Constraints);
+      return FALSE;
+    }
+    if (ConstraintsSize < 5) {
+      FreePool (Constraints);
+      return FALSE;
+    }
+    // If SEQUENCE byte found and length is at least 3
+    if ((Constraints[0] == 0x30) && (Constraints[1] >= 0x03)) {
+      // If Type is Boolean and its length is 1 then return its value
+      if (Constraints[2] == 0x01 && Constraints[3] == 0x01) {
+        FreePool (Constraints);
+        return (Constraints[4] != 0);
+      }
+    }
+  }
+
+  FreePool (Constraints);
+
+  return FALSE;
+}
+
 STATIC EFI_STATUS
 CreateNewCert (
   IN  SV_SECURITY_CONTEXT       *SecCtx,
@@ -254,6 +311,8 @@ CreateNewCert (
                                     NewCertEntry->CertData, NewCertEntry->CertDataSize,
                                     ImageDigest, ImageDigestSize);
 
+  NewCertEntry->CertIsCA = CertIsCA (NewCertEntry);
+
   // Mark the image as unverified if it is in DBX.
   if (NewCertEntry->CertIsInDbx) {
     SecCtx->ImageIsVerified = FALSE;
@@ -264,12 +323,14 @@ CreateNewCert (
     "  CertIsInDb: %u\n"
     "  CertIsInDbx: %u\n"
     "  CertIsMicrosoft: %u\n"
-    "  CertIsValid: %u\n",
+    "  CertIsValid: %u\n"
+    "  CertIsCA: %u\n",
     NewCertEntry->SignatureValid,
     NewCertEntry->CertIsInDb,
     NewCertEntry->CertIsInDbx,
     NewCertEntry->CertIsMicrosoft,
-    NewCertEntry->CertIsValid));
+    NewCertEntry->CertIsValid,
+    NewCertEntry->CertIsCA));
 
   DEBUG ((DEBUG_INFO, "Certificate hash:\n"));
   for (Index = 0; Index < NewCertEntry->CertDigestSize; Index++) {
@@ -278,7 +339,6 @@ CreateNewCert (
   DEBUG ((DEBUG_INFO, "\n"));
 
   return EFI_SUCCESS;
-
 }
 
 VOID
