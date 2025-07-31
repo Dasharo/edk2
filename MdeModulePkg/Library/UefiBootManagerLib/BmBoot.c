@@ -2082,6 +2082,11 @@ EfiBootManagerBoot (
   if (BmIsBootManagerMenuFilePath (BootOption->FilePath)) {
     DEBUG ((DEBUG_INFO, "[Bds] Booting Boot Manager Menu.\n"));
     BmStopHotkeyService (NULL, NULL);
+  } else if (BmIsSovereignBootWizardFilePath (BootOption->FilePath)) {
+    // Avoid signaling ReadyToBoot, as the wizard may call EfiBootManagerBoot
+    // with a proper boot option.
+    DEBUG ((DEBUG_INFO, "[Bds] Booting Sovereign Boot Wizard.\n"));
+    BmStopHotkeyService (NULL, NULL);
   } else {
     EfiSignalEventReadyToBoot ();
     //
