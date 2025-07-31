@@ -281,7 +281,7 @@ BootTheBootloader (
     DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
     EfiBootManagerBoot (&BootOption);
   } else {
-    DEBUG ((DEBUG_INFO, "Booting %s\n", &BootloaderContext->Description));
+    DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
     EfiBootManagerBoot (&BootOptions[OptionIndex]);
   }
 
