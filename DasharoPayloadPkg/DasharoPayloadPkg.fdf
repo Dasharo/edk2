@@ -344,7 +344,11 @@ INF DasharoModulePkg/DasharoBootPoliciesVTd/DasharoBootPoliciesVTd.inf
 #
 # Random Number Generator
 #
+!if $(QEMU_PLATFORM) == TRUE
+  !include OvmfPkg/Include/Fdf/OvmfRngDxe.fdf.inc
+!else
 INF SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
+!endif
 
 #
 # Security
