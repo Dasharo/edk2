@@ -202,7 +202,12 @@
   CacheMaintenanceLib|MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+!if $(QEMU_PLATFORM) == TRUE
+  RngLib|MdeModulePkg/Library/BaseRngLibTimerLib/BaseRngLibTimerLib.inf
+  VirtioLib|OvmfPkg/Library/VirtioLib/VirtioLib.inf
+!else
   RngLib|DasharoPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
+!endif
   NestedInterruptTplLib|OvmfPkg/Library/NestedInterruptTplLib/NestedInterruptTplLib.inf
 
   #
@@ -1007,7 +1012,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   #
   # Random Number Generator
   #
+!if $(QEMU_PLATFORM) == TRUE
+  !include OvmfPkg/Include/Dsc/OvmfRngComponents.dsc.inc
+!else
   SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
+!endif
 
   #
   # Hash2
