@@ -2244,6 +2244,7 @@ EfiBootManagerBoot (
         ASSERT_EFI_ERROR (Status);
         ASSERT (Index == 0);
         while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {}
+        gST->ConOut->ClearScreen (gST->ConOut);
       }
 
       return;
