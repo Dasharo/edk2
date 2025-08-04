@@ -2828,6 +2828,7 @@ PublishTpm2 (
   EFI_TPM2_ACPI_CONTROL_AREA     *ControlArea;
   TPM2_PTP_INTERFACE_TYPE        InterfaceType;
 
+  DEBUG((DEBUG_ERROR, "PublishTpm2() called\n"));
   //
   // Measure to PCR[0] with event EV_POST_CODE ACPI DATA.
   // The measurement has to be done before any update.
@@ -2952,7 +2953,11 @@ DriverEntry (
   Status = Tpm2RequestUseTpm ();
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "TPM2 not detected!\n"));
-    return Status;
+    DEBUG ((DEBUG_ERROR, "Tpm2RequestUseTpm returned %r\n", Status));
+    // return Status;
+    // it always croaks here, trying to regain control of the tpm;
+    // let's see how far we get if we skip it
+    Status = EFI_SUCCESS;
   }
 
   //
