@@ -639,7 +639,23 @@ DTpm2RequestUseTpm (
   PtpInterface = GetCachedPtpInterface ();
   switch (PtpInterface) {
     case Tpm2PtpInterfaceCrb:
-      return PtpCrbRequestUseTpm ((PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
+      EFI_STATUS Status;
+      PTP_CRB_REGISTERS_PTR Crb = (PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress);
+      Status = PtpCrbRequestUseTpm (Crb);
+      if (Status == EFI_TIMEOUT) {
+        // recover from previous-stage busy/locality-held once
+        PtpCrbGoIdle (Crb);
+        MicroSecondDelay (1000);
+        Status = PtpCrbRequestUseTpm (Crb);
+        if (EFI_ERROR (Status)) {
+          // bounded warmup backoff, typical PTT needs < 100–200 ms
+          for (UINTN i = 0; i < 200 && Status == EFI_TIMEOUT; i++) {
+            MicroSecondDelay (1000);
+            Status = PtpCrbRequestUseTpm (Crb);
+          }
+        }
+      }
+      return Status;
     case Tpm2PtpInterfaceFifo:
     case Tpm2PtpInterfaceTis:
       return TisPcRequestUseTpm ((TIS_PC_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
