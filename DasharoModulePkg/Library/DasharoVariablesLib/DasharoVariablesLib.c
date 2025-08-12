@@ -15,6 +15,7 @@
 #include <Library/PcdLib.h>
 #include <Library/TpmMeasurementLib.h>
 #include <Library/UefiLib.h>
+#include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <DasharoOptions.h>
@@ -599,7 +600,12 @@ DasharoCapsulesCanPersistAcrossReset (
   // coreboot.
   //
   if (MeMode != DASHARO_ME_MODE_DISABLE_HAP) {
-    Print (L"[FIRMWARE WARNING] Capsule updates are only supported while Intel ME is in HAP mode!\n");
+    //
+    // Print() must not be called when gST->ConOut is not available (e.g., at
+    // runtime phase).
+    //
+    if (gST->ConOut != NULL)
+      Print (L"[FIRMWARE WARNING] Capsule updates are only supported while Intel ME is in HAP mode!\n");
     return FALSE;
   }
 
