@@ -2936,6 +2936,9 @@ DriverEntry (
   UINT32                           ActivePCRBanks;
   UINT32                           NumberOfPCRBanks;
 
+  DEBUG ((DEBUG_INFO, "TPM: PcdTpmBaseAddress = 0x%lx\n", PcdGet64 (PcdTpmBaseAddress)));
+  DEBUG ((DEBUG_INFO, "TPM: PcdTpmDeviceInterface = 0x%x\n", PcdGet8 (PcdTpmDeviceInterface)));
+  DEBUG ((DEBUG_INFO, "TPM: PcdTpmInstanceGuid = %g\n", PcdGetPtr (PcdTpmInstanceGuid)));
   mImageHandle = ImageHandle;
 
   if (CompareGuid (PcdGetPtr (PcdTpmInstanceGuid), &gEfiTpmDeviceInstanceNoneGuid) ||

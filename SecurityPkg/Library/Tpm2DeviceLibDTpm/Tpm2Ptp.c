@@ -635,6 +635,10 @@ DTpm2RequestUseTpm (
   )
 {
   TPM2_PTP_INTERFACE_TYPE  PtpInterface;
+  PTP_CRB_REGISTERS_PTR Crb = (PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress);
+  DEBUG((DEBUG_ERROR, "CRB base=0x%lx STS=0x%08x CTRL=0x%08x LOC_STATE=0x%02x LOC_CTRL=0x%02x\n",
+       (UINT64)Crb, MmioRead32 (Crb->CrbStatus), MmioRead32 (Crb->CrbControl),
+       MmioRead8 (Crb->LocalityState), MmioRead8 (Crb->LocalityControl)));
 
   PtpInterface = GetCachedPtpInterface ();
   switch (PtpInterface) {
