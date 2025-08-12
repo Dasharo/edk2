@@ -135,6 +135,7 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_ME_MODE) == 0) {
     Data.Uint8 = FixedPcdGet8 (PcdIntelMeDefaultState);
     Size = sizeof (Data.Uint8);
+    ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_NETWORK_BOOT) == 0) {
     Data.Boolean = FixedPcdGetBool (PcdDefaultNetworkBootEnable);
     Size = sizeof (Data.Boolean);
