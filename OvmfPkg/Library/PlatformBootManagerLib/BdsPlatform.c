@@ -220,13 +220,17 @@ RegisterBootManagerMenuAppBootOption (
   EFI_BOOT_MANAGER_LOAD_OPTION     NewOption;
   EFI_DEVICE_PATH_PROTOCOL         *DevicePath;
   UINTN                            OptionNumber;
+  UINT32                           Attributes;
+
+  Attributes = IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP;
+  Attributes |= LOAD_OPTION_HIDDEN;
 
   DevicePath = BdsFvFilePath (FileGuid);
   Status = EfiBootManagerInitializeLoadOption (
              &NewOption,
              LoadOptionNumberUnassigned,
              LoadOptionTypeBoot,
-             IsBootCategory ? LOAD_OPTION_ACTIVE : LOAD_OPTION_CATEGORY_APP,
+             Attributes,
              Description,
              DevicePath,
              NULL,
