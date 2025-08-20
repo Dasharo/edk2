@@ -1063,6 +1063,7 @@
 !include OvmfPkg/Include/Dsc/ShellComponents.dsc.inc
 !include OvmfPkg/Include/Dsc/MorLock.dsc.inc
 !include OvmfPkg/Include/Dsc/OvmfRngComponents.dsc.inc
+  OvmfPkg/VirtioNetDxe/VirtioNet.inf
 
 
 !if $(DASHARO_SYSTEM_FEATURES_ENABLE) == TRUE
