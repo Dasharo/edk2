@@ -1,0 +1,42 @@
+## @file
+# PEI Driver for SmmStore.
+#
+# This module installs gVariableFlashInfoHobGuid PPI that serves as a source of
+# information about variable storage for VariableFlashInfoLib.
+#
+# Copyright (c) 2025, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SmmStorePei
+  MODULE_UNI_FILE                = SmmStorePei.uni
+  FILE_GUID                      = 8CC70A5A-51B4-4049-B97E-982B1D7D4049
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SmmStorePeiInitialize
+
+[Sources]
+  SmmStorePei.c
+
+[Packages]
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  BlParseLib
+  DebugLib
+  HobLib
+  PeiServicesLib
+  PeimEntryPoint
+
+[Guids]
+  gVariableFlashInfoHobGuid  ## PRODUCES
+
+[Depex]
+  TRUE

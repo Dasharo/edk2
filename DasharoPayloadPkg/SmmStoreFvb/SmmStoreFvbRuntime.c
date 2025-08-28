@@ -6,6 +6,7 @@
 
 **/
 
+#include <Guid/FaultTolerantWrite.h>
 #include <Library/UefiLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
@@ -14,6 +15,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/PcdLib.h>
 #include <Library/SmmStoreLib.h>
+#include <Library/HobLib.h>
 
 #include "SmmStoreFvbRuntime.h"
 
@@ -154,6 +156,90 @@ SmmStoreVirtualNotifyEvent (
 }
 
 /**
+  Check whether a flash update was interrupted by a reboot and if so,
+  recover variable storage by completing the operation.
+
+  @param[in]  MmioAddress  MMIO base of the variable storage.
+  @param[in]  BlockSize    Block size of the variable storage.
+
+  @retval EFI_SUCCESS  No recovery needed or it was done successfully.
+  @retval other        Recovery went wrong.
+**/
+STATIC
+EFI_STATUS
+RecoverVariableStorage (
+  IN EFI_PHYSICAL_ADDRESS  MmioAddress,
+  IN UINTN                 BlockSize
+  )
+{
+  EFI_STATUS                            Status;
+  UINTN                                 TargetOffset;
+  UINTN                                 SpareOffset;
+  UINTN                                 Copied;
+  UINTN                                 NumBytes;
+  VOID                                  *Buffer;
+  EFI_HOB_GUID_TYPE                     *GuidHob;
+  FAULT_TOLERANT_WRITE_LAST_WRITE_DATA  *FtwLastWrite;
+
+  GuidHob = GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid);
+  if (GuidHob == NULL) {
+    DEBUG ((DEBUG_INFO, "%a: Recovery is not needed or not possible.\n", __FUNCTION__));
+    return EFI_SUCCESS;
+  }
+
+  DEBUG ((DEBUG_INFO, "%a: Recovery is needed.\n", __FUNCTION__));
+  FtwLastWrite = GET_GUID_HOB_DATA (GuidHob);
+
+  // Validate alignment assumptions used in the loop below.
+  TargetOffset = FtwLastWrite->TargetAddress - MmioAddress;
+  SpareOffset  = FtwLastWrite->SpareAddress - MmioAddress;
+  if (FtwLastWrite->Length % BlockSize != 0 ||
+      TargetOffset % BlockSize != 0 || SpareOffset % BlockSize != 0) {
+    DEBUG ((DEBUG_ERROR, "%a: Recovery information doesn't match SMMSTORE blocks.\n", __FUNCTION__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Buffer = AllocatePool (BlockSize);
+  if (Buffer == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a: Failed to allocate a memory for recovery.\n", __FUNCTION__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = EFI_SUCCESS;
+  for (Copied = 0; Copied < FtwLastWrite->Length; Copied += BlockSize) {
+    NumBytes = BlockSize;
+    Status   = SmmStoreLibRead ((SpareOffset + Copied) / BlockSize, 0, &NumBytes, Buffer);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to read flash: %r.\n", __FUNCTION__, Status));
+      break;
+    }
+    if (NumBytes != BlockSize) {
+      DEBUG ((DEBUG_ERROR, "%a: Incomplete flash read: %d != %d.\n", __FUNCTION__, NumBytes, BlockSize));
+      Status = EFI_DEVICE_ERROR;
+      break;
+    }
+
+    Status = SmmStoreLibWrite ((TargetOffset + Copied) / BlockSize, 0, &NumBytes, Buffer);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to write flash: %r.\n", __FUNCTION__, Status));
+      break;
+    }
+    if (NumBytes != BlockSize) {
+      DEBUG ((DEBUG_ERROR, "%a: Incomplete flash write: %d != %d.\n", __FUNCTION__, NumBytes, BlockSize));
+      Status = EFI_DEVICE_ERROR;
+      break;
+    }
+  }
+
+  if (!EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "%a: Recovered variable storage.\n", __FUNCTION__));
+  }
+
+  FreePool (Buffer);
+  return Status;
+}
+
+/**
   The user Entry Point for module SmmStoreFvbRuntimeDxe. The user code starts with this function.
 
   @param[in] ImageHandle    The firmware allocated handle for the EFI image.
@@ -205,6 +291,20 @@ SmmStoreInitialize (
     DEBUG ((DEBUG_ERROR, "%a: Failed to get SmmStore block size\n", __FUNCTION__));
     SmmStoreLibDeinitialize ();
     return Status;
+  }
+
+  Status = RecoverVariableStorage (MmioAddress, BlockSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a: Failed to recover variable storage.\n", __FUNCTION__));
+    //
+    // Keep going because not much can be done.  One strategy could be wiping whole SMMSTORE
+    // and reboot to start with a clean slate, but that may not work if we ended up here.
+    //
+    // Also, hoping for the best we booted with BOOT_ASSUMING_NO_CONFIGURATION_CHANGES but now
+    // we want BOOT_WITH_DEFAULT_SETTINGS.  It's possible to do something like
+    //   ((EFI_HOB_HANDOFF_INFO_TABLE *)GetHobList ())->BootMode = BOOT_WITH_DEFAULT_SETTINGS;
+    // but it may not be a good idea at this point.
+    //
   }
 
   NvStorageSize = BlockCount * BlockSize;

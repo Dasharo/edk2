@@ -67,6 +67,7 @@
   gEdkiiNvVarStoreFormattedGuid
   gTcgEventEntryHobGuid
   gTcgEvent2EntryHobGuid
+  gEdkiiFaultTolerantWriteGuid
 
 [Ppis]
   gEfiPeiMasterBootModePpiGuid

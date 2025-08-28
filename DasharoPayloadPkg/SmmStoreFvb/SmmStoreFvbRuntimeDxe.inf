@@ -43,6 +43,7 @@
   gEfiAuthenticatedVariableGuid
   gEfiEventVirtualAddressChangeGuid
   gEdkiiNvVarStoreFormattedGuid     ## PRODUCES ## PROTOCOL
+  gEdkiiFaultTolerantWriteGuid      ## CONSUMES
 
 [Protocols]
   gEfiDevicePathProtocolGuid          ## BY_START

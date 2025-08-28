@@ -814,7 +814,12 @@ BlPeiEntryPoint (
     DEBUG ((DEBUG_INFO, "Created SMMSTORE info hob\n"));
 
     Status = ValidateFvHeader (&SMMSTOREInfo);
-    if (EFI_ERROR (Status)) {
+    //
+    // gEdkiiFaultTolerantWriteGuid HOB doesn't exist if both working and spare
+    // parts of the variable store are invalid, this is when we need to
+    // initialize it with defaults.
+    //
+    if (EFI_ERROR (Status) && GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid) == NULL) {
       Status = PeiServicesSetBootMode (BOOT_WITH_DEFAULT_SETTINGS);
       DEBUG ((DEBUG_INFO, "BootMode: Boot with default settings\n"));
       ASSERT_EFI_ERROR (Status);
