@@ -66,6 +66,15 @@ Revision History
 extern UINT8  SovereignBootWizardVfrBin[];
 extern UINT8  SovereignBootWizardStrings[];
 
+typedef struct {
+  CONST UINT32  CertLength;
+  CONST UINT8   *CertData;
+  CONST UINT8   CertHash[SHA256_DIGEST_SIZE];
+} CERT_PTR;
+
+extern CONST UINTN MicrosoftCertificatesArraySize;
+extern CONST CERT_PTR MicrosoftCertificates[];
+
 #define NAME_VALUE_NAME_NUMBER  3
 
 #define DEFAULT_CLASS_MANUFACTURING_VALUE  0xFF
@@ -88,7 +97,7 @@ extern UINT8  SovereignBootWizardStrings[];
   } while(FALSE)
 
 typedef struct {
-  UINTN                                  Signature;
+  UINT32                                 Signature;
 
   EFI_HANDLE                             AppHandle;
   EFI_HII_HANDLE                         HiiHandle;
