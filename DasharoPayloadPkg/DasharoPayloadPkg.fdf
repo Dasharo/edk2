@@ -46,6 +46,15 @@ INF DasharoPayloadPkg/SecCore/SecCore.inf
 
 INF MdeModulePkg/Core/Pei/PeiMain.inf
 INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
+#
+# Mind the relative order of these PEIMs:
+#  1. SmmStorePei produces gVariableFlashInfoHobGuid
+#  2. FaultTolerantWritePei consumes gVariableFlashInfoHobGuid through
+#     VariableFlashInfoLib and produces gEdkiiFaultTolerantWriteGuid
+#  3. BlSupportPei consumes gEdkiiFaultTolerantWriteGuid
+#
+INF DasharoPayloadPkg/SmmStorePei/SmmStorePei.inf
+INF MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
 INF DasharoPayloadPkg/BlSupportPei/BlSupportPei.inf
 INF MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
 INF MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
