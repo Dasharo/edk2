@@ -1,0 +1,14 @@
+// /** @file
+// PEI Driver for SmmStore.
+//
+// This module installs gVariableFlashInfoHobGuid PPI that serves as a source of
+// information about variable storage for VariableFlashInfoLib.
+//
+// Copyright (c) 2025, 3mdeb Sp. z o.o. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+// **/
+
+#string STR_MODULE_ABSTRACT             #language en-US "This module installs gVariableFlashInfoHobGuid PPI that serves as a source of information about variable storage for VariableFlashInfoLib."
+
+#string STR_MODULE_DESCRIPTION          #language en-US "This module installs gVariableFlashInfoHobGuid PPI that serves as a source of information about variable storage for VariableFlashInfoLib."
