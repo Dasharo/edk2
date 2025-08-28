@@ -29,6 +29,7 @@
   Asn1Time.c
   BootOptionParsing.c
   KeyManagement.c
+  MicrosoftCerts.c
   SignatureParsing.c
   SovereignBootWizard.c
   SovereignBootWizardHii.h
