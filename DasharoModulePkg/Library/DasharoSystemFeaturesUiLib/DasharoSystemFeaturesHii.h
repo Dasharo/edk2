@@ -201,8 +201,12 @@ typedef struct {
   UINT8                    CoreMaxCount;
   UINT8                    UsbPortPower;
   UINT8                    DGPUState;
-  IBG_STATUS               IbgStatus;
   BOOLEAN                  MemoryIbecc;
+  // FIXME: Do not put anything after IBG_STATUS. There is something wrong
+  // with alignments/accesses to this structure, which causes values
+  // overwrites that are after IBG_STATUS in the DASHARO_FEATURES_DATA
+  // structure.
+  IBG_STATUS               IbgStatus;
 } DASHARO_FEATURES_DATA;
 
 //
