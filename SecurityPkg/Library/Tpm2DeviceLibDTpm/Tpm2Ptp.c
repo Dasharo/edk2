@@ -116,10 +116,30 @@ PtpCrbRequestUseTpm (
   IN      PTP_CRB_REGISTERS_PTR  CrbReg
   )
 {
+  UINT32      Locality;
   EFI_STATUS  Status;
 
   if (!Tpm2IsPtpPresence (CrbReg)) {
     return EFI_NOT_FOUND;
+  }
+
+  //
+  // Skip requesting locality if it's already active.  In principle, the first
+  // check should be enough.  However, at least some CRB TPMs can reset the
+  // "granted" bit (and only the bit, active locality is not actually affected)
+  // when going in and out of the Idle state and then do nothing on request to
+  // grant locality, which leads to a timeout below.  One possible explanation
+  // is that the "granted" bit is flipped due to a bug and the chip just does
+  // nothing on requesting access to an already active locality.  The extra
+  // check should do no harm to well-behaving chips.
+  //
+  // Locality is derived from the base address:
+  //   0xFED40000 -> 0, 0xFED41000 -> 1, etc.
+  //
+  Locality = ((UINTN)CrbReg & 0xffff) >> 12;
+  if ((MmioRead32 ((UINTN)&CrbReg->LocalityStatus) & PTP_CRB_LOCALITY_STATUS_GRANTED) ||
+      (MmioRead32 ((UINTN)&CrbReg->LocalityState) & PTP_CRB_LOCALITY_STATE_ACTIVE_LOCALITY_MASK) == Locality) {
+    return EFI_SUCCESS;
   }
 
   MmioWrite32 ((UINTN)&CrbReg->LocalityControl, PTP_CRB_LOCALITY_CONTROL_REQUEST_ACCESS);
