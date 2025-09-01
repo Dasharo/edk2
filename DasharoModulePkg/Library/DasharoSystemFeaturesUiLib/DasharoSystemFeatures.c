@@ -139,7 +139,8 @@ DasharoSystemFeaturesUiLibConstructor (
 )
 {
   EFI_STATUS  Status;
-  UINTN       BufferSize;
+  UINTN       BufferSize, VarSize;
+  UINT8       DescriptorWriteable;
 
   if (!FixedPcdGetBool (PcdShowMenu))
     return EFI_SUCCESS;
@@ -205,6 +206,19 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(IntelMeMenuShowCbntStatus) = FixedPcdGetBool (PcdIntelMeMenuShowCbntStatus);
   PRIVATE_DATA(ShowMemorySpdProfile) = FixedPcdGetBool(PcdShowMemorySpdProfileOption);
   PRIVATE_DATA(ShowMemoryIbecc) = FixedPcdGetBool(PcdShowMemoryIbeccOption);
+
+  // HAP is only available if descriptor is not locked
+  VarSize = sizeof (DescriptorWriteable);
+  Status = gRT->GetVariable (
+      L"DescriptorWriteable",
+      &gDasharoSystemFeaturesTokenSpaceGuid,
+      NULL,
+      &VarSize,
+      &DescriptorWriteable
+      );
+
+  if (!EFI_ERROR(Status))
+      PRIVATE_DATA(MeHapAvailable) &= !DescriptorWriteable;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
