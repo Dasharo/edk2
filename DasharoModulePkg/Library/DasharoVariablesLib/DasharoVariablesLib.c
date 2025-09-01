@@ -559,7 +559,7 @@ DasharoCapsulesCanPersistAcrossReset (
   )
 {
   EFI_STATUS  Status;
-  UINT8       MeMode;
+  UINT8       MeMode, DescriptorWriteable;
   UINTN       VarSize;
 
   //
@@ -574,6 +574,23 @@ DasharoCapsulesCanPersistAcrossReset (
   //
   if (!FixedPcdGetBool (PcdIntelMeHapAvailable)) {
     return FALSE;
+  }
+
+  //
+  // If the descriptor is locked, we'll only be updating the BIOS region, so ME
+  // state is irrelevant.
+  //
+  VarSize = sizeof (DescriptorWriteable);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_DESCRIPTOR_WRITEABLE,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &DescriptorWriteable
+      );
+
+  if (!EFI_ERROR (Status) && !DescriptorWriteable) {
+    return TRUE;
   }
 
   MeMode = DASHARO_ME_MODE_ENABLE;
