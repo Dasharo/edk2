@@ -580,9 +580,9 @@ DasharoCapsulesCanPersistAcrossReset (
   // If the descriptor is locked, we'll only be updating the BIOS region, so ME
   // state is irrelevant.
   //
-  VarSize = sizeof (DescriptorWriteable)
+  VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
-      "DescriptorWriteable",
+      L"DescriptorWriteable",
       &gDasharoSystemFeaturesTokenSpaceGuid,
       NULL,
       &VarSize,
