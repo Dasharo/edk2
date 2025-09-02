@@ -582,7 +582,7 @@ DasharoCapsulesCanPersistAcrossReset (
   //
   VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
-      L"DescriptorWriteable",
+      DASHARO_VAR_DESCRIPTOR_WRITEABLE,
       &gDasharoSystemFeaturesTokenSpaceGuid,
       NULL,
       &VarSize,
