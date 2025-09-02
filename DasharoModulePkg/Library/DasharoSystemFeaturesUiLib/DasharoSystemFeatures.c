@@ -211,7 +211,7 @@ DasharoSystemFeaturesUiLibConstructor (
   VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
       DASHARO_VAR_DESCRIPTOR_WRITEABLE,
-      &gDasharoSystemFeaturesTokenSpaceGuid,
+      &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
       &DescriptorWriteable
