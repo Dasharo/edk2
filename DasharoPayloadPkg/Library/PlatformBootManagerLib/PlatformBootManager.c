@@ -1058,6 +1058,7 @@ WarnIfRecoveryBoot (
 
   gST->ConOut->ClearScreen (gST->ConOut);
   DrainInput ();
+  BootLogoEnableLogo ();
 }
 
 STATIC
@@ -1244,6 +1245,7 @@ WarnIfBatteryLow (
 
   gST->ConOut->ClearScreen (gST->ConOut);
   DrainInput ();
+  BootLogoEnableLogo ();
 }
 
 STATIC
@@ -1398,6 +1400,7 @@ WarnIfFirmwareUpdateMode (
 
   gST->ConOut->ClearScreen (gST->ConOut);
   DrainInput ();
+  BootLogoEnableLogo ();
   return TRUE;
 }
 /**
