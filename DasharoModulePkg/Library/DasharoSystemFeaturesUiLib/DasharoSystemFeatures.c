@@ -218,7 +218,7 @@ DasharoSystemFeaturesUiLibConstructor (
       );
 
   if (!EFI_ERROR(Status))
-      PRIVATE_DATA(MeHapAvailable) &= !DescriptorWriteable;
+      PRIVATE_DATA(MeHapAvailable) &= DescriptorWriteable;
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))
