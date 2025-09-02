@@ -1722,13 +1722,6 @@ PlatformBootManagerAfterConsole (
 
   BootLogoEnableLogo ();
 
-  //
-  // Register ENTER as CONTINUE key
-  //
-  Enter.ScanCode    = SCAN_NULL;
-  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
-  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
-
   if (!mFastBoot || FUMEnabled) {
     // FIXME: USB devices are not being detected unless we wait a bit.
     // But don't wait with fastboot enabled. We typically don't boot a full blown OS from USB.
@@ -1862,6 +1855,13 @@ PlatformBootManagerAfterConsole (
           &VarSize,
           &BootMenuEnable
         );
+
+  //
+  // Register ENTER as CONTINUE key
+  //
+  Enter.ScanCode    = SCAN_NULL;
+  Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
+  EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
 
   // Print the prompt and SOL strings only if Quiet Boot and Fast Boot are disabled.
   // Do not refresh the logo, it should stay intact.
