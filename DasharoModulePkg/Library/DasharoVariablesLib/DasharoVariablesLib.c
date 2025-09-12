@@ -293,12 +293,14 @@ InitVariable (
 {
   EFI_STATUS  Status;
   UINTN       BufferSize;
+  UINT32      Attributes;
+  VOID        *VariableData;
 
   BufferSize = 0;
   Status = gRT->GetVariable (
       VarName,
       &gDasharoSystemFeaturesGuid,
-      NULL,
+      &Attributes,
       &BufferSize,
       NULL
       );
@@ -306,6 +308,40 @@ InitVariable (
   if (Status == EFI_NOT_FOUND) {
     Status = ResetVariable (VarName);
     ASSERT_EFI_ERROR (Status);
+  } else if (Status == EFI_BUFFER_TOO_SMALL && Attributes != DasharoGetVariableAttributes(VarName)) {
+    // Re-create variable with proper attributes if they don't match, preserving
+    // the value.
+    VariableData = AllocateZeroPool (BufferSize);
+    ASSERT (VariableData != NULL);
+
+    Status = gRT->GetVariable (
+        VarName,
+        &gDasharoSystemFeaturesGuid,
+        0,
+        &BufferSize,
+        VariableData
+    );
+    ASSERT_EFI_ERROR (Status);
+
+    Status = gRT->SetVariable (
+        VarName,
+        &gDasharoSystemFeaturesGuid,
+        0,
+        0,
+        NULL
+    );
+    ASSERT_EFI_ERROR(Status);
+
+    Status = gRT->SetVariable (
+        VarName,
+        &gDasharoSystemFeaturesGuid,
+        DasharoGetVariableAttributes(VarName),
+        BufferSize,
+        VariableData
+    );
+    ASSERT_EFI_ERROR(Status);
+
+    FreePool (VariableData);
   }
 }
 
