@@ -1,4 +1,4 @@
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor|0x60 # 
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor|0x60 
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextHighlightColor|0x0F
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleBackgroundColor|0x60
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor|0x0F
@@ -23,20 +23,20 @@ gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0F
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x60
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x07
 
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 }    # Plain black
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  | { 0x00, 0x00, 0x00, 0x98 }    # Dark green
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen | { 0x00, 0x38, 0xD4, 0x30 }    # Dasharo green
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan  | { 0x00, 0xFF, 0xFF, 0xFF }    # White
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed   | { 0x00, 0x98, 0x00, 0x00 }    # Red
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta    | { 0x00, 0x98, 0x00, 0x98 }    # Magenta
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown      | { 0x00, 0x29, 0x36, 0x3b }    # Dasharo grey
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray  | { 0x00, 0x80, 0x80, 0x80 }    # Light grey
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 }    # 0 Plain black
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  | { 0x00, 0x00, 0x00, 0x98 }    # 1 Dark green
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen | { 0x00, 0x38, 0xD4, 0x30 }    # 2 Dasharo green
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan  | { 0x00, 0xFF, 0xFF, 0xFF }    # 3 White
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed   | { 0x00, 0x98, 0x00, 0x00 }    # 4 Red
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta    | { 0x00, 0x98, 0x00, 0x98 }    # 5 Magenta
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown      | { 0x00, 0x29, 0x36, 0x3b }    # 6 Dasharo grey
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray  | { 0x00, 0x80, 0x80, 0x80 }    # 7 Light grey
 
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray   | { 0x00, 0x30, 0x30, 0x30 }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue       | { 0x00, 0x00, 0x00, 0xFF }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLime       | { 0x00, 0x00, 0xFF, 0x00 }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan       | { 0x00, 0xFF, 0xFF, 0x00 }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed        | { 0x00, 0xFF, 0x00, 0x00 }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteFuchsia    | { 0x00, 0xFF, 0x00, 0xFF }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow     | { 0x00, 0xFF, 0xFF, 0x00 }
-gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite      | { 0x00, 0xFF, 0xFF, 0xFF }
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray   | { 0x00, 0x30, 0x30, 0x30 }    # 00 Dark grey
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue       | { 0x00, 0x00, 0x00, 0xFF }    # 10 Blue
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLime       | { 0x00, 0x00, 0xFF, 0x00 }    # 20 Green
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan       | { 0x00, 0xFF, 0xFF, 0x00 }    # 30 Cyan
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed        | { 0x00, 0xFF, 0x00, 0x00 }    # 40 Red
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteFuchsia    | { 0x00, 0xFF, 0x00, 0xFF }    # 50 Fuchsia
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow     | { 0x00, 0xFF, 0xFF, 0x00 }    # 60 Yellow
+gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite      | { 0x00, 0xFF, 0xFF, 0xFF }    # 70 White
