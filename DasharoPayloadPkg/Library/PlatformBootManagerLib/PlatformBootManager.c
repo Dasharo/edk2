@@ -846,12 +846,6 @@ PlatformBootManagerBeforeConsole (
   FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
 
   //
-  // PCI initialization from above should be sufficient for the discovery and
-  // processing of consoles.
-  //
-  PlatformConsoleInit ();
-
-  //
   // Find all display class PCI devices (using the handles from the previous
   // step), and connect them non-recursively. This should produce a number of
   // child handles with GOPs on them.
@@ -863,6 +857,18 @@ PlatformBootManagerBeforeConsole (
   // ErrOut.
   //
   FilterAndProcess (&gEfiGraphicsOutputProtocolGuid, NULL, AddOutput);
+
+  //
+  // Connecting children of gEfiPciRootBridgeIoProtocolGuid should be sufficient
+  // for the discovery and processing of consoles, but we intentionally add
+  // serial consoles later to make sure they follow all graphical ones.
+  //
+  // This is because at least some bootloaders (e.g., one in FreeBSD) use the
+  // first console of ConOut as the primary one. Putting serial console first
+  // leads to interactive output going to serial where most users won't even
+  // see it.
+  //
+  PlatformConsoleInit ();
 
   if (mFastBoot) {
     //
