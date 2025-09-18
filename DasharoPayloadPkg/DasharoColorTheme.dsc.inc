@@ -1,27 +1,55 @@
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor|0x60 
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextHighlightColor|0x0F
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleBackgroundColor|0x60
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor|0x0F
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupBackgroundColor|0x60
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupTextColor|0x0F
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor|0x30
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor|0x06
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpTextColor|0x07
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpBackgroundColor|0x30
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor|0x06
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoBackgroundColor|0x30
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor|0x06
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundColor|0x30
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserSubtitleTextColor|0x02
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerBackgroundColor|0x60
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerTextColor|0x0F
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpTextColor|0x02
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpBackgroundColor|0x60
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor|0x06
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor|0x30
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0F
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x60
-gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x07
+#  Color codes defined at MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsole.c
+#  Foregrounds:
+#  0x00 (EFI_BLACK)
+#  0x01 (EFI_BLUE)
+#  0x02 (EFI_GREEN)
+#  0x03 (EFI_CYAN)
+#  0x04 (EFI_RED)
+#  0x05 (EFI_MAGENTA)
+#  0x06 (EFI_BROWN)
+#  0x07 (EFI_LIGHTGRAY)
+#  0x08 (EFI_DARKGRAY)
+#  0x09 (EFI_LIGHTBLUE)
+#  0x0A (EFI_LIGHTGREEN)
+#  0x0B (EFI_LIGHTCYAN)
+#  0x0C (EFI_LIGHTRED)
+#  0x0D (EFI_LIGHTMAGENTA)
+#  0x0E (EFI_YELLOW)
+#  0x0F (EFI_WHITE)
+# 
+#  Backgrounds:
+#  0x00 (EFI_BACKGROUND_BLACK)
+#  0x10 (EFI_BACKGROUND_BLUE)
+#  0x20 (EFI_BACKGROUND_GREEN)
+#  0x30 (EFI_BACKGROUND_CYAN)
+#  0x40 (EFI_BACKGROUND_RED)
+#  0x50 (EFI_BACKGROUND_MAGENTA)
+#  0x60 (EFI_BACKGROUND_BROWN)
+#  0x70 (EFI_BACKGROUND_LIGHTGRAY)
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundHighlightColor|0x60 # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextHighlightColor|0x0F       # White text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleBackgroundColor|0x60          # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserTitleTextColor|0x0F                # White text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupBackgroundColor|0x60          # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupTextColor|0x0F                # White text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseTextColor|0x06         # Grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPopupInverseBackgroundColor|0x06   # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpTextColor|0x07                 # Light grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserHelpBackgroundColor|0x30           # White bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoTextColor|0x06                 # Grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserInfoBackgroundColor|0x30           # White bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldTextColor|0x06                # Grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldBackgroundColor|0x30          # White bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserSubtitleTextColor|0x02             # Green text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerBackgroundColor|0x60         # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserBannerTextColor|0x0F               # White text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpTextColor|0x02              # Green text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserKeyHelpBackgroundColor|0x60        # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListTextColor|0x06             # Grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor|0x30       # White bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0F                # White text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x60          # Grey bg
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x07          # Light grey text
 
 gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 }    # 0 Plain black
 gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  | { 0x00, 0x00, 0x00, 0x98 }    # 1 Dark green
