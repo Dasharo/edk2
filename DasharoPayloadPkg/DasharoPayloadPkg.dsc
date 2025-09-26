@@ -146,7 +146,7 @@
   DEFINE NETWORK_IPXE                   = FALSE
 
 [BuildOptions]
-  *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES -Wno-stringop-overflow
+  *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES -Wno-stringop-overflow -mno-mmx -mno-sse
 !if $(USE_CBMEM_FOR_CONSOLE) == FALSE
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
@@ -858,7 +858,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
   DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
-  CrScreenshotDxe/CrScreenshotDxe.inf
+  CrScreenshotDxe/CrScreenshotDxe.inf {
+    <BuildOptions>
+      # floats are used for encoding PNGs from firmware's UI
+      GCC:*_*_*_CC_FLAGS = -mmmx -msse
+  }
 
   #
   # SMBIOS Support
