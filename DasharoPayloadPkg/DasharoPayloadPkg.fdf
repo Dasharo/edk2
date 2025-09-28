@@ -422,6 +422,9 @@ FILE DRIVER = CAB058DF-E938-4F85-8978-1F7E6AABDB96 {
 
 !if $(CAPSULE_SUPPORT) == TRUE
 INF  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
+!if $(CAPSULES_V2) == TRUE
+INF FmpDevicePkg/DetectTestKeyDxe/DetectTestKeyDxe.inf
+!endif
 !endif
 
 ################################################################################
