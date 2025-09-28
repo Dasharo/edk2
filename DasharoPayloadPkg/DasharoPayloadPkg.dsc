@@ -250,6 +250,7 @@
   FmpDependencyLib|FmpDevicePkg/Library/FmpDependencyLib/FmpDependencyLib.inf
   FmpDeviceLib|UefiPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
   FmpPayloadHeaderLib|FmpDevicePkg/Library/FmpPayloadHeaderLibV1/FmpPayloadHeaderLibV1.inf
+  FmpPayloadLib|FmpDevicePkg/Library/FmpPayloadLib/FmpPayloadLib.inf
   PopUpLib|DasharoPayloadPkg/Library/PopUpLib/PopUpLib.inf
   DetectTestKeyLib|FmpDevicePkg/Library/DetectTestKeyLib/DetectTestKeyLib.inf
 !else
@@ -527,6 +528,10 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport|$(CAPSULE_SUPPORT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleEmbeddedDriverSupport|$(CAPSULE_SUPPORT)
+!if $(CAPSULES_V2)
+  # Root key for signing the outer capsule.
+  !include DasharoPayloadPkg/CapsuleRootKey.inc
+!endif
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
 
@@ -822,7 +827,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
       #
       # See BaseTools/Source/Python/Pkcs7Sign/Readme.md for more details on such
       # PCDs and include files.
+!if $(CAPSULES_V2)
+      !include BaseTools/Source/Python/Pkcs7Sign/TestRoot.cer.gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr.inc
+!else
       !include DasharoPayloadPkg/CapsuleRootKey.inc
+!endif
   }
   MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
   MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
@@ -832,6 +841,10 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
       GCC:*_*_*_CC_FLAGS = -mmmx -msse
   }
   DasharoPayloadPkg/CapsuleChargerCheckDxe/CapsuleChargerCheckDxe.inf
+!if $(CAPSULES_V2)
+  FmpDevicePkg/DetectTestKeyDxe/DetectTestKeyDxe.inf
+  FmpDevicePkg/SealedCapsulesDxe/SealedCapsulesDxe.inf
+!endif
 !endif
 !if $(RAM_DISK_ENABLE) == TRUE
   MdeModulePkg/Universal/Disk/RamDiskDxe/RamDiskDxe.inf
