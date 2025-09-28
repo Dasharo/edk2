@@ -34,6 +34,7 @@
   UpdateReport.c
 
 [Packages]
+  FmpDevicePkg/FmpDevicePkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
@@ -57,7 +58,9 @@
   VariablePolicyHelperLib
   PopUpLib
   UefiLib
+  FmpAuthenticationLib
   FmpDependencyLib
+  FmpPayloadLib
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleMax                               ## CONSUMES
@@ -74,6 +77,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport                     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCodRelocationDevPath                     ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCoDRelocationFileName                    ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSealedFmpCapsules                        ## CONSUMES
+
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr                 ## SOMETIMES_CONSUMES
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport                      ## SOMETIMES_CONSUMES
 
@@ -106,6 +112,7 @@
   gEfiGlobalVariableGuid
   gEdkiiCapsuleOnDiskNameGuid             ## SOMETIMES_CONSUMES ## GUID
   gEfiSystemResourceTableGuid             ## SOMETIMES_CONSUMES ## GUID
+  gEfiCertPkcs7Guid                       ## SOMETIMES_CONSUMES ## GUID
 
 [Depex]
   gEfiVariableWriteArchProtocolGuid

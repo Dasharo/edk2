@@ -23,6 +23,7 @@
 #include <Guid/FmpCapsule.h>
 #include <Guid/SystemResourceTable.h>
 #include <Guid/EventGroup.h>
+#include <Guid/ImageAuthentication.h>
 
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
@@ -35,6 +36,9 @@
 #include <Library/DevicePathLib.h>
 #include <Library/UefiLib.h>
 #include <Library/BmpSupportLib.h>
+#include <Library/FmpAuthenticationLib.h>
+#include <Library/FmpPayloadLib.h>
+#include <Library/PcdLib.h>
 
 #include <Protocol/GraphicsOutput.h>
 #include <Protocol/EsrtManagement.h>
@@ -1753,5 +1757,312 @@ DxeCapsuleLibDestructor (
   Status = gBS->CloseEvent (mDxeCapsuleLibEndOfDxeEvent);
   ASSERT_EFI_ERROR (Status);
 
+  return EFI_SUCCESS;
+}
+
+/**
+  Checks that an FMP image is signed with a trusted key.
+
+  @param[in] ImageHeader  Payload image within an FMP capsule.
+
+  @retval EFI_SUCCESS             The image is signed with a proper key.
+  @retval EFI_UNSUPPORTED         Signature doesn't use PKCS7 format.
+  @retval EFI_ABORTED             Root key is not available.
+  @retval EFI_SECURITY_VIOLATION  Signature doesn't correspond to any known root key.
+**/
+STATIC
+EFI_STATUS
+CheckFmpImageSignature (
+  IN EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *ImageHeader
+  )
+{
+  EFI_FIRMWARE_IMAGE_AUTHENTICATION  *ImageAuthenticationHeader;
+  GUID                               *CertType;
+  UINT8                              *PublicKeyDataXdr;
+  UINT8                              *PublicKeyDataXdrEnd;
+  UINTN                              PublicKeyDataLength;
+  UINTN                              Index;
+  EFI_STATUS                         Status;
+
+  PublicKeyDataXdr    = PcdGetPtr (PcdFmpDevicePkcs7CertBufferXdr);
+  PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
+
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdr == PublicKeyDataXdrEnd)) {
+    DEBUG ((DEBUG_ERROR, "%a(): invalid PKCS7 XDR, aborting.\n", __func__));
+    return EFI_ABORTED;
+  }
+
+  ImageAuthenticationHeader = (EFI_FIRMWARE_IMAGE_AUTHENTICATION *)&ImageHeader[1];
+
+  CertType = &ImageAuthenticationHeader->AuthInfo.CertType;
+  if (!CompareGuid (&gEfiCertPkcs7Guid, CertType)) {
+    DEBUG ((DEBUG_INFO, "%a(): unexpected certificate type: %g\n", __func__, CertType));
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Structure of PcdFmpDevicePkcs7CertBufferXdr:
+  //  - an entry:
+  //    + length of a public key as 32-bit big-endian
+  //    + a public key
+  //    + padding to 4-byte boundary (unnecessary for the last element)
+  //  - other entries follow
+  //
+  for (Index = 0; PublicKeyDataXdr < PublicKeyDataXdrEnd; Index++) {
+    DEBUG ((
+      DEBUG_INFO,
+      "%a(): certificate #%d [%p..%p].\n",
+      __func__,
+      Index,
+      PublicKeyDataXdr,
+      PublicKeyDataXdrEnd
+      ));
+
+    if (PublicKeyDataXdr + sizeof (UINT32) > PublicKeyDataXdrEnd) {
+      DEBUG ((DEBUG_ERROR, "%a(): certificate size extends beyond end of PCD, skipping it.\n", __func__));
+      return EFI_ABORTED;
+    }
+
+    PublicKeyDataLength = SwapBytes32 (*(UINT32 *)PublicKeyDataXdr);
+    PublicKeyDataXdr   += sizeof (UINT32);
+    if (PublicKeyDataXdr + PublicKeyDataLength > PublicKeyDataXdrEnd) {
+      DEBUG ((DEBUG_ERROR, "%a(): certificate extends beyond end of PCD, skipping it.\n", __func__));
+      return EFI_ABORTED;
+    }
+
+    Status = AuthenticateFmpImage (
+               ImageAuthenticationHeader,
+               ImageHeader->UpdateImageSize,
+               PublicKeyDataXdr,
+               PublicKeyDataLength
+               );
+    if (!EFI_ERROR (Status)) {
+      return EFI_SUCCESS;
+    }
+
+    PublicKeyDataXdr += PublicKeyDataLength;
+    PublicKeyDataXdr  = (UINT8 *)ALIGN_POINTER (PublicKeyDataXdr, sizeof (UINT32));
+  }
+
+  return EFI_SECURITY_VIOLATION;
+}
+
+/**
+  Validate and extract inner FMP capsule out of an outer one.
+
+  Caution: This function may receive untrusted input.
+
+  This function assumes the caller validated the capsule by using
+  IsValidCapsuleHeader(), so that all fields in EFI_CAPSULE_HEADER are correct.
+  The capsule buffer size is CapsuleHeader->CapsuleImageSize.
+
+  This function validates the fields in EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER
+  and EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER.
+
+  This function checks if the payload is an FMP capsule.
+
+  @param[in, out] CapsuleHeader         Points to a capsule header.
+                                        On input this parameter points to the outer capsule header.
+                                        On output this parameter points to the inner capsule header,
+                                        if it exists and all operations succeed.
+  @param[out]     EmbeddedDriverCount   If the inner FMP capsule exists, this parameter returns
+                                        its embedded driver count.
+
+  @retval EFI_SUCCESS             The payload is an FMP capsule.
+  @retval EFI_INVALID_PARAMETER   CapsuleHeader pointer is NULL.
+                                  Payload is not an FMP capsule or not a valid FMP capsule.
+  @retval EFI_UNSUPPORTED         The outer capsule contains an embedded driver or multiple payloads.
+                                  The outer capsule is not FMP.
+                                  The outer capsule uses old payload format.
+                                  The outer capsule is not signed.
+                                  Signature is using an unexpected format.
+  @retval EFI_SECURITY_VIOLATION  The inner capsule is not authentic.
+  @retval Others                  Statuses returned by AuthenticateFmpImage().
+**/
+EFI_STATUS
+UnsealCapsule (
+  IN OUT EFI_CAPSULE_HEADER  **CapsuleHeader,
+  OUT UINT16                 *EmbeddedDriverCount OPTIONAL
+  )
+{
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER        *OuterFmpHeader;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *OuterImageHeader;
+  EFI_FIRMWARE_IMAGE_AUTHENTICATION             *OuterAuthenticationHeader;
+  UINTN                                         OuterAuthDataSize;
+  UINTN                                         StartOfPayload;
+  UINT64                                        *OuterOffsetList;
+  EFI_STATUS                                    Status;
+  EFI_CAPSULE_HEADER                            *InnerCapsuleHeader;
+  EFI_CAPSULE_HEADER                            *OuterCapsuleHeader;
+  UINTN                                         InnerCapsuleSize;
+  UINTN                                         OuterCapsulePayloadSize;
+  UINT16                                        InnerEmbeddedDriverCount;
+
+  //
+  // Overall structure of the data handled here:
+  //
+  //    Outer/top capsule
+  //    |
+  //    |-- EFI_CAPSULE_HEADER
+  //    |   |-- GUID: FMP capsule
+  //    |   `-- flags: same as for the inner/nested capsule
+  //    |
+  //    `-- EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER
+  //        |-- embedded drivers: none
+  //        |-- dependencies: none
+  //        `-- payloads (exactly one):
+  //            |-- EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER
+  //            |-- EFI_FIRMWARE_IMAGE_AUTHENTICATION
+  //            |   `-- signed with root key embedded into BIOS
+  //            |-- FMP_PAYLOAD_HEADER
+  //            |   `-- fields aren't meaningful beyond size of payload's data
+  //            `-- Inner/nested capsule
+  //
+  //    Inner/nested capsule
+  //    |
+  //    |-- EFI_CAPSULE_HEADER
+  //    |   |-- GUID: FMP capsule
+  //    |   `-- flags: same as for the outer/nested capsule
+  //    |
+  //    `-- EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER
+  //        |-- embedded drivers: any
+  //        |-- dependencies: any
+  //        `-- payloads (any, showing just one):
+  //            |-- EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER
+  //            |-- EFI_FIRMWARE_IMAGE_AUTHENTICATION
+  //            |   `-- signed with a test key to satisfy FmpDxe
+  //            |-- FMP_PAYLOAD_HEADER
+  //            |   `-- fields describe system firmware to be updated
+  //            `-- Firmware update image
+  //
+
+  if (*CapsuleHeader == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a(): input capsule pointer is NULL.\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  OuterCapsuleHeader = *CapsuleHeader;
+  if (!IsFmpCapsuleGuid (&OuterCapsuleHeader->CapsuleGuid)) {
+    DEBUG ((DEBUG_ERROR, "%a(): outer capsule is not an FMP capsule.\n", __func__));
+    return EFI_UNSUPPORTED;
+  }
+
+  OuterFmpHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER *)((UINT8 *)OuterCapsuleHeader + OuterCapsuleHeader->HeaderSize);
+  if (OuterFmpHeader->PayloadItemCount != 1) {
+    DEBUG ((DEBUG_ERROR, "%a(): multiple payloads in the outer capsule.\n", __func__));
+    return EFI_UNSUPPORTED;
+  }
+
+  if (OuterFmpHeader->EmbeddedDriverCount != 0) {
+    DEBUG ((DEBUG_ERROR, "%a(): embedded driver inside the outer capsule.\n", __func__));
+    return EFI_UNSUPPORTED;
+  }
+
+  OuterOffsetList  = (UINT64 *)&OuterFmpHeader[1];
+  OuterImageHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER *)((UINT8 *)OuterFmpHeader + OuterOffsetList[0]);
+
+  if (OuterImageHeader->Version < EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): outer capsule version must be at least %d, got %d.\n",
+      __func__,
+      EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION,
+      OuterImageHeader->Version
+      ));
+    return EFI_UNSUPPORTED;
+  }
+
+  if (OuterImageHeader->ImageCapsuleSupport != CAPSULE_SUPPORT_AUTHENTICATION) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): outer capsule must support auth but not dependencies, got 0x%x.\n",
+      __func__,
+      OuterImageHeader->ImageCapsuleSupport
+      ));
+    return EFI_UNSUPPORTED;
+  }
+
+  Status = CheckFmpImageSignature (OuterImageHeader);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): the capsules failed to authenticate: %r.\n", __func__, Status));
+    return Status;
+  }
+
+  OuterAuthenticationHeader = (EFI_FIRMWARE_IMAGE_AUTHENTICATION *)&OuterImageHeader[1];
+
+  OuterAuthDataSize = OuterAuthenticationHeader->AuthInfo.Hdr.dwLength + sizeof (OuterAuthenticationHeader->MonotonicCount);
+
+  StartOfPayload = (UINTN)OuterAuthenticationHeader + OuterAuthDataSize;
+  if ((StartOfPayload < (UINTN)OuterAuthenticationHeader) ||
+      (StartOfPayload >= (UINTN)OuterAuthenticationHeader + OuterImageHeader->UpdateImageSize))
+  {
+    DEBUG ((DEBUG_ERROR, "%a(): pointer overflow on handling payload image.\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (OuterImageHeader->UpdateImageSize < OuterAuthDataSize) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): outer image is shorter than authentication data: 0x%x < 0x%lx.\n",
+      __func__,
+      OuterImageHeader->UpdateImageSize,
+      OuterAuthDataSize
+      ));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  OuterCapsulePayloadSize = OuterImageHeader->UpdateImageSize - OuterAuthDataSize;
+
+  Status = FmpPayloadGetData (
+             (VOID *)StartOfPayload,
+             OuterCapsulePayloadSize,
+             (VOID **)&InnerCapsuleHeader,
+             &InnerCapsuleSize
+             );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to extract FMP data: %r.\n", __func__, Status));
+    return Status;
+  }
+
+  if (InnerCapsuleSize < sizeof (EFI_CAPSULE_HEADER)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): outer payload is smaller than a capsule header (0x%x < 0x%x).\n",
+      __func__,
+      InnerCapsuleSize,
+      sizeof (EFI_CAPSULE_HEADER)
+      ));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (!IsValidCapsuleHeader (InnerCapsuleHeader, InnerCapsuleSize)) {
+    DEBUG ((DEBUG_ERROR, "%a(): outer payload is not a capsule.\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (!IsFmpCapsuleGuid (&InnerCapsuleHeader->CapsuleGuid)) {
+    DEBUG ((DEBUG_ERROR, "%a(): nested capsule is not an FMP capsule.\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = ValidateFmpCapsule (InnerCapsuleHeader, &InnerEmbeddedDriverCount);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): nested capsule did not pass validation.\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if ((OuterCapsuleHeader->HeaderSize != InnerCapsuleHeader->HeaderSize) ||
+      (OuterCapsuleHeader->Flags != InnerCapsuleHeader->Flags))
+  {
+    DEBUG ((DEBUG_ERROR, "%a(): parameters of outer and nested capsules don't match!\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (EmbeddedDriverCount != NULL) {
+    *EmbeddedDriverCount = InnerEmbeddedDriverCount;
+  }
+
+  *CapsuleHeader = InnerCapsuleHeader;
+  DEBUG ((DEBUG_INFO, "%a(): discovered a valid nested FMP capsule.\n", __func__));
   return EFI_SUCCESS;
 }

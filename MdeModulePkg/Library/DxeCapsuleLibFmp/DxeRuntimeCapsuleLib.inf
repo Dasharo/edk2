@@ -35,6 +35,7 @@
   UpdateReport.c
 
 [Packages]
+  FmpDevicePkg/FmpDevicePkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
@@ -55,9 +56,13 @@
   PopUpLib
   UefiLib
   FmpDependencyLib
+  FmpAuthenticationLib
+  FmpPayloadLib
 
 [Pcd]
-  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport  ## SOMETIMES_CONSUMES
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport        ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSealedFmpCapsules          ## CONSUMES
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr   ## SOMETIMES_CONSUMES
 
 [Protocols]
   gEsrtManagementProtocolGuid                   ## CONSUMES
@@ -78,6 +83,7 @@
   gEfiEventVirtualAddressChangeGuid       ## CONSUMES ## Event
   gEdkiiCapsuleOnDiskNameGuid             ## SOMETIMES_CONSUMES ## GUID
   gEfiSystemResourceTableGuid             ## SOMETIMES_CONSUMES ## GUID
+  gEfiCertPkcs7Guid                       ## SOMETIMES_CONSUMES ## GUID
 
 [Depex]
   gEfiVariableWriteArchProtocolGuid

@@ -1687,6 +1687,13 @@
   # @Prompt Enable advertising support of FMP capsules.
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport|FALSE|BOOLEAN|0x00000028
 
+  ## Indicates whether the platform requires FMP Capsules to be "sealed" (nested one level deep to make
+  #  signing cover the inner one in its entirety).<BR><BR>
+  #  On TRUE, the platform requires FMP capsules to be sealed.<BR>
+  #  On FALSE, the platform uses regular FMP capsules as is.<BR>
+  # @Prompt Enable to require FMP capsules to be nested which makes capsule signing cover everything.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSealedFmpCapsules|FALSE|BOOLEAN|0x00000040
+
   ## Capsule On Disk is to deliver capsules via files on Mass Storage device.<BR><BR>
   #  This PCD indicates if the Capsule On Disk is supported.<BR>
   #   TRUE  - Capsule On Disk is supported.<BR>
