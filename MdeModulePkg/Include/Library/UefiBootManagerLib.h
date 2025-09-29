@@ -826,4 +826,16 @@ EfiBootManagerLaunchSovereignBootWizard (
   UINT8 AppLaunchCause
   );
 
+/**
+  Return the boot description for the controller.
+
+  @param Handle                Controller handle.
+
+  @return  The description string.
+**/
+CHAR16 *
+EfiBootManagerGetBootDescription (
+  IN EFI_HANDLE  Handle
+  );
+
 #endif

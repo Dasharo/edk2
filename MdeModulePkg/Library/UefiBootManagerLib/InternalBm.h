@@ -361,18 +361,6 @@ BmCharToUint (
   );
 
 /**
-  Return the boot description for the controller.
-
-  @param Handle                Controller handle.
-
-  @return  The description string.
-**/
-CHAR16 *
-BmGetBootDescription (
-  IN EFI_HANDLE  Handle
-  );
-
-/**
   Enumerate all boot option descriptions and append " 2"/" 3"/... to make
   unique description.
 

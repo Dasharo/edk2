@@ -1031,7 +1031,7 @@ BM_GET_BOOT_DESCRIPTION  mBmBootDescriptionHandlers[] = {
   @return  The description string.
 **/
 CHAR16 *
-BmGetBootDescription (
+EfiBootManagerGetBootDescription (
   IN EFI_HANDLE  Handle
   )
 {
