@@ -668,6 +668,14 @@ Callback (
                   NULL
                   );
               } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+              // If we failed image verification but the image
+              // is not a correct boot option on HDD, simply exit
+              if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+                  PrivateData->FormBrowserEx2->SetScope (SystemLevel);
+                  Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+                  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
+                  return Status;
+              }
               // No bootloaders, go back to welcome form
               Status = PrivateData->FormBrowser2->SendForm (
                             PrivateData->FormBrowser2,

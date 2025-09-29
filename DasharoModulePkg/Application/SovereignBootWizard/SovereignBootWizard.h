@@ -91,6 +91,7 @@ extern CONST CERT_PTR MicrosoftCertificates[];
 #define FREE_NON_NULL(Pointer)  \
   do {                                \
     if ((Pointer) != NULL) {          \
+      DEBUG ((DEBUG_INFO, "Freeing " #Pointer "\n"));  \
       FreePool((Pointer));            \
       (Pointer) = NULL;               \
     }                                 \
@@ -263,10 +264,39 @@ GetBootOptions (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
+EFI_STATUS
+ScanFileSystemsForBootOptions (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN OUT SV_MENU_OPTION                      *MenuOption
+  );
+
+EFI_STATUS
+FillMenuEntryFromDevicePath (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN     EFI_HANDLE                          DeviceHandle,
+  IN     EFI_DEVICE_PATH_PROTOCOL            *DevicePath,
+  IN OUT SV_MENU_ENTRY                       **MenuEntry
+  );
+
+VOID
+ToLowerString (
+  IN CHAR16  *String
+  );
+
+BOOLEAN
+CheckIfEntryIsDuplicate (
+  IN SV_MENU_ENTRY *MenuEntry
+  );
+
 SV_MENU_ENTRY *
 GetMenuEntry (
   SV_MENU_OPTION  *MenuOption,
   UINTN           MenuNumber
+  );
+
+VOID
+FreeBootMenuEntry (
+  SV_MENU_ENTRY    *BootloaderEntry
   );
 
 EFI_STATUS

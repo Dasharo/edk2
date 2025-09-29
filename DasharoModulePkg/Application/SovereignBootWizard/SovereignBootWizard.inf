@@ -28,6 +28,7 @@
 [Sources]
   Asn1Time.c
   BootOptionParsing.c
+  BootOptionScanning.c
   KeyManagement.c
   MicrosoftCerts.c
   SignatureParsing.c
@@ -72,6 +73,7 @@
   gEfiCertX509Sha256Guid
   gEfiImageSecurityDatabaseGuid
   gEfiGlobalVariableGuid
+  gEfiPartTypeSystemPartGuid
 
 [Protocols]
   ## PRODUCES # SovereignBootWizardFormSet
@@ -88,6 +90,7 @@
   gEfiDevicePathToTextProtocolGuid              ## CONSUMES
   gEfiFirmwareVolume2ProtocolGuid               ## CONSUMES
   gEfiRealTimeClockArchProtocolGuid             ## SOMETIMES_CONSUMES
+  gEfiSimpleFileSystemProtocolGuid              ## SOMETIMES_CONSUMES
 
 [UserExtensions.TianoCore."ExtraFiles"]
   SovereignBootWizardExtra.uni

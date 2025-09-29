@@ -979,9 +979,31 @@ UpdateCertInfo (
   }
 
   if (CertificateEntry->SignatureValid) {
-    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Certificate fingerprint (SHA-256):", NULL);
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):",
+      NULL
+      );
   } else {
-    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Certificate fingerprint (SHA-256):\n!!! Signature is invalid !!!", NULL);
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):\n!!! Signature is invalid !!!",
+      NULL
+      );
+  }
+
+  // Special case if AppLaunchCause is SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED
+  // We still want to show what the system attempted to boot and failed, even
+  // if it is signed by MS certificate.
+  if (CertificateEntry->CertIsMicrosoft) {
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):\n!!! Certificate belongs to Microsoft !!!",
+      NULL
+      );
   }
 
   Status = ParseHashValue (CertificateEntry->CertDigest, CertificateEntry->CertDigestSize, &NewString);
