@@ -202,7 +202,12 @@
   CacheMaintenanceLib|MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
   SafeIntLib|MdePkg/Library/BaseSafeIntLib/BaseSafeIntLib.inf
   StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+!if $(QEMU_PLATFORM) == TRUE
+  RngLib|MdeModulePkg/Library/BaseRngLibTimerLib/BaseRngLibTimerLib.inf
+  VirtioLib|OvmfPkg/Library/VirtioLib/VirtioLib.inf
+!else
   RngLib|DasharoPayloadPkg/Library/BaseRngLib/BaseRngLib.inf
+!endif
   NestedInterruptTplLib|OvmfPkg/Library/NestedInterruptTplLib/NestedInterruptTplLib.inf
 
   #
@@ -362,6 +367,8 @@
 !else
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
+
+  DxeImageVerificationLib|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
 
   #
   # SMMSTORE
@@ -770,7 +777,10 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
     <LibraryClasses>
 !if $(SECURE_BOOT_ENABLE) == TRUE
-      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
+      # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationHandler.inf
 !endif
 !if $(TPM_ENABLE) == TRUE
       NULL|SecurityPkg/Library/DxeTpmMeasureBootLib/DxeTpmMeasureBootLib.inf
@@ -783,7 +793,12 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
   SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !if $(SOVEREIGN_BOOT_ENABLE) == TRUE
-  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf {
+    <LibraryClasses>
+    # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+  }
 !endif
 !endif
 
@@ -997,7 +1012,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   #
   # Random Number Generator
   #
+!if $(QEMU_PLATFORM) == TRUE
+  !include OvmfPkg/Include/Dsc/OvmfRngComponents.dsc.inc
+!else
   SecurityPkg/RandomNumberGenerator/RngDxe/RngDxe.inf
+!endif
 
   #
   # Hash2

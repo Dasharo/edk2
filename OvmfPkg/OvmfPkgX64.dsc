@@ -279,6 +279,7 @@
 
   DasharoVariablesLib|DasharoModulePkg/Library/DasharoVariablesLib/DasharoVariablesLib.inf
   BlParseLib|OvmfPkg/Library/QemuParseLib/QemuParseLib.inf
+  DxeImageVerificationLib|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
 
   #
   # Network libraries
@@ -882,7 +883,10 @@
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
     <LibraryClasses>
 !if $(SECURE_BOOT_ENABLE) == TRUE
-      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
+      # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationHandler.inf
 !endif
 !include OvmfPkg/Include/Dsc/OvmfTpmSecurityStub.dsc.inc
   }
@@ -1087,7 +1091,12 @@
   OvmfPkg/EnrollDefaultKeys/EnrollDefaultKeys.inf
 
 !if $(SOVEREIGN_BOOT_ENABLE) == TRUE
-  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf
+  DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf {
+    <LibraryClasses>
+      # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
+      OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+  }
 !endif
 
 !endif

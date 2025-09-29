@@ -29,6 +29,7 @@ Revision History:
 #define SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID            1
 #define SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID             2
 #define SOVEREIGN_BOOT_WIZARD_MS_SECURE_BOOT_FORM_ID     3
+#define SOVEREIGN_BOOT_WIZARD_KEY_DETAILS_FORM_ID        4
 #define SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID   9
 
 // Question IDs
@@ -36,7 +37,7 @@ Revision History:
 #define SOVEREIGN_BOOT_WIZARD_FORM_QUESTION_ID_BASE      0x1000
 // Welcome form
 #define WELCOME_FORM_QUESTION_ID_BASE                   0x1100
-#define SELECT_SOVEREIGN_BOOT_QUESTION_ID                0x1101
+#define SELECT_SOVEREIGN_BOOT_QUESTION_ID               0x1101
 #define SELECT_DEFAULT_SECURE_BOOT_QUESTION_ID          0x1102
 
 // Configuration form
@@ -45,6 +46,7 @@ Revision History:
 #define TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID            0x1202
 #define TRUST_KEY_FORM2_QUESTION_ID                     0x1203
 #define SHOW_KEY_DETAILS_FORM2_QUESTION_ID              0x1204
+#define SKIP_KEY_FORM2_QUESTION_ID                      0x1205
 
 #define EXIT_FORM_QUESTION_ID_BASE                      0x1F00
 #define EXIT_FORM1_QUESTION_ID                          0x1F01
@@ -57,7 +59,7 @@ Revision History:
 
 // Form Data
 typedef struct {
-  UINT8               Unused;
+  BOOLEAN  ImageUnsigned;
 } SOVEREIGN_BOOT_WIZARD_FORM_DATA;
 
 #pragma pack()

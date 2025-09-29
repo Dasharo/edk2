@@ -26,7 +26,10 @@
 #
 
 [Sources]
+  Asn1Time.c
   BootOptionParsing.c
+  KeyManagement.c
+  SignatureParsing.c
   SovereignBootWizard.c
   SovereignBootWizardHii.h
   SovereignBootWizardVfrStrings.uni
@@ -38,12 +41,14 @@
   MdeModulePkg/MdeModulePkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
   SecurityPkg/SecurityPkg.dec
+  CryptoPkg/CryptoPkg.dec
 
 [LibraryClasses]
   BaseLib
   BaseCryptLib
   MemoryAllocationLib
   UefiBootManagerLib
+  DxeServicesLib
   UefiBootServicesTableLib
   UefiApplicationEntryPoint
   UefiRuntimeServicesTableLib
@@ -57,13 +62,18 @@
   PeCoffLib
   SecureBootVariableLib
   SecureBootVariableProvisionLib
+  DxeImageVerificationLib
 
 [Guids]
   gSovereignBootWizardFormSetGuid
+  gEfiCertRsa2048Guid
+  gEfiCertPkcs7Guid
+  gEfiCertX509Sha256Guid
+  gEfiImageSecurityDatabaseGuid
+  gEfiGlobalVariableGuid
 
 [Protocols]
   ## PRODUCES # SovereignBootWizardFormSet
-  ## PRODUCES # SovereignBootWizardInventory
   gEfiDevicePathProtocolGuid
   gEfiHiiStringProtocolGuid                     ## CONSUMES
   gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
@@ -76,6 +86,7 @@
   gEfiHiiPopupProtocolGuid                      ## CONSUMES
   gEfiDevicePathToTextProtocolGuid              ## CONSUMES
   gEfiFirmwareVolume2ProtocolGuid               ## CONSUMES
+  gEfiRealTimeClockArchProtocolGuid             ## SOMETIMES_CONSUMES
 
 [UserExtensions.TianoCore."ExtraFiles"]
   SovereignBootWizardExtra.uni

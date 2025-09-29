@@ -1862,9 +1862,32 @@ EfiBootManagerLaunchSovereignBootWizard (
   EFI_BOOT_MANAGER_LOAD_OPTION       BootOption;
   EFI_DEVICE_PATH_PROTOCOL           *FilePath;
   SOVEREIGN_BOOT_WIZARD_CONFIG_DATA  SvBootData;
+  UINT16                             *BootCurrent;
+  UINTN                              BootCurrentSize;
+  UINTN                              DataSize;
+
+  BootCurrent = NULL;
+  BootCurrentSize = 0;
 
   if (!FixedPcdGetBool (PcdSovereignBootEnabled)) {
     return EFI_NOT_FOUND;
+  }
+
+  DataSize = sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA);
+  Status = gRT->GetVariable (
+      SV_BOOT_DATA_VAR,
+      &gSovereignBootWizardFormSetGuid,
+      NULL,
+      &DataSize,
+      &SvBootData
+      );
+
+  // If we haven't returned from the wizard form, do not launch it again.
+  // Let the Boot manager return to the wizard instead.
+  if (!EFI_ERROR (Status) && (DataSize == sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA))) {
+    if (SvBootData.AlreadyStarted) {
+      return EFI_ALREADY_STARTED;
+    }
   }
 
   FilePath = FvFilePath (&gSovereignBootWizardFormSetGuid);
@@ -1874,7 +1897,7 @@ EfiBootManagerLaunchSovereignBootWizard (
 
   Status = EfiBootManagerInitializeLoadOption (
               &BootOption,
-              0,
+              LoadOptionNumberUnassigned,
               LoadOptionTypeBoot,
               LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
               L"Sovereign Boot Wizard",
@@ -1885,6 +1908,18 @@ EfiBootManagerLaunchSovereignBootWizard (
 
   if (!EFI_ERROR (Status)) {
     gST->ConOut->ClearScreen (gST->ConOut);
+
+    if (AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
+      Status = GetEfiGlobalVariable2 (L"BootCurrent", (VOID **)&BootCurrent, &BootCurrentSize);
+      if (!EFI_ERROR (Status) && 
+          (BootCurrent != NULL) &&
+          (BootCurrentSize == sizeof (UINT16))) {
+        SvBootData.BootCurrent = *BootCurrent;
+        FreePool (BootCurrent);
+      } else {
+        return Status;
+      }
+    }
     //
     // Set the Sovereign Boot Wizard launch cause
     //
@@ -1898,6 +1933,16 @@ EfiBootManagerLaunchSovereignBootWizard (
       );
 
     EfiBootManagerBoot (&BootOption);
+    // Clear the launched state as soon as we return from the wizard
+    SetMem (&SvBootData, sizeof (SvBootData), 0);
+    gRT->SetVariable (
+      SV_BOOT_DATA_VAR,
+      &gSovereignBootWizardFormSetGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS,
+      sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA),
+      &SvBootData
+      );
+
     //
     // Remove the boot option after we return from the wizard
     //
@@ -2037,6 +2082,11 @@ EfiBootManagerBoot (
   if (BmIsBootManagerMenuFilePath (BootOption->FilePath)) {
     DEBUG ((DEBUG_INFO, "[Bds] Booting Boot Manager Menu.\n"));
     BmStopHotkeyService (NULL, NULL);
+  } else if (BmIsSovereignBootWizardFilePath (BootOption->FilePath)) {
+    // Avoid signaling ReadyToBoot, as the wizard may call EfiBootManagerBoot
+    // with a proper boot option.
+    DEBUG ((DEBUG_INFO, "[Bds] Booting Sovereign Boot Wizard.\n"));
+    BmStopHotkeyService (NULL, NULL);
   } else {
     EfiSignalEventReadyToBoot ();
     //
@@ -2136,8 +2186,15 @@ EfiBootManagerBoot (
 
           // Only if Sovereign Boot is provisioned. We should not end up in this path before provisioning
           if ((SvBootConfig != NULL) && SvBootConfig->SvBootEnabled && SvBootConfig->SvBootProvisioned) {
+            if (SvBootConfig != NULL) {
+              FreePool (SvBootConfig);
+              SvBootConfig = NULL;
+            }
+
             Status = EfiBootManagerLaunchSovereignBootWizard (SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED);
-            if (EFI_ERROR (Status)) {
+            // We may have already started the Wizard before and not exited it
+            // (e.g. by booting a bootloader)
+            if (EFI_ERROR (Status) && Status != EFI_ALREADY_STARTED) {
               if (gST->ConOut != NULL) {
                 gST->ConOut->ClearScreen (gST->ConOut);
                 ScreenCleared = TRUE;
@@ -2192,6 +2249,7 @@ EfiBootManagerBoot (
         ASSERT_EFI_ERROR (Status);
         ASSERT (Index == 0);
         while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {}
+        gST->ConOut->ClearScreen (gST->ConOut);
       }
 
       return;

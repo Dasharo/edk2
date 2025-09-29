@@ -104,6 +104,9 @@
   ##  @libraryclass Perform SPDM (following SPDM spec) and measure data to TPM (following TCG PFP spec).
   ##
   SpdmSecurityLib|Include/Library/SpdmSecurityLib.h
+  ##  @libraryclass  Provides functions to verify images and check against signature databases.
+  #
+  ImageVerificationLib|Include/Library/ImageVerificationLib.h
 
 [Guids]
   ## Security package token space guid.
