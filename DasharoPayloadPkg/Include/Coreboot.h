@@ -765,6 +765,8 @@ struct cb_range {
 
 #define CB_TAG_FW_INFO  0x0045
 
+#define CB_TAG_RB_INFO  0x0048
+
 /*
  * Machine-friendly version of a system firmware component.  A component is
  * identified by a GUID.  coreboot is an obvious main component but there could

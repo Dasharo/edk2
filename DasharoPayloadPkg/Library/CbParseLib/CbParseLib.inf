@@ -36,7 +36,11 @@
   DebugLib
   PcdLib
   PciLib
+  HobLib
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+
+[Guids]
+  gUniversalPayloadPciRootBridgeInfoGuid
 

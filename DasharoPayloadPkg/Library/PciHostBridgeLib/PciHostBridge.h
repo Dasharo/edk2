@@ -11,6 +11,8 @@
 #ifndef _PCI_HOST_BRIDGE_H
 #define _PCI_HOST_BRIDGE_H
 
+#include <UniversalPayload/PciRootBridges.h>
+
 typedef struct {
   ACPI_HID_DEVICE_PATH     AcpiDevicePath;
   EFI_DEVICE_PATH_PROTOCOL EndDevicePath;
@@ -76,5 +78,33 @@ InitRootBridge (
   IN  PCI_ROOT_BRIDGE_APERTURE *PMemAbove4G,
   OUT PCI_ROOT_BRIDGE          *RootBus
 );
+
+/**
+  Scan for all root bridges from Universal Payload PciRootBridgeInfoHob
+
+  @param[in]  PciRootBridgeInfo    Pointer of Universal Payload PCI Root Bridge Info Hob
+  @param[out] NumberOfRootBridges  Number of root bridges detected
+
+  @retval     Pointer to the allocated PCI_ROOT_BRIDGE structure array.
+
+**/
+PCI_ROOT_BRIDGE *
+RetrieveRootBridgeInfoFromHob (
+  IN  UNIVERSAL_PAYLOAD_PCI_ROOT_BRIDGES  *PciRootBridgeInfo,
+  OUT UINTN                               *NumberOfRootBridges
+  );
+
+/**
+  Initialize DevicePath for a PCI_ROOT_BRIDGE.
+  @param[in] HID               HID for device path
+  @param[in] UID               UID for device path
+
+  @retval A pointer to the new created device patch.
+**/
+EFI_DEVICE_PATH_PROTOCOL *
+CreateRootBridgeDevicePath (
+  IN     UINT32  HID,
+  IN     UINT32  UID
+  );
 
 #endif
