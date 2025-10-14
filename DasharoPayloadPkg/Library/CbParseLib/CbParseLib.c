@@ -10,16 +10,20 @@
 **/
 
 #include <Uefi/UefiBaseType.h>
+#include <Uefi/UefiMultiPhase.h>
+#include <Pi/PiBootMode.h>
+#include <Pi/PiHob.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
+#include <Library/HobLib.h>
 #include <Library/PcdLib.h>
 #include <Library/PciLib.h>
 #include <Library/IoLib.h>
 #include <Library/BlParseLib.h>
 #include <IndustryStandard/Acpi.h>
 #include <Coreboot.h>
-
+#include <UniversalPayload/PciRootBridges.h>
 
 /**
   Convert a packed value from cbuint64 to a UINT64 value.
@@ -1189,4 +1193,50 @@ ParseIsDiskCapsulesBoot (
   }
 
   return BootInfo->is_disk_capsules_boot != 0;
+}
+
+/**
+  Find the bootloaders RootBridge info and create Payload Root Bridges HOB.
+
+  @retval RETURN_SUCCESS           Successfully created the Payload Root Bridges HOB.
+  @retval RETURN_NOT_FOUND         Failed to find the Root Bridges HOB information.
+  @retval RETURN_OUT_OF_RESOURCES  Failed to create the Payload Root Bridges HOB.
+**/
+RETURN_STATUS
+EFIAPI
+ParseRootBridgeInfo (
+  VOID
+  )
+{
+  RETURN_STATUS                       Status;
+  UNIVERSAL_PAYLOAD_PCI_ROOT_BRIDGES  *BlRootBridgesHob = NULL;
+  UNIVERSAL_PAYLOAD_PCI_ROOT_BRIDGES  *PldRootBridgesHob;
+  struct cb_cbmem_ref  *CbMemRef;
+
+  Status           = RETURN_NOT_FOUND;
+  CbMemRef         = FindCbTag (CB_TAG_RB_INFO);
+
+  if (CbMemRef != NULL) {
+    BlRootBridgesHob = (UNIVERSAL_PAYLOAD_PCI_ROOT_BRIDGES *)(UINTN)CbMemRef->cbmem_addr;
+  }
+
+  if (BlRootBridgesHob != NULL) {
+    //
+    // Migrate bootloader root bridge info hob from bootloader to payload.
+    //
+    PldRootBridgesHob = BuildGuidHob (
+                          &gUniversalPayloadPciRootBridgeInfoGuid,
+                          BlRootBridgesHob->Header.Length
+                          );
+    ASSERT (PldRootBridgesHob != NULL);
+    if (PldRootBridgesHob != NULL) {
+      CopyMem (PldRootBridgesHob, BlRootBridgesHob, BlRootBridgesHob->Header.Length);
+      DEBUG ((DEBUG_INFO, "Create PCI root bridge info guid hob\n"));
+      Status = RETURN_SUCCESS;
+    } else {
+      Status = RETURN_OUT_OF_RESOURCES;
+    }
+  }
+
+  return Status;
 }

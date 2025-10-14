@@ -713,6 +713,15 @@ BlPeiEntryPoint (
     (UINT64)(0x60000)
     );
 
+  //
+  // Error is ignored, because we can boot even without the HOB.
+  // Our DasharoPayloadPkg/Library/PciHostBridgeLib will fall back
+  // to root bridge scanning if the HOB is not found.
+  //
+  Status = ParseRootBridgeInfo ();
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_INFO, "Payload Root Bridge HOB not created: %r\n", Status));
+  }
 
   //
   // Parse memory info
