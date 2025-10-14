@@ -294,4 +294,17 @@ FindCbTag (
   IN  UINT32  Tag
   );
 
+/**
+  Find the bootloaders RootBridge info and create Payload Root Bridges HOB.
+
+  @retval RETURN_SUCCESS           Successfully created the Payload Root Bridges HOB.
+  @retval RETURN_NOT_FOUND         Failed to find the Root Bridges HOB information.
+  @retval RETURN_OUT_OF_RESOURCES  Failed to create the Payload Root Bridges HOB.
+**/
+RETURN_STATUS
+EFIAPI
+ParseRootBridgeInfo (
+  VOID
+  );
+
 #endif
