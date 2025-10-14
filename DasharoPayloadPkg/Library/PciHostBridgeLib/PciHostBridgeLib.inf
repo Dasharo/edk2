@@ -40,3 +40,7 @@
   MemoryAllocationLib
   PciLib
   DxeServicesTableLib
+  HobLib
+
+[Guids]
+  gUniversalPayloadPciRootBridgeInfoGuid
