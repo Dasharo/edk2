@@ -97,9 +97,9 @@ InitFv (
 
   // Authentication-related fields will be filled with 0xff.
   VarStoreHdr->Signature = gEfiAuthenticatedVariableGuid;
-  // Actual size of the storage is block size, the rest is
-  // Fault Tolerant Write (FTW) space and the FTW spare space.
-  VarStoreHdr->Size      = BlockSize - VolHdrLen;
+  // Actual size of the storage is `block_count / 2 - 1`, the rest 
+  // Fault Tolerant Write (FTW) space (1 block) and the FTW spare space (half of all blocks).
+  VarStoreHdr->Size      = BlockSize * (Fv.Length / BlockSize / 2 - 1) - VolHdrLen;
   VarStoreHdr->Format    = VARIABLE_STORE_FORMATTED;
   VarStoreHdr->State     = VARIABLE_STORE_HEALTHY;
 
