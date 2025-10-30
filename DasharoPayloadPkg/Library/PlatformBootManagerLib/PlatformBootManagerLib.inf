@@ -73,6 +73,7 @@
   gEdkiiSCOTermGuid
   gEfiPcAnsiGuid
   gDasharoSystemFeaturesGuid
+  gEfiTcg2PhysicalPresenceGuid
 
 [Protocols]
   gEfiGenericMemTestProtocolGuid  ## CONSUMES

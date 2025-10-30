@@ -35,6 +35,13 @@ typedef struct {
   UINT32    PPFlags;
 } EFI_TCG2_PHYSICAL_PRESENCE_FLAGS;
 
+//
+// This variable is used to store the current active PCRs bitmask, to then
+// compare against it after reboot. This allows verifying if PCR bank change
+// was effective. Zero by default.
+//
+#define REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME  L"RequestedActivePcrBanks"
+
 extern EFI_GUID  gEfiTcg2PhysicalPresenceGuid;
 
 #endif

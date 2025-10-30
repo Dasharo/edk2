@@ -12,10 +12,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/FirmwareVolume2.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Guid/GlobalVariable.h>
+#include <Guid/Tcg2PhysicalPresenceData.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
 #include <Library/CapsuleLib.h>
 #include <Library/HobLib.h>
+#include <Library/Tpm2CommandLib.h>
+#include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Coreboot.h>
 #include <DasharoOptions.h>
 #include <Protocol/UsbIo.h>
@@ -131,7 +134,7 @@ RegisterFtdiUsbUart (
       EfiBootManagerUpdateConsoleVariable (ErrOut, FullDevicePath, NULL);
 
       *OutDevicePath = FullDevicePath;
-      
+
       FtdiFound = TRUE;
       break;
     }
@@ -1069,6 +1072,155 @@ WarnIfRecoveryBoot (
 
 STATIC
 VOID
+WarnIfSinglePCRBank (
+  VOID
+)
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      TimerEvent;
+  EFI_EVENT      Events[2];
+  BOOLEAN        CursorVisible;
+  UINTN          CurrentAttribute;
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  UINT32         TpmHashAlgorithmBitmap;
+  UINT32         ActivePcrBanks;
+  UINT32         AddedBank;
+  CHAR16         DelayLine[81];
+  UINT32         RequestedActivePcrBanks;
+  UINTN          Size;
+
+  DEBUG((DEBUG_INFO, "Checking RequestedActivePcrBanks\n"));
+
+  Status = Tpm2GetCapabilitySupportedAndActivePcrs (&TpmHashAlgorithmBitmap, &ActivePcrBanks);
+  ASSERT_EFI_ERROR (Status);
+
+  // read variable from flash
+  Size = sizeof(RequestedActivePcrBanks);
+  Status = gRT->GetVariable(
+            L"RequestedActivePcrBanks",
+            &gEfiTcg2PhysicalPresenceGuid,
+            NULL,
+            &Size,
+            &RequestedActivePcrBanks
+            );
+  
+  // it should be all zeros by default, that means there's been no
+  // change request and there's nothing to do here
+  
+  if (RequestedActivePcrBanks == 0) {
+    DEBUG((DEBUG_INFO, "RequestedActivePcrBanks is zero\n"));
+    return;
+  } else if (RequestedActivePcrBanks == ActivePcrBanks) {
+    // if they're equal, zero it out again and proceed with normal boot (means
+    // multiple bank selection was successful, they are supported)
+    RequestedActivePcrBanks = 0;
+    gRT->SetVariable(
+          L"RequestedActivePcrBanks",
+          &gEfiTcg2PhysicalPresenceGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+          sizeof(RequestedActivePcrBanks),
+          &RequestedActivePcrBanks
+        );
+    DEBUG((DEBUG_INFO, "RequestedActivePcrBanks is equal to ActivePcrBanks, change successful!!!!\n"));
+    return;
+  }
+  
+  //
+  // if they're not equal, display the popup and try to change to the new bank if
+  // user agrees
+  // 
+  Status = gBS->CreateEvent (
+      EVT_TIMER,
+      TPL_CALLBACK,
+      NULL,
+      NULL,
+      &TimerEvent
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
+
+  DrainInput ();
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
+
+  Events[0] = gST->ConIn->WaitForKey;
+  Events[1] = TimerEvent;
+
+  while(1) {
+    CreateMultiStringPopUp (
+        78,
+        10,
+        L"!!! WARNING !!!",
+        L"",
+        L"Multiple PCR banks have been selected, but the current TPM supports",
+        L"only one active bank at a time.",
+        L"",
+        L"Set the most recently selected one as the single active bank?",
+        L"",
+        L"Press F12 to confirm.",
+        L"Press ESC to deny and revert to the default bank.",
+        DelayLine
+        );
+
+    Status = gBS->WaitForEvent (2, Events, &Index);
+    ASSERT_EFI_ERROR (Status);
+
+    if (Index == 0) {
+      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      ASSERT_EFI_ERROR (Status);
+
+      if (Key.ScanCode == SCAN_ESC) {
+        //
+        // Clear the requested banks variable, the bank selection is already
+        // reverted to default
+        // 
+        RequestedActivePcrBanks = 0;
+        gRT->SetVariable(
+            L"RequestedActivePcrBanks",
+            &gEfiTcg2PhysicalPresenceGuid,
+            EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+            sizeof(RequestedActivePcrBanks),
+            &RequestedActivePcrBanks
+            );
+        break;
+      } else if (Key.ScanCode == SCAN_F12)  {
+        // Infer what was the bank the user attempted to select
+        AddedBank = RequestedActivePcrBanks & ~ActivePcrBanks;
+
+        // 
+        // It needs to be converted into the arbitrary indexing order that's
+        // been used to list the banks in the Setup Menu
+        // 
+
+        Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
+              TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS,
+              AddedBank
+              );
+        // the platform auth is optional, not sure what it is or if i need it
+        Tcg2PhysicalPresenceLibProcessRequest ( NULL );
+
+      }
+    }
+  }
+
+  Status = gBS->CloseEvent (TimerEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
+  BootLogoEnableLogo ();
+  
+}
+
+STATIC
+VOID
 WarnIfBatteryLow (
   VOID
 )
@@ -1738,7 +1890,7 @@ PlatformBootManagerAfterConsole (
 
     // With fast boot, we can't call ConnectAll as it would connect all consoles.
     EfiBootManagerConnectAll ();
-    
+
     // Detect and register FTDI USB-UART converters
     // The FTDI can only be detected after all protocols are bound thanks to
     // the ConnectAll, but then it has to be connected separately
@@ -1749,6 +1901,7 @@ PlatformBootManagerAfterConsole (
     }
   }
 
+  WarnIfSinglePCRBank();
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
   FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
