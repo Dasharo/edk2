@@ -12,10 +12,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/FirmwareVolume2.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Guid/GlobalVariable.h>
+#include <Guid/Tcg2PhysicalPresenceData.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
 #include <Library/CapsuleLib.h>
 #include <Library/HobLib.h>
+#include <Library/Tpm2CommandLib.h>
+#include <Library/Tcg2PhysicalPresenceLib.h>
 #include <Coreboot.h>
 #include <DasharoOptions.h>
 #include <Protocol/UsbIo.h>
@@ -131,7 +134,7 @@ RegisterFtdiUsbUart (
       EfiBootManagerUpdateConsoleVariable (ErrOut, FullDevicePath, NULL);
 
       *OutDevicePath = FullDevicePath;
-      
+
       FtdiFound = TRUE;
       break;
     }
@@ -1067,6 +1070,168 @@ WarnIfRecoveryBoot (
   BootLogoEnableLogo ();
 }
 
+
+
+typedef struct {
+  TPM_ALG_ID AlgId;
+  CHAR16    *Name;
+} HASH_ALG_ENTRY;
+
+STATIC CONST HASH_ALG_ENTRY mHashAlgs[] = {
+  { TPM_ALG_SHA1,    L"SHA1"    },
+  { TPM_ALG_SHA256,  L"SHA256"  },
+  { TPM_ALG_SHA384,  L"SHA384"  },
+  { TPM_ALG_SHA512,  L"SHA512"  },
+  { TPM_ALG_SM3_256, L"SM3_256" },
+};
+
+STATIC
+VOID
+WarnIfSinglePCRBank (
+  VOID
+)
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      Events[1];
+  BOOLEAN        CursorVisible;
+  UINTN          CurrentAttribute;
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  UINT32         TpmHashAlgorithmBitmap;
+  UINT32         ActivePcrBanks;
+  UINT32         RequestedActivePcrBanks;
+  UINTN          Size;
+  UINTN          i;
+  UINTN          OptionCount = 0;
+  UINTN          AvlIdx[ARRAY_SIZE(mHashAlgs)] = {0};
+  CHAR16         OptLine[81];
+  UINT32         SelectedMask;
+
+  Size = sizeof(RequestedActivePcrBanks);
+  Status = gRT->GetVariable(
+            REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
+            &gEfiTcg2PhysicalPresenceGuid,
+            NULL,
+            &Size,
+            &RequestedActivePcrBanks
+            );
+  // 
+  // If the variable doesn't exist, there's been no request to change the
+  // PCR banks.
+  // 
+  if (EFI_ERROR(Status)) {
+    return;
+  }
+  // Clear the variable after reading
+  gRT->SetVariable(
+        REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
+        &gEfiTcg2PhysicalPresenceGuid,
+        0,
+        0,
+        NULL
+      );
+  Status = Tpm2GetCapabilitySupportedAndActivePcrs(&TpmHashAlgorithmBitmap, &ActivePcrBanks);
+  if (EFI_ERROR(Status)) {
+      return;
+  }
+  // If they're equal, the requested bank selection was successful.
+  if (RequestedActivePcrBanks == ActivePcrBanks) {
+    return;
+  }
+  // Check if multiple PCR banks have in fact been selected
+  if ((RequestedActivePcrBanks & (RequestedActivePcrBanks - 1)) == 0)
+    return;
+  // 
+  // If they're not equal, display the popup and switch to a single bank
+  // of user's choice.
+  // 
+  ASSERT_EFI_ERROR(Status);
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+  gST->ConOut->EnableCursor(gST->ConOut, FALSE);
+  DrainInput();
+  Events[0] = gST->ConIn->WaitForKey;
+  // 
+  // Parse obtained available PCR banks bitmap to get the names and create
+  // an option for each available bank
+  // 
+  for (i = 0; i < ARRAY_SIZE(mHashAlgs); i++) {
+    if (TpmHashAlgorithmBitmap & (1U << i)) {
+      AvlIdx[OptionCount++] = i;
+    }
+  }
+  OptLine[0] = L'\0';
+  UnicodeSPrint(OptLine, sizeof(OptLine), L"Select bank:");
+  // Append each available bank
+  for (i = 0; i < OptionCount; i++) {
+    CHAR16 token[40];
+    UnicodeSPrint(
+      token, sizeof(token),
+      L" %u) %s", (UINT32)(i + 1), mHashAlgs[AvlIdx[i]].Name
+    );
+    StrCatS(OptLine, ARRAY_SIZE(OptLine), token);
+  }
+  
+  while (1) {
+    CreateMultiStringPopUp(
+        78,
+        9,
+        L"!!! WARNING !!!",
+        L"",
+        L"Multiple PCR banks have been selected, but the current TPM ",
+        L"apparently supports only one active bank at a time.",
+        L"",
+        OptLine,
+        L"",
+        L"Press ESC to stay with the previously active bank.",
+        L""
+    );
+
+    Status = gBS->WaitForEvent(1, Events, &Index);
+    if (EFI_ERROR(Status)) {
+      break;
+    }
+    
+    Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+    if (EFI_ERROR(Status)) {
+      break;
+    }
+    if (Key.ScanCode == SCAN_ESC) {
+      break;
+    }
+
+    if (Key.UnicodeChar >= L'1' && Key.UnicodeChar <= (L'0' + (CHAR16)OptionCount)) {
+      UINTN sel = (UINTN)(Key.UnicodeChar - L'1');
+      UINTN algIdx = AvlIdx[sel];
+      SelectedMask = (1U << algIdx);
+
+      if (SelectedMask == ActivePcrBanks) {
+        break;
+      }
+
+      Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction(
+          TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS,
+          SelectedMask
+      );
+
+      gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
+      gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
+      gST->ConOut->ClearScreen(gST->ConOut);
+      DrainInput();
+
+      Tcg2PhysicalPresenceLibProcessRequest(NULL);
+      return;
+    }
+  }
+
+  ASSERT_EFI_ERROR(Status);
+  gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
+  gST->ConOut->ClearScreen(gST->ConOut);
+  DrainInput();
+  BootLogoEnableLogo();
+}
+
 STATIC
 VOID
 WarnIfBatteryLow (
@@ -1738,7 +1903,7 @@ PlatformBootManagerAfterConsole (
 
     // With fast boot, we can't call ConnectAll as it would connect all consoles.
     EfiBootManagerConnectAll ();
-    
+
     // Detect and register FTDI USB-UART converters
     // The FTDI can only be detected after all protocols are bound thanks to
     // the ConnectAll, but then it has to be connected separately
@@ -1749,6 +1914,7 @@ PlatformBootManagerAfterConsole (
     }
   }
 
+  WarnIfSinglePCRBank ();
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
   FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
