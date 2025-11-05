@@ -876,6 +876,21 @@ BlPeiEntryPoint (
     DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
   }
 
+  //
+  // Reserve MMCONF range
+  //
+  BuildResourceDescriptorHob (
+    EFI_RESOURCE_MEMORY_RESERVED,
+    (
+    EFI_RESOURCE_ATTRIBUTE_PRESENT |
+    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
+    EFI_RESOURCE_ATTRIBUTE_TESTED |
+    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE
+    ),
+    AcpiBoardInfo.PcieBaseAddress,
+    AcpiBoardInfo.PcieBaseSize
+    );
+
   // Build SEC Performance Data Hob
   Status =   ParseTimestampTable(&Performance);
   if (!EFI_ERROR (Status)) {
