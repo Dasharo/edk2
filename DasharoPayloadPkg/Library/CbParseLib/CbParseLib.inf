@@ -36,9 +36,12 @@
   PcdLib
   PciLib
   HobLib
+  CpuLib
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadStackTop
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseSize
 
 [Guids]
   gUniversalPayloadPciRootBridgeInfoGuid

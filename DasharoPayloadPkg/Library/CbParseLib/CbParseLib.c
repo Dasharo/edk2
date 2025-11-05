@@ -16,6 +16,7 @@
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
+#include <Library/CpuLib.h>
 #include <Library/HobLib.h>
 #include <Library/PcdLib.h>
 #include <Library/PciLib.h>
@@ -402,7 +403,10 @@ ParseCbMemTable (
   return Status;
 }
 
-
+#define MSR_TOP_MEM 0xC001001A
+#define MSR_TOM2    0xC001001D
+#define TOLUD       0xBC
+#define TOUUD       0xA8
 
 /**
   Acquire the memory information from the coreboot table in memory.
@@ -425,9 +429,28 @@ ParseMemoryInfo (
   struct cb_memory_range   *Range;
   UINTN                    Index;
   MEMROY_MAP_ENTRY         MemoryMap;
-  UINT32                   Tolud;
+  MEMROY_MAP_ENTRY         NewMemoryMap;
+  UINT64                   Tolud;
+  UINT64                   Touud;
+  UINT64                   PcieBase;
+  UINT64                   PcieBaseEnd;
 
-  Tolud = PciRead32(PCI_LIB_ADDRESS(0,0,0,0xbc)) & 0xFFF00000;
+  PcieBase = PcdGet64(PcdPciExpressBaseAddress);
+  PcieBaseEnd = PcieBase + PcdGet64(PcdPciExpressBaseSize);
+
+  Tolud = 0;
+  Touud = 0;
+
+  if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x8086) /* Intel */ {
+    Tolud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOLUD)) & 0xFFF00000;
+    Touud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD)) & 0xFFF00000;
+    Touud |= RShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
+  } else if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x1022) /* AMD */ {
+    Tolud = AsmReadMsr64(MSR_TOP_MEM);
+    Touud = AsmReadMsr64(MSR_TOM2);
+  }
+
+  DEBUG ((DEBUG_INFO, "Tolud: %016lx\nTouud: %016lx\n", Tolud, Touud));
 
   //
   // Get the coreboot memory table
@@ -451,13 +474,46 @@ ParseMemoryInfo (
       /* Only MMIO is marked reserved */
       case CB_MEM_RESERVED:
         /*
-         * Reserved memory Below TOLUD can't be MMIO except legacy VGA which
-         * is reported elsewhere as reserved.
+         * Reserved memory Below TOLUD/TOUUD can't be MMIO except legacy VGA
+         * which is reported elsewhere as reserved.
          */
-        if (MemoryMap.Base < Tolud) {
-          MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
-          MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+        if (MemoryMap.Base >= BASE_4GB && Touud != 0) {
+          if (MemoryMap.Base < Touud) {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          } else {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          }
+        } else if (MemoryMap.Base < BASE_4GB && Tolud != 0) {
+          if (MemoryMap.Base < Tolud) {
+            /*
+             * Special case, coreboot tables live near TOLUD. Check if range
+             * needs splitting for reserved memory and MMIO.
+             */
+            if ((MemoryMap.Base + MemoryMap.Size) > Tolud) {
+              MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+              MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+              MemoryMap.Size = Tolud - MemoryMap.Base;
+
+              DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
+                      Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
+              MemInfoCallback (&MemoryMap, Params);
+
+              MemoryMap.Base = Tolud;
+              MemoryMap.Size = cb_unpack64(Range->size) - MemoryMap.Size;
+              MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+              MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+            } else {
+              MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
+              MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+            }
+          } else {
+            MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
+            MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
+          }
         } else {
+          /* Fallback, if not Intel/AMD or TOLUD/TOUUD is zero, treat everything as MMIO */
           MemoryMap.Type = EFI_RESOURCE_MEMORY_MAPPED_IO;
           MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
         }
@@ -473,6 +529,7 @@ ParseMemoryInfo (
       /* ACPI/SMBIOS/CBMEM has it's own tag */
       case CB_MEM_ACPI:
       case CB_MEM_TABLE:
+      case CB_MEM_SOFT_RESERVED:
         MemoryMap.Type = EFI_RESOURCE_MEMORY_RESERVED;
         MemoryMap.Flag = EFI_RESOURCE_ATTRIBUTE_PRESENT;
         break;
@@ -480,10 +537,40 @@ ParseMemoryInfo (
         continue;
     }
 
-    DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
-            Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
+    /*
+     * PCIe MMCONF must be reserved, so override the type and split the range if needed.
+     */
+    if (MemoryMap.Base == PcieBase && (MemoryMap.Base + MemoryMap.Size) == PcieBaseEnd) {
+      /* Range exactly covers MMCONF, don't report it. It will be done later */
+      continue;
+    } else if (MemoryMap.Base <= PcieBase && (MemoryMap.Base + MemoryMap.Size) >= PcieBaseEnd) {
+      /* MMCONF is a subrange of the memory range */
+      if (MemoryMap.Base < PcieBase) {
+        NewMemoryMap.Base = MemoryMap.Base;
+        NewMemoryMap.Size = PcieBase - MemoryMap.Base;
+        NewMemoryMap.Type = MemoryMap.Type;
+        NewMemoryMap.Flag = MemoryMap.Flag;
 
-    MemInfoCallback (&MemoryMap, Params);
+        DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
+                Index, NewMemoryMap.Base, NewMemoryMap.Base + NewMemoryMap.Size - 1, NewMemoryMap.Type));
+
+        MemInfoCallback (&NewMemoryMap, Params);
+      }
+      if ((MemoryMap.Base + MemoryMap.Size) > PcieBaseEnd) {
+        MemoryMap.Size -= (PcieBaseEnd - MemoryMap.Base);
+        MemoryMap.Base = PcieBaseEnd;
+
+        DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
+                Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
+
+        MemInfoCallback (&MemoryMap, Params);
+      }
+    } else {
+      DEBUG ((DEBUG_INFO, "%d. %016lx - %016lx [%02x]\n",
+              Index, MemoryMap.Base, MemoryMap.Base + MemoryMap.Size - 1, MemoryMap.Type));
+
+      MemInfoCallback (&MemoryMap, Params);
+    }
   }
 
   return RETURN_SUCCESS;
