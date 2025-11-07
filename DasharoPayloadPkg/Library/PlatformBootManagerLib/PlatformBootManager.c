@@ -1070,6 +1070,53 @@ WarnIfRecoveryBoot (
   BootLogoEnableLogo ();
 }
 
+/**
+  Initializes the RequestedActivePcrBanks variable
+**/
+STATIC
+VOID
+EnsurePrevActivePcrBanksVar (
+  VOID
+  )
+{
+  UINT32 RequestedActivePcrBanks = 0;
+  UINTN  Size  = sizeof(RequestedActivePcrBanks);
+  UINT32 Attr  = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS;
+  EFI_STATUS Status = gRT->GetVariable(
+                    L"RequestedActivePcrBanks",
+                    &gEfiTcg2PhysicalPresenceGuid,
+                    NULL,
+                    &Size,
+                    &RequestedActivePcrBanks
+                  );
+  if (Status == EFI_NOT_FOUND) {
+    gRT->SetVariable(
+      REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
+      &gEfiTcg2PhysicalPresenceGuid,
+      Attr,
+      sizeof(RequestedActivePcrBanks),
+      &RequestedActivePcrBanks
+    );
+    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable set\n"));
+  } else {
+    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable already present, value: %x\n", RequestedActivePcrBanks));
+  }
+}
+
+
+typedef struct {
+  TPM_ALG_ID AlgId;
+  CHAR16    *Name;
+} HASH_ALG_ENTRY;
+
+STATIC CONST HASH_ALG_ENTRY mHashAlgs[] = {
+  { TPM_ALG_SHA1,    L"SHA1"    },
+  { TPM_ALG_SHA256,  L"SHA256"  },
+  { TPM_ALG_SHA384,  L"SHA384"  },
+  { TPM_ALG_SHA512,  L"SHA512"  },
+  { TPM_ALG_SM3_256, L"SM3_256" },
+};
+
 STATIC
 VOID
 WarnIfSinglePCRBank (
@@ -1085,17 +1132,16 @@ WarnIfSinglePCRBank (
   EFI_INPUT_KEY  Key;
   UINT32         TpmHashAlgorithmBitmap;
   UINT32         ActivePcrBanks;
-  UINT32         AddedBank;
-  CHAR16         DelayLine[81];
   UINT32         RequestedActivePcrBanks;
   UINTN          Size;
+  UINTN          i;
+  UINTN          OptionCount = 0;
+  UINTN          AvlIdx[ARRAY_SIZE(mHashAlgs)] = {0};
+  CHAR16         OptLine[81];
+  UINT32         SelectedMask;
 
-  DEBUG((DEBUG_INFO, "Checking RequestedActivePcrBanks\n"));
-
-  Status = Tpm2GetCapabilitySupportedAndActivePcrs (&TpmHashAlgorithmBitmap, &ActivePcrBanks);
-  ASSERT_EFI_ERROR (Status);
-
-  // read variable from flash
+  Status = Tpm2GetCapabilitySupportedAndActivePcrs(&TpmHashAlgorithmBitmap, &ActivePcrBanks);
+  ASSERT_EFI_ERROR(Status);
   Size = sizeof(RequestedActivePcrBanks);
   Status = gRT->GetVariable(
             L"RequestedActivePcrBanks",
@@ -1104,16 +1150,14 @@ WarnIfSinglePCRBank (
             &Size,
             &RequestedActivePcrBanks
             );
-  
-  // it should be all zeros by default, that means there's been no
-  // change request and there's nothing to do here
-  
+  // It's zero by default, that means there's been no request to change the PCR banks.
   if (RequestedActivePcrBanks == 0) {
-    DEBUG((DEBUG_INFO, "RequestedActivePcrBanks is zero\n"));
     return;
   } else if (RequestedActivePcrBanks == ActivePcrBanks) {
-    // if they're equal, zero it out again and proceed with normal boot (means
-    // multiple bank selection was successful, they are supported)
+    // 
+    // If they're equal, zero it out again and proceed with normal boot.
+    // It means the requested bank selection was successful.
+    // 
     RequestedActivePcrBanks = 0;
     gRT->SetVariable(
           L"RequestedActivePcrBanks",
@@ -1122,101 +1166,123 @@ WarnIfSinglePCRBank (
           sizeof(RequestedActivePcrBanks),
           &RequestedActivePcrBanks
         );
-    DEBUG((DEBUG_INFO, "RequestedActivePcrBanks is equal to ActivePcrBanks, change successful!!!!\n"));
     return;
   }
-  
-  //
-  // if they're not equal, display the popup and try to change to the new bank if
-  // user agrees
   // 
-  Status = gBS->CreateEvent (
-      EVT_TIMER,
-      TPL_CALLBACK,
-      NULL,
-      NULL,
-      &TimerEvent
-      );
-  ASSERT_EFI_ERROR (Status);
-
+  // If they're not equal, display the popup and switch to a single bank
+  // of user's choice.
+  // 
+  Status = gBS->CreateEvent(EVT_TIMER, TPL_CALLBACK, NULL, NULL, &TimerEvent);
+  ASSERT_EFI_ERROR(Status);
   CurrentAttribute = gST->ConOut->Mode->Attribute;
   CursorVisible    = gST->ConOut->Mode->CursorVisible;
-
-  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
-
-  DrainInput ();
-  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
-
+  gST->ConOut->EnableCursor(gST->ConOut, FALSE);
+  DrainInput();
+  gBS->SetTimer(TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
   Events[0] = gST->ConIn->WaitForKey;
   Events[1] = TimerEvent;
+  // 
+  // Parse obtained available PCR banks bitmap to get the names and create
+  // an option for each available bank
+  // 
+  for (i = 0; i < ARRAY_SIZE(mHashAlgs); i++) {
+    if (TpmHashAlgorithmBitmap & (1U << i)) {
+      AvlIdx[OptionCount++] = i;
+    }
+  }
+  OptLine[0] = L'\0';
+  UnicodeSPrint(OptLine, sizeof(OptLine), L"Select bank:");
+  // Append each available bank
+  for (i = 0; i < OptionCount; i++) {
+    CHAR16 token[40];
+    UnicodeSPrint(
+      token, sizeof(token),
+      L" %u) %s", (UINT32)(i + 1), mHashAlgs[AvlIdx[i]].Name
+    );
+    StrCatS(OptLine, ARRAY_SIZE(OptLine), token);
+  }
+  
+  while (1) {
+    CHAR16 HintBuf[64];
+    UnicodeSPrint(HintBuf, sizeof(HintBuf), L"Press 1..%u to select a bank.", (UINT32)OptionCount);
 
-  while(1) {
-    CreateMultiStringPopUp (
+    CreateMultiStringPopUp(
         78,
-        10,
+        9,
         L"!!! WARNING !!!",
         L"",
         L"Multiple PCR banks have been selected, but the current TPM supports",
         L"only one active bank at a time.",
         L"",
-        L"Set the most recently selected one as the single active bank?",
+        OptLine,
         L"",
-        L"Press F12 to confirm.",
         L"Press ESC to deny and revert to the default bank.",
-        DelayLine
-        );
+        L""
+    );
 
-    Status = gBS->WaitForEvent (2, Events, &Index);
-    ASSERT_EFI_ERROR (Status);
+    Status = gBS->WaitForEvent(2, Events, &Index);
+    ASSERT_EFI_ERROR(Status);
 
-    if (Index == 0) {
-      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
-      ASSERT_EFI_ERROR (Status);
+    if (Index != 0) continue;
 
-      if (Key.ScanCode == SCAN_ESC) {
-        //
-        // Clear the requested banks variable, the bank selection is already
-        // reverted to default
-        // 
+    Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+    ASSERT_EFI_ERROR(Status);
+
+    if (Key.ScanCode == SCAN_ESC) {
+      RequestedActivePcrBanks = 0;
+      gRT->SetVariable(
+          L"RequestedActivePcrBanks",
+          &gEfiTcg2PhysicalPresenceGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+          sizeof(RequestedActivePcrBanks),
+          &RequestedActivePcrBanks
+      );
+      break;
+    }
+
+    if (Key.UnicodeChar >= L'1' && Key.UnicodeChar <= (L'0' + (CHAR16)OptionCount)) {
+      UINTN sel = (UINTN)(Key.UnicodeChar - L'1');
+      UINTN algIdx = AvlIdx[sel];
+      SelectedMask = (1U << algIdx);
+
+      if (SelectedMask == ActivePcrBanks) {
         RequestedActivePcrBanks = 0;
-        gRT->SetVariable(
-            L"RequestedActivePcrBanks",
-            &gEfiTcg2PhysicalPresenceGuid,
-            EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-            sizeof(RequestedActivePcrBanks),
-            &RequestedActivePcrBanks
-            );
         break;
-      } else if (Key.ScanCode == SCAN_F12)  {
-        // Infer what was the bank the user attempted to select
-        AddedBank = RequestedActivePcrBanks & ~ActivePcrBanks;
-
-        // 
-        // It needs to be converted into the arbitrary indexing order that's
-        // been used to list the banks in the Setup Menu
-        // 
-
-        Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction (
-              TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS,
-              AddedBank
-              );
-        // the platform auth is optional, not sure what it is or if i need it
-        Tcg2PhysicalPresenceLibProcessRequest ( NULL );
-
       }
+
+      RequestedActivePcrBanks = SelectedMask;
+      gRT->SetVariable(
+          L"RequestedActivePcrBanks",
+          &gEfiTcg2PhysicalPresenceGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+          sizeof(RequestedActivePcrBanks),
+          &RequestedActivePcrBanks
+      );
+
+      Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction(
+          TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS,
+          SelectedMask
+      );
+
+      Status = gBS->CloseEvent(TimerEvent);
+      ASSERT_EFI_ERROR(Status);
+      gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
+      gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
+      gST->ConOut->ClearScreen(gST->ConOut);
+      DrainInput();
+
+      Tcg2PhysicalPresenceLibProcessRequest(NULL);
+      return;
     }
   }
 
-  Status = gBS->CloseEvent (TimerEvent);
-  ASSERT_EFI_ERROR (Status);
-
-  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
-  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
-
-  gST->ConOut->ClearScreen (gST->ConOut);
-  DrainInput ();
-  BootLogoEnableLogo ();
-  
+  Status = gBS->CloseEvent(TimerEvent);
+  ASSERT_EFI_ERROR(Status);
+  gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
+  gST->ConOut->ClearScreen(gST->ConOut);
+  DrainInput();
+  BootLogoEnableLogo();
 }
 
 STATIC
@@ -1901,6 +1967,7 @@ PlatformBootManagerAfterConsole (
     }
   }
 
+  EnsurePrevActivePcrBanksVar ();
   WarnIfSinglePCRBank();
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();

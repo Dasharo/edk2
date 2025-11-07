@@ -51,39 +51,6 @@ STATIC volatile QEMU_TPM_PPI  *mPpi;
 STATIC BOOLEAN PPIinMMIO = FALSE;
 
 /**
-  Initializes the RequestedActivePcrBanks variable
-**/
-STATIC
-VOID
-EnsurePrevActivePcrBanksVar (
-  VOID
-  )
-{
-  UINT32 RequestedActivePcrBanks = 0;
-  UINTN  Size  = sizeof(RequestedActivePcrBanks);
-  UINT32 Attr  = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS;
-  EFI_STATUS Status = gRT->GetVariable(
-                    L"RequestedActivePcrBanks",
-                    &gEfiTcg2PhysicalPresenceGuid,
-                    NULL,
-                    &Size,
-                    &RequestedActivePcrBanks
-                  );
-  if (Status == EFI_NOT_FOUND) {
-    gRT->SetVariable(
-      REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
-      &gEfiTcg2PhysicalPresenceGuid,
-      Attr,
-      sizeof(RequestedActivePcrBanks),
-      &RequestedActivePcrBanks
-    );
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable set\n"));
-  } else {
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable already present, value: %x\n", RequestedActivePcrBanks));
-  }
-}
-
-/**
   Initializes QEMU PPI memory region.
 
   @retval EFI_SUCCESS           Operation completed successfully.
@@ -176,8 +143,6 @@ QemuTpmInitPPI (
 
   if (!PPIinMMIO)
     WriteBackDataCacheRange((VOID*)mPpi, sizeof(QEMU_TPM_PPI));
-
-  EnsurePrevActivePcrBanksVar ();
 
   return EFI_SUCCESS;
 
@@ -351,7 +316,6 @@ Tcg2ExecutePhysicalPresence (
 
       Status = Tpm2PcrAllocateBanks (PlatformAuth, TpmHashAlgorithmBitmap, CommandParameter);
       if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_INFO, "OOOOPS!!! Tpm2PcrAllocateBanks failed to set the bank mask to: %x, that's right, we know it before reboot!!!\n", CommandParameter));
         return TCG_PP_OPERATION_RESPONSE_BIOS_FAILURE;
       } else {
         return TCG_PP_OPERATION_RESPONSE_SUCCESS;
@@ -576,8 +540,6 @@ Tcg2UserConfirm (
 
       CautionKey = TRUE;
       TmpStr2    = Tcg2PhysicalPresenceGetStringById (STRING_TOKEN (TPM_SET_PCR_BANKS));
-      // ----^
-      // here the confirmation message gets printed. i need to do something like this with the single-bank-only message
 
       TmpStr1 = Tcg2PhysicalPresenceGetStringById (STRING_TOKEN (TPM_HEAD_STR));
       UnicodeSPrint (ConfirmText, BufSize, TmpStr1, TmpStr2);
@@ -642,8 +604,6 @@ Tcg2UserConfirm (
       ;
   }
 
-  DEBUG((DEBUG_INFO, "I'm past the confirmation printing\n"));
-  
   if (TmpStr2 == NULL) {
     FreePool (ConfirmText);
     return FALSE;
@@ -652,9 +612,6 @@ Tcg2UserConfirm (
   // Console for user interaction
   // We need to connect all trusted consoles for TCG PP. Here we treat all consoles in OVMF to be trusted consoles.
   EfiBootManagerConnectAllDefaultConsoles ();
-
-  DEBUG((DEBUG_INFO, "Connected consoles..\n"));
-  
 
   if (TpmPpCommand < TCG2_PHYSICAL_PRESENCE_STORAGE_MANAGEMENT_BEGIN) {
     if (CautionKey) {
@@ -707,7 +664,6 @@ Tcg2UserConfirm (
   HiiRemovePackages (mTcg2PpStringPackHandle);
 
   if (Tcg2ReadUserKey (CautionKey, TIMEOUT)) {
-    DEBUG((DEBUG_INFO, "CautionKey was true...\n"));
     return TRUE;
   }
 
@@ -817,7 +773,6 @@ Tcg2ExecutePendingTpmRequest (
     return;
   }
 
-  DEBUG((DEBUG_INFO, "calling for user confirmation...\n"));
   if (!RequestConfirmed) {
     //
     // Print confirm text and wait for approval.
@@ -830,7 +785,6 @@ Tcg2ExecutePendingTpmRequest (
   //
   mPpi->Response = TCG_PP_OPERATION_RESPONSE_USER_ABORT;
   if (RequestConfirmed) {
-    DEBUG((DEBUG_INFO, "oookay user confirmed, calling Tcg2ExecutePhysicalPresence\n"));
     mPpi->Response = Tcg2ExecutePhysicalPresence (
                        PlatformAuth,
                        mPpi->Request,

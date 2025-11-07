@@ -54,39 +54,6 @@ Tcg2PhysicalPresenceGetStringById (
 }
 
 /**
-  Initializes the RequestedActivePcrBanks variable
-**/
-STATIC
-VOID
-EnsurePrevActivePcrBanksVar (
-  VOID
-  )
-{
-  UINT32 RequestedActivePcrBanks = 0;
-  UINTN  Size  = sizeof(RequestedActivePcrBanks);
-  UINT32 Attr  = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS;
-  EFI_STATUS Status = gRT->GetVariable(
-                    L"RequestedActivePcrBanks",
-                    &gEfiTcg2PhysicalPresenceGuid,
-                    NULL,
-                    &Size,
-                    &RequestedActivePcrBanks
-                  );
-  if (Status == EFI_NOT_FOUND) {
-    gRT->SetVariable(
-      REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
-      &gEfiTcg2PhysicalPresenceGuid,
-      Attr,
-      sizeof(RequestedActivePcrBanks),
-      &RequestedActivePcrBanks
-    );
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable set\n"));
-  } else {
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable already present, value: %x\n", RequestedActivePcrBanks));
-  }
-}
-
-/**
   Send ClearControl and Clear command to TPM.
 
   @param[in]  PlatformAuth      platform auth value. NULL means no platform auth change.
@@ -214,7 +181,6 @@ Tcg2ExecutePhysicalPresence (
       return TCG_PP_OPERATION_RESPONSE_SUCCESS;
 
     case TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS:
-      DEBUG ((DEBUG_INFO, "Entered case TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS\n"));
       Status = Tpm2GetCapabilitySupportedAndActivePcrs (&TpmHashAlgorithmBitmap, &ActivePcrBanks);
       ASSERT_EFI_ERROR (Status);
 
@@ -244,7 +210,6 @@ Tcg2ExecutePhysicalPresence (
     
       Status = Tpm2PcrAllocateBanks (PlatformAuth, TpmHashAlgorithmBitmap, CommandParameter);
       if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_INFO, "OOOOPS!!! Tpm2PcrAllocateBanks failed to set the bank mask to: %x, that's right, we know it before reboot!!!\n", CommandParameter));
         return TCG_PP_OPERATION_RESPONSE_BIOS_FAILURE;
       } else {
         return TCG_PP_OPERATION_RESPONSE_SUCCESS;
@@ -581,7 +546,6 @@ Tcg2UserConfirm (
     default:
       ;
   }
-  DEBUG((DEBUG_INFO, "I'm past the confirmation printing\n"));
 
   if (TmpStr2 == NULL) {
     FreePool (ConfirmText);
@@ -639,7 +603,6 @@ Tcg2UserConfirm (
   HiiRemovePackages (mTcg2PpStringPackHandle);
 
   if (Tcg2ReadUserKey (CautionKey)) {
-    DEBUG((DEBUG_INFO, "CautionKey was true...\n"));
     return TRUE;
   }
 
@@ -844,7 +807,6 @@ Tcg2ExecutePendingTpmRequest (
       //
       // Print confirm text and wait for approval.
       //
-      DEBUG((DEBUG_INFO, "calling for user confirmation...\n"));
       RequestConfirmed = Tcg2UserConfirm (TcgPpData->PPRequest, TcgPpData->PPRequestParameter);
     }
 
@@ -854,7 +816,6 @@ Tcg2ExecutePendingTpmRequest (
     TcgPpData->PPResponse = TCG_PP_OPERATION_RESPONSE_USER_ABORT;
     NewFlags              = *Flags;
     if (RequestConfirmed) {
-      DEBUG((DEBUG_INFO, "oookay user confirmed, calling Tcg2ExecutePhysicalPresence\n"));
       TcgPpData->PPResponse = Tcg2ExecutePhysicalPresence (
                                 PlatformAuth,
                                 TcgPpData->PPRequest,
@@ -991,8 +952,6 @@ Tcg2PhysicalPresenceLibProcessRequest (
       ASSERT_EFI_ERROR (Status);
     }
   }
-
-  EnsurePrevActivePcrBanksVar();
 
   //
   // Check S4 resume
