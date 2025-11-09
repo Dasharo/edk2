@@ -14,6 +14,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/Smbios.h>
 #include <IndustryStandard/SmBios.h>
 
+#include <Guid/SovereignBoot.h>
+
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/UefiBootServicesTableLib.h>

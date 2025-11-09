@@ -813,4 +813,17 @@ EfiBootManagerDispatchDeferredImages (
   VOID
   );
 
+/**
+  Launch Sovereign Boot Wizard
+
+  @param AppLaunchCause          The reason why wizard is beign launched.
+
+  @retval EFI_SUCCESS            The wizard successfully loaded and executed,
+  @retval Others                 The wizard not found or faield to launch.
+**/
+EFI_STATUS
+EfiBootManagerLaunchSovereignBootWizard (
+  UINT8 AppLaunchCause
+  );
+
 #endif

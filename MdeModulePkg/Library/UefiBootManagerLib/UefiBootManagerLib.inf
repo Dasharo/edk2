@@ -41,6 +41,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   HobLib
@@ -87,6 +88,7 @@
   gEfiDiskInfoSdMmcInterfaceGuid                ## SOMETIMES_CONSUMES ## GUID
   gEfiDiskInfoUfsInterfaceGuid                  ## SOMETIMES_CONSUMES ## GUID
   gEfiPartTypeSystemPartGuid                    ## CONSUMES ## GUID
+  gSovereignBootWizardFormSetGuid               ## SOMETIMES_CONSUMES
 
 [Protocols]
   gEfiPciRootBridgeIoProtocolGuid               ## CONSUMES
@@ -123,3 +125,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDriverHealthConfigureForm               ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxRepairCount                          ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions           ## CONSUMES
+
+[FixedPcd]
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState

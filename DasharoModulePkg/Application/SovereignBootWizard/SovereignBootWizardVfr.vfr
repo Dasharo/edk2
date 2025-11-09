@@ -1,0 +1,177 @@
+///** @file
+//
+//    Sovereign Boot Wizard Setup formset.
+//
+//  Copyright (c) 2025, 3mdeb Sp z o.o. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+
+#include <Uefi/UefiMultiPhase.h>
+#include "SovereignBootWizardHii.h"
+
+
+formset
+  guid      = SOVEREIGN_BOOT_WIZARD_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_FORM_SET_TITLE),
+  help      = STRING_TOKEN(STR_FORM_SET_TITLE_HELP),
+  classguid = EFI_HII_PLATFORM_SETUP_FORMSET_GUID,
+
+  //
+  // Define a Buffer Storage (EFI_IFR_VARSTORE)
+  //
+  varstore SOVEREIGN_BOOT_WIZARD_FORM_DATA,
+    varid = SOVEREIGN_BOOT_WIZARD_FORM_DATA_VARSTORE_ID,
+    name  = SvBootFormData,
+    guid  = SOVEREIGN_BOOT_WIZARD_FORMSET_GUID;
+
+  efivarstore SOVEREIGN_BOOT_WIZARD_CONFIG_DATA,
+    attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS,
+    name = SvBootData,
+    guid = SOVEREIGN_BOOT_WIZARD_FORMSET_GUID;
+
+  efivarstore SOVEREIGN_BOOT_WIZARD_NV_CONFIG,
+    attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+    name = SvBootConfig,
+    guid = SOVEREIGN_BOOT_WIZARD_FORMSET_GUID;
+
+  //
+  // Welcome window
+  //
+  form formid = SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID,
+       title  = STRING_TOKEN(STR_FORM1_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_WELCOME_SUBTITLE);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+    subtitle text = STRING_TOKEN(STR_WELCOME_PROMPT);
+
+    // Empty text field so that none of the options are
+    // highlighted/selected by default.
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID,
+      prompt = STRING_TOKEN(STR_SELECT_SOVEREIGN_BOOT),
+      help   = STRING_TOKEN(STR_SELECT_SOVEREIGN_BOOT_HELP),
+      flags  = INTERACTIVE,
+      key    = SELECT_SOVEREIGN_BOOT_QUESTION_ID;
+
+  grayoutif TRUE;
+    text
+      help = STRING_TOKEN(STR_EMPTY_STRING),
+      text = STRING_TOKEN(STR_SOVEREIGN_BOOT_FEATURES);
+  endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_WIZARD_MS_SECURE_BOOT_FORM_ID,
+      prompt = STRING_TOKEN(STR_SELECT_DEFAULT_SECURE_BOOT),
+      help   = STRING_TOKEN(STR_SELECT_DEFAULT_SECURE_BOOT_HELP),
+      flags  = INTERACTIVE,
+      key    = SELECT_DEFAULT_SECURE_BOOT_QUESTION_ID;
+
+  grayoutif TRUE;
+    text
+      help = STRING_TOKEN(STR_EMPTY_STRING),
+      text = STRING_TOKEN(STR_MS_SECURE_BOOT_FEATURES);
+  endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_EXIT_TEXT),
+      flags  = INTERACTIVE,
+      key    = EXIT_FORM1_QUESTION_ID;
+
+  endform;
+
+  //
+  // SV boot configuration window
+  //
+  form formid = SOVEREIGN_BOOT_WIZARD_CONFIG_FORM_ID,
+       title  = STRING_TOKEN(STR_FORM2_TITLE);
+
+  disableif ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
+    subtitle text = STRING_TOKEN(STR_CONFIG_SUBTITLE);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+  endif;
+  disableif NOT ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+  endif;
+
+    subtitle text = STRING_TOKEN(STR_BOOTOPT_DESCRIPTION);
+    subtitle text = STRING_TOKEN(STR_HW_PATH);
+    subtitle text = STRING_TOKEN(STR_FILE_PATH);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    subtitle text = STRING_TOKEN(STR_KEY_FINGERPRINT);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    subtitle text = STRING_TOKEN(STR_TRUST_QUESTION);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_DO_NOT_TRUST_KEY),
+      flags  = INTERACTIVE,
+      key    = DO_NOT_TRUST_KEY_FORM2_QUESTION_ID;
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_TRUST_KEY_AND_BOOT),
+      flags  = INTERACTIVE,
+      key    = TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID;
+
+  disableif ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_TRUST_KEY),
+      flags  = INTERACTIVE,
+      key    = TRUST_KEY_FORM2_QUESTION_ID;
+  endif;
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_SHOW_KEY_DETAILS),
+      flags  = INTERACTIVE,
+      key    = SHOW_KEY_DETAILS_FORM2_QUESTION_ID;
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_EXIT_TEXT),
+      flags  = INTERACTIVE,
+      key    = EXIT_FORM2_QUESTION_ID;
+
+  endform;
+
+  //
+  // Empty placeholder menu when MS Secure boot is chosen.
+  // The callback will simply exit the application when entering this form.
+  //
+  form formid = SOVEREIGN_BOOT_WIZARD_MS_SECURE_BOOT_FORM_ID,
+       title  = STRING_TOKEN(STR_FORM1_TITLE);
+  endform;
+
+  //
+  // Advanced mode window
+  //
+  form formid = SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
+        title  = STRING_TOKEN(STR_FORM9_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_INTERACTIVE_MODE_SUBTITLE);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+
+    text
+      help   = STRING_TOKEN(STR_EMPTY_STRING),
+      text   = STRING_TOKEN(STR_EXIT_TEXT),
+      flags  = INTERACTIVE,
+      key    = EXIT_FORM9_QUESTION_ID;
+
+  endform;
+
+endformset;

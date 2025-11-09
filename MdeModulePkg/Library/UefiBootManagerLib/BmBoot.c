@@ -1821,6 +1821,123 @@ BmReportLoadFailure (
     );
 }
 
+EFI_DEVICE_PATH *
+FvFilePath (
+  EFI_GUID                     *FileGuid
+  )
+{
+
+  EFI_STATUS                         Status;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **) &LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+  return AppendDevicePathNode (
+           DevicePathFromHandle (LoadedImage->DeviceHandle),
+           (EFI_DEVICE_PATH_PROTOCOL *) &FileNode
+           );
+}
+
+/**
+  Launch Sovereign Boot Wizard
+
+  @param AppLaunchCause          The reason why wizard is beign launched.
+
+  @retval EFI_SUCCESS            The wizard successfully loaded and executed,
+  @retval Others                 The wizard not found or faield to launch.
+**/
+EFI_STATUS
+EfiBootManagerLaunchSovereignBootWizard (
+  UINT8 AppLaunchCause
+  )
+{
+  EFI_STATUS                         Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION       BootOption;
+  EFI_DEVICE_PATH_PROTOCOL           *FilePath;
+  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA  SvBootData;
+
+  if (!FixedPcdGetBool (PcdSovereignBootEnabled)) {
+    return EFI_NOT_FOUND;
+  }
+
+  FilePath = FvFilePath (&gSovereignBootWizardFormSetGuid);
+  if (FilePath == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = EfiBootManagerInitializeLoadOption (
+              &BootOption,
+              0,
+              LoadOptionTypeBoot,
+              LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
+              L"Sovereign Boot Wizard",
+              FilePath,
+              NULL,
+              0
+              );
+
+  if (!EFI_ERROR (Status)) {
+    gST->ConOut->ClearScreen (gST->ConOut);
+    //
+    // Set the Sovereign Boot Wizard launch cause
+    //
+    SvBootData.AppLaunchCause = AppLaunchCause;
+    gRT->SetVariable (
+      SV_BOOT_DATA_VAR,
+      &gSovereignBootWizardFormSetGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS,
+      sizeof (SOVEREIGN_BOOT_WIZARD_CONFIG_DATA),
+      &SvBootData
+      );
+
+    EfiBootManagerBoot (&BootOption);
+    //
+    // Remove the boot option after we return from the wizard
+    //
+    EfiBootManagerDeleteLoadOptionVariable (BootOption.OptionNumber, BootOption.OptionType);
+
+    EfiBootManagerFreeLoadOption (&BootOption);
+  }
+
+  return Status;
+}
+
+/**
+  Check if it's a Device Path pointing to Sovereign Boot Wizard.
+
+  @param  DevicePath     Input device path.
+
+  @retval TRUE   The device path is Sovereign Boot Wizar File Device Path.
+  @retval FALSE  The device path is NOT Sovereign Boot Wizar File Device Path.
+**/
+BOOLEAN
+BmIsSovereignBootWizardFilePath (
+  EFI_DEVICE_PATH_PROTOCOL  *DevicePath
+  )
+{
+  EFI_HANDLE  FvHandle;
+  VOID        *NameGuid;
+  EFI_STATUS  Status;
+
+  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &DevicePath, &FvHandle);
+  if (!EFI_ERROR (Status)) {
+    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)DevicePath);
+    if (NameGuid != NULL) {
+      return CompareGuid (NameGuid, &gSovereignBootWizardFormSetGuid);
+    }
+  }
+
+  return FALSE;
+}
+
+
 /**
   Attempt to boot the EFI boot option. This routine sets L"BootCurent" and
   also signals the EFI ready to boot event. If the device path for the option
@@ -1847,21 +1964,26 @@ EfiBootManagerBoot (
   IN  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
   )
 {
-  EFI_STATUS                 Status;
-  EFI_HANDLE                 ImageHandle;
-  EFI_LOADED_IMAGE_PROTOCOL  *ImageInfo;
-  UINT16                     Uint16;
-  UINTN                      OptionNumber;
-  UINTN                      OriginalOptionNumber;
-  EFI_DEVICE_PATH_PROTOCOL   *FilePath;
-  EFI_DEVICE_PATH_PROTOCOL   *RamDiskDevicePath;
-  VOID                       *FileBuffer;
-  UINTN                      FileSize;
-  EFI_BOOT_LOGO_PROTOCOL     *BootLogo;
-  EFI_EVENT                  LegacyBootEvent;
-  EFI_INPUT_KEY              Key;
-  UINTN                      Index;
-  UINT8                      *SecureBoot;
+  EFI_STATUS                        Status;
+  EFI_HANDLE                        ImageHandle;
+  EFI_LOADED_IMAGE_PROTOCOL         *ImageInfo;
+  UINT16                            Uint16;
+  UINTN                             OptionNumber;
+  UINTN                             OriginalOptionNumber;
+  EFI_DEVICE_PATH_PROTOCOL          *FilePath;
+  EFI_DEVICE_PATH_PROTOCOL          *RamDiskDevicePath;
+  VOID                              *FileBuffer;
+  UINTN                             FileSize;
+  EFI_BOOT_LOGO_PROTOCOL            *BootLogo;
+  EFI_EVENT                         LegacyBootEvent;
+  EFI_INPUT_KEY                     Key;
+  UINTN                             Index;
+  UINT8                             *SecureBoot;
+  UINTN                             SvBootConfigSize;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG   *SvBootConfig;
+  BOOLEAN                           ScreenCleared;
+
+  ScreenCleared = FALSE;
 
   if (BootOption == NULL) {
     return;
@@ -2003,8 +2125,38 @@ EfiBootManagerBoot (
       BmReportLoadFailure (EFI_SW_DXE_BS_EC_BOOT_OPTION_LOAD_ERROR, Status);
       BootOption->Status = Status;
 
+      // Launch Sovereign Boot Wizard if image verification failed
+      if (Status == EFI_SECURITY_VIOLATION || Status == EFI_ACCESS_DENIED) {
+        // Launch it only if THe Sovereign Boto Wizard is enabeld in the build and 
+        // we did not attempt to boot the wizard itself (safety check to avoid recursive loop)
+        if (FixedPcdGetBool (PcdSovereignBootEnabled) && !BmIsSovereignBootWizardFilePath (BootOption->FilePath)) {
+          
+          SvBootConfigSize = sizeof (SOVEREIGN_BOOT_WIZARD_NV_CONFIG);
+          GetVariable2 (SV_BOOT_CONFIG_VAR, &gSovereignBootWizardFormSetGuid, (VOID **)&SvBootConfig, &SvBootConfigSize);
+
+          // Only if Sovereign Boot is provisioned. We should not end up in this path before provisioning
+          if ((SvBootConfig != NULL) && SvBootConfig->SvBootEnabled && SvBootConfig->SvBootProvisioned) {
+            Status = EfiBootManagerLaunchSovereignBootWizard (SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED);
+            if (EFI_ERROR (Status)) {
+              if (gST->ConOut != NULL) {
+                gST->ConOut->ClearScreen (gST->ConOut);
+                ScreenCleared = TRUE;
+                AsciiPrint ("The Sovereign Boot Wizard failed to launch or is missing!\n");
+              }
+            }
+          }
+
+          if (SvBootConfig != NULL) {
+            FreePool (SvBootConfig);
+          }
+          // If user did not trust the image or decided not to boot it, simply display the warning below as usual.
+        }
+      }
+
       if (gST->ConOut != NULL) {
-        gST->ConOut->ClearScreen (gST->ConOut);
+        if (!ScreenCleared) {
+          gST->ConOut->ClearScreen (gST->ConOut);
+        }
 
         //
         // When UEFI Secure Boot is enabled, unsigned modules won't load.

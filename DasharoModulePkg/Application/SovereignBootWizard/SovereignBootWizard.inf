@@ -1,0 +1,81 @@
+## @file
+# This is a Sovereign Boot Wizard application.
+#
+# This application help configuring UEFI Secure Boot.
+#
+#  Copyright (c) 2025, 3mdeb Sp z o.o. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SovereignBootWizard
+  MODULE_UNI_FILE                = SovereignBootWizard.uni
+  FILE_GUID                      = B57031B9-1ABB-45F8-A9CB-AC5AAD72AD31
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SovereignBootWizardInit
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 EBC
+#
+
+[Sources]
+  BootOptionParsing.c
+  SovereignBootWizard.c
+  SovereignBootWizardHii.h
+  SovereignBootWizardVfrStrings.uni
+  SovereignBootWizard.h
+  SovereignBootWizardVfr.vfr
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
+  SecurityPkg/SecurityPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseCryptLib
+  MemoryAllocationLib
+  UefiBootManagerLib
+  UefiBootServicesTableLib
+  UefiApplicationEntryPoint
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  HobLib
+  HiiLib
+  PrintLib
+  UefiLib
+  DevicePathLib
+  PeCoffLib
+  SecureBootVariableLib
+  SecureBootVariableProvisionLib
+
+[Guids]
+  gSovereignBootWizardFormSetGuid
+
+[Protocols]
+  ## PRODUCES # SovereignBootWizardFormSet
+  ## PRODUCES # SovereignBootWizardInventory
+  gEfiDevicePathProtocolGuid
+  gEfiHiiStringProtocolGuid                     ## CONSUMES
+  gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gEfiFormBrowser2ProtocolGuid                  ## CONSUMES
+  gEfiHiiDatabaseProtocolGuid                   ## CONSUMES
+  gEfiSimpleTextInputExProtocolGuid             ## SOMETIMES_CONSUMES
+  gEdkiiFormBrowserEx2ProtocolGuid              ## CONSUMES
+  gEfiConfigKeywordHandlerProtocolGuid          ## CONSUMES
+  gEfiHiiPopupProtocolGuid                      ## CONSUMES
+  gEfiDevicePathToTextProtocolGuid              ## CONSUMES
+  gEfiFirmwareVolume2ProtocolGuid               ## CONSUMES
+
+[UserExtensions.TianoCore."ExtraFiles"]
+  SovereignBootWizardExtra.uni
