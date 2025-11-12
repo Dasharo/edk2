@@ -1107,8 +1107,6 @@ WarnIfSinglePCRBank (
   CHAR16         OptLine[81];
   UINT32         SelectedMask;
 
-  Status = Tpm2GetCapabilitySupportedAndActivePcrs(&TpmHashAlgorithmBitmap, &ActivePcrBanks);
-  ASSERT_EFI_ERROR(Status);
   Size = sizeof(RequestedActivePcrBanks);
   Status = gRT->GetVariable(
             REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
@@ -1121,7 +1119,7 @@ WarnIfSinglePCRBank (
   // If the variable doesn't exist, there's been no request to change the
   // PCR banks.
   // 
-  if (Status == EFI_NOT_FOUND) {
+  if (EFI_ERROR(Status)) {
     return;
   }
   // Clear the variable after reading
@@ -1132,10 +1130,17 @@ WarnIfSinglePCRBank (
         0,
         NULL
       );
+  Status = Tpm2GetCapabilitySupportedAndActivePcrs(&TpmHashAlgorithmBitmap, &ActivePcrBanks);
+  if (EFI_ERROR(Status)) {
+      return;
+  }
   // If they're equal, the requested bank selection was successful.
   if (RequestedActivePcrBanks == ActivePcrBanks) {
     return;
   }
+  // Check if multiple PCR banks have in fact been selected
+  if ((RequestedActivePcrBanks & (RequestedActivePcrBanks - 1)) == 0)
+    return;
   // 
   // If they're not equal, display the popup and switch to a single bank
   // of user's choice.
@@ -1173,8 +1178,8 @@ WarnIfSinglePCRBank (
         9,
         L"!!! WARNING !!!",
         L"",
-        L"Multiple PCR banks have been selected, but the current TPM supports",
-        L"only one active bank at a time.",
+        L"Multiple PCR banks have been selected, but the current TPM ",
+        L"apparently supports only one active bank at a time.",
         L"",
         OptLine,
         L"",
@@ -1183,13 +1188,14 @@ WarnIfSinglePCRBank (
     );
 
     Status = gBS->WaitForEvent(1, Events, &Index);
-    ASSERT_EFI_ERROR(Status);
-
-    if (Index != 0) continue;
-
+    if (EFI_ERROR(Status)) {
+      break;
+    }
+    
     Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
-    ASSERT_EFI_ERROR(Status);
-
+    if (EFI_ERROR(Status)) {
+      break;
+    }
     if (Key.ScanCode == SCAN_ESC) {
       break;
     }
@@ -1208,7 +1214,6 @@ WarnIfSinglePCRBank (
           SelectedMask
       );
 
-      ASSERT_EFI_ERROR(Status);
       gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
       gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
       gST->ConOut->ClearScreen(gST->ConOut);
