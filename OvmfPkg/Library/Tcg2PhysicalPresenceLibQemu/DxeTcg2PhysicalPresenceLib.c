@@ -300,20 +300,18 @@ Tcg2ExecutePhysicalPresence (
         DEBUG ((DEBUG_ERROR, "PCR banks %x to allocate are not supported by TPM. Skip operation\n", CommandParameter));
         return TCG_PP_OPERATION_RESPONSE_BIOS_FAILURE;
       }
- 
       // 
       // Store the requested value of the active PCR banks for comparison after
       // reboot, to confirm whether the TPM accepted the change
       // 
       gRT->SetVariable(
-        L"RequestedActivePcrBanks",
+        REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
         &gEfiTcg2PhysicalPresenceGuid,
-        EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+        EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
         sizeof(CommandParameter),
         &CommandParameter
       );
       DEBUG ((DEBUG_INFO, "Right before Tpm2PcrAllocateBanks - Setting the RequestedActivePcrBanks to:  %x\n", CommandParameter));
-
       Status = Tpm2PcrAllocateBanks (PlatformAuth, TpmHashAlgorithmBitmap, CommandParameter);
       if (EFI_ERROR (Status)) {
         return TCG_PP_OPERATION_RESPONSE_BIOS_FAILURE;
@@ -332,6 +330,18 @@ Tcg2ExecutePhysicalPresence (
     case TCG2_PHYSICAL_PRESENCE_LOG_ALL_DIGESTS:
       Status = Tpm2GetCapabilitySupportedAndActivePcrs (&TpmHashAlgorithmBitmap, &ActivePcrBanks);
       ASSERT_EFI_ERROR (Status);
+      // 
+      // Store the requested value of the active PCR banks for comparison after
+      // reboot, to confirm whether the TPM accepted the change
+      // 
+      gRT->SetVariable(
+        REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
+        &gEfiTcg2PhysicalPresenceGuid,
+        EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+        sizeof(CommandParameter),
+        &CommandParameter
+      );
+      DEBUG ((DEBUG_INFO, "Right before Tpm2PcrAllocateBanks - Setting the RequestedActivePcrBanks to:  %x\n", CommandParameter));
       Status = Tpm2PcrAllocateBanks (PlatformAuth, TpmHashAlgorithmBitmap, TpmHashAlgorithmBitmap);
       if (EFI_ERROR (Status)) {
         return TCG_PP_OPERATION_RESPONSE_BIOS_FAILURE;

@@ -1070,38 +1070,6 @@ WarnIfRecoveryBoot (
   BootLogoEnableLogo ();
 }
 
-/**
-  Initializes the RequestedActivePcrBanks variable
-**/
-STATIC
-VOID
-EnsurePrevActivePcrBanksVar (
-  VOID
-  )
-{
-  UINT32 RequestedActivePcrBanks = 0;
-  UINTN  Size  = sizeof(RequestedActivePcrBanks);
-  UINT32 Attr  = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS;
-  EFI_STATUS Status = gRT->GetVariable(
-                    L"RequestedActivePcrBanks",
-                    &gEfiTcg2PhysicalPresenceGuid,
-                    NULL,
-                    &Size,
-                    &RequestedActivePcrBanks
-                  );
-  if (Status == EFI_NOT_FOUND) {
-    gRT->SetVariable(
-      REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
-      &gEfiTcg2PhysicalPresenceGuid,
-      Attr,
-      sizeof(RequestedActivePcrBanks),
-      &RequestedActivePcrBanks
-    );
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable set\n"));
-  } else {
-    DEBUG ((DEBUG_INFO, "RequestedActivePcrBanks variable already present, value: %x\n", RequestedActivePcrBanks));
-  }
-}
 
 
 typedef struct {
@@ -1124,8 +1092,7 @@ WarnIfSinglePCRBank (
 )
 {
   EFI_STATUS     Status;
-  EFI_EVENT      TimerEvent;
-  EFI_EVENT      Events[2];
+  EFI_EVENT      Events[1];
   BOOLEAN        CursorVisible;
   UINTN          CurrentAttribute;
   UINTN          Index;
@@ -1144,43 +1111,41 @@ WarnIfSinglePCRBank (
   ASSERT_EFI_ERROR(Status);
   Size = sizeof(RequestedActivePcrBanks);
   Status = gRT->GetVariable(
-            L"RequestedActivePcrBanks",
+            REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
             &gEfiTcg2PhysicalPresenceGuid,
             NULL,
             &Size,
             &RequestedActivePcrBanks
             );
-  // It's zero by default, that means there's been no request to change the PCR banks.
-  if (RequestedActivePcrBanks == 0) {
+  // 
+  // If the variable doesn't exist, there's been no request to change the
+  // PCR banks.
+  // 
+  if (Status == EFI_NOT_FOUND) {
     return;
-  } else if (RequestedActivePcrBanks == ActivePcrBanks) {
-    // 
-    // If they're equal, zero it out again and proceed with normal boot.
-    // It means the requested bank selection was successful.
-    // 
-    RequestedActivePcrBanks = 0;
-    gRT->SetVariable(
-          L"RequestedActivePcrBanks",
-          &gEfiTcg2PhysicalPresenceGuid,
-          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-          sizeof(RequestedActivePcrBanks),
-          &RequestedActivePcrBanks
-        );
+  }
+  // Clear the variable after reading
+  gRT->SetVariable(
+        REQUESTED_ACTIVE_PCR_BANKS_VARIABLE_NAME,
+        &gEfiTcg2PhysicalPresenceGuid,
+        0,
+        0,
+        NULL
+      );
+  // If they're equal, the requested bank selection was successful.
+  if (RequestedActivePcrBanks == ActivePcrBanks) {
     return;
   }
   // 
   // If they're not equal, display the popup and switch to a single bank
   // of user's choice.
   // 
-  Status = gBS->CreateEvent(EVT_TIMER, TPL_CALLBACK, NULL, NULL, &TimerEvent);
   ASSERT_EFI_ERROR(Status);
   CurrentAttribute = gST->ConOut->Mode->Attribute;
   CursorVisible    = gST->ConOut->Mode->CursorVisible;
   gST->ConOut->EnableCursor(gST->ConOut, FALSE);
   DrainInput();
-  gBS->SetTimer(TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
   Events[0] = gST->ConIn->WaitForKey;
-  Events[1] = TimerEvent;
   // 
   // Parse obtained available PCR banks bitmap to get the names and create
   // an option for each available bank
@@ -1203,9 +1168,6 @@ WarnIfSinglePCRBank (
   }
   
   while (1) {
-    CHAR16 HintBuf[64];
-    UnicodeSPrint(HintBuf, sizeof(HintBuf), L"Press 1..%u to select a bank.", (UINT32)OptionCount);
-
     CreateMultiStringPopUp(
         78,
         9,
@@ -1216,11 +1178,11 @@ WarnIfSinglePCRBank (
         L"",
         OptLine,
         L"",
-        L"Press ESC to deny and revert to the default bank.",
+        L"Press ESC to stay with the previously active bank.",
         L""
     );
 
-    Status = gBS->WaitForEvent(2, Events, &Index);
+    Status = gBS->WaitForEvent(1, Events, &Index);
     ASSERT_EFI_ERROR(Status);
 
     if (Index != 0) continue;
@@ -1229,14 +1191,6 @@ WarnIfSinglePCRBank (
     ASSERT_EFI_ERROR(Status);
 
     if (Key.ScanCode == SCAN_ESC) {
-      RequestedActivePcrBanks = 0;
-      gRT->SetVariable(
-          L"RequestedActivePcrBanks",
-          &gEfiTcg2PhysicalPresenceGuid,
-          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-          sizeof(RequestedActivePcrBanks),
-          &RequestedActivePcrBanks
-      );
       break;
     }
 
@@ -1246,25 +1200,14 @@ WarnIfSinglePCRBank (
       SelectedMask = (1U << algIdx);
 
       if (SelectedMask == ActivePcrBanks) {
-        RequestedActivePcrBanks = 0;
         break;
       }
-
-      RequestedActivePcrBanks = SelectedMask;
-      gRT->SetVariable(
-          L"RequestedActivePcrBanks",
-          &gEfiTcg2PhysicalPresenceGuid,
-          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-          sizeof(RequestedActivePcrBanks),
-          &RequestedActivePcrBanks
-      );
 
       Tcg2PhysicalPresenceLibSubmitRequestToPreOSFunction(
           TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS,
           SelectedMask
       );
 
-      Status = gBS->CloseEvent(TimerEvent);
       ASSERT_EFI_ERROR(Status);
       gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
       gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
@@ -1276,7 +1219,6 @@ WarnIfSinglePCRBank (
     }
   }
 
-  Status = gBS->CloseEvent(TimerEvent);
   ASSERT_EFI_ERROR(Status);
   gST->ConOut->EnableCursor(gST->ConOut, CursorVisible);
   gST->ConOut->SetAttribute(gST->ConOut, CurrentAttribute);
@@ -1967,8 +1909,7 @@ PlatformBootManagerAfterConsole (
     }
   }
 
-  EnsurePrevActivePcrBanksVar ();
-  WarnIfSinglePCRBank();
+  WarnIfSinglePCRBank ();
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
   FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
