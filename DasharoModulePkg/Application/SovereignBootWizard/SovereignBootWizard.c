@@ -291,6 +291,52 @@ BootTheBootloader (
   return EFI_SUCCESS;
 }
 
+VOID
+PrepareBootloaders (
+  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData
+  )
+{
+  EFI_STATUS                           Status;
+  EFI_INPUT_KEY                        Key;
+  BROWSER_SETTING_SCOPE                Scope;
+
+  if (mBootloadersInitted) {
+    return;
+  }
+
+  Status = GetBootOptions (PrivateData);
+  if (!EFI_ERROR (Status)) {
+    mBootloadersInitted = TRUE;
+    if (!mBootloadersShown) {
+      Status = UpdateBootloaderPage (PrivateData);
+      mBootloadersShown = !EFI_ERROR (Status);
+    }
+  } else {
+    do {
+      CreatePopUp (
+        EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+        &Key,
+        L"",
+        L"Could not find any bootloaders.",
+        L"",
+        L"Press ENTER to exit Sovereign Boot configuration...",
+        L"",
+        NULL
+        );
+    } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+    // If we failed image verification but the image
+    // is not a correct boot option on HDD, or no bootloaders found,
+    // simply exit
+    if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+      Scope = FormSetLevel;
+    } else {
+      Scope = SystemLevel;
+    }
+    PrivateData->FormBrowserEx2->SetScope (Scope);
+    PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+  }
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -395,6 +441,29 @@ Callback (
           // variables except keeping default dbx. Then the wizard will
           // proceed with enrolling trusted keys into db.
           Status = PrepareSbVariablesForSvBoot ();
+          if (EFI_ERROR (Status)) {
+            do {
+              CreatePopUp (
+                EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+                &Key,
+                L"",
+                L"Could not prepare Secure Boot variables for provisioning.",
+                L"",
+                L"Press ENTER to exit Sovereign Boot configuration...",
+                L"",
+                NULL
+                );
+            } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+            if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
+              PrivateData->FormBrowserEx2->SetScope (FormSetLevel);
+            } else {
+              PrivateData->FormBrowserEx2->SetScope (SystemLevel);
+            }
+
+            Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
+            return Status;
+          }
+          PrepareBootloaders(PrivateData);
           break;
         }
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
@@ -581,8 +650,6 @@ Callback (
                 Scope = SystemLevel;
               }
               PrivateData->FormBrowserEx2->SetScope (Scope);
-              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
-
               *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
             }
             return Status;
@@ -591,8 +658,6 @@ Callback (
           if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
               Status = BootTheBootloader (PrivateData, BootloaderToBoot);
               PrivateData->FormBrowserEx2->SetScope (SystemLevel);
-              Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
-
               *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
               return Status;
           }
@@ -647,47 +712,11 @@ Callback (
     {
       switch (QuestionId) {
         case DO_NOT_TRUST_KEY_FORM2_QUESTION_ID:
-          if (!mBootloadersInitted) {
-            Status = GetBootOptions (PrivateData);
-            if (!EFI_ERROR (Status)) {
-              mBootloadersInitted = TRUE;
-              if (!mBootloadersShown) {
-                Status = UpdateBootloaderPage (PrivateData);
-                mBootloadersShown = !EFI_ERROR (Status);
-              }
-            } else {
-              do {
-                CreatePopUp (
-                  EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
-                  &Key,
-                  L"",
-                  L"Could not find any bootloaders.",
-                  L"",
-                  L"Press ENTER to exit Sovereign Boot configuration...",
-                  L"",
-                  NULL
-                  );
-              } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-              // If we failed image verification but the image
-              // is not a correct boot option on HDD, simply exit
-              if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-                  PrivateData->FormBrowserEx2->SetScope (SystemLevel);
-                  Status = PrivateData->FormBrowserEx2->ExecuteAction(BROWSER_ACTION_EXIT, 0);
-                  *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
-                  return Status;
-              }
-              // No bootloaders, go back to welcome form
-              Status = PrivateData->FormBrowser2->SendForm (
-                            PrivateData->FormBrowser2,
-                            &PrivateData->HiiHandle,
-                            1,
-                            &gSovereignBootWizardFormSetGuid,
-                            SOVEREIGN_BOOT_WIZARD_WELCOME_FORM_ID,
-                            NULL,
-                            NULL
-                            );
-            }
-          }
+          // When the trust form opens during image authentication failure
+          // the PrepareBootloaders is not called, because Sovereign Boot
+          // welcome form is skipped and SV Boto option never selected.
+          PrepareBootloaders (PrivateData);
+          Status = EFI_SUCCESS;
           break;
         default:
           break;

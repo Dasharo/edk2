@@ -703,10 +703,14 @@ GetBootOptions (
 
   Status = ScanFileSystemsForBootOptions (Private, &BootOptionMenu);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Scanning of filesystems failed with %r", Status));
+    DEBUG ((DEBUG_ERROR, "Scanning of filesystems failed with %r\n", Status));
   }
 
   DEBUG ((DEBUG_INFO, "Found %d boot options \n", BootOptionMenu.MenuNumber));
+
+  if (BootOptionMenu.MenuNumber == 0) {
+    return EFI_NOT_FOUND;
+  }
 
   return EFI_SUCCESS;
 }

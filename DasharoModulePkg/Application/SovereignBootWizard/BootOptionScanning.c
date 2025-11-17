@@ -479,7 +479,7 @@ ScanFileSystemsForBootOptions (
              &HandleCount,
              &HandleBuffer);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Could not ESP handle buffer\n"));
+    DEBUG ((DEBUG_ERROR, "Could not locate ESP handle buffer\n"));
     return Status;
   }
 
