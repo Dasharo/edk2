@@ -46,6 +46,33 @@ UiDevicePathToStr (
   return ToText;
 }
 
+STATIC CONST UINT8 DevicePathAllowList [][2] = {
+  { MEDIA_DEVICE_PATH, MEDIA_HARDDRIVE_DP },
+  { MEDIA_DEVICE_PATH, MEDIA_CDROM_DP },
+  { MESSAGING_DEVICE_PATH, MSG_USB_DP },
+  { MESSAGING_DEVICE_PATH, MSG_SATA_DP },
+  { MESSAGING_DEVICE_PATH, MSG_NVME_NAMESPACE_DP },
+  { MESSAGING_DEVICE_PATH, MSG_SD_DP },
+  { MESSAGING_DEVICE_PATH, MSG_EMMC_DP }
+};
+
+BOOLEAN
+IsPathAllowed (
+  IN EFI_DEVICE_PATH_PROTOCOL  *Path
+  )
+{
+  UINTN Idx;
+
+  for (Idx = 0; Idx < sizeof (DevicePathAllowList) / 2; Idx++) {
+    if ((DevicePathType (Path) == DevicePathAllowList[Idx][0]) &&
+        (DevicePathSubType (Path) == DevicePathAllowList[Idx][1])) {
+        return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 /**
   Check if it's a Device Path pointing to HDD.
 
@@ -67,7 +94,7 @@ IsHddFilePath (
 
   Path = FullPath;
   while (!IsDevicePathEnd (Path)) {
-    if ((DevicePathType (Path) == MEDIA_DEVICE_PATH) && (DevicePathSubType (Path) == MEDIA_HARDDRIVE_DP)) {
+    if (IsPathAllowed (Path)) {
         FREE_NON_NULL (FullPath);
         return TRUE;
     }
@@ -469,7 +496,7 @@ CheckIfEntryIsDuplicate (
       continue;
     }
 
-    DEBUG ((DEBUG_INFO, "Comparing:\n\t%s%s\n\t%s%s\n",
+    DEBUG ((DEBUG_INFO, "Comparing:\n\t%s %s\n\t%s %s\n",
             MenuEntry->DevicePathString, MenuEntry->FilePathString,
             BootloaderEntry->DevicePathString, BootloaderEntry->FilePathString
             ));

@@ -91,7 +91,6 @@ extern CONST CERT_PTR MicrosoftCertificates[];
 #define FREE_NON_NULL(Pointer)  \
   do {                                \
     if ((Pointer) != NULL) {          \
-      DEBUG ((DEBUG_INFO, "Freeing " #Pointer "\n"));  \
       FreePool((Pointer));            \
       (Pointer) = NULL;               \
     }                                 \
