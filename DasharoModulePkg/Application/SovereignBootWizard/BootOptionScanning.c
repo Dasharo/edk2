@@ -79,10 +79,10 @@ IsSupportedFileType (
 
   InputFileType = GetTypeFromName (FileName);
   //
-  // If the file not has *.* style, always return TRUE.
+  // If the file not has *.* style, always return FALSE.
   //
   if (InputFileType == NULL) {
-    return TRUE;
+    return FALSE;
   }
 
   TmpStr = AllocateCopyPool (StrSize (InputFileType), InputFileType);
