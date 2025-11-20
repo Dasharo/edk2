@@ -496,18 +496,12 @@ CheckIfEntryIsDuplicate (
       continue;
     }
 
-    DEBUG ((DEBUG_INFO, "Comparing:\n\t%s %s\n\t%s %s\n",
-            MenuEntry->DevicePathString, MenuEntry->FilePathString,
-            BootloaderEntry->DevicePathString, BootloaderEntry->FilePathString
-            ));
-
     if (MenuPathsAreEqual (MenuEntry, BootloaderEntry)) {
       DEBUG ((DEBUG_WARN, "Found duplicate entry\n"));
       return TRUE;
     }
   }
 
-  DEBUG ((DEBUG_WARN, "Not a duplicate entry\n"));
   return FALSE;
 }
 
