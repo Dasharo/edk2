@@ -391,7 +391,7 @@ EnrollHashToSigDB (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to write the %s variable: %r\n", VariableName, Status));
   } else {
-    if (Trust) {
+    if (Trust && (mFirstTrustedBootloader == -1)) {
       mFirstTrustedBootloader = (INTN)mBootloaderIndex;
     }
     // If image is unsigned or added as untrusted we have to increment the

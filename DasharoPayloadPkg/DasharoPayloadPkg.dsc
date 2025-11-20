@@ -553,6 +553,14 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(SECURE_BOOT_ENABLE) == TRUE
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootEnabled|$(SOVEREIGN_BOOT_ENABLE)
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSovereignBootDefaultState|TRUE
+!if $(SOVEREIGN_BOOT_ENABLE) == TRUE
+  # In order to not run out of TPM event log space due to frequent SB
+  # variables measurements in Sovereign Boot, make the minimum log areas much
+  # larger. Otherwise SHIM refuses to boot reporting VOLUME_FULL errors when
+  # measuring MOK variables.
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0x1000000
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2FinalLogAreaLen|0x800000
+!endif
 !endif
 
 !if $(SOURCE_DEBUG_ENABLE)

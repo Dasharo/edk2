@@ -11,6 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define ALIGNMENT_SIZE  8
 #define ALIGN_SIZE(a)  (((a) % ALIGNMENT_SIZE) ? ALIGNMENT_SIZE - ((a) % ALIGNMENT_SIZE) : 0)
 
+
 /**
   Read file content into BufferPtr, the size of the allocate buffer
   is *FileSize plus AdditionAllocateSize.
@@ -218,6 +219,57 @@ CertIsCA (
   return FALSE;
 }
 
+STATIC BOOLEAN
+CertHasMicrosoftInCommonNames (
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  CHAR8                                   StringBuffer[500];
+  UINTN                                   StringBufferSize;
+
+  StringBufferSize = sizeof (StringBuffer);
+  SetMem (StringBuffer, StringBufferSize, 0);
+  if (!RETURN_ERROR (X509GetIssuerCommonName (CertificateEntry->CertData,
+                                              CertificateEntry->CertDataSize,
+                                              StringBuffer,
+                                              &StringBufferSize))) {
+    if (AsciiStrStr (StringBuffer, "Microsoft") != NULL) {
+      return TRUE;
+    }
+  }
+
+  StringBufferSize = sizeof (StringBuffer);
+  SetMem (StringBuffer, StringBufferSize, 0);
+  if (!RETURN_ERROR (X509GetCommonName (CertificateEntry->CertData,
+                                        CertificateEntry->CertDataSize,
+                                        StringBuffer,
+                                        &StringBufferSize))) {
+    if (AsciiStrStr (StringBuffer, "Microsoft") != NULL) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+STATIC BOOLEAN
+CertHashMatchesMicrosoft (
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  UINTN  Cert;
+
+  for (Cert = 0; Cert < MicrosoftCertificatesArraySize; Cert++) {
+    if (!CompareMem (CertificateEntry->CertDigest,
+                     MicrosoftCertificates[Cert].CertHash,
+                     CertificateEntry->CertDigestSize)) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 STATIC EFI_STATUS
 CreateNewCert (
   IN  SV_SECURITY_CONTEXT       *SecCtx,
@@ -312,6 +364,29 @@ CreateNewCert (
                                     ImageDigest, ImageDigestSize);
 
   NewCertEntry->CertIsCA = CertIsCA (NewCertEntry);
+
+
+  // If signature is invalid, Authenticode method won't work
+  if (NewCertEntry->SignatureValid) {
+    for (Index = 0; Index < MicrosoftCertificatesArraySize; Index++) {
+      if (AuthenticodeVerify (AuthData, AuthDataSize,
+                              MicrosoftCertificates[Index].CertData,
+                              MicrosoftCertificates[Index].CertLength,
+                              ImageDigest, ImageDigestSize)) {
+        NewCertEntry->CertIsMicrosoft = TRUE;
+        break;
+      }
+    }
+  } else {
+    // If signature is invalid, hashes are our best bet to detect the
+    // Microsoft certificates.
+    NewCertEntry->CertIsMicrosoft = CertHashMatchesMicrosoft (NewCertEntry);
+    // If hashes do not match, then maybe it is not the CA, so we have to
+    // check common names to be sure.
+    if (!NewCertEntry->CertIsMicrosoft) {
+      NewCertEntry->CertIsMicrosoft = CertHasMicrosoftInCommonNames (NewCertEntry);
+    }
+  }
 
   // Mark the image as unverified if it is in DBX.
   if (NewCertEntry->CertIsInDbx) {
@@ -880,8 +955,14 @@ UpdateCertInfo (
 
     // Do not show already trusted/utrusted, invalid or microsoft certificates
     if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-      if (CertificateEntry->CertIsInDb || CertificateEntry->CertIsMicrosoft) {
-        DEBUG ((DEBUG_INFO, "Certificate %u already trusted, or belongs to Microsoft\n",
+      if (CertificateEntry->CertIsMicrosoft) {
+        DEBUG ((DEBUG_INFO, "Certificate %u belongs to Microsoft\n",
+                mCertIndex));
+        mCertIndex++;
+        continue;
+      }
+      if (CertificateEntry->CertIsInDb) {
+        DEBUG ((DEBUG_INFO, "Certificate %u already trusted\n",
                 mCertIndex));
         mCertIndex++;
         continue;
@@ -897,7 +978,33 @@ UpdateCertInfo (
     return EFI_NO_MEDIA;
   }
 
-  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Certificate fingerprint (SHA-256):", NULL);
+  if (CertificateEntry->SignatureValid) {
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):",
+      NULL
+      );
+  } else {
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):\n!!! Signature is invalid !!!",
+      NULL
+      );
+  }
+
+  // Special case if AppLaunchCause is SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED
+  // We still want to show what the system attempted to boot and failed, even
+  // if it is signed by MS certificate.
+  if (CertificateEntry->CertIsMicrosoft) {
+    HiiSetString (
+      Private->HiiHandle,
+      STRING_TOKEN (STR_KEY_FINGERPRINT),
+      L"Certificate fingerprint (SHA-256):\n!!! Certificate belongs to Microsoft !!!",
+      NULL
+      );
+  }
 
   Status = ParseHashValue (CertificateEntry->CertDigest, CertificateEntry->CertDigestSize, &NewString);
   if (!EFI_ERROR (Status)) {

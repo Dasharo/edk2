@@ -2884,7 +2884,7 @@ CreatePreInstalledBootOption (
   CHAR16                                *DevPathStr;
   EFI_DEVICE_PATH_PROTOCOL              *OptDevicePath;
 
-  Description = BmGetBootDescription (GetDiskHandleByFsHandle(Handle));
+  Description = EfiBootManagerGetBootDescription (GetDiskHandleByFsHandle(Handle));
   BootOptions = ReallocatePool (
                   sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
                   sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
@@ -3228,7 +3228,7 @@ BmEnumerateBootOptions (
         continue;
       }
 
-      Description = BmGetBootDescription (Handles[Index]);
+      Description = EfiBootManagerGetBootDescription (Handles[Index]);
       BootOptions = ReallocatePool (
                       sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
                       sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
@@ -3279,7 +3279,7 @@ BmEnumerateBootOptions (
       continue;
     }
 
-    Description = BmGetBootDescription (Handles[Index]);
+    Description = EfiBootManagerGetBootDescription (Handles[Index]);
     BootOptions = ReallocatePool (
                     sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
                     sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
@@ -3323,7 +3323,7 @@ BmEnumerateBootOptions (
       continue;
     }
 
-    Description = BmGetBootDescription (Handles[Index]);
+    Description = EfiBootManagerGetBootDescription (Handles[Index]);
     BootOptions = ReallocatePool (
                     sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount),
                     sizeof (EFI_BOOT_MANAGER_LOAD_OPTION) * (*BootOptionCount + 1),
@@ -3499,7 +3499,7 @@ BmRegisterBootManagerMenu (
   for (Index = 0; Index < HandleCount; Index++) {
     if (BmIsBootManagerMenuFilePath (DevicePathFromHandle (Handles[Index]))) {
       DevicePath  = DuplicateDevicePath (DevicePathFromHandle (Handles[Index]));
-      Description = BmGetBootDescription (Handles[Index]);
+      Description = EfiBootManagerGetBootDescription (Handles[Index]);
       break;
     }
   }

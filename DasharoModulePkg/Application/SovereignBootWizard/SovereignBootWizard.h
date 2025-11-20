@@ -66,6 +66,15 @@ Revision History
 extern UINT8  SovereignBootWizardVfrBin[];
 extern UINT8  SovereignBootWizardStrings[];
 
+typedef struct {
+  CONST UINT32  CertLength;
+  CONST UINT8   *CertData;
+  CONST UINT8   CertHash[SHA256_DIGEST_SIZE];
+} CERT_PTR;
+
+extern CONST UINTN MicrosoftCertificatesArraySize;
+extern CONST CERT_PTR MicrosoftCertificates[];
+
 #define NAME_VALUE_NAME_NUMBER  3
 
 #define DEFAULT_CLASS_MANUFACTURING_VALUE  0xFF
@@ -88,7 +97,7 @@ extern UINT8  SovereignBootWizardStrings[];
   } while(FALSE)
 
 typedef struct {
-  UINTN                                  Signature;
+  UINT32                                 Signature;
 
   EFI_HANDLE                             AppHandle;
   EFI_HII_HANDLE                         HiiHandle;
@@ -254,10 +263,39 @@ GetBootOptions (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
+EFI_STATUS
+ScanFileSystemsForBootOptions (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN OUT SV_MENU_OPTION                      *MenuOption
+  );
+
+EFI_STATUS
+FillMenuEntryFromDevicePath (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN     EFI_HANDLE                          DeviceHandle,
+  IN     EFI_DEVICE_PATH_PROTOCOL            *DevicePath,
+  IN OUT SV_MENU_ENTRY                       **MenuEntry
+  );
+
+VOID
+ToLowerString (
+  IN CHAR16  *String
+  );
+
+BOOLEAN
+CheckIfEntryIsDuplicate (
+  IN SV_MENU_ENTRY *MenuEntry
+  );
+
 SV_MENU_ENTRY *
 GetMenuEntry (
   SV_MENU_OPTION  *MenuOption,
   UINTN           MenuNumber
+  );
+
+VOID
+FreeBootMenuEntry (
+  SV_MENU_ENTRY    *BootloaderEntry
   );
 
 EFI_STATUS
