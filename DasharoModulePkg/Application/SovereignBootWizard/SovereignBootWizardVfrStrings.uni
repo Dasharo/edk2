@@ -15,9 +15,6 @@
 //
 // --*/
 
-
-/=#
-
 #langdef en-US  "English"
 
 #string STR_FORM_SET_TITLE                       #language en-US "Sovereign Boot Provisioning Wizard"
@@ -98,5 +95,88 @@
 #string STR_CERT_KEY_EXPONENT2                   #language en-US ""
 
 // Interactive mode strings
-#string STR_FORM9_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
+#string STR_FORM5_TITLE                          #language en-US "Sovereign Boot Provisioning Wizard"
 #string STR_INTERACTIVE_MODE_SUBTITLE            #language en-US "Sovereign Boot is already provisioned. You can use below options to modify/augment current configuration\n"
+
+#string STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE        #language en-US "Enroll Signature"
+#string STR_SOVEREIGN_BOOT_DELETE_SIGNATURE        #language en-US "Delete Signature"
+#string STR_SOVEREIGN_BOOT_DELETE_LIST_FORM        #language en-US "Delete Signature List Form"
+#string STR_SOVEREIGN_BOOT_DELETE_DATA_FORM        #language en-US "Delete Signature Data Form"
+#string STR_SOVEREIGN_BOOT_DELETE_ALL_LIST         #language en-US "Delete All Signature List"
+#string STR_SOVEREIGN_BOOT_DELETE_ALL_DATA         #language en-US "Delete All Signature Data"
+#string STR_SOVEREIGN_BOOT_DELETE_CHECK_DATA       #language en-US "Delete Checked Signature Data"
+#string STR_SOVEREIGN_BOOT_DELETE_ALL_DATA_HELP    #language en-US "All signature data will be deleted, no matter how many signature data have you checked."
+#string STR_SOVEREIGN_BOOT_DELETE_CHECK_DATA_HELP  #language en-US "All checked signature data will be deleted."
+#string STR_SOVEREIGN_BOOT_ADD_SIGNATURE_FILE      #language en-US "Enroll Signature Using File"
+
+#string STR_DBX_CERTIFICATE_FORMAT_PROMPT  #language en-US "Signature Format"
+#string STR_DBX_CERTIFICATE_FORMAT_HELP    #language en-US "X509 DER-Cert enrolled. Select different option to enroll it into DBX."
+#string STR_DBX_CERTIFICATE_FORMAT_SHA1    #language en-US "X509 CERT SHA1"
+#string STR_DBX_CERTIFICATE_FORMAT_SHA224  #language en-US "X509 CERT SHA224"
+#string STR_DBX_CERTIFICATE_FORMAT_SHA256  #language en-US "X509 CERT SHA256"
+#string STR_DBX_CERTIFICATE_FORMAT_SHA384  #language en-US "X509 CERT SHA384"
+#string STR_DBX_CERTIFICATE_FORMAT_SHA512  #language en-US "X509 CERT SHA512"
+#string STR_DBX_CERTIFICATE_FORMAT_RAW     #language en-US "X509 CERT"
+
+#string STR_DBX_PE_IMAGE_FORMAT_HELP       #language en-US "PE image enrolled. Use SHA256 hash to enroll it into DBX"
+#string STR_DBX_PE_FORMAT_SHA256           #language en-US "PE Image SHA256"
+
+#string STR_DBX_AUTH_2_FORMAT_HELP         #language en-US "VARIABLE_AUTHENTICATION_2 binary enrolled. Use raw binary to enroll it into DBX"
+#string STR_DBX_AUTH_2_FORMAT              #language en-US "VARIABLE_AUTHENTICATION_2"
+
+#string STR_CERTIFICATE_REVOCATION_TIME_PROMPT #language en-US "  Revocation Time"
+#string STR_CERTIFICATE_REVOCATION_TIME_HELP   #language en-US "Input the revocation time of the certificate"
+#string STR_CERTIFICATE_REVOCATION_DATE_PROMPT #language en-US "  Revocation Date"
+#string STR_CERTIFICATE_REVOCATION_DATE_HELP   #language en-US "Input the revocation date of the certificate"
+
+#string STR_ALWAYS_CERTIFICATE_REVOCATION_PROMPT   #language en-US "Always Revocation"
+#string STR_ALWAYS_CERTIFICATE_REVOCATION_HELP     #language en-US "Indicate whether the certificate is always revoked."
+
+#string STR_SAVE_SIGNATURE_FILE            #language en-US "Save Signature File"
+
+#string STR_SAVE_AND_EXIT                  #language en-US  "Commit Changes and Exit"
+#string STR_NO_SAVE_AND_EXIT               #language en-US  "Discard Changes and Exit"
+
+#string STR_FILE_EXPLORER_TITLE            #language en-US  "File Explorer"
+
+#string STR_SOVEREIGN_BOOT_DB_OPTION          #language en-US "DB Options"
+#string STR_SOVEREIGN_BOOT_DB_OPTION_HELP     #language en-US "Enroll/Delete Signature"
+#string STR_SOVEREIGN_BOOT_DBX_OPTION         #language en-US "DBX Options"
+#string STR_SOVEREIGN_BOOT_DBX_OPTION_HELP    #language en-US "Enroll/Delete DBX"
+
+#string STR_CERT_TYPE_RSA2048_SHA256_GUID         #language en-US "RSA2048_SHA256_GUID"
+#string STR_CERT_TYPE_PCKS7_GUID                  #language en-US "PKCS7_GUID"
+#string STR_CERT_TYPE_SHA1_GUID                   #language en-US "SHA1_GUID"
+#string STR_CERT_TYPE_SHA256_GUID                 #language en-US "SHA256_GUID"
+#string STR_CERT_TYPE_X509_SHA256_GUID            #language en-US "X509_SHA256_GUID"
+#string STR_CERT_TYPE_X509_SHA384_GUID            #language en-US "X509_SHA384_GUID"
+#string STR_CERT_TYPE_X509_SHA512_GUID            #language en-US "X509_SHA512_GUID"
+
+#string STR_LIST_TYPE_RSA2048_SHA256              #language en-US "RSA2048_SHA256"
+#string STR_LIST_TYPE_RSA2048                     #language en-US "RSA2048"
+#string STR_LIST_TYPE_X509                        #language en-US "X509"
+#string STR_LIST_TYPE_SHA1                        #language en-US "SHA1"
+#string STR_LIST_TYPE_SHA224                      #language en-US "SHA224"
+#string STR_LIST_TYPE_SHA256                      #language en-US "SHA256"
+#string STR_LIST_TYPE_SHA384                      #language en-US "SHA384"
+#string STR_LIST_TYPE_SHA512                      #language en-US "SHA512"
+#string STR_LIST_TYPE_SM3                         #language en-US "SM3"
+#string STR_LIST_TYPE_X509_SHA256                 #language en-US "X509_SHA256"
+#string STR_LIST_TYPE_X509_SHA384                 #language en-US "X509_SHA384"
+#string STR_LIST_TYPE_X509_SHA512                 #language en-US "X509_SHA512"
+#string STR_LIST_TYPE_X509_SM3                    #language en-US "X509_SM3"
+#string STR_LIST_TYPE_UNKNOWN                     #language en-US "UnKnown"
+
+#string STR_SIGNATURE_LIST_NAME_FORMAT            #language en-US "Signature List, Entry-%d"
+#string STR_SIGNATURE_DATA_NAME_FORMAT            #language en-US "Signature Data, Entry-%d"
+#string STR_SIGNATURE_LIST_HELP_FORMAT            #language en-US "List Type:\n  %s\n\nEntry Number:\n  %d"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_GUID       #language en-US "Owner GUID:\n%s\n\n"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_CN         #language en-US "%s(%d bytes):\nCN = %s\n"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_HASH       #language en-US "%s(%d bytes):\n%s\n"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_TIME       #language en-US "Revocation Time:\n%s"
+#string STR_SIGNATURE_DATA_HASH_NAME_FORMAT       #language en-US "Image hash %g"
+#string STR_SIGNATURE_CERT_HASH_NAME_FORMAT       #language en-US "Certificate hash %g"
+#string STR_SIGNATURE_DATA_RSA_NAME_FORMAT        #language en-US "RSA2048 key %g"
+#string STR_SIGNATURE_DATA_RSA_HASH_NAME_FORMAT   #language en-US "RSA2048 SHA256 hash %g"
+
+#string STR_SIGNATURE_DELETE_ALL_CONFIRM          #language en-US "Press 'Y' to delete all signature List."

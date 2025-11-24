@@ -85,7 +85,7 @@ formset
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_EXIT_TEXT),
       flags  = INTERACTIVE,
-      key    = EXIT_FORM1_QUESTION_ID;
+      key    = KEY_EXIT_FORM1;
 
   endform;
 
@@ -119,26 +119,26 @@ formset
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_DO_NOT_TRUST_KEY),
       flags  = INTERACTIVE,
-      key    = DO_NOT_TRUST_KEY_FORM2_QUESTION_ID;
+      key    = KEY_DO_NOT_TRUST_KEY_FORM2;
 
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_TRUST_KEY_AND_BOOT),
       flags  = INTERACTIVE,
-      key    = TRUST_KEY_AND_BOOT_FORM2_QUESTION_ID;
+      key    = KEY_TRUST_KEY_AND_BOOT_FORM2;
 
   disableif ideqval SvBootData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED;
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_TRUST_KEY),
       flags  = INTERACTIVE,
-      key    = TRUST_KEY_FORM2_QUESTION_ID;
+      key    = KEY_TRUST_KEY_FORM2;
 
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_SKIP_KEY),
       flags  = INTERACTIVE,
-      key    = SKIP_KEY_FORM2_QUESTION_ID;
+      key    = KEY_SKIP_KEY_FORM2;
   endif;
 
   subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
@@ -148,7 +148,7 @@ formset
       prompt = STRING_TOKEN(STR_SHOW_KEY_DETAILS),
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       flags  = INTERACTIVE,
-      key    = SHOW_KEY_DETAILS_FORM2_QUESTION_ID;
+      key    = KEY_SHOW_KEY_DETAILS_FORM2;
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
   endif;
@@ -157,7 +157,7 @@ formset
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_EXIT_TEXT),
       flags  = INTERACTIVE,
-      key    = EXIT_FORM2_QUESTION_ID;
+      key    = KEY_EXIT_FORM2;
 
   endform;
 
@@ -215,22 +215,246 @@ formset
     endif;
   endform;
 
-
   //
-  // Advanced mode window
+  // Interactive mode window
   //
   form formid = SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
-        title  = STRING_TOKEN(STR_FORM9_TITLE);
+        title  = STRING_TOKEN(STR_FORM5_TITLE);
 
     subtitle text = STRING_TOKEN(STR_INTERACTIVE_MODE_SUBTITLE);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
+         prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_DB_OPTION),
+         help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_DB_OPTION_HELP),
+         flags  = INTERACTIVE,
+         key    = KEY_SOVEREIGN_BOOT_DB_OPTION;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM,
+         prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_DBX_OPTION),
+         help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_DBX_OPTION_HELP),
+         flags  = INTERACTIVE,
+         key    = KEY_SOVEREIGN_BOOT_DBX_OPTION;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     text
       help   = STRING_TOKEN(STR_EMPTY_STRING),
       text   = STRING_TOKEN(STR_EXIT_TEXT),
       flags  = INTERACTIVE,
-      key    = EXIT_FORM9_QUESTION_ID;
+      key    = KEY_EXIT_FORM5;
+
+  endform;
+
+  form formid = FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
+    title = STRING_TOKEN(STR_SOVEREIGN_BOOT_DB_OPTION);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB,
+    prompt = STRING_TOKEN (STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE),
+    help   = STRING_TOKEN (STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE),
+    flags  = 0;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB,
+    prompt = STRING_TOKEN (STR_SOVEREIGN_BOOT_DELETE_SIGNATURE),
+    help   = STRING_TOKEN (STR_SOVEREIGN_BOOT_DELETE_SIGNATURE),
+    flags  = INTERACTIVE,
+    key    = SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB;
+
+  endform;
+
+  form formid = FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM,
+    title = STRING_TOKEN(STR_SOVEREIGN_BOOT_DBX_OPTION);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX,
+    prompt = STRING_TOKEN (STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE),
+    help   = STRING_TOKEN (STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE),
+    flags  = 0;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
+    prompt = STRING_TOKEN (STR_SOVEREIGN_BOOT_DELETE_SIGNATURE),
+    help   = STRING_TOKEN (STR_SOVEREIGN_BOOT_DELETE_SIGNATURE),
+    flags  = INTERACTIVE,
+    key    = KEY_VALUE_FROM_DBX_TO_LIST_FORM;
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB,
+    title  = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_SIGNATURE);
+
+    label LABEL_DB_DELETE;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
+    title  = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_LIST_FORM);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    grayoutif ideqval SvBootFormData.ListCount == 0;
+      label LABEL_DELETE_ALL_LIST_BUTTON;
+      label LABEL_END;
+    endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    label LABEL_SIGNATURE_LIST_START;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM,
+    title = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_DATA_FORM);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
+      prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_ALL_DATA),
+      help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_ALL_DATA_HELP),
+      flags  = INTERACTIVE,
+      key    = KEY_SOVEREIGN_BOOT_DELETE_ALL_DATA;
+
+    grayoutif ideqval SvBootFormData.CheckedDataCount == 0;
+      goto SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
+        prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_CHECK_DATA),
+        help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_DELETE_CHECK_DATA_HELP),
+        flags  = INTERACTIVE,
+        key    = KEY_SOVEREIGN_BOOT_DELETE_CHECK_DATA;
+    endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    label LABEL_SIGNATURE_DATA_START;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB,
+    title = STRING_TOKEN(STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB,
+         prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_ADD_SIGNATURE_FILE),
+         help = STRING_TOKEN(STR_SOVEREIGN_BOOT_ADD_SIGNATURE_FILE),
+         flags = INTERACTIVE,
+         key = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    label SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
+         prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
+         help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
+         flags  = INTERACTIVE | RESET_REQUIRED,
+         key    = KEY_VALUE_SAVE_AND_EXIT_DB;
+
+    goto SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
+         prompt = STRING_TOKEN(STR_NO_SAVE_AND_EXIT),
+         help   = STRING_TOKEN(STR_NO_SAVE_AND_EXIT),
+         flags  = INTERACTIVE,
+         key    = KEY_VALUE_NO_SAVE_AND_EXIT_DB;
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX,
+    title = STRING_TOKEN(STR_SOVEREIGN_BOOT_ENROLL_SIGNATURE);
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX,
+         prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_ADD_SIGNATURE_FILE),
+         help = STRING_TOKEN(STR_SOVEREIGN_BOOT_ADD_SIGNATURE_FILE),
+         flags = INTERACTIVE,
+         key = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX;
+
+    label SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    disableif NOT ideqval SvBootFormData.FileEnrollType == 1;
+      oneof name = X509SignatureFormatInDbx,
+            varid       = SvBootFormData.CertificateFormat,
+            prompt      = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_PROMPT),
+            help        = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_HELP),
+            disableif TRUE; // Make it depend on DISABLE_SHA1_DEPRECATED_INTERFACES?
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA1), value = 0x0, flags = 0;
+            endif;
+            suppressif TRUE; // SHA224 not implemented
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA224), value = 0x1, flags = 0;
+            endif;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA256), value = 0x2, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA384), value = 0x3, flags = 0;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_SHA512), value = 0x4, flags = 0;
+            option text = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_RAW), value = 0x6, flags = 0;
+      endoneof;
+    endif;
+
+    disableif NOT ideqval SvBootFormData.FileEnrollType == 2;
+      text
+        help   = STRING_TOKEN(STR_DBX_PE_IMAGE_FORMAT_HELP),          // Help string
+        text   = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_PROMPT),     // Prompt string
+        text   = STRING_TOKEN(STR_DBX_PE_FORMAT_SHA256);              // PE image type
+    endif;
+
+    disableif NOT ideqval SvBootFormData.FileEnrollType == 3;
+      text
+        help   = STRING_TOKEN(STR_DBX_AUTH_2_FORMAT_HELP),            // Help string
+        text   = STRING_TOKEN(STR_DBX_CERTIFICATE_FORMAT_PROMPT),     // Prompt string
+        text   = STRING_TOKEN(STR_DBX_AUTH_2_FORMAT);                 // AUTH_2 image type
+    endif;
+
+    suppressif ideqval SvBootFormData.CertificateFormat == 4;
+        checkbox varid  = SvBootFormData.AlwaysRevocation,
+               prompt = STRING_TOKEN(STR_ALWAYS_CERTIFICATE_REVOCATION_PROMPT),
+               help   = STRING_TOKEN(STR_ALWAYS_CERTIFICATE_REVOCATION_HELP),
+               flags  = INTERACTIVE,
+        endcheckbox;
+
+        suppressif ideqval SvBootFormData.AlwaysRevocation == 1;
+            date  varid  = SvBootFormData.RevocationDate,
+                  prompt = STRING_TOKEN(STR_CERTIFICATE_REVOCATION_DATE_PROMPT),
+                  help   = STRING_TOKEN(STR_CERTIFICATE_REVOCATION_DATE_HELP),
+                  flags  = STORAGE_NORMAL,
+            enddate;
+
+            time varid   = SvBootFormData.RevocationTime,
+                 prompt  = STRING_TOKEN(STR_CERTIFICATE_REVOCATION_TIME_PROMPT),
+                 help    = STRING_TOKEN(STR_CERTIFICATE_REVOCATION_TIME_HELP),
+                 flags   = STORAGE_NORMAL,
+            endtime;
+        endif;
+    endif;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    goto SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
+         prompt = STRING_TOKEN(STR_SAVE_AND_EXIT),
+         help   = STRING_TOKEN(STR_SAVE_AND_EXIT),
+         flags  = INTERACTIVE | RESET_REQUIRED,
+         key    = KEY_VALUE_SAVE_AND_EXIT_DBX;
+
+    goto SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID,
+         prompt = STRING_TOKEN(STR_NO_SAVE_AND_EXIT),
+         help   = STRING_TOKEN(STR_NO_SAVE_AND_EXIT),
+         flags  = INTERACTIVE,
+         key    = KEY_VALUE_NO_SAVE_AND_EXIT_DBX;
 
   endform;
 

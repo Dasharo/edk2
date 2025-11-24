@@ -497,7 +497,6 @@ CheckIfEntryIsDuplicate (
     }
 
     if (MenuPathsAreEqual (MenuEntry, BootloaderEntry)) {
-      DEBUG ((DEBUG_WARN, "Found duplicate entry\n"));
       return TRUE;
     }
   }
