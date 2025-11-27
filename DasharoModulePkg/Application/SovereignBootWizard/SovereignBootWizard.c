@@ -18,6 +18,7 @@ STATIC CHAR16 mVarStoreName[] = SV_BOOT_VARSTORE_NAME;
 STATIC CHAR16 mSvBootConfigVarName[] = SV_BOOT_CONFIG_VAR;
 
 STATIC BOOLEAN mBootloadersShown;
+STATIC BOOLEAN mAltDbAccessMode;
 
 STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
   {
@@ -89,8 +90,6 @@ ExtractConfig (
   EFI_STRING                            ConfigRequestHdr;
   EFI_STRING                            ConfigRequest;
   UINTN                                 Size;
-
-  DEBUG ((DEBUG_INFO, "ExtractConfig: Request %s, Progress %x, Results %x\n", Request, Progress, Results));
 
   if ((Progress == NULL) || (Results == NULL)) {
     return EFI_INVALID_PARAMETER;
@@ -185,8 +184,6 @@ RouteConfig (
   EFI_STATUS                                Status;
   UINTN                                     BufferSize;
   SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA        *PrivateData;
-
-  DEBUG ((DEBUG_INFO, "RouteConfig: Configuration %s, Progress %x\n", Configuration, Progress));
 
   if ((Configuration == NULL) || (Progress == NULL)) {
     return EFI_INVALID_PARAMETER;
@@ -387,7 +384,6 @@ Callback (
   SOVEREIGN_BOOT_WIZARD_NV_CONFIG      SvConfig;
   BROWSER_SETTING_SCOPE                Scope;
   UINTN                                BootloaderToBoot;
-  UINT16                               LabelId;
   EFI_DEVICE_PATH_PROTOCOL             *File;
   UINTN                                NameLength;
   UINT16                               *FilePostFix;
@@ -510,29 +506,53 @@ Callback (
           break;
         }
         case KEY_SOVEREIGN_BOOT_DB_OPTION:
+          PrivateData->VariableName = Variable_DB;
+          LoadSignatureList (
+            PrivateData,
+            LABEL_DB_CERTS_DATA_START,
+            FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
+            OPTION_DB_LIST_QUESTION_ID
+            );
+
+          Status = EFI_SUCCESS;
+          break;
+
         case KEY_SOVEREIGN_BOOT_DBX_OPTION:
+          PrivateData->VariableName = Variable_DBX;
+          LoadSignatureList (
+            PrivateData,
+            LABEL_DBX_CERTS_DATA_START,
+            FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM,
+            OPTION_DBX_LIST_QUESTION_ID
+            );
 
-          if (QuestionId == KEY_SOVEREIGN_BOOT_DB_OPTION) {
-            LabelId = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB;
-          } else if (QuestionId == KEY_SOVEREIGN_BOOT_DBX_OPTION) {
-            LabelId = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX;
-          } else {
-            LabelId = SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB;
-          }
+          Status = EFI_SUCCESS;
+          break;
 
-          //
+        case KEY_ENROLL_SIGNATURE_TO_DB:
           // Refresh selected file.
-          //
-          CleanUpPage (LabelId, PrivateData);
+          PrivateData->FormData.FileEnrollType = UNKNOWN_FILE_TYPE;
+          PrivateData->FormData.CertificateFormat = HASHALG_SHA256;
+          CleanUpPage (SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB, PrivateData);
+          Status = EFI_SUCCESS;
+          break;
+
+        case KEY_ENROLL_SIGNATURE_TO_DBX:
+          // Refresh selected file.
+          PrivateData->FormData.FileEnrollType = UNKNOWN_FILE_TYPE;
+          PrivateData->FormData.CertificateFormat = HASHALG_SHA256;
+          CleanUpPage (SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX, PrivateData);
           Status = EFI_SUCCESS;
           break;
 
         case SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB:
+          mAltDbAccessMode = FALSE;
           ChooseFile (NULL, NULL, UpdateDBFromFile, &File);
           Status = EFI_SUCCESS;
           break;
 
         case SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX:
+          mAltDbAccessMode = FALSE;
           ChooseFile (NULL, NULL, UpdateDBXFromFile, &File);
 
           if (PrivateData->FileContext->FHandle != NULL) {
@@ -551,26 +571,23 @@ Callback (
               // Supports DER-encoded X509 certificate.
               //
               PrivateData->FormData.FileEnrollType = X509_CERT_FILE_TYPE;
+              PrivateData->FormData.CertificateFormat = HASHALG_RAW;
             } else if (IsAuthentication2Format (PrivateData->FileContext->FHandle)) {
               PrivateData->FormData.FileEnrollType = AUTHENTICATION_2_FILE_TYPE;
+              PrivateData->FormData.CertificateFormat = HASHALG_RAW;
             } else {
               PrivateData->FormData.FileEnrollType = PE_IMAGE_FILE_TYPE;
+              PrivateData->FormData.CertificateFormat = HASHALG_SHA256;
             }
 
             PrivateData->FileContext->FileType = PrivateData->FormData.FileEnrollType;
-
-            //
-            // Clean up Certificate Format if File type is not X509 DER
-            //
-            if (PrivateData->FormData.FileEnrollType != X509_CERT_FILE_TYPE) {
-              PrivateData->FormData.CertificateFormat = HASHALG_RAW;
-            }
           }
 
           Status = EFI_SUCCESS;
           break;
 
         case SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB:
+          mAltDbAccessMode = FALSE;
           UpdateDeletePage (
             PrivateData,
             EFI_IMAGE_SECURITY_DATABASE,
@@ -586,6 +603,7 @@ Callback (
         // From DBX option to the level-1 form, display signature list.
         //
         case KEY_VALUE_FROM_DBX_TO_LIST_FORM:
+          mAltDbAccessMode = FALSE;
           PrivateData->VariableName = Variable_DBX;
           LoadSignatureList (
             PrivateData,
@@ -600,6 +618,7 @@ Callback (
         // Delete all signature list and reload.
         //
         case KEY_SOVEREIGN_BOOT_DELETE_ALL_LIST:
+          mAltDbAccessMode = FALSE;
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
             &Key,
@@ -635,15 +654,43 @@ Callback (
             );
 
           if ((Key.UnicodeChar == L'Y') || (Key.UnicodeChar == L'y')) {
-            DeleteSignatureEx (PrivateData, Delete_Signature_List_One, PrivateData->FormData.CheckedDataCount);
+            DeleteSignatureEx (
+              PrivateData,
+              Delete_Signature_List_One,
+              mAltDbAccessMode ? 1 : PrivateData->FormData.CheckedDataCount);
           }
 
-          LoadSignatureList (
-            PrivateData,
-            LABEL_SIGNATURE_LIST_START,
-            SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
-            OPTION_SIGNATURE_LIST_QUESTION_ID
-            );
+          if (!mAltDbAccessMode) {
+            Value->ref.FormId = SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM;
+            LoadSignatureList (
+              PrivateData,
+              LABEL_SIGNATURE_LIST_START,
+              SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM,
+              OPTION_SIGNATURE_LIST_QUESTION_ID
+              );
+          } else {
+            if (PrivateData->VariableName == Variable_DB) {
+              Value->ref.FormId = FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM;
+              CleanUpPage (Value->ref.FormId, PrivateData);
+              LoadSignatureList (
+                PrivateData,
+                LABEL_DB_CERTS_DATA_START,
+                Value->ref.FormId,
+                OPTION_DB_LIST_QUESTION_ID
+                );
+            } else if (PrivateData->VariableName == Variable_DBX) {
+              Value->ref.FormId = FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM;
+              CleanUpPage (Value->ref.FormId, PrivateData);
+              LoadSignatureList (
+                PrivateData,
+                LABEL_DBX_CERTS_DATA_START,
+                Value->ref.FormId,
+                OPTION_DBX_LIST_QUESTION_ID
+                );
+            } else {
+              Value->ref.FormId = SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID;
+            }
+          }
           PrivateData->FormData.ListCount = PrivateData->ListCount;
           Status = EFI_SUCCESS;
           break;
@@ -652,6 +699,7 @@ Callback (
         // Delete checked signature data and reload.
         //
         case KEY_SOVEREIGN_BOOT_DELETE_CHECK_DATA:
+          mAltDbAccessMode = FALSE;
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
             &Key,
@@ -674,6 +722,71 @@ Callback (
           Status = EFI_SUCCESS;
           break;
 
+        case KEY_REMOVE_HASH_FROM_DATABASE:
+        case KEY_REMOVE_KEY_FROM_DATABASE:
+        case KEY_REMOVE_CERT_FROM_DATABASE:
+          mAltDbAccessMode = TRUE;
+          CreatePopUp (
+            EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+            &Key,
+            L"Press 'Y' to delete signature data.",
+            L"Press other key to cancel and exit.",
+            NULL
+            );
+
+          if ((Key.UnicodeChar == L'Y') || (Key.UnicodeChar == L'y')) {
+            DeleteSignatureEx (PrivateData, Delete_Signature_Data, 1);
+          }
+
+          if (PrivateData->DataCount == 1) {
+            if (PrivateData->VariableName == Variable_DB) {
+              Value->ref.FormId = FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM;
+              CleanUpPage (Value->ref.FormId, PrivateData);
+              LoadSignatureList (
+                PrivateData,
+                LABEL_DB_CERTS_DATA_START,
+                Value->ref.FormId,
+                OPTION_DB_LIST_QUESTION_ID
+                );
+              PrivateData->FormData.ListCount = PrivateData->ListCount;
+            } else if (PrivateData->VariableName == Variable_DBX) {
+              Value->ref.FormId = FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM;
+              CleanUpPage (Value->ref.FormId, PrivateData);
+              LoadSignatureList (
+                PrivateData,
+                LABEL_DBX_CERTS_DATA_START,
+                Value->ref.FormId,
+                OPTION_DBX_LIST_QUESTION_ID
+                );
+              PrivateData->FormData.ListCount = PrivateData->ListCount;
+            } else {
+              Value->ref.FormId = SOVEREIGN_BOOT_WIZARD_INTERACTIVE_MODE_FORM_ID;
+            }
+          } else {
+            Value->ref.FormId = SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM;
+            CleanUpPage (Value->ref.FormId, PrivateData);
+            if (PrivateData->VariableName == Variable_DB) {
+              LoadSignatureData (
+                PrivateData,
+                LABEL_SIGNATURE_DATA_START,
+                Value->ref.FormId,
+                OPTION_DB_ENTRIES_QUESTION_ID,
+                PrivateData->ListIndex
+                );
+            } else if (PrivateData->VariableName == Variable_DBX) {
+              LoadSignatureData (
+                PrivateData,
+                LABEL_SIGNATURE_DATA_START,
+                Value->ref.FormId,
+                OPTION_DBX_ENTRIES_QUESTION_ID,
+                PrivateData->ListIndex
+                );
+            }
+          }
+
+          Status = EFI_SUCCESS;
+          break;
+
         case KEY_VALUE_SAVE_AND_EXIT_DB:
           Status = EnrollSignatureDatabase (PrivateData, EFI_IMAGE_SECURITY_DATABASE);
           if (EFI_ERROR (Status)) {
@@ -684,6 +797,15 @@ Callback (
               L"Only supports DER-encoded X509 certificate and executable EFI image",
               NULL
               );
+          } else {
+            CleanUpPage (FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM, PrivateData);
+            LoadSignatureList (
+              PrivateData,
+              LABEL_DB_CERTS_DATA_START,
+              FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
+              OPTION_DB_LIST_QUESTION_ID
+              );
+            PrivateData->FormData.ListCount = PrivateData->ListCount;
           }
           Status = EFI_SUCCESS;
           break;
@@ -727,6 +849,13 @@ Callback (
               NULL
               );
           } else {
+            CleanUpPage (FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM, PrivateData);
+            LoadSignatureList (
+              PrivateData,
+              LABEL_DBX_CERTS_DATA_START,
+              FORMID_SOVEREIGN_BOOT_DBX_OPTION_FORM,
+              OPTION_DBX_LIST_QUESTION_ID
+              );
             PrivateData->FormData.ListCount = PrivateData->ListCount;
           }
 
@@ -740,8 +869,9 @@ Callback (
 
         default:
           if ((QuestionId >= OPTION_DEL_DB_QUESTION_ID) &&
-                    (QuestionId < (OPTION_DEL_DB_QUESTION_ID + OPTION_CONFIG_RANGE)))
+              (QuestionId < (OPTION_DEL_DB_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
+            mAltDbAccessMode = FALSE;
             DeleteSignature (
               PrivateData,
               EFI_IMAGE_SECURITY_DATABASE,
@@ -751,10 +881,19 @@ Callback (
               OPTION_DEL_DB_QUESTION_ID,
               QuestionId - OPTION_DEL_DB_QUESTION_ID
               );
+            // Refresh DB entries in the DB option form
+            LoadSignatureList (
+              PrivateData,
+              LABEL_DB_CERTS_DATA_START,
+              FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
+              OPTION_DB_LIST_QUESTION_ID
+              );
+            PrivateData->FormData.ListCount = PrivateData->ListCount;
             Status = EFI_SUCCESS;
           } else if ((QuestionId >= OPTION_SIGNATURE_LIST_QUESTION_ID) &&
                     (QuestionId < (OPTION_SIGNATURE_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
+            mAltDbAccessMode = FALSE;
             LoadSignatureData (
               PrivateData,
               LABEL_SIGNATURE_DATA_START,
@@ -767,6 +906,7 @@ Callback (
           } else if ((QuestionId >= OPTION_SIGNATURE_DATA_QUESTION_ID) &&
                     (QuestionId < (OPTION_SIGNATURE_DATA_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
+            mAltDbAccessMode = FALSE;
             if (PrivateData->CheckArray[QuestionId - OPTION_SIGNATURE_DATA_QUESTION_ID]) {
               PrivateData->FormData.CheckedDataCount--;
               PrivateData->CheckArray[QuestionId - OPTION_SIGNATURE_DATA_QUESTION_ID] = FALSE;
@@ -775,11 +915,60 @@ Callback (
               PrivateData->CheckArray[QuestionId - OPTION_SIGNATURE_DATA_QUESTION_ID] = TRUE;
             }
             Status = EFI_SUCCESS;
+          } else if ((QuestionId >= OPTION_DB_LIST_QUESTION_ID) &&
+                    (QuestionId < (OPTION_DB_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltDbAccessMode = TRUE;
+            LoadSignatureData (
+              PrivateData,
+              LABEL_SIGNATURE_DATA_START,
+              SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM,
+              OPTION_DB_ENTRIES_QUESTION_ID,
+              QuestionId - OPTION_DB_LIST_QUESTION_ID
+              );
+            PrivateData->ListIndex = QuestionId - OPTION_DB_LIST_QUESTION_ID;
+            Status = EFI_SUCCESS;
+          } else if ((QuestionId >= OPTION_DBX_LIST_QUESTION_ID) &&
+                    (QuestionId < (OPTION_DBX_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltDbAccessMode = TRUE;
+            LoadSignatureData (
+              PrivateData,
+              LABEL_SIGNATURE_DATA_START,
+              SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM,
+              OPTION_DBX_ENTRIES_QUESTION_ID,
+              QuestionId - OPTION_DBX_LIST_QUESTION_ID
+              );
+            PrivateData->ListIndex = QuestionId - OPTION_DBX_LIST_QUESTION_ID;
+            Status = EFI_SUCCESS;
+          } else if ((QuestionId >= OPTION_DB_ENTRIES_QUESTION_ID) &&
+                    (QuestionId < (OPTION_DB_ENTRIES_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltDbAccessMode = TRUE;
+            LoadSignatureDataStrings (
+              PrivateData,
+              QuestionId - OPTION_DB_ENTRIES_QUESTION_ID,
+              PrivateData->ListIndex
+              );
+            PrivateData->DataIndex = QuestionId - OPTION_DB_ENTRIES_QUESTION_ID;
+            PrivateData->CheckArray[PrivateData->DataIndex] = TRUE;
+            Status = EFI_SUCCESS;
+          } else if ((QuestionId >= OPTION_DBX_ENTRIES_QUESTION_ID) &&
+                    (QuestionId < (OPTION_DBX_ENTRIES_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltDbAccessMode = TRUE;
+            LoadSignatureDataStrings (
+              PrivateData,
+              QuestionId - OPTION_DBX_ENTRIES_QUESTION_ID,
+              PrivateData->ListIndex
+              );
+            PrivateData->DataIndex = QuestionId - OPTION_DBX_ENTRIES_QUESTION_ID;
+            PrivateData->CheckArray[PrivateData->DataIndex] = TRUE;
+            Status = EFI_SUCCESS;
           } else {
             Status = EFI_UNSUPPORTED;
           }
           //TODO: add bootloaders submenu here
-
           break;
       }
 
@@ -1032,8 +1221,17 @@ Callback (
           //
           // Free memory when exit from the SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM form.
           //
-          FREE_NON_NULL (PrivateData->CheckArray);
-          PrivateData->FormData.CheckedDataCount = 0;
+          if (!mAltDbAccessMode) {
+            FREE_NON_NULL (PrivateData->CheckArray);
+            PrivateData->FormData.CheckedDataCount = 0;
+          }
+          Status = EFI_SUCCESS;
+          break;
+        case KEY_REMOVE_HASH_FROM_DATABASE:
+        case KEY_REMOVE_KEY_FROM_DATABASE:
+        case KEY_REMOVE_CERT_FROM_DATABASE:
+            FREE_NON_NULL (PrivateData->CheckArray);
+            PrivateData->FormData.CheckedDataCount = 0;
           Status = EFI_SUCCESS;
           break;
         default:

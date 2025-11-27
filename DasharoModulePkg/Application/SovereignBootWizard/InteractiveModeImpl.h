@@ -20,11 +20,6 @@ extern  EFI_IFR_GUID_LABEL  *mEndLabel;
 
 #define MAX_CHAR         480
 #define TWO_BYTE_ENCODE  0x82
-#define BUFFER_MAX_SIZE  100
-
-#define WIN_CERT_UEFI_RSA2048_SIZE  256
-#define WIN_CERT_UEFI_RSA3072_SIZE  384
-#define WIN_CERT_UEFI_RSA4096_SIZE  512
 
 #define UNKNOWN_FILE_TYPE           0
 #define X509_CERT_FILE_TYPE         1
@@ -63,6 +58,16 @@ typedef enum {
   Delete_Signature_List_One,
   Delete_Signature_Data
 } SIGNATURE_DELETE_TYPE;
+
+
+typedef enum {
+  Signature_Type_X509_Cert,
+  Signature_Type_X509_Cert_Hash,
+  Signature_Type_RSA_Key,
+  Signature_Type_RSA_Key_Hash,
+  Signature_Type_Hash,
+  Signature_Type_Unknown
+} SIGNATURE_TYPE;
 
 typedef struct {
   UINTN         Signature;
@@ -246,6 +251,23 @@ LoadSignatureList (
   IN UINT16                              LabelId,
   IN EFI_FORM_ID                         FormId,
   IN EFI_QUESTION_ID                     QuestionIdBase
+  );
+
+/**
+  This function to load signature data strings under the signature data.
+
+  @param[in]  PrivateData         Module's private data.
+  @param[in]  DataIndex           Indicate to load which signature data.
+  @param[in]  ListIndex           Indicate to load which signature list.
+
+  @retval   EFI_SUCCESS           Success to update the signature data page
+  @retval   EFI_OUT_OF_RESOURCES  Unable to allocate required resources.
+**/
+EFI_STATUS
+LoadSignatureDataStrings (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData,
+  IN UINT16                              DataIndex,
+  IN UINT16                              ListIndex
   );
 
 /**

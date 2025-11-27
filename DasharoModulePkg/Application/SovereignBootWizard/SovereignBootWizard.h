@@ -105,7 +105,14 @@ extern CONST CERT_PTR MicrosoftCertificates[];
     }                                       \
   } while (FALSE)
 
+#define BUFFER_MAX_SIZE  100
+
+#define WIN_CERT_UEFI_RSA2048_SIZE  256
+#define WIN_CERT_UEFI_RSA3072_SIZE  384
+#define WIN_CERT_UEFI_RSA4096_SIZE  512
+
 typedef enum {
+  Variable_NONE,
   Variable_DB,
   Variable_DBX,
   Variable_MAX
@@ -145,6 +152,8 @@ typedef struct {
   CURRENT_VARIABLE_NAME                  VariableName;     // The variable name we are processing.
   UINT32                                 ListCount;        // Record current variable has how many signature list.
   UINTN                                  ListIndex;        // Record which signature list is processing.
+  UINT32                                 DataCount;        // Record current list has how many signature data.
+  UINTN                                  DataIndex;        // Record which signature data is processing.
   BOOLEAN                                *CheckArray;      // Record which signature data checked.
 } SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA;
 
@@ -351,6 +360,19 @@ UpdateCertInfo (
 EFI_STATUS
 UpdateCertDetails (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
+  );
+
+VOID
+FillCertStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  );
+
+VOID
+FillKeyHashStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_SIGNATURE_LIST                  *List,
+  IN  EFI_SIGNATURE_DATA                  *Data
   );
 
 EFI_STATUS

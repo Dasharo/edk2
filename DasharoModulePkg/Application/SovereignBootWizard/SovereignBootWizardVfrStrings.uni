@@ -74,7 +74,7 @@
 #string STR_SHOW_KEY_DETAILS                     #language en-US "Show key/certificate details"
 
 // Configuration page strings
-#string STR_FORM4_TITLE                          #language en-US "Certificate Details"
+#string STR_FORM_CERT_DETAILS_TITLE              #language en-US "Certificate Details"
 
 #string STR_VALIDITY_BEFORE                      #language en-US "Valid Not Before:"
 #string STR_VALIDITY_AFTER                       #language en-US "Valid Not After:"
@@ -129,7 +129,7 @@
 #string STR_CERTIFICATE_REVOCATION_DATE_PROMPT #language en-US "  Revocation Date"
 #string STR_CERTIFICATE_REVOCATION_DATE_HELP   #language en-US "Input the revocation date of the certificate"
 
-#string STR_ALWAYS_CERTIFICATE_REVOCATION_PROMPT   #language en-US "Always Revocation"
+#string STR_ALWAYS_CERTIFICATE_REVOCATION_PROMPT   #language en-US "Always Revoked"
 #string STR_ALWAYS_CERTIFICATE_REVOCATION_HELP     #language en-US "Indicate whether the certificate is always revoked."
 
 #string STR_SAVE_SIGNATURE_FILE            #language en-US "Save Signature File"
@@ -139,10 +139,10 @@
 
 #string STR_FILE_EXPLORER_TITLE            #language en-US  "File Explorer"
 
-#string STR_SOVEREIGN_BOOT_DB_OPTION          #language en-US "DB Options"
-#string STR_SOVEREIGN_BOOT_DB_OPTION_HELP     #language en-US "Enroll/Delete Signature"
-#string STR_SOVEREIGN_BOOT_DBX_OPTION         #language en-US "DBX Options"
-#string STR_SOVEREIGN_BOOT_DBX_OPTION_HELP    #language en-US "Enroll/Delete DBX"
+#string STR_SOVEREIGN_BOOT_DB_OPTION          #language en-US "Show or modify Trusted Key/Image Database"
+#string STR_SOVEREIGN_BOOT_DB_OPTION_HELP     #language en-US ""
+#string STR_SOVEREIGN_BOOT_DBX_OPTION         #language en-US "Show or modify Untrusted Key/Image Database"
+#string STR_SOVEREIGN_BOOT_DBX_OPTION_HELP    #language en-US ""
 
 #string STR_CERT_TYPE_RSA2048_SHA256_GUID         #language en-US "RSA2048_SHA256_GUID"
 #string STR_CERT_TYPE_PCKS7_GUID                  #language en-US "PKCS7_GUID"
@@ -152,31 +152,72 @@
 #string STR_CERT_TYPE_X509_SHA384_GUID            #language en-US "X509_SHA384_GUID"
 #string STR_CERT_TYPE_X509_SHA512_GUID            #language en-US "X509_SHA512_GUID"
 
-#string STR_LIST_TYPE_RSA2048_SHA256              #language en-US "RSA2048_SHA256"
+#string STR_LIST_TYPE_RSA2048_SHA256              #language en-US "RSA2048 signature of SHA256 hash"
 #string STR_LIST_TYPE_RSA2048                     #language en-US "RSA2048"
-#string STR_LIST_TYPE_X509                        #language en-US "X509"
-#string STR_LIST_TYPE_SHA1                        #language en-US "SHA1"
-#string STR_LIST_TYPE_SHA224                      #language en-US "SHA224"
-#string STR_LIST_TYPE_SHA256                      #language en-US "SHA256"
-#string STR_LIST_TYPE_SHA384                      #language en-US "SHA384"
-#string STR_LIST_TYPE_SHA512                      #language en-US "SHA512"
-#string STR_LIST_TYPE_SM3                         #language en-US "SM3"
-#string STR_LIST_TYPE_X509_SHA256                 #language en-US "X509_SHA256"
-#string STR_LIST_TYPE_X509_SHA384                 #language en-US "X509_SHA384"
-#string STR_LIST_TYPE_X509_SHA512                 #language en-US "X509_SHA512"
-#string STR_LIST_TYPE_X509_SM3                    #language en-US "X509_SM3"
-#string STR_LIST_TYPE_UNKNOWN                     #language en-US "UnKnown"
+#string STR_LIST_TYPE_X509                        #language en-US "X.509 Certificate"
+#string STR_LIST_TYPE_SHA1                        #language en-US "SHA1 hash"
+#string STR_LIST_TYPE_SHA224                      #language en-US "SHA224 hash"
+#string STR_LIST_TYPE_SHA256                      #language en-US "SHA256 hash"
+#string STR_LIST_TYPE_SHA384                      #language en-US "SHA384 hash"
+#string STR_LIST_TYPE_SHA512                      #language en-US "SHA512 hash"
+#string STR_LIST_TYPE_SM3                         #language en-US "SM3 hash"
+#string STR_LIST_TYPE_X509_SHA256                 #language en-US "X.509 Certificate SHA256 hash"
+#string STR_LIST_TYPE_X509_SHA384                 #language en-US "X.509 Certificate SHA384 hash"
+#string STR_LIST_TYPE_X509_SHA512                 #language en-US "X.509 Certificate SHA512 hash"
+#string STR_LIST_TYPE_X509_SM3                    #language en-US "X.509 Certificate SM3 hash"
+#string STR_LIST_TYPE_UNKNOWN                     #language en-US "Unknown"
 
 #string STR_SIGNATURE_LIST_NAME_FORMAT            #language en-US "Signature List, Entry-%d"
 #string STR_SIGNATURE_DATA_NAME_FORMAT            #language en-US "Signature Data, Entry-%d"
 #string STR_SIGNATURE_LIST_HELP_FORMAT            #language en-US "List Type:\n  %s\n\nEntry Number:\n  %d"
-#string STR_SIGNATURE_DATA_HELP_FORMAT_GUID       #language en-US "Owner GUID:\n%s\n\n"
-#string STR_SIGNATURE_DATA_HELP_FORMAT_CN         #language en-US "%s(%d bytes):\nCN = %s\n"
-#string STR_SIGNATURE_DATA_HELP_FORMAT_HASH       #language en-US "%s(%d bytes):\n%s\n"
-#string STR_SIGNATURE_DATA_HELP_FORMAT_TIME       #language en-US "Revocation Time:\n%s"
-#string STR_SIGNATURE_DATA_HASH_NAME_FORMAT       #language en-US "Image hash %g"
-#string STR_SIGNATURE_CERT_HASH_NAME_FORMAT       #language en-US "Certificate hash %g"
-#string STR_SIGNATURE_DATA_RSA_NAME_FORMAT        #language en-US "RSA2048 key %g"
-#string STR_SIGNATURE_DATA_RSA_HASH_NAME_FORMAT   #language en-US "RSA2048 SHA256 hash %g"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_GUID       #language en-US "Owner GUID:\n%s\n"
+#string STR_SIGNATURE_DATA_HELP_GUID_SVBOOT       #language en-US "(Enrolled by Sovereign Boot Wizard)\n"
+#string STR_SIGNATURE_DATA_HELP_GUID_FW           #language en-US "(Enrolled by firmware)\n"
+#string STR_SIGNATURE_DATA_HELP_GUID_MS           #language en-US "(Microsoft owned)\n"
+
+#string STR_SIGNATURE_DATA_HELP_FORMAT_CN         #language en-US "\n%s(%d bytes):\nCN = %s\n"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_HASH       #language en-US "\n%s(%d bytes):\n%s\n"
+#string STR_SIGNATURE_DATA_HELP_FORMAT_TIME       #language en-US "\nRevocation Time:\n%s"
+
+#string STR_SIGNATURE_DATA_HASH_NAME_FORMAT       #language en-US "Entry %d: Image %s"
+#string STR_SIGNATURE_DATA_CERT_HASH_NAME_FORMAT  #language en-US "Entry %d: %s"
+#string STR_SIGNATURE_DATA_CERT_NAME_FORMAT       #language en-US "Entry %d: %s"
+#string STR_SIGNATURE_DATA_RSA_NAME_FORMAT        #language en-US "Entry %d: %s key"
+#string STR_SIGNATURE_DATA_RSA_HASH_NAME_FORMAT   #language en-US "Entry %d: %s"
+#string STR_SIGNATURE_DATA_UNKNOWN_NAME_FORMAT    #language en-US "Entry %d: %s type"
+
+#string STR_SIGNATURE_LIST_HASH_NAME_FORMAT       #language en-US "List %d: Image %s list"
+#string STR_SIGNATURE_LIST_CERT_HASH_NAME_FORMAT  #language en-US "List %d: %s list"
+#string STR_SIGNATURE_LIST_CERT_NAME_FORMAT       #language en-US "List %d: %s list"
+#string STR_SIGNATURE_LIST_RSA_NAME_FORMAT        #language en-US "List %d: %s key list"
+#string STR_SIGNATURE_LIST_RSA_HASH_NAME_FORMAT   #language en-US "List %d: %s list"
+#string STR_SIGNATURE_LIST_UNKNOWN_NAME_FORMAT    #language en-US "List %d: %s type list"
 
 #string STR_SIGNATURE_DELETE_ALL_CONFIRM          #language en-US "Press 'Y' to delete all signature List."
+
+#string STR_FORM_HASH_DETAILS_TITLE               #language en-US "Key and hash details"
+#string STR_SV_BOOT_DB_INFO                       #language en-US "Below is the list of certificates and image hashes enrolled "
+                                                                  "to the Trusted Image and Key Database.\n\n"
+                                                                  "Use below options to delete entries by one with more detailed view.\n\n"
+                                                                  "To delete multiple entries please use Delete Signatures option above."
+#string STR_SV_BOOT_DBX_INFO                      #language en-US "Below is the list of certificates and image hashes enrolled "
+                                                                  "to the Unrusted Image and Key Database.\n\n"
+                                                                  "Use below options to delete entries by one with more detailed view.\n\n"
+                                                                  "To delete multiple entries please use Delete Signatures option above."
+
+#string STR_DATABASE_EMPTY                        #language en-US "The database is empty"
+
+#string STR_SV_BOOT_SIG_LIST_HELP                 #language en-US "This signature was not added by Sovereing Boot Provisioning Wizard."
+
+#string STR_SV_BOOT_SIG_LIST_DEFAULT_HELP         #language en-US "This signature was not added by Sovereing Boot."
+
+#string STR_SIGNATURE_TYPE                        #language en-US "Signature type:"
+#string STR_SIGNATURE_DATA_RAW                    #language en-US "Signature data:"
+#string STR_SIGNATURE_DATA_RAW_HEX                #language en-US ""
+
+#string STR_SIGNATURE_DATA_REVOCATION_TIME        #language en-US "Revocation time:"
+#string STR_SIGNATURE_DATA_REVOCATION_TIME2       #language en-US ""
+
+#string STR_REMOVE_KEY                            #language en-US "Remove this key from database"
+#string STR_REMOVE_HASH                           #language en-US "Remove this hash from database"
+#string STR_REMOVE_CERT                           #language en-US "Remove this certificate from database"

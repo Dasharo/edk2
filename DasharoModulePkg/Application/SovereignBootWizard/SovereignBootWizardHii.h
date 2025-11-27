@@ -38,6 +38,7 @@ Revision History:
 #define SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX          0xa
 #define SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM       0xb
 #define SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM       0xc
+#define SOVEREIGN_BOOT_WIZARD_HASH_DETAILS_FORM_ID      0xd
 
 // Question IDs
 // Each form will reserve 0x100 IDs
@@ -62,7 +63,15 @@ Revision History:
 #define KEY_SHOW_KEY_DETAILS_FORM2                      0x1204
 #define KEY_SKIP_KEY_FORM2                              0x1205
 
+
 // Interactive form
+
+#define KEY_REMOVE_KEY_FROM_DATABASE                    0x1D01
+#define KEY_REMOVE_HASH_FROM_DATABASE                   0x1D02
+#define KEY_REMOVE_CERT_FROM_DATABASE                   0x1D03
+
+#define SIGNATURE_TYPE_QUESTION_ID                      0x1D10
+
 #define KEY_VALUE_SAVE_AND_EXIT_DB                      0x1F0A
 #define KEY_VALUE_NO_SAVE_AND_EXIT_DB                   0x1F0B
 #define KEY_VALUE_SAVE_AND_EXIT_DBX                     0x1F0C
@@ -76,11 +85,15 @@ Revision History:
 #define KEY_SOVEREIGN_BOOT_DELETE_ALL_LIST              0x130a
 #define KEY_SOVEREIGN_BOOT_DELETE_ALL_DATA              0x130b
 #define KEY_SOVEREIGN_BOOT_DELETE_CHECK_DATA            0x130c
+#define KEY_ENROLL_SIGNATURE_TO_DB                      0x130d
+#define KEY_ENROLL_SIGNATURE_TO_DBX                     0x130e
 
 #define LABEL_DB_DELETE                                 0x1401
 #define LABEL_SIGNATURE_LIST_START                      0x1402
 #define LABEL_SIGNATURE_DATA_START                      0x1403
 #define LABEL_DELETE_ALL_LIST_BUTTON                    0x1500
+#define LABEL_DB_CERTS_DATA_START                       0x1600
+#define LABEL_DBX_CERTS_DATA_START                      0x1700
 #define LABEL_END                                       0xffff
 
 #define OPTION_CONFIG_RANGE                             0x1000
@@ -105,20 +118,54 @@ Revision History:
 // Question ID 0x6000 ~ 0x6FFF is for signature data.
 //
 #define OPTION_SIGNATURE_DATA_QUESTION_ID               0x6000
+//
+// Question ID 0x7000 ~ 0x7FFF is for DB list
+//
+#define OPTION_DB_LIST_QUESTION_ID                      0x7000
+//
+// Question ID 0x8000 ~ 0x8FFF is for DBX list
+//
+#define OPTION_DBX_LIST_QUESTION_ID                     0x8000
+//
+// Question ID 0x7000 ~ 0x7FFF is for DB list entries
+//
+#define OPTION_DB_ENTRIES_QUESTION_ID                   0x9000
+//
+// Question ID 0x8000 ~ 0x8FFF is for DBX list entries
+//
+#define OPTION_DBX_ENTRIES_QUESTION_ID                  0xA000
+
+#define SIGNATURE_TYPE_RSA2048_SHA256                   0
+#define SIGNATURE_TYPE_RSA2048                          1
+#define SIGNATURE_TYPE_X509                             2
+#define SIGNATURE_TYPE_SHA1                             3
+#define SIGNATURE_TYPE_SHA224                           4
+#define SIGNATURE_TYPE_SHA256                           5
+#define SIGNATURE_TYPE_SHA384                           6
+#define SIGNATURE_TYPE_SHA512                           7
+#define SIGNATURE_TYPE_SM3                              8
+#define SIGNATURE_TYPE_X509_SHA256                      9
+#define SIGNATURE_TYPE_X509_SHA384                      10
+#define SIGNATURE_TYPE_X509_SHA512                      11
+#define SIGNATURE_TYPE_X509_SM3                         12
+#define SIGNATURE_TYPE_UNKNOWN                          13
 
 // Keep the form data packed to workaround the storage size calculation
 // difference in C and IFR for EFI_HII_TIME
 #pragma pack(1)
 // Form Data
 typedef struct {
-  BOOLEAN         ImageUnsigned;     // If the image is unsigned.
-  BOOLEAN         AlwaysRevocation;  // If the certificate is always revoked. Revocation time is hidden
-  UINT8           CertificateFormat; // The type of the certificate
-  EFI_HII_DATE    RevocationDate;    // The revocation date of the certificate
-  EFI_HII_TIME    RevocationTime;    // The revocation time of the certificate
-  UINT8           FileEnrollType;    // File type of signature enroll
-  UINT32          ListCount;         // The count of signature list.
-  UINT32          CheckedDataCount;  // The count of checked signature data.
+  BOOLEAN         ImageUnsigned;        // If the image is unsigned.
+  BOOLEAN         AlwaysRevocation;     // If the certificate is always revoked. Revocation time is hidden
+  UINT8           CertificateFormat;    // The type of the certificate
+  EFI_HII_DATE    RevocationDate;       // The revocation date of the certificate
+  EFI_HII_TIME    RevocationTime;       // The revocation time of the certificate
+  UINT8           FileEnrollType;       // File type of signature enroll
+  UINT32          ListCount;            // The count of signature list.
+  UINT32          CheckedDataCount;     // The count of checked signature data.
+  UINT8           SignatureType;        // Type of signature to be displayed
+  BOOLEAN         IsCertHash;           // If the signature data is certificate hash
+  UINT8           SignatureRemove;      // If the signature data should be modified
 } SOVEREIGN_BOOT_WIZARD_FORM_DATA;
 
 #pragma pack()

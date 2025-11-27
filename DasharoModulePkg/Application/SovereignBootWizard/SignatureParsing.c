@@ -817,7 +817,7 @@ ParseHashValue (
 }
 
 /**
-  Parse key modulus from buffer, and save in the CHAR16 type array.
+  Format raw hex buffer, and save in the CHAR16 type array.
   The buffer is callee allocated and should be freed by the caller.
 
   @param[in]    Digest                    The pointer to the hash value.
@@ -829,7 +829,7 @@ ParseHashValue (
   @retval       EFI_SUCCESS               Operation success.
 **/
 EFI_STATUS
-ParseKeyModulus (
+FormatHexBuffer (
   IN  UINT8                  *Digest,
   IN  UINTN                  DigestSize,
   OUT CHAR16                 **BufferToReturn
@@ -1190,7 +1190,7 @@ UpdateCertKeyStrings (
   }
 
   NewString = NULL;
-  if (!EFI_ERROR (ParseKeyModulus (ModulusBuffer, PubKeyModSize, &NewString))) {
+  if (!EFI_ERROR (FormatHexBuffer (ModulusBuffer, PubKeyModSize, &NewString))) {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), NewString, NULL);
   }
   FREE_NON_NULL (NewString);
@@ -1203,6 +1203,139 @@ UpdateCertKeyStrings (
 ON_EXIT:
   RsaFree (X509PubKey);
   FREE_NON_NULL (ModulusBuffer);
+}
+
+VOID
+UpdateKeyStringsFromSigList (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_SIGNATURE_DATA                  *Data
+  )
+{
+  UINT8                                   *ModulusBuffer;
+  CHAR16                                  *NewString;
+  UINT16                                  ExponentString[20];
+
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), L"Unknown", NULL);
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_EXPONENT2), L"Unknown", NULL);
+
+  ModulusBuffer = (UINT8 *)Data->SignatureData;
+
+  NewString = NULL;
+  if (!EFI_ERROR (FormatHexBuffer (ModulusBuffer, WIN_CERT_UEFI_RSA2048_SIZE, &NewString))) {
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_MODULUS_HEX), NewString, NULL);
+  }
+  FREE_NON_NULL (NewString);
+
+  SetMem(ExponentString, sizeof (ExponentString), 0);
+  HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_CERT_KEY_EXPONENT2), L"0x10001", NULL);
+}
+
+VOID
+UpdateTimeString (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_TIME                            *Time
+  )
+{
+  CHAR16         TimeString[BUFFER_MAX_SIZE];
+
+  ZeroMem (TimeString, sizeof (TimeString));
+  UnicodeSPrint (
+    TimeString,
+    sizeof (TimeString),
+    L"%02d-%02d-%04d %02d:%02d:%02d",
+    Time->Day,
+    Time->Month,
+    Time->Year,
+    Time->Hour,
+    Time->Minute,
+    Time->Second
+    );
+
+  HiiSetString(Private->HiiHandle, STRING_TOKEN(STR_SIGNATURE_DATA_REVOCATION_TIME2), TimeString, NULL);
+}
+
+VOID
+UpdateHashStringsFromSigData (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_SIGNATURE_DATA                  *Data,
+  IN  UINT32                              DataSize
+  )
+{
+  CHAR16                                  *HexString;
+
+  HexString = NULL;
+  if (!EFI_ERROR (FormatHexBuffer (Data->SignatureData, DataSize, &HexString))) {
+    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_SIGNATURE_DATA_RAW_HEX), HexString, NULL);
+  }
+  FREE_NON_NULL (HexString);
+}
+
+VOID
+FillKeyHashStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_SIGNATURE_LIST                  *List,
+  IN  EFI_SIGNATURE_DATA                  *Data
+  )
+{
+  UINT32    DataSize;
+  EFI_TIME  *Time;
+
+  Private->FormData.IsCertHash = FALSE;
+
+  switch (Private->FormData.SignatureType) {
+  case SIGNATURE_TYPE_RSA2048:
+    UpdateKeyStringsFromSigList (Private, Data);
+    return;
+  case SIGNATURE_TYPE_RSA2048_SHA256:
+    DataSize = List->SignatureSize - sizeof (EFI_GUID);
+    break;
+  case SIGNATURE_TYPE_SHA1:
+    DataSize = 20;
+    break;
+  case SIGNATURE_TYPE_SHA224:
+    DataSize = 28;
+    break;
+  case SIGNATURE_TYPE_X509_SHA256:
+  case SIGNATURE_TYPE_X509_SM3:
+    Private->FormData.IsCertHash = TRUE;
+  case SIGNATURE_TYPE_SHA256:
+  case SIGNATURE_TYPE_SM3:
+    DataSize = 32;
+    break;
+  case SIGNATURE_TYPE_X509_SHA384:
+    Private->FormData.IsCertHash = TRUE;
+  case SIGNATURE_TYPE_SHA384:
+    DataSize = 48;
+    break;
+  case SIGNATURE_TYPE_X509_SHA512:
+    Private->FormData.IsCertHash = TRUE;
+  case SIGNATURE_TYPE_SHA512:
+    DataSize = 64;
+    break;
+  case SIGNATURE_TYPE_UNKNOWN:
+  default:
+    UpdateHashStringsFromSigData (Private, Data, List->SignatureSize);
+    return;
+  }
+
+  if (Private->FormData.IsCertHash) {
+    Time = (EFI_TIME *)(Data->SignatureData + DataSize);
+    UpdateTimeString (Private, Time);
+  }
+
+  UpdateHashStringsFromSigData (Private, Data, DataSize);
+}
+
+VOID
+FillCertStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  )
+{
+  UpdateCertValidityStrings (Private, CertificateEntry);
+  UpdateCertIssuerAndSubjectStrings (Private, CertificateEntry);
+  UpdateCertSerialNumberString (Private, CertificateEntry);
+  UpdateCertKeyStrings (Private, CertificateEntry);
 }
 
 EFI_STATUS
@@ -1223,10 +1356,7 @@ UpdateCertDetails (
     return EFI_NO_MEDIA;
   }
 
-  UpdateCertValidityStrings (Private, CertificateEntry);
-  UpdateCertIssuerAndSubjectStrings (Private, CertificateEntry);
-  UpdateCertSerialNumberString (Private, CertificateEntry);
-  UpdateCertKeyStrings (Private, CertificateEntry);
+  FillCertStrings (Private, CertificateEntry);
 
   return EFI_SUCCESS;
 }
