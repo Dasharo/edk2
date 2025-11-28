@@ -781,6 +781,7 @@ IsCertHashFoundInDbx (
 {
   EFI_STATUS          Status;
   EFI_SIGNATURE_LIST  *DbxList;
+  EFI_SIGNATURE_LIST  *DbxWalker;
   UINTN               DbxSize;
   EFI_SIGNATURE_DATA  *CertHash;
   UINTN               CertHashCount;
@@ -821,19 +822,20 @@ IsCertHashFoundInDbx (
     }
   }
 
-  while ((DbxSize > 0) && (SignatureListSize >= DbxList->SignatureListSize)) {
+  DbxWalker = DbxList;
+  while ((DbxSize > 0) && (SignatureListSize >= DbxWalker->SignatureListSize)) {
     //
     // Determine Hash Algorithm of Certificate in the forbidden database.
     //
-    if (CompareGuid (&DbxList->SignatureType, &gEfiCertX509Sha256Guid)) {
+    if (CompareGuid (&DbxWalker->SignatureType, &gEfiCertX509Sha256Guid)) {
       HashAlg = HASHALG_SHA256;
-    } else if (CompareGuid (&DbxList->SignatureType, &gEfiCertX509Sha384Guid)) {
+    } else if (CompareGuid (&DbxWalker->SignatureType, &gEfiCertX509Sha384Guid)) {
       HashAlg = HASHALG_SHA384;
-    } else if (CompareGuid (&DbxList->SignatureType, &gEfiCertX509Sha512Guid)) {
+    } else if (CompareGuid (&DbxWalker->SignatureType, &gEfiCertX509Sha512Guid)) {
       HashAlg = HASHALG_SHA512;
     } else {
-      DbxSize -= DbxList->SignatureListSize;
-      DbxList  = (EFI_SIGNATURE_LIST *)((UINT8 *)DbxList + DbxList->SignatureListSize);
+      DbxSize -= DbxWalker->SignatureListSize;
+      DbxWalker  = (EFI_SIGNATURE_LIST *)((UINT8 *)DbxWalker + DbxWalker->SignatureListSize);
       continue;
     }
     //
@@ -843,9 +845,9 @@ IsCertHashFoundInDbx (
       goto Done;
     }
 
-    SiglistHeaderSize = sizeof (EFI_SIGNATURE_LIST) + DbxList->SignatureHeaderSize;
-    CertHash          = (EFI_SIGNATURE_DATA *)((UINT8 *)DbxList + SiglistHeaderSize);
-    CertHashCount     = (DbxList->SignatureListSize - SiglistHeaderSize) / DbxList->SignatureSize;
+    SiglistHeaderSize = sizeof (EFI_SIGNATURE_LIST) + DbxWalker->SignatureHeaderSize;
+    CertHash          = (EFI_SIGNATURE_DATA *)((UINT8 *)DbxWalker + SiglistHeaderSize);
+    CertHashCount     = (DbxWalker->SignatureListSize - SiglistHeaderSize) / DbxWalker->SignatureSize;
     for (Index = 0; Index < CertHashCount; Index++) {
       //
       // Iterate each Signature Data Node within this CertList for verify.
@@ -867,11 +869,11 @@ IsCertHashFoundInDbx (
         goto Done;
       }
 
-      CertHash = (EFI_SIGNATURE_DATA *)((UINT8 *)CertHash + DbxList->SignatureSize);
+      CertHash = (EFI_SIGNATURE_DATA *)((UINT8 *)CertHash + DbxWalker->SignatureSize);
     }
 
-    DbxSize -= DbxList->SignatureListSize;
-    DbxList  = (EFI_SIGNATURE_LIST *)((UINT8 *)DbxList + DbxList->SignatureListSize);
+    DbxSize -= DbxWalker->SignatureListSize;
+    DbxWalker  = (EFI_SIGNATURE_LIST *)((UINT8 *)DbxWalker + DbxWalker->SignatureListSize);
   }
 
   Status = EFI_SUCCESS;
