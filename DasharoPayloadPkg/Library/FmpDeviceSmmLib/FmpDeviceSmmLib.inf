@@ -44,6 +44,10 @@
 
 [Packages]
   DasharoPayloadPkg/DasharoPayloadPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
   FmpDevicePkg/FmpDevicePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+
+[Guids]
+  gDasharoSystemFeaturesGuid

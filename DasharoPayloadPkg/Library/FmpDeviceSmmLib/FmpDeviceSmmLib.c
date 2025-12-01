@@ -860,6 +860,32 @@ QueryVariableInfoHook (
   return EFI_NOT_AVAILABLE_YET;
 }
 
+STATIC
+BOOLEAN
+IsDescriptorLocked (
+  VOID
+  )
+{
+  EFI_STATUS     Status;
+  UINTN          VarSize;
+  UINT8          DescriptorWriteable;
+
+  VarSize = sizeof (DescriptorWriteable);
+  Status = gRT->GetVariable (
+      L"DescriptorWriteable",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &DescriptorWriteable
+      );
+
+  // Variable does not exist on platforms without a descriptor (e.g. AMD)
+  if (EFI_ERROR(Status))
+    return TRUE;
+
+  return DescriptorWriteable;
+}
+
 /**
   Updates a firmware device with a new firmware image.  This function returns
   EFI_UNSUPPORTED if the firmware image is not updatable.  If the firmware image
@@ -946,6 +972,7 @@ FmpDeviceSetImageWithStatus (
   UINT8       *CurrentImage;
   UINT8       *UpdatedImage;
   UINTN       Offset;
+  BOOLEAN     DescriptorLocked;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
 
@@ -974,7 +1001,9 @@ FmpDeviceSetImageWithStatus (
   ReadSteps = (TotalSteps * 5) / 100;
   TotalSteps += ReadSteps;
 
-  CurrentImage = ReadCurrentFirmware ();
+  DescriptorLocked = IsDescriptorLocked();
+
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1005,6 +1034,20 @@ FmpDeviceSetImageWithStatus (
     //
     if (CompareMem (CurrentImage + Offset, UpdatedImage + Offset, BlockSize) == 0) {
       // Erase and write steps.
+      IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
+      continue;
+    }
+
+    // Only touch blocks that are fully unlocked for writing.
+    // This assumes that the protected ranges are aligned to SMMSTORE's block
+    // size, otherwise the start/end of unprotected ranges might not get
+    // updated.
+    if (DescriptorLocked && !IsRangeWriteable(CurrentImage, ImageSize, Offset, BlockSize)) {
+      DEBUG ((
+        DEBUG_INFO,
+        "%a(): range %d - %d is not writeable\n",
+        __FUNCTION__, Offset, BlockSize + Offset
+        ));
       IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
       continue;
     }

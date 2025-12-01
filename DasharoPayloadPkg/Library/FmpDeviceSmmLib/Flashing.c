@@ -80,7 +80,7 @@ GetFmap (
 VOID *
 EFIAPI
 ReadCurrentFirmware (
-  VOID
+  BOOLEAN IsDescriptorLocked
   )
 {
   EFI_STATUS  Status;
@@ -140,8 +140,15 @@ ReadCurrentFirmware (
         Block * BlockSize,
         Status
         ));
-      FreePool (Image);
-      return NULL;
+
+      // We allow for this failure if descriptor is locked because when locked,
+      // certain regions of the flash are read-protected. We can't know which
+      // ones they are until we've read enough of the firmware to get to the
+      // FMAP.
+      if (!IsDescriptorLocked) {
+        FreePool (Image);
+        return NULL;
+      }
     }
   }
 
@@ -606,6 +613,83 @@ MigrateSmbiosData (
   // TODO: if CONFIG_CBFS_VERIFICATION is on, need to update CBFS hash here
   //       (file can have hashes too, but they seem optional)
   //
+
+  return TRUE;
+}
+
+/**
+  Checks if the given range is writable according to Intel Flash Descriptor
+  access restrictions.
+
+  @param[in] Image       Firmware image to check
+  @param[in] ImageLen    Length of the image
+  @param[in] RangeOffset Offset in the image to check
+  @param[in] RangeLen    Length of the range to check
+
+  @return TRUE if range is writeable, FALSE otherwise.
+**/
+BOOLEAN
+EFIAPI
+IsRangeWriteable (
+  IN CONST VOID *Image,
+  IN CONST UINTN ImageLen,
+  IN CONST UINTN RangeOffset,
+  IN CONST UINTN RangeLen
+  )
+{
+  CONST Fmap     *FlashMap;
+  CONST FmapArea *Region;
+
+  // Reject out-of-bounds upfront
+  if (RangeOffset >= ImageLen || RangeLen > ImageLen - RangeOffset)
+    return FALSE;
+
+  // Something went wrong, assume nothing is writable. Update won't touch anything.
+  if (!GetFmap (Image, ImageLen, &FlashMap)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse current firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  // If descriptor is locked, IFD, ME, GbE and DevExp2 regions are not
+  // writeable. This is at least true for Dasharo firmware and TrustRoot
+  // provisioning scripts.
+  Region = FmapFindArea(FlashMap, "SI_DESC");
+
+  // There is no descriptor, so everything should be unlocked.
+  if (!Region)
+    return TRUE;
+
+  // Range overlaps locked descriptor.
+  if (RangeOffset + RangeLen > Region->offset &&
+      Region->offset + Region->size > RangeOffset)
+    return FALSE;
+
+  Region = FmapFindArea(FlashMap, "SI_ME");
+
+  // Range exists and overlaps locked ME.
+  if (Region && RangeOffset + RangeLen > Region->offset &&
+      Region->offset + Region->size > RangeOffset)
+    return FALSE;
+
+  Region = FmapFindArea(FlashMap, "RW_UNUSED");
+
+  // Range exists and overlaps locked RW_UNUSED.
+  if (Region && RangeOffset + RangeLen > Region->offset &&
+      Region->offset + Region->size > RangeOffset)
+    return FALSE;
+
+  Region = FmapFindArea(FlashMap, "SI_GBE");
+
+  // While SI_GBE is not typically locked, its size is smaller than the SMMSTORE
+  // erase/write size, and it sits between two locked regions. Explicitly avoid
+  // touching it to reduce ambiguity.
+  if (Region && RangeOffset + RangeLen > Region->offset &&
+      Region->offset + Region->size > RangeOffset)
+    return FALSE;
 
   return TRUE;
 }
