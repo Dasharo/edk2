@@ -9,7 +9,7 @@
 VOID *
 EFIAPI
 ReadCurrentFirmware (
-  VOID
+  BOOLEAN IsDescriptorLocked
   );
 
 /**
@@ -25,6 +25,25 @@ EFIAPI
 MergeFirmwareImages (
   IN CONST VOID  *Current,
   IN CONST VOID  *New
+  );
+
+/**
+  Checks if the given range overlaps a write-protected IFD range.
+
+  @param[in] Image       Firmware image to check
+  @param[in] ImageLen    Length of the image
+  @param[in] RangeOffset Offset in the image to check
+  @param[in] RangeOffset Length of the range to check
+
+  @return TRUE if range is writeable, FALSE otherwise.
+**/
+BOOLEAN
+EFIAPI
+IsRangeWriteable (
+  IN CONST VOID *Image,
+  IN CONST UINTN ImageLen,
+  IN CONST UINTN RangeOffset,
+  IN CONST UINTN RangeLen
   );
 
 #endif // FLASHING_H__

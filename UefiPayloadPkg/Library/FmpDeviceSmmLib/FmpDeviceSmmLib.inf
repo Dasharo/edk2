@@ -39,6 +39,7 @@
 
 [Packages]
   DasharoPayloadPkg/DasharoPayloadPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
   FmpDevicePkg/FmpDevicePkg.dec
   MdeModulePkg/MdeModulePkg.dec
@@ -46,3 +47,4 @@
 
 [Guids]
   gEfiFirmwareInfoHobGuid
+  gDasharoSystemFeaturesGuid
