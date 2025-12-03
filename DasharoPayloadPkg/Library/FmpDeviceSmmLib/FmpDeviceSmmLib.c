@@ -881,9 +881,9 @@ IsDescriptorLocked (
 
   // Variable does not exist on platforms without a descriptor (e.g. AMD)
   if (EFI_ERROR(Status))
-    return TRUE;
+    return FALSE;
 
-  return DescriptorWriteable;
+  return !DescriptorWriteable;
 }
 
 /**
