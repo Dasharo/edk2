@@ -46,4 +46,24 @@ IsRangeWriteable (
   IN CONST UINTN RangeLen
   );
 
+/**
+  Checks if the two coreboot images are Boot Guard enabled and are using the
+  same OEM root key for signing.
+
+  @param[in] Current     Current firmware image
+  @param[in] CurrentLen  Size of current firmware image
+  @param[in] Updated     Updated firmware image
+  @param[in] UpdatedLen  Size of updated firmware image
+
+  @return TRUE     If the two images are compatible with each other
+  @return FALSE    If the two images are incompatiblE
+**/
+BOOLEAN
+EFIAPI
+AreImageBtgKeysCompatible (
+  IN CONST VOID  *Current,
+  IN CONST VOID  *Updated,
+  IN CONST UINTN ImageSize
+  );
+
 #endif // FLASHING_H__
