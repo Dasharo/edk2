@@ -394,4 +394,30 @@ CleanUpPage (
   IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
   );
 
+/**
+  This function to loads bootloader data strings under the bootloader form.
+
+  @param[in]  PrivateData         Module's private data.
+
+  @retval   EFI_SUCCESS           Success to update the bootloader list page
+  @retval   EFI_OUT_OF_RESOURCES  Unable to allocate required resources.
+**/
+EFI_STATUS
+LoadBootloaders (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
+/**
+  This function to loads certificate list under the bootloader data.
+
+  @param[in]  PrivateData         Module's private data.
+
+  @retval   EFI_SUCCESS           Success to update the bootloader page
+  @retval   EFI_OUT_OF_RESOURCES  Unable to allocate required resources.
+**/
+EFI_STATUS
+LoadBootloaderCertificates (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
 #endif

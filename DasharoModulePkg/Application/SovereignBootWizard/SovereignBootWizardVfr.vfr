@@ -339,6 +339,14 @@ formset
     subtitle text = STRING_TOKEN(STR_LAUNCH_REASON);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
+    goto FORMID_SOVEREIGN_BOOT_BL_OPTION_FORM,
+         prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_BL_OPTION),
+         help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_BL_OPTION_HELP),
+         flags  = INTERACTIVE,
+         key    = KEY_SOVEREIGN_BOOT_BL_OPTION;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
     goto FORMID_SOVEREIGN_BOOT_DB_OPTION_FORM,
          prompt = STRING_TOKEN(STR_SOVEREIGN_BOOT_DB_OPTION),
          help   = STRING_TOKEN(STR_SOVEREIGN_BOOT_DB_OPTION_HELP),
@@ -360,6 +368,85 @@ formset
       text   = STRING_TOKEN(STR_EXIT_TEXT),
       flags  = INTERACTIVE,
       key    = KEY_EXIT_FORM5;
+
+  endform;
+
+  form formid = FORMID_SOVEREIGN_BOOT_BL_OPTION_FORM,
+    title  = STRING_TOKEN(STR_BOOTLOADER_LIST_FORM);
+
+    disableif NOT ideqval SvBootFormData.BootloaderCount == 0;
+      grayoutif TRUE;
+        text
+          help   = STRING_TOKEN(STR_EMPTY_STRING),
+          text   = STRING_TOKEN(STR_NO_BOOTLOADERS_FOUND);
+      endif;
+    endif;
+
+    label LABEL_BOOTLOADER_LIST_START;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+  endform;
+
+  form formid = SOVEREIGN_BOOT_WIZARD_BL_DETAILS_FORM_ID,
+    title  = STRING_TOKEN(STR_BOOTLOADER_DETAILS_FORM);
+
+    subtitle text = STRING_TOKEN(STR_BOOTOPT_DESCRIPTION);
+    subtitle text = STRING_TOKEN(STR_HW_PATH);
+    subtitle text = STRING_TOKEN(STR_FILE_PATH);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    subtitle text = STRING_TOKEN(STR_BOOTLOADER_HASH);
+    subtitle text = STRING_TOKEN(STR_BOOTLOADER_HASH_HEX);
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    grayoutif TRUE;
+      oneof varid       = SvBootFormData.ImageUnsigned,
+            prompt      = STRING_TOKEN(STR_IMAGE_IS_SIGNED),
+            help        = STRING_TOKEN(STR_EMPTY_STRING),
+            option text = STRING_TOKEN(STR_YES), value = 0x0, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_NO), value = 0x1, flags = 0;
+      endoneof;
+
+      oneof varid       = SvBootFormData.HasInvalidSignature,
+            prompt      = STRING_TOKEN(STR_IMAGE_CONTAINS_INVALID_SIGNATURE),
+            help        = STRING_TOKEN(STR_EMPTY_STRING),
+            option text = STRING_TOKEN(STR_NO), value = 0x0, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_YES), value = 0x1, flags = 0;
+      endoneof;
+
+      oneof varid       = SvBootFormData.SignedByMs,
+            prompt      = STRING_TOKEN(STR_IMAGE_IS_SIGNED_BY_MS),
+            help        = STRING_TOKEN(STR_EMPTY_STRING),
+            option text = STRING_TOKEN(STR_NO), value = 0x0, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_YES), value = 0x1, flags = 0;
+      endoneof;
+
+      oneof varid       = SvBootFormData.SignedByMsOnly,
+            prompt      = STRING_TOKEN(STR_IMAGE_IS_SIGNED_BY_MS_ONLY),
+            help        = STRING_TOKEN(STR_EMPTY_STRING),
+            option text = STRING_TOKEN(STR_NO), value = 0x0, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_YES), value = 0x1, flags = 0;
+      endoneof;
+
+      oneof varid       = SvBootFormData.ImageTrusted,
+            prompt      = STRING_TOKEN(STR_IMAGE_IS_TRUSTED),
+            help        = STRING_TOKEN(STR_EMPTY_STRING),
+            option text = STRING_TOKEN(STR_UNDECIDED), value = IMAGE_STATE_UNDECIDED, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_NO), value = IMAGE_STATE_UNTRUSTED, flags = 0;
+            option text = STRING_TOKEN(STR_YES), value = IMAGE_STATE_TRUSTED, flags = 0;
+      endoneof;
+    endif;
+
+    disableif ideqval SvBootFormData.ImageUnsigned == 1;
+      subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+      subtitle text = STRING_TOKEN(STR_BL_CERTIFICATE_LSIT);
+      subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+    endif;
+
+    label LABEL_BOOTLOADER_CERT_LIST_START;
+    label LABEL_END;
+    subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
   endform;
 

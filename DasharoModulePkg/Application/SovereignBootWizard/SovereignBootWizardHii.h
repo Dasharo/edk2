@@ -39,6 +39,8 @@ Revision History:
 #define SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM       0xb
 #define SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM       0xc
 #define SOVEREIGN_BOOT_WIZARD_HASH_DETAILS_FORM_ID      0xd
+#define FORMID_SOVEREIGN_BOOT_BL_OPTION_FORM            0xe
+#define SOVEREIGN_BOOT_WIZARD_BL_DETAILS_FORM_ID        0xf
 
 // Question IDs
 // Each form will reserve 0x100 IDs
@@ -87,6 +89,7 @@ Revision History:
 #define KEY_SOVEREIGN_BOOT_DELETE_CHECK_DATA            0x130c
 #define KEY_ENROLL_SIGNATURE_TO_DB                      0x130d
 #define KEY_ENROLL_SIGNATURE_TO_DBX                     0x130e
+#define KEY_SOVEREIGN_BOOT_BL_OPTION                    0x130f
 
 #define LABEL_DB_DELETE                                 0x1401
 #define LABEL_SIGNATURE_LIST_START                      0x1402
@@ -94,6 +97,8 @@ Revision History:
 #define LABEL_DELETE_ALL_LIST_BUTTON                    0x1500
 #define LABEL_DB_CERTS_DATA_START                       0x1600
 #define LABEL_DBX_CERTS_DATA_START                      0x1700
+#define LABEL_BOOTLOADER_LIST_START                     0x2000
+#define LABEL_BOOTLOADER_CERT_LIST_START                0x3000
 #define LABEL_END                                       0xffff
 
 #define OPTION_CONFIG_RANGE                             0x1000
@@ -150,12 +155,16 @@ Revision History:
 #define SIGNATURE_TYPE_X509_SM3                         12
 #define SIGNATURE_TYPE_UNKNOWN                          13
 
+#define IMAGE_STATE_UNDECIDED                           0
+#define IMAGE_STATE_UNTRUSTED                           1
+#define IMAGE_STATE_TRUSTED                             2
+
 // Keep the form data packed to workaround the storage size calculation
 // difference in C and IFR for EFI_HII_TIME
 #pragma pack(1)
 // Form Data
 typedef struct {
-  BOOLEAN         ImageUnsigned;        // If the image is unsigned.
+  UINT8           ImageUnsigned;        // If the image is unsigned.
   BOOLEAN         AlwaysRevocation;     // If the certificate is always revoked. Revocation time is hidden
   UINT8           CertificateFormat;    // The type of the certificate
   EFI_HII_DATE    RevocationDate;       // The revocation date of the certificate
@@ -166,6 +175,11 @@ typedef struct {
   UINT8           SignatureType;        // Type of signature to be displayed
   BOOLEAN         IsCertHash;           // If the signature data is certificate hash
   UINT8           SignatureRemove;      // If the signature data should be modified
+  UINT32          BootloaderCount;      // The count of bootloaders.
+  UINT8           SignedByMs;           // If current bootloader is signed by MS certs.
+  UINT8           SignedByMsOnly;       // If current bootloader is signed by MS certs only.
+  UINT8           ImageTrusted;         // If current bootloader is trusted.
+  UINT8           HasInvalidSignature;  // If current bootloader contains invalid signature.
 } SOVEREIGN_BOOT_WIZARD_FORM_DATA;
 
 #pragma pack()

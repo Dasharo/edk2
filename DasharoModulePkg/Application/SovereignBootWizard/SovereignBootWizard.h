@@ -290,10 +290,11 @@ typedef struct {
   LIST_ENTRY                  Certs;
 } SV_SECURITY_CONTEXT;
 
-extern SV_MENU_OPTION            BootOptionMenu;
+extern SV_MENU_OPTION            mBootOptionMenu;
 extern UINTN                     mBootloaderIndex;
 extern UINTN                     mCertIndex;
 extern INTN                      mFirstTrustedBootloader;
+extern BOOLEAN                   mAltAccessMode;
 
 EFI_STATUS
 GetBootOptions (
@@ -328,6 +329,13 @@ SV_MENU_ENTRY *
 GetMenuEntry (
   SV_MENU_OPTION  *MenuOption,
   UINTN           MenuNumber
+  );
+
+EFI_STATUS
+ParseHashValue (
+  IN  UINT8                  *Digest,
+  IN  UINTN                  DigestSize,
+  OUT CHAR16                 **BufferToReturn
   );
 
 VOID

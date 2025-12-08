@@ -139,6 +139,8 @@
 
 #string STR_FILE_EXPLORER_TITLE            #language en-US  "File Explorer"
 
+#string STR_SOVEREIGN_BOOT_BL_OPTION          #language en-US "Show or modify Bootloaders"
+#string STR_SOVEREIGN_BOOT_BL_OPTION_HELP     #language en-US ""
 #string STR_SOVEREIGN_BOOT_DB_OPTION          #language en-US "Show or modify Trusted Key/Image Database"
 #string STR_SOVEREIGN_BOOT_DB_OPTION_HELP     #language en-US ""
 #string STR_SOVEREIGN_BOOT_DBX_OPTION         #language en-US "Show or modify Untrusted Key/Image Database"
@@ -221,3 +223,24 @@
 #string STR_REMOVE_KEY                            #language en-US "Remove this key from database"
 #string STR_REMOVE_HASH                           #language en-US "Remove this hash from database"
 #string STR_REMOVE_CERT                           #language en-US "Remove this certificate from database"
+
+#string STR_BOOTLOADER_LIST_FORM                  #language en-US "Bootloaders"
+#string STR_BOOTLOADER_NAME_FORMAT                #language en-US "%s (%s)"
+#string STR_BOOTLOADER_HELP_FORMAT                #language en-US "%s\n\n%s\n\n%s"
+#string STR_NO_BOOTLOADERS_FOUND                  #language en-US "No bootloaders found"
+
+#string STR_BOOTLOADER_DETAILS_FORM               #language en-US "Bootloader details"
+#string STR_BOOTLOADER_HASH                       #language en-US "Image hash (SHA-256):"
+#string STR_BOOTLOADER_HASH_HEX                   #language en-US ""
+#string STR_BL_CERTIFICATE_LSIT                   #language en-US "Certificate list:"
+#string STR_CERT_NO_COMMON_NAME                   #language en-US "Certificate without common name"
+
+#string STR_IMAGE_IS_SIGNED                       #language en-US "Image is signed:"
+#string STR_IMAGE_CONTAINS_INVALID_SIGNATURE      #language en-US "Image contains invalid signature:"
+#string STR_IMAGE_IS_SIGNED_BY_MS                 #language en-US "Image contains Microsoft signatures:"
+#string STR_IMAGE_IS_SIGNED_BY_MS_ONLY            #language en-US "Image is signed only by Microsoft certificates:"
+#string STR_IMAGE_IS_TRUSTED                      #language en-US "Image is trusted:"
+
+#string STR_YES                                   #language en-US "Yes"
+#string STR_NO                                    #language en-US "No"
+#string STR_UNDECIDED                             #language en-US "Undecided"

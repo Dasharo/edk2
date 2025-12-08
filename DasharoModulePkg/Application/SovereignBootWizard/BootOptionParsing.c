@@ -11,7 +11,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 ///
 /// Boot Option from variable Menu
 ///
-SV_MENU_OPTION  BootOptionMenu = {
+SV_MENU_OPTION  mBootOptionMenu = {
   SOVEREIGN_BOOT_MENU_OPTION_SIGNATURE,
   { NULL },
   0
@@ -489,8 +489,8 @@ CheckIfEntryIsDuplicate (
   }
 
   Index = 0;
-  while (Index < BootOptionMenu.MenuNumber) {
-    BootloaderEntry = GetMenuEntry (&BootOptionMenu, Index++);
+  while (Index < mBootOptionMenu.MenuNumber) {
+    BootloaderEntry = GetMenuEntry (&mBootOptionMenu, Index++);
     if (BootloaderEntry == NULL) {
       DEBUG ((DEBUG_WARN, "Bootloader entry is NULL\n"));
       continue;
@@ -639,7 +639,7 @@ FillMenuEntryFromDevicePath (
 
 /**
 
-  Build the BootOptionMenu according to BootOrder Variable.
+  Build the mBootOptionMenu according to BootOrder Variable.
   This Routine will access the Boot#### to get EFI_LOAD_OPTION.
 
   @param CallbackData The BMM context data.
@@ -665,7 +665,7 @@ GetBootOptions (
   MenuCount         = 0;
   BootOrderListSize = 0;
   BootOrderList     = NULL;
-  InitializeListHead (&BootOptionMenu.Head);
+  InitializeListHead (&mBootOptionMenu.Head);
 
   DEBUG ((DEBUG_INFO, "Locating boot options\n"));
 
@@ -678,8 +678,8 @@ GetBootOptions (
       return Status;
     }
 
-    InsertTailList (&BootOptionMenu.Head, &NewMenuEntry->Link);
-    BootOptionMenu.MenuNumber = 1;
+    InsertTailList (&mBootOptionMenu.Head, &NewMenuEntry->Link);
+    mBootOptionMenu.MenuNumber = 1;
     return EFI_SUCCESS;
   }
 
@@ -711,7 +711,7 @@ GetBootOptions (
       return Status;
     }
 
-    InsertTailList (&BootOptionMenu.Head, &NewMenuEntry->Link);
+    InsertTailList (&mBootOptionMenu.Head, &NewMenuEntry->Link);
     MenuCount++;
   }
 
@@ -719,16 +719,16 @@ GetBootOptions (
 
   FREE_NON_NULL (BootOrderList);
 
-  BootOptionMenu.MenuNumber = MenuCount;
+  mBootOptionMenu.MenuNumber = MenuCount;
 
-  Status = ScanFileSystemsForBootOptions (Private, &BootOptionMenu);
+  Status = ScanFileSystemsForBootOptions (Private, &mBootOptionMenu);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Scanning of filesystems failed with %r\n", Status));
   }
 
-  DEBUG ((DEBUG_INFO, "Found %d boot options \n", BootOptionMenu.MenuNumber));
+  DEBUG ((DEBUG_INFO, "Found %d boot options \n", mBootOptionMenu.MenuNumber));
 
-  if (BootOptionMenu.MenuNumber == 0) {
+  if (mBootOptionMenu.MenuNumber == 0) {
     return EFI_NOT_FOUND;
   }
 
@@ -776,12 +776,13 @@ UpdateBootloaderPage (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   )
 {
-  SV_MENU_ENTRY    *BootloaderEntry;
-  EFI_STRING       NewString;
-  EFI_STATUS       Status;
+  SV_MENU_ENTRY        *BootloaderEntry;
+  SV_SECURITY_CONTEXT  *SecurityContext;
+  EFI_STRING           NewString;
+  EFI_STATUS           Status;
 
-  while (mBootloaderIndex < BootOptionMenu.MenuNumber) {
-    BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  while (mBootloaderIndex < mBootOptionMenu.MenuNumber) {
+    BootloaderEntry   = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
     if (BootloaderEntry == NULL) {
       return EFI_NO_MEDIA;
     }
@@ -793,6 +794,7 @@ UpdateBootloaderPage (
     if (BootloaderEntry->SecurityContext == NULL) {
       Status = FillSecurityContext(BootloaderEntry);
       if (EFI_ERROR (Status)) {
+        Private->FormData.ImageUnsigned = TRUE;
         DEBUG ((DEBUG_ERROR, "Failed to fill security context for bootloader %u\n", mBootloaderIndex));
         return EFI_NO_MEDIA;
       }
@@ -802,15 +804,17 @@ UpdateBootloaderPage (
     if (Status == EFI_NO_MEDIA) {
       DEBUG ((DEBUG_INFO, "No more keys/certificates for bootloader %u\n", mBootloaderIndex));
       // No more keys/certs to show for this bootloader, proceed to the next one
-      mCertIndex = 0;
-      mBootloaderIndex++;
-      continue;
+      if (!mAltAccessMode) {
+        mCertIndex = 0;
+        mBootloaderIndex++;
+        continue;
+      }
     }
 
     break;
   }
 
-  if (mBootloaderIndex >= BootOptionMenu.MenuNumber) {
+  if (mBootloaderIndex >= mBootOptionMenu.MenuNumber) {
     DEBUG ((DEBUG_INFO, "No more keys/certificates/bootloaders to show\n"));
     return EFI_NO_MEDIA;
   }
@@ -835,6 +839,31 @@ UpdateBootloaderPage (
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_FILE_PATH), NewString, NULL);
   } else {
     HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTOPT_DESCRIPTION), L"Not Found!", NULL);
+  }
+
+  if (mAltAccessMode && (BootloaderEntry->SecurityContext != NULL)) {
+    NewString = NULL;
+    SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+    Status = ParseHashValue (SecurityContext->ImageDigest,
+                             SecurityContext->ImageDigestSize,
+                             &NewString);
+    if (!EFI_ERROR (Status)) {
+      HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTLOADER_HASH_HEX), NewString, NULL);
+      FREE_NON_NULL (NewString);
+    } else {
+      HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_BOOTLOADER_HASH_HEX), L"Image hash could not be obtained.", NULL);
+    }
+
+    Private->FormData.ImageUnsigned = (!SecurityContext->ImageIsSigned ||
+                                       (SecurityContext->NumCertificates == 0));
+
+    if (SecurityContext->ImageIsInDbx) {
+      Private->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
+    } else if (SecurityContext->ImageIsInDb) {
+      Private->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
+    } else {
+      Private->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+    }
   }
 
   return Status;
@@ -881,13 +910,13 @@ FreeBootMenuEntries (
 {
   SV_MENU_ENTRY    *BootloaderEntry;
 
-  if (BootOptionMenu.MenuNumber == 0) {
+  if (mBootOptionMenu.MenuNumber == 0) {
     return;
   }
 
-  while (!IsListEmpty (&BootOptionMenu.Head)) {
+  while (!IsListEmpty (&mBootOptionMenu.Head)) {
     BootloaderEntry = CR (
-                        BootOptionMenu.Head.ForwardLink,
+                        mBootOptionMenu.Head.ForwardLink,
                         SV_MENU_ENTRY,
                         Link,
                         SOVEREIGN_BOOT_MENU_ENTRY_SIGNATURE);
@@ -895,5 +924,5 @@ FreeBootMenuEntries (
     FreeBootMenuEntry (BootloaderEntry);
   }
 
-  BootOptionMenu.MenuNumber = 0;
+  mBootOptionMenu.MenuNumber = 0;
 }

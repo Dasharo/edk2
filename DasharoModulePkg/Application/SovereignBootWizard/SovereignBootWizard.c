@@ -12,13 +12,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *mPrivateData = NULL;
 SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *gPrivateData = NULL;
 BOOLEAN mBootloadersInitted;
+BOOLEAN mAltAccessMode;
 
 STATIC CHAR16 mSvBootDataVarName[] = SV_BOOT_DATA_VAR;
 STATIC CHAR16 mVarStoreName[] = SV_BOOT_VARSTORE_NAME;
 STATIC CHAR16 mSvBootConfigVarName[] = SV_BOOT_CONFIG_VAR;
 
 STATIC BOOLEAN mBootloadersShown;
-STATIC BOOLEAN mAltDbAccessMode;
 
 STATIC HII_VENDOR_DEVICE_PATH  mHiiVendorDevicePath = {
   {
@@ -233,7 +233,7 @@ BootTheBootloader (
   INTN                                 OptionIndex;
   EFI_STATUS                           Status;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, BootloaderIndex);
+  BootloaderEntry   = GetMenuEntry (&mBootOptionMenu, BootloaderIndex);
   if (BootloaderEntry == NULL) {
     DEBUG ((DEBUG_INFO, "Bootloader %u entry not found\n", BootloaderIndex));
     return EFI_NO_MEDIA;
@@ -315,6 +315,7 @@ PrepareBootloaders (
   if (!EFI_ERROR (Status)) {
     mBootloadersInitted = TRUE;
     if (!mBootloadersShown) {
+      mAltAccessMode = FALSE;
       Status = UpdateBootloaderPage (PrivateData);
       mBootloadersShown = !EFI_ERROR (Status);
     }
@@ -505,6 +506,22 @@ Callback (
           Status = UpdateCertDetails (PrivateData);
           break;
         }
+        case KEY_SOVEREIGN_BOOT_BL_OPTION:
+          if (!mBootloadersInitted) {
+              Status = GetBootOptions (PrivateData);
+              if (!EFI_ERROR (Status)) {
+                mBootloadersInitted = TRUE;
+              } else {
+                if (Status != EFI_NOT_FOUND) {
+                  PrivateData->FormData.BootloaderCount = 0;
+                  break;
+                }
+              }
+          }
+          LoadBootloaders (PrivateData);
+          Status = EFI_SUCCESS;
+          break;
+
         case KEY_SOVEREIGN_BOOT_DB_OPTION:
           PrivateData->VariableName = Variable_DB;
           LoadSignatureList (
@@ -546,13 +563,13 @@ Callback (
           break;
 
         case SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           ChooseFile (NULL, NULL, UpdateDBFromFile, &File);
           Status = EFI_SUCCESS;
           break;
 
         case SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           ChooseFile (NULL, NULL, UpdateDBXFromFile, &File);
 
           if (PrivateData->FileContext->FHandle != NULL) {
@@ -587,7 +604,7 @@ Callback (
           break;
 
         case SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           UpdateDeletePage (
             PrivateData,
             EFI_IMAGE_SECURITY_DATABASE,
@@ -603,7 +620,7 @@ Callback (
         // From DBX option to the level-1 form, display signature list.
         //
         case KEY_VALUE_FROM_DBX_TO_LIST_FORM:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           PrivateData->VariableName = Variable_DBX;
           LoadSignatureList (
             PrivateData,
@@ -618,7 +635,7 @@ Callback (
         // Delete all signature list and reload.
         //
         case KEY_SOVEREIGN_BOOT_DELETE_ALL_LIST:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
             &Key,
@@ -657,10 +674,10 @@ Callback (
             DeleteSignatureEx (
               PrivateData,
               Delete_Signature_List_One,
-              mAltDbAccessMode ? 1 : PrivateData->FormData.CheckedDataCount);
+              mAltAccessMode ? 1 : PrivateData->FormData.CheckedDataCount);
           }
 
-          if (!mAltDbAccessMode) {
+          if (!mAltAccessMode) {
             Value->ref.FormId = SOVEREIGN_BOOT_DELETE_SIGNATURE_LIST_FORM;
             LoadSignatureList (
               PrivateData,
@@ -699,7 +716,7 @@ Callback (
         // Delete checked signature data and reload.
         //
         case KEY_SOVEREIGN_BOOT_DELETE_CHECK_DATA:
-          mAltDbAccessMode = FALSE;
+          mAltAccessMode = FALSE;
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
             &Key,
@@ -725,7 +742,7 @@ Callback (
         case KEY_REMOVE_HASH_FROM_DATABASE:
         case KEY_REMOVE_KEY_FROM_DATABASE:
         case KEY_REMOVE_CERT_FROM_DATABASE:
-          mAltDbAccessMode = TRUE;
+          mAltAccessMode = TRUE;
           CreatePopUp (
             EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
             &Key,
@@ -871,7 +888,7 @@ Callback (
           if ((QuestionId >= OPTION_DEL_DB_QUESTION_ID) &&
               (QuestionId < (OPTION_DEL_DB_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = FALSE;
+            mAltAccessMode = FALSE;
             DeleteSignature (
               PrivateData,
               EFI_IMAGE_SECURITY_DATABASE,
@@ -893,7 +910,7 @@ Callback (
           } else if ((QuestionId >= OPTION_SIGNATURE_LIST_QUESTION_ID) &&
                     (QuestionId < (OPTION_SIGNATURE_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = FALSE;
+            mAltAccessMode = FALSE;
             LoadSignatureData (
               PrivateData,
               LABEL_SIGNATURE_DATA_START,
@@ -906,7 +923,7 @@ Callback (
           } else if ((QuestionId >= OPTION_SIGNATURE_DATA_QUESTION_ID) &&
                     (QuestionId < (OPTION_SIGNATURE_DATA_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = FALSE;
+            mAltAccessMode = FALSE;
             if (PrivateData->CheckArray[QuestionId - OPTION_SIGNATURE_DATA_QUESTION_ID]) {
               PrivateData->FormData.CheckedDataCount--;
               PrivateData->CheckArray[QuestionId - OPTION_SIGNATURE_DATA_QUESTION_ID] = FALSE;
@@ -918,7 +935,7 @@ Callback (
           } else if ((QuestionId >= OPTION_DB_LIST_QUESTION_ID) &&
                     (QuestionId < (OPTION_DB_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = TRUE;
+            mAltAccessMode = TRUE;
             LoadSignatureData (
               PrivateData,
               LABEL_SIGNATURE_DATA_START,
@@ -931,7 +948,7 @@ Callback (
           } else if ((QuestionId >= OPTION_DBX_LIST_QUESTION_ID) &&
                     (QuestionId < (OPTION_DBX_LIST_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = TRUE;
+            mAltAccessMode = TRUE;
             LoadSignatureData (
               PrivateData,
               LABEL_SIGNATURE_DATA_START,
@@ -944,7 +961,7 @@ Callback (
           } else if ((QuestionId >= OPTION_DB_ENTRIES_QUESTION_ID) &&
                     (QuestionId < (OPTION_DB_ENTRIES_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = TRUE;
+            mAltAccessMode = TRUE;
             LoadSignatureDataStrings (
               PrivateData,
               QuestionId - OPTION_DB_ENTRIES_QUESTION_ID,
@@ -956,7 +973,7 @@ Callback (
           } else if ((QuestionId >= OPTION_DBX_ENTRIES_QUESTION_ID) &&
                     (QuestionId < (OPTION_DBX_ENTRIES_QUESTION_ID + OPTION_CONFIG_RANGE)))
           {
-            mAltDbAccessMode = TRUE;
+            mAltAccessMode = TRUE;
             LoadSignatureDataStrings (
               PrivateData,
               QuestionId - OPTION_DBX_ENTRIES_QUESTION_ID,
@@ -965,10 +982,24 @@ Callback (
             PrivateData->DataIndex = QuestionId - OPTION_DBX_ENTRIES_QUESTION_ID;
             PrivateData->CheckArray[PrivateData->DataIndex] = TRUE;
             Status = EFI_SUCCESS;
+          } else if ((QuestionId >= OPTION_BL_QUESTION_ID) &&
+                    (QuestionId < (OPTION_BL_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltAccessMode = TRUE;
+            mBootloaderIndex = QuestionId - OPTION_BL_QUESTION_ID;
+            Status = UpdateBootloaderPage (PrivateData);
+            if (!EFI_ERROR (Status)) {
+              Status = LoadBootloaderCertificates (PrivateData);
+            }
+          } else if ((QuestionId >= OPTION_BL_CERT_QUESTION_ID) &&
+                    (QuestionId < (OPTION_BL_CERT_QUESTION_ID + OPTION_CONFIG_RANGE)))
+          {
+            mAltAccessMode = TRUE;
+            mCertIndex = QuestionId - OPTION_BL_CERT_QUESTION_ID;
+            Status = UpdateCertDetails (PrivateData);
           } else {
             Status = EFI_UNSUPPORTED;
           }
-          //TODO: add bootloaders submenu here
           break;
       }
 
@@ -1221,7 +1252,7 @@ Callback (
           //
           // Free memory when exit from the SOVEREIGN_BOOT_DELETE_SIGNATURE_DATA_FORM form.
           //
-          if (!mAltDbAccessMode) {
+          if (!mAltAccessMode) {
             FREE_NON_NULL (PrivateData->CheckArray);
             PrivateData->FormData.CheckedDataCount = 0;
           }

@@ -3137,6 +3137,351 @@ ON_EXIT:
   return Status;
 }
 
+
+/**
+  Format the help info for the bootloader data, each help info contain 3 parts.
+  1. Description.
+  2. Disk HW path.
+  3. File apth.
+
+  @param[in]      PrivateData             Module's private data.
+  @param[in]      BootloaderEntry         Point to the bootloader data.
+  @param[out]     StringId                Save the string id of help info.
+
+  @retval         EFI_SUCCESS             Operation success.
+  @retval         EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+FormatBlHelpInfo (
+  IN     SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData,
+  IN     SV_MENU_ENTRY                       *BootloaderEntry,
+  OUT    EFI_STRING_ID                       *StringId
+  )
+{
+  EFI_STATUS     Status;
+  EFI_STRING     FormatHelpString;
+  UINTN          TotalSize;
+  CHAR16         *HelpInfoString;
+
+  Status           = EFI_SUCCESS;
+  HelpInfoString   = NULL;
+
+  TotalSize      = 1024;
+  HelpInfoString = AllocateZeroPool (TotalSize);
+  if (HelpInfoString == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  FormatHelpString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_BOOTLOADER_HELP_FORMAT), NULL);
+  if (FormatHelpString == NULL) {
+    goto ON_EXIT;
+  }
+
+  UnicodeSPrint (
+    HelpInfoString,
+    TotalSize,
+    FormatHelpString,
+    BootloaderEntry->DisplayString,
+    BootloaderEntry->DevicePathString,
+    BootloaderEntry->FilePathString
+    );
+  FREE_NON_NULL (FormatHelpString);
+
+  *StringId = HiiSetString (PrivateData->HiiHandle, 0, HelpInfoString, NULL);
+ON_EXIT:
+  FREE_NON_NULL (HelpInfoString);
+
+  return Status;
+}
+
+/**
+  This function to loads bootloader data strings under the bootloader form.
+
+  @param[in]  PrivateData         Module's private data.
+
+  @retval   EFI_SUCCESS           Success to update the bootloader list page
+  @retval   EFI_OUT_OF_RESOURCES  Unable to allocate required resources.
+**/
+EFI_STATUS
+LoadBootloaders (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  EFI_STATUS          Status;
+  EFI_IFR_GUID_LABEL  *StartLabel;
+  EFI_IFR_GUID_LABEL  *EndLabel;
+  EFI_STRING_ID       HelpStringId;
+  EFI_STRING          FormatNameString;
+  VOID                *StartOpCodeHandle;
+  VOID                *EndOpCodeHandle;
+  UINT16              Index;
+  CHAR16              NameBuffer[BUFFER_MAX_SIZE];
+  SV_MENU_ENTRY       *BootloaderEntry;
+
+  Status            = EFI_SUCCESS;
+  FormatNameString  = NULL;
+  StartOpCodeHandle = NULL;
+  EndOpCodeHandle   = NULL;
+  Index             = 0;
+
+  // Initialize the container for dynamic opcodes.
+  //
+  StartOpCodeHandle = HiiAllocateOpCodeHandle ();
+  if (StartOpCodeHandle == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  EndOpCodeHandle = HiiAllocateOpCodeHandle ();
+  if (EndOpCodeHandle == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  //
+  // Create Hii Extend Label OpCode.
+  //
+  StartLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (
+                                       StartOpCodeHandle,
+                                       &gEfiIfrTianoGuid,
+                                       NULL,
+                                       sizeof (EFI_IFR_GUID_LABEL)
+                                       );
+  StartLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+  StartLabel->Number       = LABEL_BOOTLOADER_LIST_START;
+
+  EndLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (
+                                     EndOpCodeHandle,
+                                     &gEfiIfrTianoGuid,
+                                     NULL,
+                                     sizeof (EFI_IFR_GUID_LABEL)
+                                     );
+  EndLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+  EndLabel->Number       = LABEL_END;
+
+  FormatNameString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN (STR_BOOTLOADER_NAME_FORMAT), NULL);
+  if (FormatNameString == NULL) {
+    Status = EFI_NOT_FOUND;
+    goto ON_EXIT;
+  }
+
+  for (Index = 0; Index < mBootOptionMenu.MenuNumber; Index = Index + 1) {
+    BootloaderEntry = GetMenuEntry (&mBootOptionMenu, Index);
+    if (BootloaderEntry == NULL) {
+      Status = EFI_NO_MEDIA;
+      goto ON_EXIT;
+    }
+
+    //
+    // Format name buffer.
+    //
+    ZeroMem (NameBuffer, sizeof (NameBuffer));
+    UnicodeSPrint (
+      NameBuffer,
+      sizeof (NameBuffer),
+      FormatNameString,
+      &BootloaderEntry->FilePathString[StrLen(L"File Path: ")],
+      &BootloaderEntry->DisplayString[StrLen(L"Description: ")]);
+
+    //
+    // Format help info buffer.
+    //
+    Status = FormatBlHelpInfo (PrivateData, BootloaderEntry, &HelpStringId);
+    if (EFI_ERROR (Status)) {
+      goto ON_EXIT;
+    }
+
+    HiiCreateGotoOpCode (
+      StartOpCodeHandle,
+      SOVEREIGN_BOOT_WIZARD_BL_DETAILS_FORM_ID,
+      HiiSetString (PrivateData->HiiHandle, 0, NameBuffer, NULL),
+      HelpStringId,
+      EFI_IFR_FLAG_CALLBACK,
+      OPTION_BL_QUESTION_ID + Index
+      );
+  }
+
+ON_EXIT:
+  PrivateData->FormData.BootloaderCount = Index;
+
+  HiiUpdateForm (
+    PrivateData->HiiHandle,
+    &gSovereignBootWizardFormSetGuid,
+    FORMID_SOVEREIGN_BOOT_BL_OPTION_FORM,
+    StartOpCodeHandle,
+    EndOpCodeHandle
+    );
+
+  FREE_NON_OPCODE (StartOpCodeHandle);
+  FREE_NON_OPCODE (EndOpCodeHandle);
+
+  return Status;
+}
+
+
+/**
+  This function to loads bootloader data strings under the bootloader form.
+
+  @param[in]  PrivateData         Module's private data.
+
+  @retval   EFI_SUCCESS           Success to update the bootloader list page
+  @retval   EFI_OUT_OF_RESOURCES  Unable to allocate required resources.
+**/
+EFI_STATUS
+LoadBootloaderCertificates (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  EFI_STATUS          Status;
+  EFI_IFR_GUID_LABEL  *StartLabel;
+  EFI_IFR_GUID_LABEL  *EndLabel;
+  EFI_STRING_ID       NameStringId;
+  VOID                *StartOpCodeHandle;
+  VOID                *EndOpCodeHandle;
+  UINT16              Index;
+  CHAR8               NameBuffer[BUFFER_MAX_SIZE];
+  UINTN               NameBufferSize;
+  CHAR16              *NewString;
+  SV_MENU_ENTRY       *BootloaderEntry;
+  SV_SECURITY_CONTEXT *SecurityContext;
+  SV_CERT_ENTRY       *CertificateEntry;
+  BOOLEAN             MsCertFound;
+  BOOLEAN             NonMsCertFound;
+  BOOLEAN             FoundInDbx;
+  BOOLEAN             FoundInDb;
+  BOOLEAN             InvalidSigFound;
+
+  Status            = EFI_SUCCESS;
+  StartOpCodeHandle = NULL;
+  EndOpCodeHandle   = NULL;
+  Index             = 0;
+  MsCertFound       = FALSE;
+  NonMsCertFound    = FALSE;
+  FoundInDbx        = FALSE;
+  FoundInDb         = FALSE;
+  InvalidSigFound   = FALSE;
+
+  // Initialize the container for dynamic opcodes.
+  //
+  StartOpCodeHandle = HiiAllocateOpCodeHandle ();
+  if (StartOpCodeHandle == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  EndOpCodeHandle = HiiAllocateOpCodeHandle ();
+  if (EndOpCodeHandle == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ON_EXIT;
+  }
+
+  //
+  // Create Hii Extend Label OpCode.
+  //
+  StartLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (
+                                       StartOpCodeHandle,
+                                       &gEfiIfrTianoGuid,
+                                       NULL,
+                                       sizeof (EFI_IFR_GUID_LABEL)
+                                       );
+  StartLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+  StartLabel->Number       = LABEL_BOOTLOADER_CERT_LIST_START;
+
+  EndLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (
+                                     EndOpCodeHandle,
+                                     &gEfiIfrTianoGuid,
+                                     NULL,
+                                     sizeof (EFI_IFR_GUID_LABEL)
+                                     );
+  EndLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+  EndLabel->Number       = LABEL_END;
+
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
+  if ((BootloaderEntry == NULL) || (BootloaderEntry->SecurityContext == NULL)) {
+    Status = EFI_NO_MEDIA;
+    goto ON_EXIT;
+  }
+
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+  for (Index = 0; Index < SecurityContext->NumCertificates; Index = Index + 1) {
+    CertificateEntry = GetCertEntry(BootloaderEntry, Index);
+    if (CertificateEntry == NULL) {
+      return EFI_NO_MEDIA;
+    }
+
+    NameStringId = STRING_TOKEN(STR_CERT_NO_COMMON_NAME);
+    NameBufferSize = sizeof (NameBuffer);
+    SetMem (NameBuffer, NameBufferSize, 0);
+    if (!RETURN_ERROR (X509GetCommonName (CertificateEntry->CertData,
+                                          CertificateEntry->CertDataSize,
+                                          NameBuffer,
+                                          &NameBufferSize))) {
+      NewString = (CHAR16 *)AllocateZeroPool ((NameBufferSize + 1) * sizeof(CHAR16));
+      if (NewString != NULL) {
+        if (!RETURN_ERROR (AsciiStrToUnicodeStrS (NameBuffer, NewString, NameBufferSize + 1))) {
+          NameStringId = HiiSetString (PrivateData->HiiHandle, 0, NewString, NULL);
+        }
+        FreePool (NewString);
+      }
+    }
+
+    if (CertificateEntry->CertIsMicrosoft) {
+      MsCertFound = TRUE;
+    } else {
+      NonMsCertFound = TRUE;
+    }
+
+    if (CertificateEntry->CertIsInDbx) {
+      FoundInDbx = TRUE;
+    }
+
+    if (CertificateEntry->CertIsInDb) {
+      FoundInDb = TRUE;
+    }
+
+    if (!CertificateEntry->SignatureValid) {
+      InvalidSigFound = TRUE;
+    }
+
+    HiiCreateGotoOpCode (
+      StartOpCodeHandle,
+      SOVEREIGN_BOOT_WIZARD_KEY_DETAILS_FORM_ID,
+      NameStringId,
+      STRING_TOKEN(STR_EMPTY_STRING),
+      EFI_IFR_FLAG_CALLBACK,
+      OPTION_BL_CERT_QUESTION_ID + Index
+      );
+  }
+
+  PrivateData->FormData.SignedByMs = MsCertFound;
+  PrivateData->FormData.SignedByMsOnly = (!NonMsCertFound && MsCertFound);
+  PrivateData->FormData.HasInvalidSignature = InvalidSigFound;
+
+  if (FoundInDbx) {
+    PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
+  } else if (FoundInDb) {
+    PrivateData->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
+  } else {
+    PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+  }
+
+ON_EXIT:
+
+  HiiUpdateForm (
+    PrivateData->HiiHandle,
+    &gSovereignBootWizardFormSetGuid,
+    SOVEREIGN_BOOT_WIZARD_BL_DETAILS_FORM_ID,
+    StartOpCodeHandle,
+    EndOpCodeHandle
+    );
+
+  FREE_NON_OPCODE (StartOpCodeHandle);
+  FREE_NON_OPCODE (EndOpCodeHandle);
+
+  return Status;
+}
+
 /**
   This function publish the Sovereign Boot Wizrd Interactive Mode form.
 

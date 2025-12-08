@@ -219,7 +219,7 @@ EnrollHashToSigDB (
   BOOLEAN                              Trust;
   EFI_INPUT_KEY                        Key;
 
-  BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }

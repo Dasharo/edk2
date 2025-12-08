@@ -898,7 +898,7 @@ UpdateCertInfo (
   EFI_STRING           NewString;
   EFI_STATUS           Status;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, OptionNumber);
+  BootloaderEntry   = GetMenuEntry (&mBootOptionMenu, OptionNumber);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -912,9 +912,11 @@ UpdateCertInfo (
                                      (SecurityContext->NumCertificates == 0));
 
   if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-    if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
-      DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
-      return EFI_NO_MEDIA;
+    if (!mAltAccessMode) {
+      if (SecurityContext->ImageIsInDb || SecurityContext->ImageIsInDbx) {
+        DEBUG ((DEBUG_INFO, "Bootloader %u already (un)trusted\n", OptionNumber));
+        return EFI_NO_MEDIA;
+      }
     }
   }
 
@@ -938,7 +940,7 @@ UpdateCertInfo (
     // Do not show images that are not verified (one of the certs in the
     // signatures is unstrusted/in DBX), because we won't be able to boot it
     // anyways.
-    if (!SecurityContext->ImageIsVerified) {
+    if (!SecurityContext->ImageIsVerified && !mAltAccessMode) {
       DEBUG ((DEBUG_INFO, "Image %u already untrusted\n", mBootloaderIndex));
       mCertIndex = 0;
       return EFI_NO_MEDIA;
@@ -955,17 +957,19 @@ UpdateCertInfo (
 
     // Do not show already trusted/utrusted, invalid or microsoft certificates
     if (Private->ConfigData.AppLaunchCause != SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-      if (CertificateEntry->CertIsMicrosoft) {
-        DEBUG ((DEBUG_INFO, "Certificate %u belongs to Microsoft\n",
-                mCertIndex));
-        mCertIndex++;
-        continue;
-      }
-      if (CertificateEntry->CertIsInDb) {
-        DEBUG ((DEBUG_INFO, "Certificate %u already trusted\n",
-                mCertIndex));
-        mCertIndex++;
-        continue;
+      if (!mAltAccessMode) {
+        if (CertificateEntry->CertIsMicrosoft) {
+          DEBUG ((DEBUG_INFO, "Certificate %u belongs to Microsoft\n",
+                  mCertIndex));
+          mCertIndex++;
+          continue;
+        }
+        if (CertificateEntry->CertIsInDb) {
+          DEBUG ((DEBUG_INFO, "Certificate %u already trusted\n",
+                  mCertIndex));
+          mCertIndex++;
+          continue;
+        }
       }
     }
 
@@ -1062,7 +1066,7 @@ UpdateCertIssuerAndSubjectStrings (
   IN  SV_CERT_ENTRY                       *CertificateEntry
   )
 {
-  CHAR8                                   StringBuffer[500];
+  CHAR8                                   StringBuffer[BUFFER_MAX_SIZE];
   UINTN                                   StringBufferSize;
   CHAR16                                  *NewString;
 
@@ -1346,7 +1350,7 @@ UpdateCertDetails (
   SV_MENU_ENTRY                           *BootloaderEntry;
   SV_CERT_ENTRY                           *CertificateEntry;
 
-  BootloaderEntry   = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  BootloaderEntry   = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }
