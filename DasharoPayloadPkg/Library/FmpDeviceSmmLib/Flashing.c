@@ -7,6 +7,7 @@
 #include <Library/FmapLib.h>
 #include <Library/FmpDeviceLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PrintLib.h>
 #include <Library/SmmStoreLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -26,6 +27,43 @@ typedef struct {
   CONST Fmap   *UpdatedFmap;
   UINTN        FwSize;
 } MigrationData;
+
+typedef struct {
+	CONST UINT16 Alg;
+	CONST UINT16 Size;
+	CONST UINT8 Data[];
+} __attribute__((packed)) HashStruct;
+
+typedef struct km_hash {
+	CONST UINT64 Usage;
+	CONST HashStruct Hash;
+} __attribute__((packed)) KmHash;
+
+typedef struct {
+  CONST UINT64 StructureId;
+  CONST UINT8  StructVersion;
+  CONST UINT8  Reserved1[3];
+  CONST UINT16 KeySignatureOffset;
+  CONST UINT8  Reserved2[3];
+  CONST UINT8  KeyManifestRevision;
+  CONST UINT8  KmSvn;
+  CONST UINT8  KeyManifestId;
+  CONST UINT16 KmPubKeyHashAlg;
+  CONST UINT16 KeyCount;
+  CONST KmHash KeyHash[];
+} __attribute__((packed)) KeyManifestHeader;
+
+typedef struct {
+  CONST UINT8  Version;
+  CONST UINT16 KeySize;
+  CONST UINT32 Exponent;
+  CONST UINT8  Modulus[];
+} __attribute__((packed)) BtgPubKey;
+
+typedef struct {
+  CONST UINT8  Version;
+  CONST UINT16 KeyAlg;
+} __attribute__((packed)) KeyAndSigHeader;
 
 STATIC
 BOOLEAN
@@ -796,4 +834,199 @@ MergeFirmwareImages (
 Fail:
   FreePool (Data.Updated);
   return NULL;
+}
+
+/**
+  Checks if an image has Boot Guard enabled, by checking is KM and BPM are
+  present in the image.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If Boot Guard BPM and KM are present
+  @return FALSE   If Boot Guard BPM and KM are absent
+**/
+STATIC
+BOOLEAN
+IsBootGuardEnabled(
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  )
+{
+  struct cbfs_file   *File;
+  struct cbfs_image  Cbfs;
+  CONST Fmap         *FlashMap;
+
+  if (!GetFmap (Image, ImageLen, &FlashMap)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Image, FlashMap, &Cbfs)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  File = cbfs_get_entry (&Cbfs, "key_manifest.bin");
+  if (File == NULL)
+    return FALSE;
+
+  File = cbfs_get_entry (&Cbfs, "boot_policy_manifest.bin");
+  if (File == NULL)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
+  Extracts the BtgPubKey struct from a Key Manifest buffer.
+
+  @param[in]  Km             Key Manifest to parse
+  @param[in]  ImageLen       Size of the Key Manifest to check
+  @param[out] OemRootKey     The extracted OemRootKey
+  @param[out] OemRootKeySize Size of the extracted OemRootKey
+
+  @return EFI_INVALID_PARAMETER    If the input parameters or values in the Key
+                                   Manifest are invalid
+  @return EFI_SUCCESS              If extraction was successful
+**/
+STATIC
+EFI_STATUS
+GetOemRootKeyFromKm (
+  IN CONST VOID   *KmBuffer,
+  IN CONST UINTN  KmSize,
+  OUT VOID        **OemRootKey,
+  OUT UINTN       *OemRootKeySize
+  )
+{
+  BtgPubKey *PubKeyOffset, *PubKey;
+  KeyManifestHeader *Km = (KeyManifestHeader*) KmBuffer;
+
+  if (Km == NULL ||
+      OemRootKeySize == NULL ||
+      KmSize < sizeof(KeyManifestHeader) ||
+      KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey))
+    return EFI_INVALID_PARAMETER;
+
+  PubKeyOffset = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset + sizeof(KeyAndSigHeader));
+
+  if (PubKeyOffset->KeySize != 2048 && PubKeyOffset->KeySize != 3072)
+    return EFI_INVALID_PARAMETER;
+
+  if (PubKeyOffset->Exponent != 0x10001)
+    return EFI_INVALID_PARAMETER;
+
+  *OemRootKeySize = sizeof(BtgPubKey) + PubKeyOffset->KeySize / 8;
+
+  PubKey = AllocatePool (*OemRootKeySize);
+  CopyMem(PubKey, PubKeyOffset, *OemRootKeySize);
+
+  *OemRootKey = (VOID *)PubKey;
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Checks if the two coreboot images are Boot Guard enabled and are using the
+  same OEM root key for signing.
+
+  @param[in] Current     Current firmware image
+  @param[in] Updated     Updated firmware image
+  @param[in] ImageSize   Size of updated firmware image
+
+  @return TRUE     If the two images are compatible with each other
+  @return FALSE    If the two images are incompatiblE
+**/
+BOOLEAN
+EFIAPI
+AreImageBtgKeysCompatible (
+  IN CONST VOID  *Current,
+  IN CONST VOID  *Updated,
+  IN CONST UINTN ImageSize
+  )
+{
+  EFI_STATUS         Status;
+  struct cbfs_file   *CurrentKmFile, *UpdatedKmFile;
+  struct cbfs_image  CurrentCbfs, UpdatedCbfs;
+  CONST Fmap         *CurrentFlashMap, *UpdatedFlashMap;
+  VOID               *CurrentOemKey, *UpdatedOemKey;
+  UINTN              CurrentOemKeyLen, UpdatedOemKeyLen;
+
+  // Boot Guard is not currently deployed.
+  if (!IsBootGuardEnabled(Current, ImageSize))
+    return TRUE;
+
+  // TODO Add a fused platform check here.
+
+  // Going from BtG -> No BtG is not possible if the platform is fused.
+  if (IsBootGuardEnabled(Current, ImageSize) && !IsBootGuardEnabled(Updated, ImageSize))
+    return FALSE;
+
+  if (!GetFmap (Current, ImageSize, &CurrentFlashMap)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Current, CurrentFlashMap, &CurrentCbfs)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  CurrentKmFile = cbfs_get_entry (&CurrentCbfs, "key_manifest.bin");
+  if (CurrentKmFile == NULL)
+    return FALSE;
+
+  if (!GetFmap (Updated, ImageSize, &UpdatedFlashMap)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Updated, UpdatedFlashMap, &UpdatedCbfs)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  UpdatedKmFile = cbfs_get_entry (&UpdatedCbfs, "key_manifest.bin");
+  if (UpdatedKmFile == NULL)
+    return FALSE;
+
+  if (CurrentKmFile->len != UpdatedKmFile->len)
+    return FALSE;
+
+  Status = GetOemRootKeyFromKm(
+    CBFS_SUBHEADER(CurrentKmFile),
+    CurrentKmFile->len,
+    &CurrentOemKey,
+    &CurrentOemKeyLen
+  );
+
+  if (EFI_ERROR(Status))
+    return FALSE;
+
+  Status = GetOemRootKeyFromKm(
+    CBFS_SUBHEADER(UpdatedKmFile),
+    UpdatedKmFile->len,
+    &UpdatedOemKey,
+    &UpdatedOemKeyLen
+  );
+
+  if (EFI_ERROR(Status))
+    return FALSE;
+
+  if (CurrentOemKeyLen != UpdatedOemKeyLen)
+    return FALSE;
+
+  return !CompareMem(CurrentOemKey, UpdatedOemKey, CurrentOemKeyLen);
 }
