@@ -1025,8 +1025,6 @@ FmpDeviceSetImageWithStatus (
       __FUNCTION__
       ));
     return EFI_ABORTED;
-  } else {
-    AsciiPrint("New image is signed with a compatible OEM Root Key\n");
   }
 
   UpdatedImage = MergeFirmwareImages (CurrentImage, Image);
