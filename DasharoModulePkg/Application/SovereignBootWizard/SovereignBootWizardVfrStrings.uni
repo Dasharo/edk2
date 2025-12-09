@@ -60,17 +60,22 @@
 #string STR_FILE_PATH                            #language en-US "File path: "
 #string STR_KEY_FINGERPRINT                      #language en-US "Certificate fingerprint (SHA-256):"
 #string STR_KEY_FINGERPRINT_HASH                 #language en-US ""
+#string STR_BOOTLOADER_HASH                      #language en-US "Image hash (SHA-256):"
+
+#string STR_IMAGE_UNSIGNED                       #language en-US "!!! Image is unsigned !!!"
+#string STR_SIGNATURE_INVALID                    #language en-US "!!! Signature or certificate is invalid !!!"
+#string STR_CERT_BELONGS_TO_MICROSOFT            #language en-US "!!! Certificate belongs to Microsoft !!!"
 
 #string STR_TRUST_QUESTION                       #language en-US "Do you want to trust this key/image and continue booting?"
 #string STR_SV_TRUST_KEY_POPUP                   #language en-US ""
 #string STR_SV_TRUST_KEY_QUESTION                #language en-US "Are you sure you want to trust the following"
 #string STR_SV_UNTRUST_KEY_QUESTION              #language en-US "Are you sure you do NOT want to trust the following"
 
-#string STR_DO_NOT_TRUST_KEY                     #language en-US "[ Do NOT trust, next bootloader ]"
-#string STR_DO_NOT_TRUST_KEY2                    #language en-US "[ Do NOT trust ]"
-#string STR_TRUST_KEY_AND_BOOT                   #language en-US "[ Trust this key/image and boot ]"
-#string STR_TRUST_KEY                            #language en-US "[ Trust this key/image, next key/bootloader ]"
-#string STR_SKIP_KEY                             #language en-US "[ Skip this key/image, next key/bootloader ]"
+#string STR_DO_NOT_TRUST_KEY                     #language en-US "Do NOT trust, next bootloader"
+#string STR_DO_NOT_TRUST_KEY2                    #language en-US "Do NOT trust"
+#string STR_TRUST_KEY_AND_BOOT                   #language en-US "Trust this key/image and boot"
+#string STR_TRUST_KEY                            #language en-US "Trust this key/image, next key/bootloader"
+#string STR_SKIP_KEY                             #language en-US "Skip this key/image, next key/bootloader"
 #string STR_SHOW_KEY_DETAILS                     #language en-US "Show key/certificate details"
 
 // Configuration page strings
@@ -230,7 +235,6 @@
 #string STR_NO_BOOTLOADERS_FOUND                  #language en-US "No bootloaders found"
 
 #string STR_BOOTLOADER_DETAILS_FORM               #language en-US "Bootloader details"
-#string STR_BOOTLOADER_HASH                       #language en-US "Image hash (SHA-256):"
 #string STR_BOOTLOADER_HASH_HEX                   #language en-US ""
 #string STR_BL_CERTIFICATE_LSIT                   #language en-US "Certificate list:"
 #string STR_CERT_NO_COMMON_NAME                   #language en-US "Certificate without common name"
@@ -239,8 +243,27 @@
 #string STR_IMAGE_CONTAINS_INVALID_SIGNATURE      #language en-US "Image contains invalid signature:"
 #string STR_IMAGE_IS_SIGNED_BY_MS                 #language en-US "Image contains Microsoft signatures:"
 #string STR_IMAGE_IS_SIGNED_BY_MS_ONLY            #language en-US "Image is signed only by Microsoft certificates:"
+#string STR_IMAGE_HASH_IN_DB                      #language en-US "Image hash present in Trusted Database:"
+#string STR_IMAGE_HASH_IN_DBX                     #language en-US "Image hash present in Untrusted Database:"
 #string STR_IMAGE_IS_TRUSTED                      #language en-US "Image is trusted:"
 
 #string STR_YES                                   #language en-US "Yes"
 #string STR_NO                                    #language en-US "No"
 #string STR_UNDECIDED                             #language en-US "Undecided"
+
+#string STR_CERT_VALID                            #language en-US "Certificate is valid:"
+#string STR_CERT_IS_MICROSOFT                     #language en-US "Certificate belongs to Microsoft:"
+#string STR_CERT_IN_DB                            #language en-US "Certificate present in Trusted Database:"
+#string STR_CERT_IN_DBX                           #language en-US "Certificate present in Untrusted Database:"
+
+#string STR_REMOVE_CERT_FROM_TRUSTED              #language en-US "Remove certificate from Trusted Database"
+#string STR_REMOVE_CERT_FROM_UNTRUSTED            #language en-US "Remove certificate from Untrusted Database"
+#string STR_ADD_CERT_TO_TRUSTED                   #language en-US "Add certificate to Trusted Database"
+#string STR_ADD_CERT_TO_UNTRUSTED                 #language en-US "Add certificate to Untrusted Database"
+
+#string STR_REMOVE_HASH_FROM_TRUSTED              #language en-US "Remove image hash from Trusted Database"
+#string STR_REMOVE_HASH_FROM_UNTRUSTED            #language en-US "Remove image hash from Untrusted Database"
+#string STR_ADD_HASH_TO_TRUSTED                   #language en-US "Add image hash to Trusted Database"
+#string STR_ADD_HASH_TO_UNTRUSTED                 #language en-US "Add image hash to Untrusted Database"
+
+#string STR_REMOVE_ALL_IMAGE_DATA                 #language en-US "Remove all hashes and certificates of this image from all databases"

@@ -72,6 +72,10 @@ Revision History:
 #define KEY_REMOVE_HASH_FROM_DATABASE                   0x1D02
 #define KEY_REMOVE_CERT_FROM_DATABASE                   0x1D03
 
+#define KEY_SOVEREIGN_BOOT_DELETE_SIGNATURE_FROM_DB     0x1D04
+#define KEY_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB       0x1D05
+#define KEY_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX      0x1D06
+
 #define SIGNATURE_TYPE_QUESTION_ID                      0x1D10
 
 #define KEY_VALUE_SAVE_AND_EXIT_DB                      0x1F0A
@@ -90,15 +94,26 @@ Revision History:
 #define KEY_ENROLL_SIGNATURE_TO_DB                      0x130d
 #define KEY_ENROLL_SIGNATURE_TO_DBX                     0x130e
 #define KEY_SOVEREIGN_BOOT_BL_OPTION                    0x130f
+#define KEY_REMOVE_CERT_FROM_DB                         0x1310
+#define KEY_REMOVE_CERT_FROM_DBX                        0x1311
+#define KEY_ADD_CERT_TO_DB                              0x1312
+#define KEY_ADD_CERT_TO_DBX                             0x1313
+#define KEY_REMOVE_HASH_FROM_DB                         0x1314
+#define KEY_REMOVE_HASH_FROM_DBX                        0x1315
+#define KEY_ADD_HASH_TO_DB                              0x1316
+#define KEY_ADD_HASH_TO_DBX                             0x1317
+#define KEY_REMOVE_ALL_IMAGE_DATA                       0x1318
 
-#define LABEL_DB_DELETE                                 0x1401
-#define LABEL_SIGNATURE_LIST_START                      0x1402
-#define LABEL_SIGNATURE_DATA_START                      0x1403
+#define LABEL_DB_DELETE                                 0x1400
+#define LABEL_SIGNATURE_LIST_START                      0x1410
+#define LABEL_SIGNATURE_DATA_START                      0x1420
+#define LABEL_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB     0x1430
+#define LABEL_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX    0x1440
 #define LABEL_DELETE_ALL_LIST_BUTTON                    0x1500
 #define LABEL_DB_CERTS_DATA_START                       0x1600
 #define LABEL_DBX_CERTS_DATA_START                      0x1700
-#define LABEL_BOOTLOADER_LIST_START                     0x2000
-#define LABEL_BOOTLOADER_CERT_LIST_START                0x3000
+#define LABEL_BOOTLOADER_LIST_START                     0x1800
+#define LABEL_BOOTLOADER_CERT_LIST_START                0x1900
 #define LABEL_END                                       0xffff
 
 #define OPTION_CONFIG_RANGE                             0x1000
@@ -176,10 +191,17 @@ typedef struct {
   BOOLEAN         IsCertHash;           // If the signature data is certificate hash
   UINT8           SignatureRemove;      // If the signature data should be modified
   UINT32          BootloaderCount;      // The count of bootloaders.
+  UINT8           BlCertView;           // Controls data displayed in the certificate details
   UINT8           SignedByMs;           // If current bootloader is signed by MS certs.
   UINT8           SignedByMsOnly;       // If current bootloader is signed by MS certs only.
+  UINT8           ImageHashIsInDb;      // If current bootloader hash is present in DB.
+  UINT8           ImageHashIsInDbx;     // If current bootloader hash is present in DBX.
   UINT8           ImageTrusted;         // If current bootloader is trusted.
   UINT8           HasInvalidSignature;  // If current bootloader contains invalid signature.
+  UINT8           CertInDb;             // If current certificate or its hash is present in DB.
+  UINT8           CertInDbx;            // If current certificate or its hash is present in DBX.
+  UINT8           CertIsValid;          // If current certificate is valid.
+  UINT8           CertIsMicrosoft;      // If current certificate is Microsoft.
 } SOVEREIGN_BOOT_WIZARD_FORM_DATA;
 
 #pragma pack()

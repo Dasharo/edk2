@@ -866,6 +866,19 @@ UpdateBootloaderPage (
     }
   }
 
+  DEBUG ((DEBUG_INFO, "%a:\n"
+    "  ImageIsSigned: %u\n"
+    "  ImageIsVerified: %u\n"
+    "  ImageIsInDb: %u\n"
+    "  ImageIsInDbx: %u\n"
+    "  ImageTrusted: %u\n",
+    __FUNCTION__,
+    SecurityContext->ImageIsSigned,
+    SecurityContext->ImageIsVerified,
+    SecurityContext->ImageIsInDb,
+    SecurityContext->ImageIsInDbx,
+    Private->FormData.ImageTrusted));
+
   return Status;
 }
 

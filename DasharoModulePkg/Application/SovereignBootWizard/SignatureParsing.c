@@ -353,15 +353,39 @@ CreateNewCert (
                 );
   if (!EFI_ERROR (Status) && IsFound) {
     NewCertEntry->CertIsInDb = TRUE;
-  } else {
-    NewCertEntry->CertIsInDb = FALSE;
   }
 
-  NewCertEntry->CertIsInDbx = IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize);
+  // Check if certificate is in DBX
+  IsFound = FALSE;
+  Status = IsSignatureFoundInDatabase (
+                EFI_IMAGE_SECURITY_DATABASE1,
+                NewCertEntry->CertData,
+                &gEfiCertX509Guid,
+                NewCertEntry->CertDataSize,
+                &IsFound
+                );
+  if (!EFI_ERROR (Status) && IsFound) {
+    NewCertEntry->CertIsInDbx = TRUE;
+  }
+
+  // Check if certificate hash is in DBX
+  IsFound = FALSE;
+  Status = IsCertHashFoundInDbx (
+                NewCertEntry->CertData,
+                NewCertEntry->CertDataSize,
+                NULL,
+                0,
+                NULL,
+                &IsFound
+                );
+  if (!EFI_ERROR (Status) && IsFound) {
+    NewCertEntry->CertIsInDbx = TRUE;
+  }
+
   NewCertEntry->SignatureValid = AuthenticodeVerify (
-                                    AuthData, AuthDataSize,
-                                    NewCertEntry->CertData, NewCertEntry->CertDataSize,
-                                    ImageDigest, ImageDigestSize);
+                                   AuthData, AuthDataSize,
+                                   NewCertEntry->CertData, NewCertEntry->CertDataSize,
+                                   ImageDigest, ImageDigestSize);
 
   NewCertEntry->CertIsCA = CertIsCA (NewCertEntry);
 
@@ -389,7 +413,7 @@ CreateNewCert (
   }
 
   // Mark the image as unverified if it is in DBX.
-  if (NewCertEntry->CertIsInDbx) {
+  if (IsForbiddenByDbx (AuthData, AuthDataSize, ImageDigest, ImageDigestSize)) {
     SecCtx->ImageIsVerified = FALSE;
   }
 
@@ -632,6 +656,7 @@ FillSecurityContext (
   UINTN                         ImageSize;
   UINT32                        AuthStatus;
   EFI_STATUS                    Status;
+  EFI_GUID                      HashType;
 
   FullFilePath = NULL;
   LoadCtx = (SV_LOAD_CONTEXT *)Entry->VariableContext;
@@ -684,6 +709,21 @@ FillSecurityContext (
                &SecCtx->ImageDigestSize,
                &SecCtx->HashType);
 
+  // Additional hashes for checks in interactive mode.
+  HashPeImage (ImageBase,
+               ImageSize,
+               HASHALG_SHA384,
+               SecCtx->ImageSha384Digest,
+               &SecCtx->ImageSha384DigestSize,
+               &HashType);
+
+  HashPeImage (ImageBase,
+               ImageSize,
+               HASHALG_SHA512,
+               SecCtx->ImageSha512Digest,
+               &SecCtx->ImageSha512DigestSize,
+               &HashType);
+
   //
   // Start Image Validation.
   //
@@ -725,6 +765,122 @@ ON_EXIT:
   FREE_NON_NULL (ImageBase);
 
   return Status;
+}
+
+VOID
+RefreshImageSecurityInfo (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  SV_MENU_ENTRY       *BootloaderEntry;
+  SV_SECURITY_CONTEXT *SecurityContext;
+  SV_CERT_ENTRY       *CertificateEntry;
+  UINTN               Index;
+  BOOLEAN             MsCertFound;
+  BOOLEAN             NonMsCertFound;
+  BOOLEAN             FoundInDbx;
+  BOOLEAN             FoundInDb;
+  BOOLEAN             InvalidSigFound;
+
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL) {
+    return;
+  }
+
+  FreeSecurityContext (BootloaderEntry->SecurityContext);
+  FREE_NON_NULL (BootloaderEntry->SecurityContext);
+
+  FillSecurityContext (BootloaderEntry);
+
+  MsCertFound = FALSE;
+  NonMsCertFound = FALSE;
+  FoundInDbx = FALSE;
+  FoundInDb = FALSE;
+  InvalidSigFound = FALSE;
+
+  if (BootloaderEntry->SecurityContext == NULL) {
+    return;
+  }
+
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+  for (Index = 0; Index < SecurityContext->NumCertificates; Index = Index + 1) {
+    CertificateEntry = GetCertEntry(BootloaderEntry, Index);
+    if (CertificateEntry == NULL) {
+      continue;
+    }
+
+    if (CertificateEntry->CertIsMicrosoft) {
+      MsCertFound = TRUE;
+    } else {
+      NonMsCertFound = TRUE;
+    }
+
+    if (CertificateEntry->CertIsInDbx) {
+      FoundInDbx = TRUE;
+    }
+
+    if (CertificateEntry->CertIsInDb) {
+      FoundInDb = TRUE;
+    }
+
+    if (!CertificateEntry->SignatureValid || !CertificateEntry->CertIsValid) {
+      InvalidSigFound = TRUE;
+    }
+
+    if (Index == mCertIndex) {
+      PrivateData->FormData.CertInDb = CertificateEntry->CertIsInDb;
+      PrivateData->FormData.CertInDbx = CertificateEntry->CertIsInDbx;
+      PrivateData->FormData.CertIsValid = CertificateEntry->CertIsValid;
+      PrivateData->FormData.CertIsMicrosoft = CertificateEntry->CertIsMicrosoft;
+    }
+  }
+
+  PrivateData->FormData.SignedByMs = MsCertFound;
+  PrivateData->FormData.SignedByMsOnly = (!NonMsCertFound && MsCertFound);
+  PrivateData->FormData.HasInvalidSignature = InvalidSigFound;
+  PrivateData->FormData.ImageHashIsInDb = SecurityContext->ImageIsInDb;
+  PrivateData->FormData.ImageHashIsInDbx = SecurityContext->ImageIsInDbx;
+
+  if (SecurityContext->ImageIsSigned) {
+    if (!SecurityContext->ImageIsVerified || FoundInDbx || SecurityContext->ImageIsInDbx) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
+    } else if (FoundInDb || SecurityContext->ImageIsInDb) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
+    } else {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+    }
+  } else {
+    if (SecurityContext->ImageIsInDbx) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
+    } else if (SecurityContext->ImageIsInDb) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
+    } else {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+    }
+  }
+
+  DEBUG ((DEBUG_INFO, "%a:\n"
+    "  MsCertFound: %u\n"
+    "  NonMsCertFound: %u\n"
+    "  InvalidSigFound: %u\n"
+    "  ImageIsSigned: %u\n"
+    "  ImageIsVerified: %u\n"
+    "  FoundInDbx: %u\n"
+    "  FoundInDb: %u\n"
+    "  ImageIsInDb: %u\n"
+    "  ImageIsInDbx: %u\n"
+    "  ImageTrusted: %u\n",
+    __FUNCTION__,
+    MsCertFound,
+    NonMsCertFound,
+    InvalidSigFound,
+    SecurityContext->ImageIsSigned,
+    SecurityContext->ImageIsVerified,
+    FoundInDbx,
+    FoundInDb,
+    SecurityContext->ImageIsInDb,
+    SecurityContext->ImageIsInDbx,
+    PrivateData->FormData.ImageTrusted));
 }
 
 /**
@@ -922,9 +1078,6 @@ UpdateCertInfo (
 
   // Image is unsigned? Show its hash instead of certificates
   if (Private->FormData.ImageUnsigned) {
-
-    HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT), L"Image hash (SHA-256):\n!!! Image is unsigned !!!", NULL);
-
     Status = ParseHashValue (SecurityContext->ImageDigest, SecurityContext->ImageDigestSize, &NewString);
     if (!EFI_ERROR (Status)) {
       HiiSetString (Private->HiiHandle, STRING_TOKEN (STR_KEY_FINGERPRINT_HASH), NewString, NULL);
@@ -982,33 +1135,16 @@ UpdateCertInfo (
     return EFI_NO_MEDIA;
   }
 
-  if (CertificateEntry->SignatureValid) {
-    HiiSetString (
-      Private->HiiHandle,
-      STRING_TOKEN (STR_KEY_FINGERPRINT),
-      L"Certificate fingerprint (SHA-256):",
-      NULL
-      );
+  if (!CertificateEntry->SignatureValid || !CertificateEntry->CertIsValid) {
+    Private->FormData.HasInvalidSignature = TRUE;
   } else {
-    HiiSetString (
-      Private->HiiHandle,
-      STRING_TOKEN (STR_KEY_FINGERPRINT),
-      L"Certificate fingerprint (SHA-256):\n!!! Signature is invalid !!!",
-      NULL
-      );
+    Private->FormData.HasInvalidSignature = FALSE;
   }
 
   // Special case if AppLaunchCause is SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED
   // We still want to show what the system attempted to boot and failed, even
   // if it is signed by MS certificate.
-  if (CertificateEntry->CertIsMicrosoft) {
-    HiiSetString (
-      Private->HiiHandle,
-      STRING_TOKEN (STR_KEY_FINGERPRINT),
-      L"Certificate fingerprint (SHA-256):\n!!! Certificate belongs to Microsoft !!!",
-      NULL
-      );
-  }
+  Private->FormData.SignedByMs = CertificateEntry->CertIsMicrosoft;
 
   Status = ParseHashValue (CertificateEntry->CertDigest, CertificateEntry->CertDigestSize, &NewString);
   if (!EFI_ERROR (Status)) {
@@ -1361,6 +1497,11 @@ UpdateCertDetails (
   }
 
   FillCertStrings (Private, CertificateEntry);
+
+  Private->FormData.CertInDb = CertificateEntry->CertIsInDb;
+  Private->FormData.CertInDbx = CertificateEntry->CertIsInDbx;
+  Private->FormData.CertIsValid = CertificateEntry->CertIsValid;
+  Private->FormData.CertIsMicrosoft = CertificateEntry->CertIsMicrosoft;
 
   return EFI_SUCCESS;
 }

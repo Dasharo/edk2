@@ -384,12 +384,14 @@ IsAuthentication2Format (
 /**
   Clean up the dynamic opcode at label and form specified by both LabelId.
 
-  @param[in] LabelId         It is both the Form ID and Label ID for opcode deletion.
+  @param[in] FormId          It is the Form ID for opcode deletion.
+  @param[in] LabelId         It is the Label ID for opcode deletion.
   @param[in] PrivateData     Module private data.
 
 **/
 VOID
 CleanUpPage (
+  IN UINT16                              FormId,
   IN UINT16                              LabelId,
   IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
   );
@@ -418,6 +420,76 @@ LoadBootloaders (
 EFI_STATUS
 LoadBootloaderCertificates (
   IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
+/**
+  This function removes the image hash from database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader was not found.
+  @retval   EFI_NOT_FOUND           If hash of the image could not be found in
+                                    database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveImageHashFromDatabase (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
+/**
+  This function removes a certificate from database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader or certificate was not
+                                    found or certificate hash could not be
+                                    calculated.
+  @retval   EFI_NOT_FOUND           If the certificate or its hash was not
+                                    found in database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveCertificateFromDatabase (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
+/**
+  This function removes all data elated to an image from untrusted database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader or certificate was not
+                                    found or certificate hash could not be
+                                    calculated.
+  @retval   EFI_NOT_FOUND           If the certificate or its hash was not
+                                    found in database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveImageDataFromDbx (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  );
+
+/**
+  This function removes all data elated to an image from trusted database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader or certificate was not
+                                    found or certificate hash could not be
+                                    calculated.
+  @retval   EFI_NOT_FOUND           If the certificate or its hash was not
+                                    found in database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveImageDataFromDb (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *PrivateData
   );
 
 #endif

@@ -302,20 +302,19 @@ RefreshUpdateData (
 **/
 VOID
 CleanUpPage (
+  IN UINT16                              FormId,
   IN UINT16                              LabelId,
   IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
   )
 {
   RefreshUpdateData ();
 
-  //
   // Remove all op-codes from dynamic page
-  //
   mStartLabel->Number = LabelId;
   HiiUpdateForm (
     PrivateData->HiiHandle,
     &gSovereignBootWizardFormSetGuid,
-    LabelId,
+    FormId,
     mStartOpCodeHandle, // Label LabelId
     mEndOpCodeHandle    // LABEL_END
     );
@@ -379,7 +378,8 @@ ExtractFileNameFromDevicePath (
 BOOLEAN
 UpdatePage (
   IN  EFI_DEVICE_PATH_PROTOCOL  *FilePath,
-  IN  EFI_FORM_ID               FormId
+  IN  EFI_FORM_ID               FormId,
+  IN  UINT16                    Label
   )
 {
   CHAR16         *FileName;
@@ -415,7 +415,7 @@ UpdatePage (
   // Create Subtitle op-code for the display string of the option.
   //
   RefreshUpdateData ();
-  mStartLabel->Number = FormId;
+  mStartLabel->Number = Label;
 
   HiiCreateSubTitleOpCode (
     mStartOpCodeHandle,
@@ -450,7 +450,10 @@ UpdateDBFromFile (
   IN EFI_DEVICE_PATH_PROTOCOL  *FilePath
   )
 {
-  return UpdatePage (FilePath, SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB);
+  return UpdatePage (
+           FilePath,
+           SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB,
+           LABEL_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DB);
 }
 
 /**
@@ -467,7 +470,10 @@ UpdateDBXFromFile (
   IN EFI_DEVICE_PATH_PROTOCOL  *FilePath
   )
 {
-  return UpdatePage (FilePath, SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX);
+  return UpdatePage (
+           FilePath,
+           SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX,
+           LABEL_SOVEREIGN_BOOT_ENROLL_SIGNATURE_TO_DBX);
 }
 
 /**
@@ -3348,8 +3354,8 @@ LoadBootloaderCertificates (
   SV_CERT_ENTRY       *CertificateEntry;
   BOOLEAN             MsCertFound;
   BOOLEAN             NonMsCertFound;
-  BOOLEAN             FoundInDbx;
   BOOLEAN             FoundInDb;
+  BOOLEAN             FoundInDbx;
   BOOLEAN             InvalidSigFound;
 
   Status            = EFI_SUCCESS;
@@ -3358,8 +3364,8 @@ LoadBootloaderCertificates (
   Index             = 0;
   MsCertFound       = FALSE;
   NonMsCertFound    = FALSE;
-  FoundInDbx        = FALSE;
   FoundInDb         = FALSE;
+  FoundInDbx        = FALSE;
   InvalidSigFound   = FALSE;
 
   // Initialize the container for dynamic opcodes.
@@ -3432,15 +3438,15 @@ LoadBootloaderCertificates (
       NonMsCertFound = TRUE;
     }
 
-    if (CertificateEntry->CertIsInDbx) {
-      FoundInDbx = TRUE;
-    }
-
     if (CertificateEntry->CertIsInDb) {
       FoundInDb = TRUE;
     }
 
-    if (!CertificateEntry->SignatureValid) {
+    if (CertificateEntry->CertIsInDbx) {
+      FoundInDbx = TRUE;
+    }
+
+    if (!CertificateEntry->SignatureValid || !CertificateEntry->CertIsValid) {
       InvalidSigFound = TRUE;
     }
 
@@ -3457,14 +3463,41 @@ LoadBootloaderCertificates (
   PrivateData->FormData.SignedByMs = MsCertFound;
   PrivateData->FormData.SignedByMsOnly = (!NonMsCertFound && MsCertFound);
   PrivateData->FormData.HasInvalidSignature = InvalidSigFound;
+  PrivateData->FormData.ImageHashIsInDb = SecurityContext->ImageIsInDb;
+  PrivateData->FormData.ImageHashIsInDbx = SecurityContext->ImageIsInDbx;
 
-  if (FoundInDbx) {
-    PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
-  } else if (FoundInDb) {
-    PrivateData->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
-  } else {
-    PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+  if (SecurityContext->ImageIsSigned) {
+    if (!SecurityContext->ImageIsVerified || FoundInDbx || SecurityContext->ImageIsInDbx) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNTRUSTED;
+    } else if (FoundInDb || SecurityContext->ImageIsInDb) {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_TRUSTED;
+    } else {
+      PrivateData->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
+    }
   }
+
+  DEBUG ((DEBUG_INFO, "%a:\n"
+    "  MsCertFound: %u\n"
+    "  NonMsCertFound: %u\n"
+    "  InvalidSigFound: %u\n"
+    "  ImageIsSigned: %u\n"
+    "  ImageIsVerified: %u\n"
+    "  FoundInDbx: %u\n"
+    "  FoundInDb: %u\n"
+    "  ImageIsInDb: %u\n"
+    "  ImageIsInDbx: %u\n"
+    "  ImageTrusted: %u\n",
+    __FUNCTION__,
+    MsCertFound,
+    NonMsCertFound,
+    InvalidSigFound,
+    SecurityContext->ImageIsSigned,
+    SecurityContext->ImageIsVerified,
+    FoundInDbx,
+    FoundInDb,
+    SecurityContext->ImageIsInDb,
+    SecurityContext->ImageIsInDbx,
+    PrivateData->FormData.ImageTrusted));
 
 ON_EXIT:
 
@@ -3562,4 +3595,391 @@ UninstallInteractiveModeForm (
   if (mEndOpCodeHandle != NULL) {
     HiiFreeOpCodeHandle (mEndOpCodeHandle);
   }
+}
+
+/**
+  This function removes the image hash from database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader was not found.
+  @retval   EFI_NOT_FOUND           If hash of the image could not be found in
+                                    database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveImageHashFromDatabase (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  EFI_STATUS          Status;
+  EFI_SIGNATURE_LIST  *ListWalker;
+  EFI_SIGNATURE_DATA  *DataWalker;
+  CHAR16              VariableName[BUFFER_MAX_SIZE];
+  UINTN               VariableDataSize;
+  UINT32              VariableAttr;
+  UINTN               RemainingSize;
+  UINTN               ListIndex;
+  UINTN               Index;
+  UINT8               *VariableData;
+  UINT8               *HashData;
+  UINTN               DigestLen;
+  SV_MENU_ENTRY       *BootloaderEntry;
+  SV_SECURITY_CONTEXT *SecurityContext;
+
+  Status           = EFI_NO_MEDIA;
+  VariableDataSize = 0;
+  ListIndex        = 0;
+  VariableData     = NULL;
+
+  if (PrivateData->VariableName == Variable_DB) {
+    UnicodeSPrint (VariableName, sizeof (VariableName), EFI_IMAGE_SECURITY_DATABASE);
+  } else if (PrivateData->VariableName == Variable_DBX) {
+    UnicodeSPrint (VariableName, sizeof (VariableName), EFI_IMAGE_SECURITY_DATABASE1);
+  } else {
+    goto Done;
+  }
+
+  Status = gRT->GetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  &VariableAttr,
+                  &VariableDataSize,
+                  VariableData
+                  );
+  if (EFI_ERROR (Status) && (Status != EFI_BUFFER_TOO_SMALL)) {
+    goto Done;
+  }
+
+  VariableData = AllocateZeroPool (VariableDataSize);
+  if (VariableData == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Done;
+  }
+
+  Status = gRT->GetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  &VariableAttr,
+                  &VariableDataSize,
+                  VariableData
+                  );
+  if (EFI_ERROR (Status)) {
+    goto Done;
+  }
+
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL || BootloaderEntry->SecurityContext == NULL) {
+    DEBUG ((DEBUG_ERROR, "Bootloader %u not found\n", mBootloaderIndex));
+    return EFI_NO_MEDIA;
+  }
+
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+
+  RemainingSize = VariableDataSize;
+  ListWalker    = (EFI_SIGNATURE_LIST *)(VariableData);
+
+  Status = EFI_NOT_FOUND;
+  while ((RemainingSize > 0) && (RemainingSize >= ListWalker->SignatureListSize)) {
+    HashData = NULL;
+    if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha256Guid)) {
+      HashData = SecurityContext->ImageDigest;
+      DigestLen = SHA256_DIGEST_SIZE;
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha384Guid)) {
+      HashData = SecurityContext->ImageSha384Digest;
+      DigestLen = SHA384_DIGEST_SIZE;
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertSha512Guid)) {
+      HashData = SecurityContext->ImageSha512Digest;
+      DigestLen = SHA512_DIGEST_SIZE;
+    } else {
+      RemainingSize -= ListWalker->SignatureListSize;
+      ListWalker     = (EFI_SIGNATURE_LIST *)((UINT8 *)ListWalker + ListWalker->SignatureListSize);
+      ListIndex++;
+      continue;
+    }
+
+    DataWalker = (EFI_SIGNATURE_DATA *)((UINT8 *)ListWalker + sizeof (EFI_SIGNATURE_LIST) + ListWalker->SignatureHeaderSize);
+    for (Index = 0; Index < SIGNATURE_DATA_COUNTS (ListWalker); Index = Index + 1) {
+      // Remove raw certificate or certificate hash if data matches
+      if ((HashData != NULL) &&
+          (CompareMem (DataWalker->SignatureData, HashData, DigestLen) == 0)) {
+        PrivateData->ListIndex = ListIndex;
+
+        if (SIGNATURE_DATA_COUNTS (ListWalker) == 1) {
+          Status = DeleteSignatureEx (PrivateData, Delete_Signature_List_One, 1);
+        } else {
+          PrivateData->CheckArray = AllocateZeroPool (SIGNATURE_DATA_COUNTS (ListWalker));
+          if (PrivateData->CheckArray == NULL) {
+            Status = EFI_OUT_OF_RESOURCES;
+            goto Done;
+          }
+          PrivateData->CheckArray[Index] = TRUE;
+          Status = DeleteSignatureEx (PrivateData, Delete_Signature_Data, 1);
+          FreePool (PrivateData->CheckArray);
+          PrivateData->CheckArray = NULL;
+        }
+
+        goto Done;
+      }
+
+      DataWalker = (EFI_SIGNATURE_DATA *)((UINT8 *)DataWalker + ListWalker->SignatureSize);
+    }
+
+    RemainingSize -= ListWalker->SignatureListSize;
+    ListWalker     = (EFI_SIGNATURE_LIST *)((UINT8 *)ListWalker + ListWalker->SignatureListSize);
+    ListIndex++;
+  }
+
+Done:
+
+  FREE_NON_NULL (VariableData);
+
+  return Status;
+}
+
+/**
+  This function removes a certificate from database.
+
+  @param[in]  PrivateData           Module's private data.
+
+  @retval   EFI_SUCCESS             Success to update the signature database
+  @retval   EFI_NO_MEDIA            If given bootloader or certificate was not
+                                    found or certificate hash could not be
+                                    calculated.
+  @retval   EFI_NOT_FOUND           If the certificate or its hash was not
+                                    found in database.
+  @retval   EFI_OUT_OF_RESOURCES    Unable to allocate required resources.
+**/
+EFI_STATUS
+RemoveCertificateFromDatabase (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  EFI_STATUS          Status;
+  EFI_SIGNATURE_LIST  *ListWalker;
+  EFI_SIGNATURE_DATA  *DataWalker;
+  CHAR16              VariableName[BUFFER_MAX_SIZE];
+  UINTN               VariableDataSize;
+  UINT32              VariableAttr;
+  UINTN               RemainingSize;
+  UINTN               ListIndex;
+  UINTN               Index;
+  UINT8               *VariableData;
+  UINT8               HashAlg;
+  UINT8               CertDigest[MAX_DIGEST_SIZE];
+  UINTN               DigestLen;
+  SV_MENU_ENTRY       *BootloaderEntry;
+  SV_CERT_ENTRY       *CertificateEntry;
+
+  Status           = EFI_NO_MEDIA;
+  VariableDataSize = 0;
+  ListIndex        = 0;
+  VariableData     = NULL;
+
+  if (PrivateData->VariableName == Variable_DB) {
+    UnicodeSPrint (VariableName, sizeof (VariableName), EFI_IMAGE_SECURITY_DATABASE);
+  } else if (PrivateData->VariableName == Variable_DBX) {
+    UnicodeSPrint (VariableName, sizeof (VariableName), EFI_IMAGE_SECURITY_DATABASE1);
+  } else {
+    goto Done;
+  }
+
+  Status = gRT->GetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  &VariableAttr,
+                  &VariableDataSize,
+                  VariableData
+                  );
+  if (EFI_ERROR (Status) && (Status != EFI_BUFFER_TOO_SMALL)) {
+    goto Done;
+  }
+
+  VariableData = AllocateZeroPool (VariableDataSize);
+  if (VariableData == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto Done;
+  }
+
+  Status = gRT->GetVariable (
+                  VariableName,
+                  &gEfiImageSecurityDatabaseGuid,
+                  &VariableAttr,
+                  &VariableDataSize,
+                  VariableData
+                  );
+  if (EFI_ERROR (Status)) {
+    goto Done;
+  }
+
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL) {
+    DEBUG ((DEBUG_ERROR, "Bootloader %u not found\n", mBootloaderIndex));
+    return EFI_NO_MEDIA;
+  }
+
+  CertificateEntry = GetCertEntry(BootloaderEntry, mCertIndex);
+  if (CertificateEntry == NULL) {
+    DEBUG ((DEBUG_ERROR, "Certificate %u not found\n", mCertIndex));
+    return EFI_NO_MEDIA;
+  }
+
+  RemainingSize = VariableDataSize;
+  ListWalker    = (EFI_SIGNATURE_LIST *)(VariableData);
+
+  Status = EFI_NOT_FOUND;
+  while ((RemainingSize > 0) && (RemainingSize >= ListWalker->SignatureListSize)) {
+    HashAlg = HASHALG_MAX;
+    if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha256Guid)) {
+      HashAlg = HASHALG_SHA256;
+      DigestLen = SHA256_DIGEST_SIZE;
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha384Guid)) {
+      HashAlg = HASHALG_SHA384;
+      DigestLen = SHA384_DIGEST_SIZE;
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Sha512Guid)) {
+      HashAlg = HASHALG_SHA512;
+      DigestLen = SHA512_DIGEST_SIZE;
+    } else if (CompareGuid (&ListWalker->SignatureType, &gEfiCertX509Guid)) {
+      HashAlg = HASHALG_RAW;
+    } else {
+      RemainingSize -= ListWalker->SignatureListSize;
+      ListWalker     = (EFI_SIGNATURE_LIST *)((UINT8 *)ListWalker + ListWalker->SignatureListSize);
+      ListIndex++;
+      continue;
+    }
+
+    if (HashAlg < HASHALG_MAX) {
+      ZeroMem (CertDigest, MAX_DIGEST_SIZE);
+      if (!CalculateCertHash (CertificateEntry->CertData, CertificateEntry->CertDataSize, HashAlg, CertDigest)) {
+        Status = EFI_NO_MEDIA;
+        goto Done;
+      }
+    }
+
+    DataWalker = (EFI_SIGNATURE_DATA *)((UINT8 *)ListWalker + sizeof (EFI_SIGNATURE_LIST) + ListWalker->SignatureHeaderSize);
+    for (Index = 0; Index < SIGNATURE_DATA_COUNTS (ListWalker); Index = Index + 1) {
+      // Remove raw certificate or certificate hash if data matches
+      if (((HashAlg < HASHALG_MAX) && (CompareMem (DataWalker->SignatureData,
+                                                   CertDigest,
+                                                   DigestLen) == 0)) ||
+          ((HashAlg == HASHALG_RAW) && (CompareMem (DataWalker->SignatureData,
+                                                    CertificateEntry->CertData,
+                                                    CertificateEntry->CertDataSize) == 0)))
+      {
+        PrivateData->ListIndex = ListIndex;
+
+        if (SIGNATURE_DATA_COUNTS (ListWalker) == 1) {
+          Status = DeleteSignatureEx (PrivateData, Delete_Signature_List_One, 1);
+        } else {
+          PrivateData->CheckArray = AllocateZeroPool (SIGNATURE_DATA_COUNTS (ListWalker));
+          if (PrivateData->CheckArray == NULL) {
+            Status = EFI_OUT_OF_RESOURCES;
+            goto Done;
+          }
+          PrivateData->CheckArray[Index] = TRUE;
+          Status = DeleteSignatureEx (PrivateData, Delete_Signature_Data, 1);
+          FreePool (PrivateData->CheckArray);
+          PrivateData->CheckArray = NULL;
+        }
+
+        goto Done;
+      }
+
+      DataWalker = (EFI_SIGNATURE_DATA *)((UINT8 *)DataWalker + ListWalker->SignatureSize);
+    }
+
+    RemainingSize -= ListWalker->SignatureListSize;
+    ListWalker     = (EFI_SIGNATURE_LIST *)((UINT8 *)ListWalker + ListWalker->SignatureListSize);
+    ListIndex++;
+  }
+
+Done:
+
+  FREE_NON_NULL (VariableData);
+
+  return Status;
+}
+
+EFI_STATUS
+RemoveImageDataFromDatabase (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  EFI_STATUS           Status = EFI_SUCCESS;
+  SV_MENU_ENTRY        *BootloaderEntry;
+  SV_SECURITY_CONTEXT  *SecurityContext;
+  UINTN                CertIndex;
+  UINTN                Index;
+
+  while (!EFI_ERROR (Status)) {
+    Status = RemoveImageHashFromDatabase (PrivateData);
+  }
+
+  // No more entries with given image, continue with certs
+  if (Status == EFI_NOT_FOUND) {
+    Status = EFI_SUCCESS;
+  } else {
+    DEBUG ((DEBUG_INFO, "%a: RemoveImageHashFromDatabase failed with %r\n",
+            __FUNCTION__, Status));
+    return Status;
+  }
+
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
+  if (BootloaderEntry == NULL || BootloaderEntry->SecurityContext == NULL) {
+    DEBUG ((DEBUG_INFO, "%a: No bootloader entry or security context\n", __FUNCTION__));
+    return EFI_NOT_FOUND;
+  }
+
+  SecurityContext = (SV_SECURITY_CONTEXT *)BootloaderEntry->SecurityContext;
+
+  // Backup currently browsed certificate index
+  CertIndex = mCertIndex;
+
+  for (Index = 0; Index < SecurityContext->NumCertificates; Index++) {
+
+    mCertIndex = Index;
+    while (!EFI_ERROR (Status)) {
+      Status = RemoveCertificateFromDatabase (PrivateData);
+    }
+
+    // No more entries with given, proceed with next cert
+    if (Status == EFI_NOT_FOUND) {
+      Status = EFI_SUCCESS;
+      continue;
+    } else {
+      DEBUG ((DEBUG_INFO, "%a: RemoveCertificateFromDatabase %u failed with %r\n",
+              __FUNCTION__, Index, Status));
+      mCertIndex = CertIndex;
+      return Status;
+    }
+  }
+
+  mCertIndex = CertIndex;
+
+  if (Status == EFI_NOT_FOUND) {
+    Status = EFI_SUCCESS;
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+RemoveImageDataFromDbx (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
+  )
+{
+  PrivateData->VariableName = Variable_DBX;
+
+  return RemoveImageDataFromDatabase(PrivateData);
+}
+
+EFI_STATUS
+RemoveImageDataFromDb (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA *PrivateData
+  )
+{
+  PrivateData->VariableName = Variable_DB;
+
+  return RemoveImageDataFromDatabase(PrivateData);
 }

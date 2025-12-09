@@ -261,6 +261,7 @@ typedef struct {
   BOOLEAN                     CertIsValid;
   BOOLEAN                     CertIsMicrosoft;
   BOOLEAN                     CertIsCA;
+  BOOLEAN                     CertIsForbidden;
 
   UINT8                       CertDigest[MAX_DIGEST_SIZE];
   UINTN                       CertDigestSize;
@@ -274,8 +275,12 @@ typedef struct {
 } SV_CERT_ENTRY;
 
 typedef struct {
-  UINT8                       ImageDigest[MAX_DIGEST_SIZE];
+  UINT8                       ImageDigest[SHA256_DIGEST_SIZE];
   UINTN                       ImageDigestSize;
+  UINT8                       ImageSha384Digest[SHA384_DIGEST_SIZE];
+  UINTN                       ImageSha384DigestSize;
+  UINT8                       ImageSha512Digest[SHA512_DIGEST_SIZE];
+  UINTN                       ImageSha512DigestSize;
 
   BOOLEAN                     ImageIsInDbx;
   BOOLEAN                     ImageIsInDb;
@@ -395,8 +400,9 @@ PrepareSbVariablesForSvBoot (
 
 EFI_STATUS
 AddKeyOrHashAsTrustedOrUntrusted (
-  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
-  BOOLEAN                              Trust
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  IN BOOLEAN                              Trust,
+  IN BOOLEAN                              EnrollImageHash
   );
 
 EFI_STATUS
@@ -441,6 +447,11 @@ FreeBootMenuEntries (
 VOID
 FreeSecurityContext (
   SV_SECURITY_CONTEXT  *SecCtx
+  );
+
+VOID
+RefreshImageSecurityInfo (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
   );
 
 #endif
