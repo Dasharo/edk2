@@ -1,5 +1,6 @@
 #include "Flashing.h"
 
+#include <IndustryStandard/SmBios.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/CbfsLib.h>
 #include <Library/DebugLib.h>
@@ -10,7 +11,9 @@
 #include <Library/PrintLib.h>
 #include <Library/SmmStoreLib.h>
 #include <Library/UefiLib.h>
+#include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Protocol/Smbios.h>
 
 typedef enum {
   REGION_MIGRATED,
@@ -950,6 +953,121 @@ GetOemRootKeyFromKm (
   return EFI_SUCCESS;
 }
 
+//
+// SMBIOS Type 14: Group Associations
+//
+typedef struct {
+  SMBIOS_STRUCTURE  Hdr;
+  SMBIOS_TABLE_STRING GroupName;
+  UINT8             ItemType;
+  UINT16            ItemHandle;
+} SMBIOS_TABLE_TYPE14_SINGLE_ITEM;
+
+/**
+  Helper to retrieve a string from an SMBIOS structure by Index.
+**/
+CHAR8*
+GetSmbiosString (
+  IN SMBIOS_STRUCTURE_POINTER  SmbiosRecord,
+  IN SMBIOS_TABLE_STRING       StringIndex
+  )
+{
+  CHAR8  *String;
+  UINT8  Index;
+
+  String = (CHAR8 *)(SmbiosRecord.Raw + SmbiosRecord.Hdr->Length);
+
+  for (Index = 1; Index <= StringIndex; Index++) {
+    if (Index == StringIndex) {
+      return String;
+    }
+    while (*String != 0) {
+      String++;
+    }
+    String++;
+    if (*String == 0) {
+      return NULL;
+    }
+  }
+  return NULL;
+}
+
+/**
+  Check if the platform is Fused (Manufacturing Mode Closed) using SMBIOS shadows.
+
+  @retval TRUE   Platform is FUSED (Production Mode).
+  @retval FALSE  Platform is UNFUSED (Manufacturing Mode) or Error.
+**/
+BOOLEAN
+IsPlatformFused (
+  VOID
+  )
+{
+  EFI_STATUS                 Status;
+  EFI_SMBIOS_PROTOCOL        *Smbios;
+  EFI_SMBIOS_HANDLE          SmbiosHandle;
+  EFI_SMBIOS_TYPE            SmbiosType;
+  EFI_SMBIOS_TABLE_HEADER    *SmbiosRecord;
+  SMBIOS_TABLE_TYPE14_SINGLE_ITEM *Type14;
+  CHAR8                      *GroupName;
+  UINT16                     TargetHandle;
+  BOOLEAN                    FoundTargetHandle;
+  FwstsSmbiosTable           *FwstsTable;
+
+  Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
+  if (EFI_ERROR (Status))
+    return TRUE;
+
+  SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+  SmbiosType = 14;
+  TargetHandle = 0xFFFF;
+  FoundTargetHandle = FALSE;
+
+  while (!EFI_ERROR (Smbios->GetNext (Smbios, &SmbiosHandle, &SmbiosType, &SmbiosRecord, NULL))) {
+    Type14 = (SMBIOS_TABLE_TYPE14_SINGLE_ITEM *) SmbiosRecord;
+
+    SMBIOS_STRUCTURE_POINTER TempStruct;
+    TempStruct.Hdr = SmbiosRecord;
+
+    GroupName = GetSmbiosString (TempStruct, Type14->GroupName);
+    if (GroupName != NULL && AsciiStrCmp (GroupName, "$MEI") == 0) {
+      TargetHandle = Type14->ItemHandle;
+      FoundTargetHandle = TRUE;
+      break;
+    }
+  }
+
+  if (!FoundTargetHandle)
+    return TRUE;
+
+  SmbiosHandle = TargetHandle;
+  Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &SmbiosRecord, NULL);
+
+  if (EFI_ERROR(Status) || SmbiosRecord->Handle != TargetHandle) {
+     SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+     FoundTargetHandle = FALSE;
+     do {
+       Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &SmbiosRecord, NULL);
+       if (!EFI_ERROR(Status) && SmbiosRecord->Handle == TargetHandle) {
+         FoundTargetHandle = TRUE;
+         break;
+       }
+     } while (!EFI_ERROR(Status));
+
+     if (!FoundTargetHandle) return TRUE;
+  }
+
+  FwstsTable = (FwstsSmbiosTable *)SmbiosRecord;
+
+  if (SmbiosRecord->Length < sizeof(FwstsSmbiosTable))
+    return TRUE;
+
+  if ((FwstsTable->Record.Reg[5] & BIT30))
+    return TRUE;
+  else
+    return FALSE;
+}
+
 /**
   Checks if the two coreboot images are Boot Guard enabled and are using the
   same OEM root key for signing.
@@ -976,11 +1094,13 @@ AreImageBtgKeysCompatible (
   VOID               *CurrentOemKey, *UpdatedOemKey;
   UINTN              CurrentOemKeyLen, UpdatedOemKeyLen;
 
+  // Platform is unfused and unlocked, so different BtG key doesn't matter.
+  if (!IsPlatformFused () && !IsDescriptorLocked())
+    return TRUE;
+
   // Boot Guard is not currently deployed.
   if (!IsBootGuardEnabled (Current, ImageSize))
     return TRUE;
-
-  // TODO Add a fused platform check here.
 
   // Going from BtG -> No BtG is not possible if the platform is fused.
   if (IsBootGuardEnabled (Current, ImageSize) && !IsBootGuardEnabled (Updated, ImageSize))
