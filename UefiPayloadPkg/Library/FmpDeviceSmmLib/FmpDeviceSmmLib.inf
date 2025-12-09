@@ -45,6 +45,9 @@
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
 
+[Protocols]
+  gEfiSmbiosProtocolGuid          ## CONSUMES
+
 [Guids]
   gEfiFirmwareInfoHobGuid
   gDasharoSystemFeaturesGuid
