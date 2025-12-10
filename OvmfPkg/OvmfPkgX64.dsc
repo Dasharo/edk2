@@ -1017,6 +1017,7 @@
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+  MdeModulePkg/Universal/FileExplorerDxe/FileExplorerDxe.inf 
 
   OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf
   OvmfPkg/QemuRamfbDxe/QemuRamfbDxe.inf
@@ -1105,6 +1106,8 @@
       # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
       BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
       OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+      # Using FileExplorerLib directly causes form browsing problems.
+      FileExplorerLib|MdeModulePkg/Library/DxeFileExplorerProtocol/DxeFileExplorerProtocol.inf
   }
 !endif
 

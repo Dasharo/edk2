@@ -7,6 +7,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "SovereignBootWizard.h"
+#include "InteractiveModeImpl.h"
 
 STATIC EFI_STATUS
 DeleteAllSecureBootVariables (
@@ -203,7 +204,8 @@ CreateSigList (
 STATIC EFI_STATUS
 EnrollHashToSigDB (
   IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData,
-  IN CHAR16                              *VariableName
+  IN CHAR16                              *VariableName,
+  IN BOOLEAN                             EnrollImageHash
   )
 {
   EFI_SIGNATURE_LIST                   *SigDBHash;
@@ -219,7 +221,7 @@ EnrollHashToSigDB (
   BOOLEAN                              Trust;
   EFI_INPUT_KEY                        Key;
 
-  BootloaderEntry = GetMenuEntry (&BootOptionMenu, mBootloaderIndex);
+  BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL) {
     return EFI_NO_MEDIA;
   }
@@ -229,13 +231,6 @@ EnrollHashToSigDB (
     return EFI_NO_MEDIA;
   }
 
-  if (SecurityContext->ImageIsSigned) {
-    CertificateEntry = GetCertEntry (BootloaderEntry, mCertIndex);
-    if (CertificateEntry == NULL) {
-      return EFI_NO_MEDIA;
-    }
-  }
-
   DataSize      = 0;
   SigDBSize     = 0;
   SigDBHash     = NULL;
@@ -243,7 +238,19 @@ EnrollHashToSigDB (
 
   SigDBSize = sizeof (EFI_SIGNATURE_LIST) + sizeof (EFI_SIGNATURE_DATA) - 1;
 
-  if (SecurityContext->ImageIsSigned) {
+  if (EnrollImageHash || !SecurityContext->ImageIsSigned) {
+    SigDBSize += SHA256_DIGEST_SIZE;
+    Status = CreateSigList (
+      SecurityContext->ImageDigest,
+      SecurityContext->ImageDigestSize,
+      &SecurityContext->HashType,
+      &SigDBHash
+      );
+  } else {
+    CertificateEntry = GetCertEntry (BootloaderEntry, mCertIndex);
+    if (CertificateEntry == NULL) {
+      return EFI_NO_MEDIA;
+    }
     // EDK2 only checks X509 certificates in DB and DBX, so enroll whole cert to DB.
     // For DBX only non-CA (signer's) certificate can be checked.
     // Otherwise enroll SHA256 to DBX to save space.
@@ -267,14 +274,6 @@ EnrollHashToSigDB (
         &SigDBHash
         );
     }
-  } else {
-    SigDBSize += SHA256_DIGEST_SIZE;
-    Status = CreateSigList (
-      SecurityContext->ImageDigest,
-      SecurityContext->ImageDigestSize,
-      &SecurityContext->HashType,
-      &SigDBHash
-      );
   }
 
   if (SigDBHash == NULL) {
@@ -318,7 +317,7 @@ EnrollHashToSigDB (
     goto ON_EXIT;
   }
 
-  if (SecurityContext->ImageIsSigned && Trust) {
+  if (!EnrollImageHash && SecurityContext->ImageIsSigned && Trust) {
     if (!CertificateEntry->CertIsValid) {
       do {
         CreatePopUp (
@@ -354,23 +353,25 @@ EnrollHashToSigDB (
       goto ON_EXIT;
     }
     if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-      if (CertificateEntry->CertIsInDbx) {
-        do {
-          CreatePopUp (
-            EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
-            &Key,
-            L"",
-            L"This certificate is currently untrusted.",
-            L"Removing certificates from DBX is not yet supported.",
-            L"Can not add the certificate as trusted."
-            L"",
-            L"Press ENTER to abort the process...",
-            L"",
-            NULL
-            );
-        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-        Status = EFI_ABORTED;
-        goto ON_EXIT;
+      if (CertificateEntry->CertIsInDbx || !SecurityContext->ImageIsVerified) {
+        Status = RemoveImageDataFromDbx (PrivateData);
+        if (EFI_ERROR (Status)) {
+          do {
+            CreatePopUp (
+              EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+              &Key,
+              L"",
+              L"Failed to remove all bootloader entries from DBX.",
+              L"Can not add the certificate as trusted."
+              L"",
+              L"Press ENTER to abort the process...",
+              L"",
+              NULL
+              );
+          } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+          Status = EFI_ABORTED;
+          goto ON_EXIT;
+        }
       }
     }
   }
@@ -394,17 +395,19 @@ EnrollHashToSigDB (
     if (Trust && (mFirstTrustedBootloader == -1)) {
       mFirstTrustedBootloader = (INTN)mBootloaderIndex;
     }
-    // If image is unsigned or added as untrusted we have to increment the
-    // bootloader index to show next one. No point in displaying other
-    // signatures if one of them is already in DBX, as the image will not
-    // pass Secure Boot verification. Otherwise move to next certificate.
-    if (!SecurityContext->ImageIsSigned || !Trust) {
-      mBootloaderIndex++;
-      mCertIndex = 0;
-      DEBUG ((DEBUG_INFO, "Moving to next bootloader %u\n", mBootloaderIndex));
-    } else {
-      mCertIndex++;
-      DEBUG ((DEBUG_INFO, "Moving to next certificate %u for bootloader %u\n", mCertIndex, mBootloaderIndex));
+    if (!mAltAccessMode) {
+      // If image is unsigned or added as untrusted we have to increment the
+      // bootloader index to show next one. No point in displaying other
+      // signatures if one of them is already in DBX, as the image will not
+      // pass Secure Boot verification. Otherwise move to next certificate.
+      if (!SecurityContext->ImageIsSigned || !Trust) {
+        mBootloaderIndex++;
+        mCertIndex = 0;
+        DEBUG ((DEBUG_INFO, "Moving to next bootloader %u\n", mBootloaderIndex));
+      } else {
+        mCertIndex++;
+        DEBUG ((DEBUG_INFO, "Moving to next certificate %u for bootloader %u\n", mCertIndex, mBootloaderIndex));
+      }
     }
   }
 
@@ -419,8 +422,9 @@ ON_EXIT:
 
 EFI_STATUS
 AddKeyOrHashAsTrustedOrUntrusted (
-  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
-  BOOLEAN                              Trust
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  IN BOOLEAN                              Trust,
+  IN BOOLEAN                              EnrollImageHash
   )
 {
   EFI_STRING                           Message;
@@ -433,38 +437,51 @@ AddKeyOrHashAsTrustedOrUntrusted (
   CHAR16                               ErrorMessage[MAXIMUM_VALUE_CHARACTERS + 8];
   EFI_INPUT_KEY                        Key;
 
-  Message = HiiGetString (
+  PopupMessage = NULL;
+
+  if (!mAltAccessMode) {
+    Message = HiiGetString (
+                PrivateData->HiiHandle,
+                Trust ? STRING_TOKEN(STR_SV_TRUST_KEY_QUESTION) : STRING_TOKEN(STR_SV_UNTRUST_KEY_QUESTION),
+                NULL);
+
+    if (PrivateData->FormData.ImageUnsigned) {
+      HeaderString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_BOOTLOADER_HASH), NULL);
+    } else {
+      HeaderString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT), NULL);
+    }
+    HashString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT_HASH), NULL);
+
+    // Size of the whole message plus couple new lines
+    PopupMessageSize = StrSize(Message) + StrSize(HeaderString) + StrSize(HashString) + 6;
+    PopupMessage = (CHAR16 *) AllocateZeroPool(PopupMessageSize);
+
+    if (PopupMessage == NULL) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    UnicodeSPrint (PopupMessage, PopupMessageSize, L"%s\n%s\n%s", Message, HeaderString, HashString);
+    HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SV_TRUST_KEY_POPUP), PopupMessage, NULL) ;
+
+    Status = PrivateData->HiiPopup->CreatePopup (
+              PrivateData->HiiPopup,
+              EfiHiiPopupStyleInfo,
+              EfiHiiPopupTypeYesNo,
               PrivateData->HiiHandle,
-              Trust ? STRING_TOKEN(STR_SV_TRUST_KEY_QUESTION) : STRING_TOKEN(STR_SV_UNTRUST_KEY_QUESTION),
-              NULL);
-  HeaderString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT), NULL);
-  HashString = HiiGetString (PrivateData->HiiHandle, STRING_TOKEN(STR_KEY_FINGERPRINT_HASH), NULL);
-
-  // Size of the whole message plus couple new lines
-  PopupMessageSize = StrSize(Message) + StrSize(HeaderString) + StrSize(HashString) + 6;
-  PopupMessage = (CHAR16 *) AllocateZeroPool(PopupMessageSize);
-
-  if (PopupMessage == NULL) {
-    return EFI_OUT_OF_RESOURCES;
+              STRING_TOKEN (STR_SV_TRUST_KEY_POPUP),
+              &UserSelection
+              );
+  } else {
+    UserSelection = EfiHiiPopupSelectionYes;
   }
 
-  UnicodeSPrint (PopupMessage, PopupMessageSize, L"%s\n%s\n%s", Message, HeaderString, HashString);
-  HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_SV_TRUST_KEY_POPUP), PopupMessage, NULL) ;
-
-  Status = PrivateData->HiiPopup->CreatePopup (
-             PrivateData->HiiPopup,
-             EfiHiiPopupStyleInfo,
-             EfiHiiPopupTypeYesNo,
-             PrivateData->HiiHandle,
-             STRING_TOKEN (STR_SV_TRUST_KEY_POPUP),
-             &UserSelection
-             );
   if (UserSelection == EfiHiiPopupSelectionYes) {
     // Add key or hash to DB or DBX
 
     Status = EnrollHashToSigDB (
                PrivateData,
-               Trust ? EFI_IMAGE_SECURITY_DATABASE : EFI_IMAGE_SECURITY_DATABASE1
+               Trust ? EFI_IMAGE_SECURITY_DATABASE : EFI_IMAGE_SECURITY_DATABASE1,
+               EnrollImageHash
                );
 
     if (EFI_ERROR (Status) && Status != EFI_ABORTED) {
@@ -478,8 +495,8 @@ AddKeyOrHashAsTrustedOrUntrusted (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
         &Key,
         L"",
-        Trust ? L"Could not add the certificate/image as trusted" :
-                L"Could not add the certificate/image as untrusted",
+        Trust ? L"Could not add the certificate/image hash as trusted" :
+                L"Could not add the certificate/image hash as untrusted",
         L"",
         ErrorMessage,
         L"",
@@ -492,7 +509,7 @@ AddKeyOrHashAsTrustedOrUntrusted (
     Status = EFI_ABORTED;
   }
 
-  FreePool (PopupMessage);
+  FREE_NON_NULL (PopupMessage);
 
   return Status;
 }

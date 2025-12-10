@@ -803,9 +803,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(SOVEREIGN_BOOT_ENABLE) == TRUE
   DasharoModulePkg/Application/SovereignBootWizard/SovereignBootWizard.inf {
     <LibraryClasses>
-    # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
+      # For Secure Boot use OpenSSL, because MBED TLS may fail AuthenticodeVerify
       BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
       OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLibCrypto.inf
+      # Using FileExplorerLib directly causes form browsing problems.^M
+      FileExplorerLib|MdeModulePkg/Library/DxeFileExplorerProtocol/DxeFileExplorerProtocol.inf
   }
 !endif
 !endif
@@ -894,6 +896,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+  MdeModulePkg/Universal/FileExplorerDxe/FileExplorerDxe.inf
   DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
   CrScreenshotDxe/CrScreenshotDxe.inf {
     <BuildOptions>

@@ -29,6 +29,7 @@
   Asn1Time.c
   BootOptionParsing.c
   BootOptionScanning.c
+  InteractiveModeImpl.c
   KeyManagement.c
   MicrosoftCerts.c
   SignatureParsing.c
@@ -65,15 +66,30 @@
   SecureBootVariableLib
   SecureBootVariableProvisionLib
   DxeImageVerificationLib
+  FileExplorerLib
 
 [Guids]
-  gSovereignBootWizardFormSetGuid
   gEfiCertRsa2048Guid
+  gEfiCertRsa2048Sha256Guid
+  gEfiCertX509Guid
+  gEfiCertSha1Guid
+  gEfiCertSha224Guid
+  gEfiCertSha256Guid
+  gEfiCertSha384Guid
+  gEfiCertSha512Guid
+  gEfiCertSm3Guid
   gEfiCertPkcs7Guid
+  gEfiCertTypeRsa2048Sha256Guid
+  gEfiFileSystemVolumeLabelInfoIdGuid
   gEfiCertX509Sha256Guid
+  gEfiCertX509Sha384Guid
+  gEfiCertX509Sha512Guid
+  gEfiCertX509Sm3Guid
+  gSovereignBootWizardFormSetGuid
   gEfiImageSecurityDatabaseGuid
   gEfiGlobalVariableGuid
   gEfiPartTypeSystemPartGuid
+  gEfiIfrTianoGuid
 
 [Protocols]
   ## PRODUCES # SovereignBootWizardFormSet

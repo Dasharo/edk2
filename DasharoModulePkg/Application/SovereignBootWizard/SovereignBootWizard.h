@@ -24,6 +24,7 @@ Revision History
 #include <Pi/PiBootMode.h>
 #include <Pi/PiHob.h>
 
+#include <Protocol/FileExplorer.h>
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/FormBrowser2.h>
 #include <Protocol/HiiConfigAccess.h>
@@ -46,6 +47,7 @@ Revision History
 #include <Library/BaseMemoryLib.h>
 #include <Library/BaseCryptLib.h>
 #include <Library/DxeServicesLib.h>
+#include <Library/FileExplorerLib.h>
 #include <Library/HobLib.h>
 #include <Library/UefiBootManagerLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -75,7 +77,7 @@ typedef struct {
 extern CONST UINTN MicrosoftCertificatesArraySize;
 extern CONST CERT_PTR MicrosoftCertificates[];
 
-#define NAME_VALUE_NAME_NUMBER  3
+#define SV_BOOT_VARSTORE_NAME              L"SvBootFormData"
 
 #define DEFAULT_CLASS_MANUFACTURING_VALUE  0xFF
 #define DEFAULT_CLASS_STANDARD_VALUE       0x0
@@ -96,17 +98,39 @@ extern CONST CERT_PTR MicrosoftCertificates[];
     }                                 \
   } while(FALSE)
 
+#define FREE_NON_OPCODE(Handle)  \
+  do{                                       \
+    if ((Handle) != NULL) {                 \
+      HiiFreeOpCodeHandle((Handle));        \
+    }                                       \
+  } while (FALSE)
+
+#define BUFFER_MAX_SIZE  100
+
+#define WIN_CERT_UEFI_RSA2048_SIZE  256
+#define WIN_CERT_UEFI_RSA3072_SIZE  384
+#define WIN_CERT_UEFI_RSA4096_SIZE  512
+
+typedef enum {
+  Variable_NONE,
+  Variable_DB,
+  Variable_DBX,
+  Variable_MAX
+} CURRENT_VARIABLE_NAME;
+
+typedef struct {
+  EFI_FILE_HANDLE    FHandle;
+  UINT16             *FileName;
+  UINT8              FileType;
+} SOVEREIGNBOOT_FILE_CONTEXT;
+
 typedef struct {
   UINT32                                 Signature;
 
   EFI_HANDLE                             AppHandle;
   EFI_HII_HANDLE                         HiiHandle;
-  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA      ConfigData;
-  SOVEREIGN_BOOT_WIZARD_NV_CONFIG        NvConfig;
-  SOVEREIGN_BOOT_WIZARD_FORM_DATA        FormData;
 
-  EFI_STRING_ID                          NameStringId[NAME_VALUE_NAME_NUMBER];
-  EFI_STRING                             NameValueName[NAME_VALUE_NAME_NUMBER];
+  EFI_HII_CONFIG_ACCESS_PROTOCOL         ConfigAccess;
 
   EFI_HII_DATABASE_PROTOCOL              *HiiDatabase;
   EFI_HII_STRING_PROTOCOL                *HiiString;
@@ -114,15 +138,28 @@ typedef struct {
   EFI_CONFIG_KEYWORD_HANDLER_PROTOCOL    *HiiKeywordHandler;
   EFI_HII_POPUP_PROTOCOL                 *HiiPopup;
 
+  EFI_DEVICE_PATH_TO_TEXT_PROTOCOL       *DevPathToText;
+
   EFI_FORM_BROWSER2_PROTOCOL             *FormBrowser2;
   EDKII_FORM_BROWSER_EXTENSION2_PROTOCOL *FormBrowserEx2;
 
-  EFI_HII_CONFIG_ACCESS_PROTOCOL         ConfigAccess;
+  SOVEREIGN_BOOT_WIZARD_CONFIG_DATA      ConfigData;
+  SOVEREIGN_BOOT_WIZARD_NV_CONFIG        NvConfig;
+  SOVEREIGN_BOOT_WIZARD_FORM_DATA        FormData;
 
-  EFI_DEVICE_PATH_TO_TEXT_PROTOCOL       *DevPathToText;
+  SOVEREIGNBOOT_FILE_CONTEXT             *FileContext;
+
+  CURRENT_VARIABLE_NAME                  VariableName;     // The variable name we are processing.
+  UINT32                                 ListCount;        // Record current variable has how many signature list.
+  UINTN                                  ListIndex;        // Record which signature list is processing.
+  UINT32                                 DataCount;        // Record current list has how many signature data.
+  UINTN                                  DataIndex;        // Record which signature data is processing.
+  BOOLEAN                                *CheckArray;      // Record which signature data checked.
 } SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA;
 
 #define SOVEREIGN_BOOT_WIZARD_PRIVATE_FROM_THIS(a)  CR (a, SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA, ConfigAccess, SOVEREIGN_BOOT_PRIVATE_SIGNATURE)
+
+extern SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *gPrivateData;
 
 #pragma pack(1)
 
@@ -224,6 +261,7 @@ typedef struct {
   BOOLEAN                     CertIsValid;
   BOOLEAN                     CertIsMicrosoft;
   BOOLEAN                     CertIsCA;
+  BOOLEAN                     CertIsForbidden;
 
   UINT8                       CertDigest[MAX_DIGEST_SIZE];
   UINTN                       CertDigestSize;
@@ -237,8 +275,12 @@ typedef struct {
 } SV_CERT_ENTRY;
 
 typedef struct {
-  UINT8                       ImageDigest[MAX_DIGEST_SIZE];
+  UINT8                       ImageDigest[SHA256_DIGEST_SIZE];
   UINTN                       ImageDigestSize;
+  UINT8                       ImageSha384Digest[SHA384_DIGEST_SIZE];
+  UINTN                       ImageSha384DigestSize;
+  UINT8                       ImageSha512Digest[SHA512_DIGEST_SIZE];
+  UINTN                       ImageSha512DigestSize;
 
   BOOLEAN                     ImageIsInDbx;
   BOOLEAN                     ImageIsInDb;
@@ -253,10 +295,11 @@ typedef struct {
   LIST_ENTRY                  Certs;
 } SV_SECURITY_CONTEXT;
 
-extern SV_MENU_OPTION            BootOptionMenu;
+extern SV_MENU_OPTION            mBootOptionMenu;
 extern UINTN                     mBootloaderIndex;
 extern UINTN                     mCertIndex;
 extern INTN                      mFirstTrustedBootloader;
+extern BOOLEAN                   mAltAccessMode;
 
 EFI_STATUS
 GetBootOptions (
@@ -293,6 +336,13 @@ GetMenuEntry (
   UINTN           MenuNumber
   );
 
+EFI_STATUS
+ParseHashValue (
+  IN  UINT8                  *Digest,
+  IN  UINTN                  DigestSize,
+  OUT CHAR16                 **BufferToReturn
+  );
+
 VOID
 FreeBootMenuEntry (
   SV_MENU_ENTRY    *BootloaderEntry
@@ -325,6 +375,19 @@ UpdateCertDetails (
   IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private
   );
 
+VOID
+FillCertStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  SV_CERT_ENTRY                       *CertificateEntry
+  );
+
+VOID
+FillKeyHashStrings (
+  IN  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *Private,
+  IN  EFI_SIGNATURE_LIST                  *List,
+  IN  EFI_SIGNATURE_DATA                  *Data
+  );
+
 EFI_STATUS
 RestoreSecureBootDefaults (
   VOID
@@ -337,13 +400,20 @@ PrepareSbVariablesForSvBoot (
 
 EFI_STATUS
 AddKeyOrHashAsTrustedOrUntrusted (
-  SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
-  BOOLEAN                              Trust
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
+  IN BOOLEAN                              Trust,
+  IN BOOLEAN                              EnrollImageHash
   );
 
 EFI_STATUS
 FinalizeSvBootProvisioning (
   VOID
+  );
+
+CHAR16 *
+UiDevicePathToStr (
+  IN EFI_DEVICE_PATH_TO_TEXT_PROTOCOL  *DevPathToText,
+  IN EFI_DEVICE_PATH_PROTOCOL  *DevPath
   );
 
 BOOLEAN
@@ -377,6 +447,11 @@ FreeBootMenuEntries (
 VOID
 FreeSecurityContext (
   SV_SECURITY_CONTEXT  *SecCtx
+  );
+
+VOID
+RefreshImageSecurityInfo (
+  IN SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA  *PrivateData
   );
 
 #endif
