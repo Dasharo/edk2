@@ -222,7 +222,8 @@ RouteConfig (
 EFI_STATUS
 BootTheBootloader (
   SOVEREIGN_BOOT_WIZARD_PRIVATE_DATA   *PrivateData,
-  UINTN                                BootloaderIndex
+  UINTN                                BootloaderIndex,
+  BOOLEAN                              SetFirstPriority
   )
 {
   SV_MENU_ENTRY                        *BootloaderEntry;
@@ -276,19 +277,31 @@ BootTheBootloader (
     gST->ConOut->ClearScreen (gST->ConOut);
   }
 
-  // TODO: Make this bootloader the first boot priority
   if (OptionIndex == -1) {
-    Status = EfiBootManagerAddLoadOptionVariable (&BootOption, MAX_UINTN);
+    Status = EfiBootManagerAddLoadOptionVariable (&BootOption, SetFirstPriority ? 0 : MAX_UINTN);
     if (EFI_ERROR (Status)) {
       EfiBootManagerFreeLoadOption (&BootOption);
       EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
       DEBUG ((DEBUG_ERROR, "Failed to add load option variable: %r\n", Status));
       return Status;
     }
-    DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
+    DEBUG ((DEBUG_INFO, "Booting new option: %s\n", BootloaderContext->Description));
     EfiBootManagerBoot (&BootOption);
   } else {
-    DEBUG ((DEBUG_INFO, "Booting %s\n", BootloaderContext->Description));
+    if (SetFirstPriority) {
+      // Remove the Boot#### variable associated with the bootloader and its
+      // entry in Bootorder variable
+      EfiBootManagerDeleteLoadOptionVariable (BootOption.OptionNumber, BootOption.OptionType);
+      // Create the Boot#### option again with the top priority
+      Status = EfiBootManagerAddLoadOptionVariable (&BootOption, 0);
+      if (EFI_ERROR (Status)) {
+        EfiBootManagerFreeLoadOption (&BootOption);
+        EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+        DEBUG ((DEBUG_ERROR, "Failed to add load option variable: %r\n", Status));
+        return Status;
+      }
+    }
+    DEBUG ((DEBUG_INFO, "Booting option %d: %s\n", OptionIndex, BootloaderContext->Description));
     EfiBootManagerBoot (&BootOptions[OptionIndex]);
   }
 
@@ -553,7 +566,7 @@ Callback (
                       );
                   } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
                   // 4. Boot the first trusted bootloader.
-                  BootTheBootloader(PrivateData, (UINTN)mFirstTrustedBootloader);
+                  BootTheBootloader(PrivateData, (UINTN)mFirstTrustedBootloader, TRUE);
                   // If we return from the bootloader, exit the form completely.
                   mBootloaderIndex = 0;
                   if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
@@ -647,7 +660,7 @@ Callback (
           }
           // If we failed image verification and decided to trust the image, simply boot it
           if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_IMAGE_VERIFICATION_FAILED) {
-              Status = BootTheBootloader (PrivateData, BootloaderToBoot);
+              Status = BootTheBootloader (PrivateData, BootloaderToBoot, FALSE);
               PrivateData->FormBrowserEx2->SetScope (SystemLevel);
               *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
               goto EXIT;
@@ -667,7 +680,7 @@ Callback (
               NULL
               );
             gBS->Stall (2 * 1000 * 1000);
-            Status = BootTheBootloader (PrivateData, BootloaderToBoot);
+            Status = BootTheBootloader (PrivateData, BootloaderToBoot, TRUE);
             // Do not go back to wizard after booting
             if (PrivateData->ConfigData.AppLaunchCause == SV_BOOT_LAUNCH_VIA_SETUP) {
               Scope = FormSetLevel;
