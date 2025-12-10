@@ -864,20 +864,19 @@ UpdateBootloaderPage (
     } else {
       Private->FormData.ImageTrusted = IMAGE_STATE_UNDECIDED;
     }
-  }
 
-  DEBUG ((DEBUG_INFO, "%a:\n"
-    "  ImageIsSigned: %u\n"
-    "  ImageIsVerified: %u\n"
-    "  ImageIsInDb: %u\n"
-    "  ImageIsInDbx: %u\n"
-    "  ImageTrusted: %u\n",
-    __FUNCTION__,
-    SecurityContext->ImageIsSigned,
-    SecurityContext->ImageIsVerified,
-    SecurityContext->ImageIsInDb,
-    SecurityContext->ImageIsInDbx,
-    Private->FormData.ImageTrusted));
+    DEBUG ((DEBUG_INFO, "UpdateBootloaderPage:\n"
+      "  ImageIsSigned: %u\n"
+      "  ImageIsVerified: %u\n"
+      "  ImageIsInDb: %u\n"
+      "  ImageIsInDbx: %u\n"
+      "  ImageTrusted: %u\n",
+      SecurityContext->ImageIsSigned,
+      SecurityContext->ImageIsVerified,
+      SecurityContext->ImageIsInDb,
+      SecurityContext->ImageIsInDbx,
+      Private->FormData.ImageTrusted));
+  }
 
   return Status;
 }

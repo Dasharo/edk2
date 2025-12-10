@@ -3476,7 +3476,7 @@ LoadBootloaderCertificates (
     }
   }
 
-  DEBUG ((DEBUG_INFO, "%a:\n"
+  DEBUG ((DEBUG_INFO, "LoadBootloaderCertificates:\n"
     "  MsCertFound: %u\n"
     "  NonMsCertFound: %u\n"
     "  InvalidSigFound: %u\n"
@@ -3487,7 +3487,6 @@ LoadBootloaderCertificates (
     "  ImageIsInDb: %u\n"
     "  ImageIsInDbx: %u\n"
     "  ImageTrusted: %u\n",
-    __FUNCTION__,
     MsCertFound,
     NonMsCertFound,
     InvalidSigFound,
@@ -3920,14 +3919,13 @@ RemoveImageDataFromDatabase (
   if (Status == EFI_NOT_FOUND) {
     Status = EFI_SUCCESS;
   } else {
-    DEBUG ((DEBUG_INFO, "%a: RemoveImageHashFromDatabase failed with %r\n",
-            __FUNCTION__, Status));
+    DEBUG ((DEBUG_INFO, "RemoveImageHashFromDatabase failed with %r\n", Status));
     return Status;
   }
 
   BootloaderEntry = GetMenuEntry (&mBootOptionMenu, mBootloaderIndex);
   if (BootloaderEntry == NULL || BootloaderEntry->SecurityContext == NULL) {
-    DEBUG ((DEBUG_INFO, "%a: No bootloader entry or security context\n", __FUNCTION__));
+    DEBUG ((DEBUG_INFO, "RemoveImageDataFromDatabase: No bootloader entry or security context\n"));
     return EFI_NOT_FOUND;
   }
 
@@ -3948,8 +3946,7 @@ RemoveImageDataFromDatabase (
       Status = EFI_SUCCESS;
       continue;
     } else {
-      DEBUG ((DEBUG_INFO, "%a: RemoveCertificateFromDatabase %u failed with %r\n",
-              __FUNCTION__, Index, Status));
+      DEBUG ((DEBUG_INFO, "RemoveCertificateFromDatabase %u failed with %r\n", Index, Status));
       mCertIndex = CertIndex;
       return Status;
     }

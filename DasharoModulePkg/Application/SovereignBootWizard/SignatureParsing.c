@@ -293,7 +293,7 @@ CreateNewCert (
   if ((SecCtx == NULL) || (CertData == NULL) || (FileBuffer == NULL) ||
       (AuthData == NULL) || (CertEntry == NULL) || (CertDataSize == 0) ||
       (FileSize == 0) || (AuthDataSize == 0)) {
-    DEBUG ((DEBUG_ERROR, "%a, Invalid parameter\n", __FUNCTION__));
+    DEBUG ((DEBUG_ERROR, "CreateNewCert, Invalid parameter\n"));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -859,7 +859,7 @@ RefreshImageSecurityInfo (
     }
   }
 
-  DEBUG ((DEBUG_INFO, "%a:\n"
+  DEBUG ((DEBUG_INFO, "RefreshImageSecurityInfo:\n"
     "  MsCertFound: %u\n"
     "  NonMsCertFound: %u\n"
     "  InvalidSigFound: %u\n"
@@ -870,7 +870,6 @@ RefreshImageSecurityInfo (
     "  ImageIsInDb: %u\n"
     "  ImageIsInDbx: %u\n"
     "  ImageTrusted: %u\n",
-    __FUNCTION__,
     MsCertFound,
     NonMsCertFound,
     InvalidSigFound,
