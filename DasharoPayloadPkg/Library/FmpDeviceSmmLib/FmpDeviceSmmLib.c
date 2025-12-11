@@ -1018,10 +1018,10 @@ FmpDeviceSetImageWithStatus (
 
   if (!AreImageBtgKeysCompatible(CurrentImage, Image, ImageSize)) {
     FreePool (CurrentImage);
-    AsciiPrint("New image is not signed with a compatible OEM Root Key, refusing to flash\n");
+    AsciiPrint("New image is not signed with a compatible OEM Root Key, aborting update\n");
     DEBUG ((
       DEBUG_ERROR,
-      "%a(): New image is not signed with a compatible OEM Root Key, refusing to flash\n",
+      "%a(): New image is not signed with a compatible OEM Root Key, aborting update\n",
       __FUNCTION__
       ));
     return EFI_ABORTED;
