@@ -972,8 +972,6 @@ GetSmbiosString (
   return NULL;
 }
 
-#define HFSTS1_MANUFACTURING_MODE_BIT BIT4
-
 /**
   Check if the platform is Fused (Manufacturing Mode Closed) using SMBIOS shadows.
 
@@ -995,7 +993,7 @@ IsPlatformFused (
   UINT16                     TargetHandle;
   BOOLEAN                    FoundTargetHandle;
   UINT8                      *RawData;
-  UINT32                     Hfsts1;
+  UINT32                     Hfsts6;
 
   Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
   if (EFI_ERROR (Status))
@@ -1042,12 +1040,12 @@ IsPlatformFused (
 
   RawData = (UINT8 *)SmbiosRecord;
 
-  if (SmbiosRecord->Length < (sizeof(UINT32)))
+  if (SmbiosRecord->Length < (6 * sizeof(UINT32)));
     return FALSE;
 
-  CopyMem (&Hfsts1, &RawData[0], sizeof(UINT32));
+  CopyMem (&Hfsts6, &RawData[5 * sizeof(UINT32)], sizeof(UINT32));
 
-  if ((Hfsts1 & BIT4) == 0)
+  if ((Hfsts6 & BIT30))
     return TRUE;
   else
     return FALSE;
