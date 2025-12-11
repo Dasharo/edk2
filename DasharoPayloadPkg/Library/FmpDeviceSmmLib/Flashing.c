@@ -851,7 +851,7 @@ Fail:
 **/
 STATIC
 BOOLEAN
-IsBootGuardEnabled(
+IsBootGuardEnabled (
   IN CONST VOID  *Image,
   IN CONST UINTN ImageLen
   )
@@ -926,7 +926,7 @@ GetOemRootKeyFromKm (
   *OemRootKeySize = sizeof(BtgPubKey) + PubKeyOffset->KeySize / 8;
 
   PubKey = AllocatePool (*OemRootKeySize);
-  CopyMem(PubKey, PubKeyOffset, *OemRootKeySize);
+  CopyMem (PubKey, PubKeyOffset, *OemRootKeySize);
 
   *OemRootKey = (VOID *)PubKey;
 
@@ -1080,15 +1080,15 @@ AreImageBtgKeysCompatible (
   UINTN              CurrentOemKeyLen, UpdatedOemKeyLen;
 
   // Platform is unfused, so different BtG key doesn't matter.
-  if (!IsPlatformFused())
+  if (!IsPlatformFused ())
     return TRUE;
 
   // Boot Guard is not currently deployed.
-  if (!IsBootGuardEnabled(Current, ImageSize))
+  if (!IsBootGuardEnabled (Current, ImageSize))
     return TRUE;
 
   // Going from BtG -> No BtG is not possible if the platform is fused.
-  if (IsBootGuardEnabled(Current, ImageSize) && !IsBootGuardEnabled(Updated, ImageSize))
+  if (IsBootGuardEnabled (Current, ImageSize) && !IsBootGuardEnabled (Updated, ImageSize))
     return FALSE;
 
   if (!GetFmap (Current, ImageSize, &CurrentFlashMap)) {
@@ -1130,28 +1130,28 @@ AreImageBtgKeysCompatible (
   if (CurrentKmFile->len != UpdatedKmFile->len)
     return FALSE;
 
-  Status = GetOemRootKeyFromKm(
+  Status = GetOemRootKeyFromKm (
     CBFS_SUBHEADER(CurrentKmFile),
     CurrentKmFile->len,
     &CurrentOemKey,
     &CurrentOemKeyLen
   );
 
-  if (EFI_ERROR(Status))
+  if (EFI_ERROR (Status))
     return FALSE;
 
-  Status = GetOemRootKeyFromKm(
+  Status = GetOemRootKeyFromKm (
     CBFS_SUBHEADER(UpdatedKmFile),
     UpdatedKmFile->len,
     &UpdatedOemKey,
     &UpdatedOemKeyLen
   );
 
-  if (EFI_ERROR(Status))
+  if (EFI_ERROR (Status))
     return FALSE;
 
   if (CurrentOemKeyLen != UpdatedOemKeyLen)
     return FALSE;
 
-  return !CompareMem(CurrentOemKey, UpdatedOemKey, CurrentOemKeyLen);
+  return !CompareMem (CurrentOemKey, UpdatedOemKey, CurrentOemKeyLen);
 }
