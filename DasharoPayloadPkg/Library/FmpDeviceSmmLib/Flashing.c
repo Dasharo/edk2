@@ -1040,7 +1040,7 @@ IsPlatformFused (
 
   RawData = (UINT8 *)SmbiosRecord;
 
-  if (SmbiosRecord->Length < (6 * sizeof(UINT32)));
+  if (SmbiosRecord->Length < (6 * sizeof(UINT32)))
     return FALSE;
 
   CopyMem (&Hfsts6, &RawData[5 * sizeof(UINT32)], sizeof(UINT32));
