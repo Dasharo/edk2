@@ -960,7 +960,7 @@ GetOemRootKeyFromKm (
   OUT UINTN       *OemRootKeySize
   )
 {
-  BtgPubKey *PubKeyOffset, *PubKey;
+  BtgPubKey *PubKeyOffset;
   KeyManifestHeader *Km = (KeyManifestHeader*) KmBuffer;
 
   if (Km == NULL ||
@@ -979,11 +979,7 @@ GetOemRootKeyFromKm (
     return EFI_INVALID_PARAMETER;
 
   *OemRootKeySize = sizeof(BtgPubKey) + PubKeyOffset->KeySize / 8;
-
-  PubKey = AllocatePool (*OemRootKeySize);
-  CopyMem (PubKey, PubKeyOffset, *OemRootKeySize);
-
-  *OemRootKey = (VOID *)PubKey;
+  *OemRootKey = (VOID *)PubKeyOffset;
 
   return EFI_SUCCESS;
 }
