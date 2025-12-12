@@ -967,7 +967,8 @@ GetOemRootKeyFromKm (
       OemRootKey == NULL ||
       OemRootKeySize == NULL ||
       KmSize < sizeof(KeyManifestHeader) ||
-      KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey))
+      KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey) ||
+      Km->StructureId != 0x5F5F4D59454B5F5F) // __KEYM__
     return EFI_INVALID_PARAMETER;
 
   PubKeyOffset = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset + sizeof(KeyAndSigHeader));
