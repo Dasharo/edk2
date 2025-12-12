@@ -964,12 +964,12 @@ GetOemRootKeyFromKm (
   KeyAndSigHeader *PubKeyHeader;
   KeyManifestHeader *Km = (KeyManifestHeader*) KmBuffer;
 
-  if (Km == NULL ||
-      OemRootKey == NULL ||
-      OemRootKeySize == NULL ||
-      KmSize < sizeof(KeyManifestHeader) ||
-      KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey) ||
-      Km->StructureId != 0x5F5F4D59454B5F5F) // __KEYM__
+  if ((Km == NULL) ||
+      (OemRootKey == NULL) ||
+      (OemRootKeySize == NULL) ||
+      (KmSize < sizeof(KeyManifestHeader)) ||
+      (KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey)) ||
+      (Km->StructureId != 0x5F5F4D59454B5F5F)) // __KEYM__
     return EFI_INVALID_PARAMETER;
 
   PubKeyHeader = (KeyAndSigHeader*)((UINT8*)Km + Km->KeySignatureOffset);
