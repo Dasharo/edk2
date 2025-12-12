@@ -861,6 +861,39 @@ Fail:
 }
 
 /**
+  Checks if the Intel Flash Descriptor is locked. A locked descriptor means that
+  certain regions of the SPI flash are locked.
+
+  @return TRUE     If the descriptor is locked
+  @return FALSE    If the descriptor is unlocked
+**/
+BOOLEAN
+EFIAPI
+IsDescriptorLocked (
+  VOID
+  )
+{
+  EFI_STATUS     Status;
+  UINTN          VarSize;
+  UINT8          DescriptorWriteable;
+
+  VarSize = sizeof (DescriptorWriteable);
+  Status = gRT->GetVariable (
+      L"DescriptorWriteable",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &DescriptorWriteable
+      );
+
+  // Variable does not exist on platforms without a descriptor (e.g. AMD)
+  if (EFI_ERROR(Status))
+    return FALSE;
+
+  return !DescriptorWriteable;
+}
+
+/**
   Checks if an image has Boot Guard enabled, by checking is KM and BPM are
   present in the image.
 
