@@ -972,7 +972,7 @@ GetOemRootKeyFromKm (
       Km->StructureId != 0x5F5F4D59454B5F5F) // __KEYM__
     return EFI_INVALID_PARAMETER;
 
-  PubKeyHeader = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset);
+  PubKeyHeader = (KeyAndSigHeader*)((UINT8*)Km + Km->KeySignatureOffset);
   PubKey = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset + sizeof(KeyAndSigHeader));
 
   if (PubKeyHeader->KeyAlg != 0x1) // RSA
