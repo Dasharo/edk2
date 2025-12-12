@@ -1047,8 +1047,7 @@ IsPlatformFused (
   CHAR8                      *GroupName;
   UINT16                     TargetHandle;
   BOOLEAN                    FoundTargetHandle;
-  UINT8                      *RawData;
-  UINT32                     Hfsts6;
+  FwstsSmbiosTable           *FwstsTable;
 
   Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
   if (EFI_ERROR (Status))
@@ -1093,14 +1092,12 @@ IsPlatformFused (
      if (!FoundTargetHandle) return FALSE;
   }
 
-  RawData = (UINT8 *)SmbiosRecord;
+  FwstsTable = (FwstsSmbiosTable *)SmbiosRecord;
 
-  if (SmbiosRecord->Length < (6 * sizeof(UINT32)))
+  if (SmbiosRecord->Length < sizeof(FwstsSmbiosTable))
     return FALSE;
 
-  CopyMem (&Hfsts6, &RawData[5 * sizeof(UINT32)], sizeof(UINT32));
-
-  if ((Hfsts6 & BIT30))
+  if ((FwstsTable->Record.Reg[5] & BIT30))
     return TRUE;
   else
     return FALSE;
