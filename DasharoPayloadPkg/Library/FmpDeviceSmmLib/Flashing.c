@@ -956,7 +956,7 @@ EFI_STATUS
 GetOemRootKeyFromKm (
   IN CONST VOID   *KmBuffer,
   IN CONST UINTN  KmSize,
-  IN OUT VOID        **OemRootKey,
+  IN OUT VOID     **OemRootKey,
   OUT UINTN       *OemRootKeySize
   )
 {
