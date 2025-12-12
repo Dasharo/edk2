@@ -960,7 +960,8 @@ GetOemRootKeyFromKm (
   OUT UINTN       *OemRootKeySize
   )
 {
-  BtgPubKey *PubKeyOffset;
+  BtgPubKey *PubKey;
+  KeyAndSigHeader *PubKeyHeader;
   KeyManifestHeader *Km = (KeyManifestHeader*) KmBuffer;
 
   if (Km == NULL ||
@@ -971,16 +972,14 @@ GetOemRootKeyFromKm (
       Km->StructureId != 0x5F5F4D59454B5F5F) // __KEYM__
     return EFI_INVALID_PARAMETER;
 
-  PubKeyOffset = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset + sizeof(KeyAndSigHeader));
+  PubKeyHeader = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset);
+  PubKey = (BtgPubKey*)((UINT8*)Km + Km->KeySignatureOffset + sizeof(KeyAndSigHeader));
 
-  if (PubKeyOffset->KeySize != 2048 && PubKeyOffset->KeySize != 3072)
+  if (PubKeyHeader->KeyAlg != 0x1) // RSA
     return EFI_INVALID_PARAMETER;
 
-  if (PubKeyOffset->Exponent != 0x10001)
-    return EFI_INVALID_PARAMETER;
-
-  *OemRootKeySize = sizeof(BtgPubKey) + PubKeyOffset->KeySize / 8;
-  *OemRootKey = (VOID *)PubKeyOffset;
+  *OemRootKeySize = sizeof(BtgPubKey) + PubKey->KeySize / 8;
+  *OemRootKey = (VOID *)PubKey;
 
   return EFI_SUCCESS;
 }
