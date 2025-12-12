@@ -861,32 +861,6 @@ QueryVariableInfoHook (
   return EFI_NOT_AVAILABLE_YET;
 }
 
-STATIC
-BOOLEAN
-IsDescriptorLocked (
-  VOID
-  )
-{
-  EFI_STATUS     Status;
-  UINTN          VarSize;
-  UINT8          DescriptorWriteable;
-
-  VarSize = sizeof (DescriptorWriteable);
-  Status = gRT->GetVariable (
-      L"DescriptorWriteable",
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &VarSize,
-      &DescriptorWriteable
-      );
-
-  // Variable does not exist on platforms without a descriptor (e.g. AMD)
-  if (EFI_ERROR(Status))
-    return FALSE;
-
-  return !DescriptorWriteable;
-}
-
 /**
   Updates a firmware device with a new firmware image.  This function returns
   EFI_UNSUPPORTED if the firmware image is not updatable.  If the firmware image
