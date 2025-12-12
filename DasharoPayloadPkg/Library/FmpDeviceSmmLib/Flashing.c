@@ -1047,7 +1047,7 @@ IsPlatformFused (
 
   Status = gBS->LocateProtocol (&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
   if (EFI_ERROR (Status))
-    return FALSE;
+    return TRUE;
 
   SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
   SmbiosType = 14;
@@ -1069,7 +1069,7 @@ IsPlatformFused (
   }
 
   if (!FoundTargetHandle)
-    return FALSE;
+    return TRUE;
 
   SmbiosHandle = TargetHandle;
   Status = Smbios->GetNext (Smbios, &SmbiosHandle, NULL, &SmbiosRecord, NULL);
@@ -1085,13 +1085,13 @@ IsPlatformFused (
        }
      } while (!EFI_ERROR(Status));
 
-     if (!FoundTargetHandle) return FALSE;
+     if (!FoundTargetHandle) return TRUE;
   }
 
   FwstsTable = (FwstsSmbiosTable *)SmbiosRecord;
 
   if (SmbiosRecord->Length < sizeof(FwstsSmbiosTable))
-    return FALSE;
+    return TRUE;
 
   if ((FwstsTable->Record.Reg[5] & BIT30))
     return TRUE;
