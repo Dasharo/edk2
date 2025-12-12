@@ -28,6 +28,19 @@ MergeFirmwareImages (
   );
 
 /**
+  Checks if the Intel Flash Descriptor is locked. A locked descriptor means that
+  certain regions of the SPI flash are locked.
+
+  @return TRUE     If the descriptor is locked
+  @return FALSE    If the descriptor is unlocked
+**/
+BOOLEAN
+EFIAPI
+IsDescriptorLocked (
+  VOID
+  );
+
+/**
   Checks if the given range overlaps a write-protected IFD range.
 
   @param[in] Image       Firmware image to check
