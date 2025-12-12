@@ -68,6 +68,27 @@ typedef struct {
   CONST UINT16 KeyAlg;
 } __attribute__((packed)) KeyAndSigHeader;
 
+typedef struct {
+	UINT8  Type;
+	UINT8  Length;
+	UINT16 Handle;
+} __attribute__((packed)) SmbiosHeader;
+
+typedef struct {
+  UINT8  HeciName;
+  UINT32 Reg[6];
+} __attribute__((packed)) FwstsRecord;
+
+typedef struct {
+  SmbiosHeader Header;
+  UINT8        Version;
+  UINT8        Count;
+  FwstsRecord  Record;
+  // We only care about the first record and we're not sure how many there are
+  //FwstsRecord  Record[CONFIG_MAX_MEI_DEVICES];
+  //UINT8        Eos[2];
+} __attribute__((packed)) FwstsSmbiosTable;
+
 STATIC
 BOOLEAN
 GetFmap (
@@ -902,7 +923,7 @@ EFI_STATUS
 GetOemRootKeyFromKm (
   IN CONST VOID   *KmBuffer,
   IN CONST UINTN  KmSize,
-  OUT VOID        **OemRootKey,
+  IN OUT VOID        **OemRootKey,
   OUT UINTN       *OemRootKeySize
   )
 {
@@ -910,6 +931,7 @@ GetOemRootKeyFromKm (
   KeyManifestHeader *Km = (KeyManifestHeader*) KmBuffer;
 
   if (Km == NULL ||
+      OemRootKey == NULL ||
       OemRootKeySize == NULL ||
       KmSize < sizeof(KeyManifestHeader) ||
       KmSize < Km->KeySignatureOffset + sizeof(KeyAndSigHeader) + sizeof(BtgPubKey))
