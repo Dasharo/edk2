@@ -1132,8 +1132,8 @@ AreImageBtgKeysCompatible (
   VOID               *CurrentOemKey, *UpdatedOemKey;
   UINTN              CurrentOemKeyLen, UpdatedOemKeyLen;
 
-  // Platform is unfused, so different BtG key doesn't matter.
-  if (!IsPlatformFused ())
+  // Platform is unfused and unlocked, so different BtG key doesn't matter.
+  if (!IsPlatformFused () && !IsDescriptorLocked())
     return TRUE;
 
   // Boot Guard is not currently deployed.
