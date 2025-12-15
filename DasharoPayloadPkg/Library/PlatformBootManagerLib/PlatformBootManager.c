@@ -1115,10 +1115,10 @@ WarnIfSinglePCRBank (
             &Size,
             &RequestedActivePcrBanks
             );
-  // 
+  //
   // If the variable doesn't exist, there's been no request to change the
   // PCR banks.
-  // 
+  //
   if (EFI_ERROR(Status)) {
     return;
   }
@@ -1141,20 +1141,20 @@ WarnIfSinglePCRBank (
   // Check if multiple PCR banks have in fact been selected
   if ((RequestedActivePcrBanks & (RequestedActivePcrBanks - 1)) == 0)
     return;
-  // 
+  //
   // If they're not equal, display the popup and switch to a single bank
   // of user's choice.
-  // 
+  //
   ASSERT_EFI_ERROR(Status);
   CurrentAttribute = gST->ConOut->Mode->Attribute;
   CursorVisible    = gST->ConOut->Mode->CursorVisible;
   gST->ConOut->EnableCursor(gST->ConOut, FALSE);
   DrainInput();
   Events[0] = gST->ConIn->WaitForKey;
-  // 
+  //
   // Parse obtained available PCR banks bitmap to get the names and create
   // an option for each available bank
-  // 
+  //
   for (i = 0; i < ARRAY_SIZE(mHashAlgs); i++) {
     if (TpmHashAlgorithmBitmap & (1U << i)) {
       AvlIdx[OptionCount++] = i;
@@ -1171,7 +1171,7 @@ WarnIfSinglePCRBank (
     );
     StrCatS(OptLine, ARRAY_SIZE(OptLine), token);
   }
-  
+
   while (1) {
     CreateMultiStringPopUp(
         78,
@@ -1191,7 +1191,7 @@ WarnIfSinglePCRBank (
     if (EFI_ERROR(Status)) {
       break;
     }
-    
+
     Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
     if (EFI_ERROR(Status)) {
       break;

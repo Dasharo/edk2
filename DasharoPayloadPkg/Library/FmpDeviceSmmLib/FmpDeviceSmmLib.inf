@@ -31,8 +31,11 @@
 
 [LibraryClasses]
   BaseMemoryLib
+  BaseCryptLib
   BlParseLib
+  BootLogoLib
   CbfsLib
+  CustomizedDisplayLib
   DebugLib
   EfiVarsLib
   FmapLib
@@ -43,6 +46,7 @@
   UefiRuntimeServicesTableLib
 
 [Packages]
+  CryptoPkg/CryptoPkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
   FmpDevicePkg/FmpDevicePkg.dec
@@ -50,7 +54,9 @@
   MdePkg/MdePkg.dec
 
 [Protocols]
+  gEfiGraphicsOutputProtocolGuid  ## CONSUMES
   gEfiSmbiosProtocolGuid          ## CONSUMES
+  gEfiHiiFontProtocolGuid         ## CONSUMES
 
 [Guids]
   gDasharoSystemFeaturesGuid

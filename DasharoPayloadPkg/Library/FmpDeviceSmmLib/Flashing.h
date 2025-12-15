@@ -60,6 +60,38 @@ IsRangeWriteable (
   );
 
 /**
+  Retrieves the SHA-384 hash of the OEM Root Key from a Coreboot image.
+
+  This function parses the input firmware image to locate the FMAP and CBFS.
+  It searches for the 'key_manifest.bin' file, extracts the OEM Public Key
+  (BtgPubKey), and computes a SHA-384 hash.
+
+  The hash is calculated over the concatenation of the Key Modulus followed
+  immediately by the Key Exponent (Hash = SHA384(Modulus || Exponent)).
+
+  @param[in]  Image           Pointer to the start of the Coreboot firmware image.
+  @param[in]  ImageLen        The size of the firmware image in bytes.
+  @param[out] OemRootKeyHash  Double pointer to retrieve the allocated hash buffer.
+                              On EFI_SUCCESS, this will point to a 48-byte buffer
+                              containing the SHA-384 digest.
+                              The caller is responsible for freeing this buffer
+                              using FreePool().
+
+  @retval EFI_SUCCESS             The hash was successfully retrieved and memory allocated.
+  @retval EFI_INVALID_PARAMETER   The extracted key length is invalid or too short to contain the struct.
+  @retval EFI_NOT_FOUND           FMAP, CBFS, or 'key_manifest.bin' could not be found.
+  @retval EFI_OUT_OF_RESOURCES    Could not allocate memory for the hash output or temporary buffers.
+  @retval EFI_ABORTED             Cryptographic hash calculation failed.
+**/
+EFI_STATUS
+EFIAPI
+GetOemRootKeyHash (
+  IN CONST VOID *Image,
+  IN UINTN ImageLen,
+  IN OUT UINT8 **OemRootKeyHash
+  );
+
+/**
   Checks if the two coreboot images are Boot Guard enabled and are using the
   same OEM root key for signing.
 
