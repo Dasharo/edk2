@@ -89,22 +89,22 @@
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType           ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable    ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue  ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan  ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed   ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta    ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown      ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray  ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray   ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue       ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLime       ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan       ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed        ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteFuchsia    ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow     ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteGreen          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed            ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta   ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta        ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow         ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite          ## CONSUMES
 
 
 # [Event]
