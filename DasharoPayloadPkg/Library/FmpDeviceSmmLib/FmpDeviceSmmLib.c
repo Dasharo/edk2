@@ -1151,6 +1151,41 @@ HexDump (
 }
 
 STATIC
+UINTN
+GetDisplayScaleFactor (
+  VOID
+  )
+{
+EFI_STATUS                             Status;
+  EFI_GRAPHICS_OUTPUT_PROTOCOL         *Gop;
+  UINT32                               ModeIndex;
+  UINT32                               MaxHRes = 0;
+  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
+  UINTN                                SizeOfInfo;
+
+  Status = gBS->LocateProtocol (&gEfiGraphicsOutputProtocolGuid, NULL, (VOID **)&Gop);
+  if (EFI_ERROR (Status) || Gop == NULL)
+    return 1;
+
+  // Iterate through all modes to find the largest (presumed native) resolution
+  for (ModeIndex = 0; ModeIndex < Gop->Mode->MaxMode; ModeIndex++) {
+    Status = Gop->QueryMode (Gop, ModeIndex, &SizeOfInfo, &Info);
+
+    if (!EFI_ERROR (Status)) {
+      if (Info->HorizontalResolution > MaxHRes) {
+        MaxHRes = Info->HorizontalResolution;
+      }
+      FreePool (Info);
+    }
+  }
+
+  if (MaxHRes > 1920)
+    return 2;
+
+  return 1;
+}
+
+STATIC
 VOID
 ShowBtgErrorPopup (
   IN VOID   *CurrentImage,
@@ -1194,7 +1229,7 @@ ShowBtgErrorPopup (
   do {
     ClearScreen();
     CreateMultiStringPopUpScaled (
-        2,
+        GetDisplayScaleFactor(),
         100,
         13,
         L"Firmware Update Skipped",
