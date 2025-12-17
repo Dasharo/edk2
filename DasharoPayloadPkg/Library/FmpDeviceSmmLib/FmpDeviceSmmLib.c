@@ -978,7 +978,7 @@ CreateMultiStringPopUp2x (
   )
 {
   EFI_STATUS                     Status;
-  VA_LIST                        Args;
+  VA_LIST                        Args, ArgsCopy;
   CHAR16                         *String;
   UINTN                          Index;
 
@@ -1015,6 +1015,7 @@ CreateMultiStringPopUp2x (
   UINTN MaxStrLen = 0;
 
   VA_START(Args, NumberOfLines);
+  VA_COPY(ArgsCopy, Args);
   for (Index = 0; Index < NumberOfLines; Index++) {
     String = VA_ARG(Args, CHAR16 *);
     if (String != NULL) {
@@ -1083,9 +1084,8 @@ CreateMultiStringPopUp2x (
   UINTN CurrentY = BoxY + (PADDING_Y * SCALE_FACTOR);
   UINTN TextStartX = BoxX + (PADDING_X * SCALE_FACTOR);
 
-  VA_START(Args, NumberOfLines);
   for (Index = 0; Index < NumberOfLines; Index++) {
-    String = VA_ARG(Args, CHAR16 *);
+    String = VA_ARG(ArgsCopy, CHAR16 *);
 
     if (String != NULL) {
       // A. Clear 1x buffer with BG color (clean slate)
@@ -1126,7 +1126,7 @@ CreateMultiStringPopUp2x (
 
     CurrentY += (GLYPH_HEIGHT * SCALE_FACTOR);
   }
-  VA_END(Args);
+  VA_END(ArgsCopy);
 
   if (RenderBuffer1x) FreePool(RenderBuffer1x);
   if (RenderBuffer2x) FreePool(RenderBuffer2x);
