@@ -1196,7 +1196,6 @@ ShowBtgErrorPopup (
   EFI_STATUS     Status;
   UINT8          *CurrentOemRk;
   UINT16         CurrentOemRkString[48 * 2 + 1];
-  EFI_EVENT      TimerEvent;
   UINTN          CurrentAttribute;
   BOOLEAN        CursorVisible;
   EFI_EVENT      Events[1];
@@ -1207,15 +1206,6 @@ ShowBtgErrorPopup (
   ASSERT_EFI_ERROR (Status);
 
   HexDump (CurrentOemRk, 48, CurrentOemRkString);
-
-  Status = gBS->CreateEvent (
-      EVT_TIMER,
-      TPL_CALLBACK,
-      NULL,
-      NULL,
-      &TimerEvent
-      );
-  ASSERT_EFI_ERROR (Status);
 
   CurrentAttribute = gST->ConOut->Mode->Attribute;
   CursorVisible    = gST->ConOut->Mode->CursorVisible;
@@ -1255,9 +1245,6 @@ ShowBtgErrorPopup (
       ASSERT_EFI_ERROR (Status);
     }
   } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-
-  Status = gBS->CloseEvent (TimerEvent);
-  ASSERT_EFI_ERROR (Status);
 
   gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
   gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
