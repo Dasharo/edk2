@@ -13,7 +13,6 @@
 #include <Guid/SystemResourceTable.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/BlParseLib.h>
-#include <Library/BootLogoLib.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/DebugLib.h>
 #include <Library/FmpDeviceLib.h>
