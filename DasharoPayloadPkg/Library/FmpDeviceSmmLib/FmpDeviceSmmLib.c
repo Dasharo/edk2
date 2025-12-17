@@ -1163,7 +1163,6 @@ ShowBtgErrorPopup (
   EFI_EVENT      TimerEvent;
   UINTN          CurrentAttribute;
   BOOLEAN        CursorVisible;
-  UINTN          SecondsLeft;
   EFI_EVENT      Events[1];
   UINTN          Index;
   EFI_INPUT_KEY  Key;
@@ -1191,9 +1190,7 @@ ShowBtgErrorPopup (
 
   Events[0] = gST->ConIn->WaitForKey;
 
-  SecondsLeft = 10;
-
-  while (SecondsLeft > 0) {
+  do {
     ClearScreen();
     CreateMultiStringPopUp2x (
         100,
@@ -1219,14 +1216,8 @@ ShowBtgErrorPopup (
     if (Index == 0) {
       Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
       ASSERT_EFI_ERROR (Status);
-
-      if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-        break;
-      }
-    } else {
-      SecondsLeft--;
     }
-  }
+  } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
 
   Status = gBS->CloseEvent (TimerEvent);
   ASSERT_EFI_ERROR (Status);
