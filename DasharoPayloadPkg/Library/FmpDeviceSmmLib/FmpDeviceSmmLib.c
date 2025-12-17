@@ -1382,8 +1382,6 @@ FmpDeviceSetImageWithStatus (
 
     ShowBtgErrorPopup(CurrentImage, ImageSize, ErrorString);
 
-    FreePool(ErrorString);
-
     return EFI_ABORTED;
   }
 
