@@ -883,7 +883,6 @@ DrainInput (
 }
 
 // Configuration
-#define SCALE_FACTOR        2
 #define GLYPH_WIDTH         8
 #define GLYPH_HEIGHT        19
 #define PADDING_X           (2 * GLYPH_WIDTH) // 2 chars padding (unscaled)
@@ -896,33 +895,34 @@ DrainInput (
 #define POPUP_BORDER_COLOR  {0xFF, 0xFF, 0xFF, 0xFF}
 
 /**
-  Helper: Upscales a source Blt buffer by 2x into a destination buffer.
+  Helper: Upscales a source Blt buffer by ScaleFactor into a destination buffer.
   Uses Nearest-Neighbor scaling.
 **/
 STATIC
 VOID
-UpscaleBuffer2x (
+UpscaleBuffer (
   IN EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Source,
   IN UINTN                          SourceWidth,
   IN UINTN                          SourceHeight,
+  IN UINTN                          ScaleFactor,
   OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Dest
   )
 {
   UINTN x, y;
-  UINTN DestWidth = SourceWidth * SCALE_FACTOR;
+  UINTN DestWidth = SourceWidth * ScaleFactor;
 
   for (y = 0; y < SourceHeight; y++) {
     for (x = 0; x < SourceWidth; x++) {
       EFI_GRAPHICS_OUTPUT_BLT_PIXEL Pixel = Source[y * SourceWidth + x];
 
-      // Calculate index of the top-left pixel in the 2x2 destination block
-      UINTN DestIndex = (y * SCALE_FACTOR) * DestWidth + (x * SCALE_FACTOR);
+      // Calculate index of the top-left pixel in the scaled destination block
+      UINTN DestIndex = (y * ScaleFactor) * DestWidth + (x * ScaleFactor);
 
-      // Fill the 2x2 block
-      Dest[DestIndex]                 = Pixel;
-      Dest[DestIndex + 1]             = Pixel;
-      Dest[DestIndex + DestWidth]     = Pixel;
-      Dest[DestIndex + DestWidth + 1] = Pixel;
+      // Fill the scaled block
+      for (UINTN Index = 0; Index < ScaleFactor; ++Index) {
+        Dest[DestIndex + Index]             = Pixel;
+        Dest[DestIndex + DestWidth + Index] = Pixel;
+      }
     }
   }
 }
@@ -961,7 +961,7 @@ ClearScreen (
 
 /**
   Draw a pop up windows based on the dimension, number of lines and
-  strings specified. (GOP 2x Scaled Version)
+  strings specified. (GOP Scaled Version)
 
   @param RequestedWidth  The width of the pop-up in standard character cells.
                          If 0, autosize to fit longest string.
@@ -971,7 +971,8 @@ ClearScreen (
 **/
 VOID
 EFIAPI
-CreateMultiStringPopUp2x (
+CreateMultiStringPopUpScaled (
+  IN  UINTN  ScaleFactor,
   IN  UINTN  RequestedWidth,
   IN  UINTN  NumberOfLines,
   ...
@@ -995,7 +996,7 @@ CreateMultiStringPopUp2x (
   // Buffers
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *BackBuffer = NULL;      // Saves what is behind popup
   EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *RenderBuffer1x = NULL;  // Temporary buffer for font rendering
-  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *RenderBuffer2x = NULL;  // Upscaled buffer for display
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *RenderBufferScaled = NULL;  // Upscaled buffer for display
   EFI_IMAGE_OUTPUT               *BltBufferObj = NULL;    // HII wrapper
 
   // 1. Locate Protocols
@@ -1038,8 +1039,8 @@ CreateMultiStringPopUp2x (
 
   // Final Box Size (Scaled Content + Scaled Padding)
   // We apply scale factor to everything to ensure crisp look
-  BoxW = (UnscaledContentW * SCALE_FACTOR) + (PADDING_X * SCALE_FACTOR * 2);
-  BoxH = (UnscaledContentH * SCALE_FACTOR) + (PADDING_Y * SCALE_FACTOR * 2);
+  BoxW = (UnscaledContentW * ScaleFactor) + (PADDING_X * ScaleFactor * 2);
+  BoxH = (UnscaledContentH * ScaleFactor) + (PADDING_Y * ScaleFactor * 2);
 
   // Center on screen
   BoxX = (ScreenWidth > BoxW) ? (ScreenWidth - BoxW) / 2 : 0;
@@ -1068,7 +1069,7 @@ CreateMultiStringPopUp2x (
   // We allocate enough space for one line at a time
   UINTN LinePixels1x = UnscaledContentW * GLYPH_HEIGHT;
   RenderBuffer1x = AllocateZeroPool(LinePixels1x * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
-  RenderBuffer2x = AllocateZeroPool(LinePixels1x * SCALE_FACTOR * SCALE_FACTOR * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+  RenderBufferScaled = AllocateZeroPool(LinePixels1x * ScaleFactor * ScaleFactor * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
 
   BltBufferObj = AllocateZeroPool(sizeof(EFI_IMAGE_OUTPUT));
   BltBufferObj->Width = (UINT16)UnscaledContentW;
@@ -1081,8 +1082,8 @@ CreateMultiStringPopUp2x (
   FontInfo.BackgroundColor = (EFI_GRAPHICS_OUTPUT_BLT_PIXEL)POPUP_BG_COLOR;
 
   // 6. Render Text Loop
-  UINTN CurrentY = BoxY + (PADDING_Y * SCALE_FACTOR);
-  UINTN TextStartX = BoxX + (PADDING_X * SCALE_FACTOR);
+  UINTN CurrentY = BoxY + (PADDING_Y * ScaleFactor);
+  UINTN TextStartX = BoxX + (PADDING_X * ScaleFactor);
 
   for (Index = 0; Index < NumberOfLines; Index++) {
     String = VA_ARG(ArgsCopy, CHAR16 *);
@@ -1112,24 +1113,24 @@ CreateMultiStringPopUp2x (
           NULL, NULL, NULL
       );
 
-      // D. Scale up 2x
-      UpscaleBuffer2x(RenderBuffer1x, UnscaledContentW, GLYPH_HEIGHT, RenderBuffer2x);
+      // D. Scale up
+      UpscaleBuffer(RenderBuffer1x, UnscaledContentW, GLYPH_HEIGHT, ScaleFactor, RenderBufferScaled);
 
       // E. Blt to Screen at FIXED Left Margin
       //    We now blit the entire "strip" which fits perfectly inside the box padding
-      Gop->Blt(Gop, RenderBuffer2x, EfiBltBufferToVideo,
+      Gop->Blt(Gop, RenderBufferScaled, EfiBltBufferToVideo,
                0, 0,
                TextStartX, CurrentY,          // Fixed X Position
-               UnscaledContentW * SCALE_FACTOR, GLYPH_HEIGHT * SCALE_FACTOR,
-               UnscaledContentW * SCALE_FACTOR * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+               UnscaledContentW * ScaleFactor, GLYPH_HEIGHT * ScaleFactor,
+               UnscaledContentW * ScaleFactor * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
     }
 
-    CurrentY += (GLYPH_HEIGHT * SCALE_FACTOR);
+    CurrentY += (GLYPH_HEIGHT * ScaleFactor);
   }
   VA_END(ArgsCopy);
 
   if (RenderBuffer1x) FreePool(RenderBuffer1x);
-  if (RenderBuffer2x) FreePool(RenderBuffer2x);
+  if (RenderBufferScaled) FreePool(RenderBufferScaled);
   if (BltBufferObj)   FreePool(BltBufferObj);
 }
 
@@ -1192,7 +1193,8 @@ ShowBtgErrorPopup (
 
   do {
     ClearScreen();
-    CreateMultiStringPopUp2x (
+    CreateMultiStringPopUpScaled (
+        2,
         100,
         13,
         L"Firmware Update Skipped",
