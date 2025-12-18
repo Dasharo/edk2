@@ -1431,13 +1431,13 @@ InitSerialColors (VOID)
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteRed),   &mTerminalEfiColors[4]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightMagenta),    &mTerminalEfiColors[5]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBrown),      &mTerminalEfiColors[6]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray),  &mTerminalEfiColors[15]);
+  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray),  &mTerminalEfiColors[7]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteDarkGray),   &mTerminalEfiColors[8]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightBlue,       &mTerminalEfiColors[9]);
+  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightBlue),       &mTerminalEfiColors[9]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGreen),       &mTerminalEfiColors[10]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightCyan),       &mTerminalEfiColors[11]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightRed),        &mTerminalEfiColors[12]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta),    &mTerminalEfiColors[13]);
   CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteYellow),     &mTerminalEfiColors[14]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite),      &mTerminalEfiColors[7]);
+  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite),      &mTerminalEfiColors[15]);
 }

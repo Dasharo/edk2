@@ -561,14 +561,14 @@ TerminalConOutSetAttribute (
   //  convert Attribute value to terminal emulator
   //  understandable foreground color
   //
-  ForegroundControl = mTerminalEfiColors[Attribute & 0x07];
+  ForegroundControl = mTerminalEfiColors[Attribute & 0x0F];
   BackgroundControl = mTerminalEfiColors[(Attribute >> 4) & 0x07];
 
   //
   // terminal emulator's control sequence to set attributes
   //
   CHAR16 mSetTerminalColorString[64];
-  UnicodeSPrint(mSetTerminalColorString, sizeof(mSetTerminalColorString), 
+  UnicodeSPrint(mSetTerminalColorString, sizeof(mSetTerminalColorString),
     L"%c[38;2;%u;%u;%um%c[48;2;%u;%u;%um",
     ESC, ForegroundControl.r, ForegroundControl.g, ForegroundControl.b,
     ESC, BackgroundControl.r, BackgroundControl.g, BackgroundControl.b);
