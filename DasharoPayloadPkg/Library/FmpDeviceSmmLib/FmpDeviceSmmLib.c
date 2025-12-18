@@ -908,20 +908,22 @@ UpscaleBuffer (
   OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Dest
   )
 {
-  UINTN x, y;
+  UINTN x, y, i, j;
   UINTN DestWidth = SourceWidth * ScaleFactor;
 
   for (y = 0; y < SourceHeight; y++) {
     for (x = 0; x < SourceWidth; x++) {
       EFI_GRAPHICS_OUTPUT_BLT_PIXEL Pixel = Source[y * SourceWidth + x];
 
-      // Calculate index of the top-left pixel in the scaled destination block
-      UINTN DestIndex = (y * ScaleFactor) * DestWidth + (x * ScaleFactor);
+      // Top-left corner of the destination block
+      UINTN DestStartX = x * ScaleFactor;
+      UINTN DestStartY = y * ScaleFactor;
 
-      // Fill the scaled block
-      for (UINTN Index = 0; Index < ScaleFactor; ++Index) {
-        Dest[DestIndex + Index]             = Pixel;
-        Dest[DestIndex + DestWidth + Index] = Pixel;
+      // Fill the ScaleFactor * ScaleFactor block in the destination
+      for (i = 0; i < ScaleFactor; i++) {       // Row
+        for (j = 0; j < ScaleFactor; j++) {     // Column
+          Dest[(DestStartY + i) * DestWidth + (DestStartX + j)] = Pixel;
+        }
       }
     }
   }
