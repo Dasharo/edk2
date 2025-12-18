@@ -1220,7 +1220,7 @@ ShowBtgErrorPopup (
     ClearScreen();
     CreateMultiStringPopUpScaled (
         GetDisplayScaleFactor(),
-        100,
+        96,
         13,
         L"Firmware Update Skipped",
         L"",
