@@ -691,6 +691,28 @@ IsRangeWriteable (
       Region->offset + Region->size > RangeOffset)
     return FALSE;
 
+  // We're only adding a TOPSWAP region if we're using TOP_SWAP_REDUNDANCY.
+  // I think it can be reliably used to gate locking the Slot A regions with
+  // less code than using a new PCD, but also with less flexibility 
+  Region = FmapFindArea(FlashMap, "TOPSWAP");
+  if (Region) {  
+    // The regions BOOTBLOCK and COREBOOT are to remain read-only golden copies
+    // of the firmware if we're using TOP_SWAP_REDUNDANCY
+    Region = FmapFindArea(FlashMap, "BOOTBLOCK");
+
+    // Range exists and overlaps locked BOOTBLOCK.
+    if (Region && RangeOffset + RangeLen > Region->offset &&
+        Region->offset + Region->size > RangeOffset)
+      return FALSE;
+
+    Region = FmapFindArea(FlashMap, "COREBOOT");
+
+    // Range exists and overlaps locked COREBOOT.
+    if (Region && RangeOffset + RangeLen > Region->offset &&
+        Region->offset + Region->size > RangeOffset)
+      return FALSE;
+  }
+
   return TRUE;
 }
 
