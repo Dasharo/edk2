@@ -10,6 +10,20 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __CAPSULE_LIB_H__
 #define __CAPSULE_LIB_H__
 
+#include <Guid/FileInfo.h>
+
+typedef struct {
+  //
+  // image address.
+  //
+  VOID             *ImageAddress;
+  //
+  // The file info of the image comes from.
+  //  if FileInfo == NULL. means image does not come from file
+  //
+  EFI_FILE_INFO    *FileInfo;
+} IMAGE_INFO;
+
 //
 // BOOLEAN Variable to indicate whether system is in the capsule on disk state.
 //
@@ -155,6 +169,61 @@ EFI_STATUS
 EFIAPI
 CoDRemoveTempFile (
   UINTN  MaxRetry
+  );
+
+/**
+  Check if any on-disk capsules are present.
+
+  @param[in]  MaxRetry  Max Connection Retry.  Stall 100ms between each
+                        connection try to ensure devices like USB can get
+                        enumerated.
+
+  @retval TRUE   At least one potential on-disk capsule was found on a boot
+                 drive.
+  @retval FALSE  No capsule candidates were discovered on a boot drive.
+**/
+BOOLEAN
+EFIAPI
+CoDPresent (
+  IN UINTN  MaxRetry
+  );
+
+/**
+  This routine is called to get all capsules from file. The capsule file image is
+  copied to BS memory. Caller is responsible to free them.
+
+  @param[in]    MaxRetry             Max Connection Retry. Stall 100ms between each connection try to ensure
+                                     devices like USB can get enumerated.
+  @param[out]   CapsulePtr           Copied Capsule file Image Info buffer
+  @param[out]   CapsuleNum           CapsuleNumber
+  @param[out]   FsHandle             File system handle
+  @param[out]   LoadOptionNumber     OptionNumber of boot option
+
+  @retval EFI_SUCCESS  Succeed to get all capsules.
+
+**/
+EFI_STATUS
+EFIAPI
+CoDGetAll (
+  IN  UINTN       MaxRetry,
+  OUT IMAGE_INFO  **CapsulePtr,
+  OUT UINTN       *CapsuleNum,
+  OUT EFI_HANDLE  *FsHandle,
+  OUT UINT16      *LoadOptionNumber
+  );
+
+/**
+  Free resources allocated by CoDGetAll.
+
+  @param[in]  ImageInfo  An array of data and information of files
+  @param[in]  Count      Length of the array.
+
+**/
+VOID
+EFIAPI
+CoDFreeImages (
+  IN IMAGE_INFO  *ImageInfo,
+  IN UINTN       Count
   );
 
 #endif
