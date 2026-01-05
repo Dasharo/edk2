@@ -1166,3 +1166,27 @@ ParseInfoString (
 
   return (CONST CHAR8 *)CbString->string;
 }
+
+/**
+  Parse bootloader's information to check whether EDK should look for on-disk
+  capsules.
+
+  @retval TRUE   Should check for on-disk capsules unless in-RAM capsules are
+                 present.  Must reboot in any case.
+  @retval FALSE  On-disk capsules should not be processed on this boot.
+**/
+BOOLEAN
+EFIAPI
+ParseIsDiskCapsulesBoot (
+  VOID
+  )
+{
+  struct lb_boot_info  *BootInfo;
+
+  BootInfo = FindCbTag (CB_TAG_BOOT_INFO);
+  if (BootInfo == NULL) {
+    return FALSE;
+  }
+
+  return BootInfo->is_disk_capsules_boot != 0;
+}
