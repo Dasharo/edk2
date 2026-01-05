@@ -266,7 +266,7 @@ InitCapsulePtr (
     // up the call chain.  Maybe the value should have a PCD.
     //
     CapsuleOnDiskBuf = NULL;
-    Status           = GetAllCapsuleOnDisk (
+    Status           = CoDGetAll (
                          /*MaxRetry=*/3,
                          &CapsuleOnDiskBuf,
                          &CapsuleOnDiskNum,
@@ -274,7 +274,7 @@ InitCapsulePtr (
                          &LoadOptionNumber
                          );
     if (EFI_ERROR (Status) || CapsuleOnDiskBuf == NULL) {
-      DEBUG ((DEBUG_WARN, "%a(): GetAllCapsuleOnDisk Status: %r.\n", __func__, Status));
+      DEBUG ((DEBUG_WARN, "%a(): CoDGetAll Status: %r.\n", __func__, Status));
       // Don't return, this isn't a fatal error, just ensure no weird fails.
       CapsuleOnDiskNum = 0;
     }
