@@ -756,6 +756,83 @@ AddOutput (
     ReportText));
 }
 
+STATIC
+BOOLEAN
+IsFumEnabled (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       VarSize;
+  BOOLEAN     FUMEnabled;
+
+  if (!PcdGetBool (PcdShowFum)) {
+    return FALSE;
+  }
+
+  VarSize = sizeof (FUMEnabled);
+
+  Status = gRT->GetVariable (
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &FUMEnabled
+      );
+  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
+    return FALSE;
+  }
+
+  return FUMEnabled;
+}
+
+STATIC
+VOID
+DropDasharoVar (
+  IN CHAR16  *VarName
+  )
+{
+  // Don't really care about the return value.
+  gRT->SetVariable (VarName, &gDasharoSystemFeaturesGuid, 0, 0, NULL);
+}
+
+STATIC
+VOID
+DropFum (
+  VOID
+  )
+{
+  // Remove the variable to disable FUM on the next boot.
+  DropDasharoVar (DASHARO_VAR_FIRMWARE_UPDATE_MODE);
+}
+
+// Replace non-volatile FUM variable with a volatile runtime one so applications
+// can detect FUM.
+STATIC
+EFI_STATUS
+PromoteFum (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       VarSize;
+  BOOLEAN     FUMEnabled;
+
+  DropFum ();
+
+  FUMEnabled = TRUE;
+  VarSize = sizeof (FUMEnabled);
+  Status = gRT->SetVariable (
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      &gDasharoSystemFeaturesGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+      VarSize,
+      &FUMEnabled
+      );
+
+  return Status;
+}
+
 
 /**
   Do the platform specific action before the console is connected.
@@ -1437,44 +1514,12 @@ WarnIfFirmwareUpdateMode (
   BOOLEAN        CursorVisible;
   UINTN          CurrentAttribute;
   UINTN          SecondsLeft;
-  UINTN          VarSize;
-  BOOLEAN        FUMEnabled;
 
-  VarSize = sizeof (FUMEnabled);
-
-  Status = gRT->GetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &VarSize,
-      &FUMEnabled
-      );
-
-  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled) || !FUMEnabled) {
+  if (!IsFumEnabled ()) {
     return FALSE;
   }
 
-  //
-  // Remove variable to disable FUM on next boot
-  //
-  Status = gRT->SetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
-      &gDasharoSystemFeaturesGuid,
-      0,
-      0,
-      NULL
-      );
-
-  //
-  // Create volatile runtime variable so applications can detect FUM
-  //
-  Status = gRT->SetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
-      &gDasharoSystemFeaturesGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-      VarSize,
-      &FUMEnabled
-      );
+  PromoteFum ();
 
   Status = gBS->CreateEvent (
       EVT_TIMER,
