@@ -638,6 +638,40 @@ GetEfiSysPartitionFromActiveBootOption (
   return Status;
 }
 
+STATIC
+VOID
+FreeFileInfoEntry (
+  IN FILE_INFO_ENTRY  *Entry,
+  IN BOOLEAN          FreeInfo
+  )
+{
+  if (FreeInfo) {
+    FreePool (Entry->FileInfo);
+  }
+  FreePool (Entry->FileNameFirstPart);
+  FreePool (Entry->FileNameSecondPart);
+  FreePool (Entry);
+}
+
+STATIC
+VOID
+FreeFileInfoEntries (
+  IN LIST_ENTRY  *List,
+  IN BOOLEAN     FreeInfo
+  )
+{
+  FILE_INFO_ENTRY  *FileInfoEntry;
+  LIST_ENTRY       *Link;
+
+  while (!IsListEmpty (List)) {
+    Link = List->ForwardLink;
+    RemoveEntryList (Link);
+
+    FileInfoEntry = CR (Link, FILE_INFO_ENTRY, Link, FILE_INFO_SIGNATURE);
+    FreeFileInfoEntry (FileInfoEntry, FreeInfo);
+  }
+}
+
 /**
   This routine is called to get all file infos with in a given dir & with given file attribute, the file info is listed in
   alphabetical order described in UEFI spec.
@@ -861,17 +895,7 @@ EXIT:
   }
 
   if (EFI_ERROR (Status)) {
-    while (!IsListEmpty (FileInfoList)) {
-      Link = FileInfoList->ForwardLink;
-      RemoveEntryList (Link);
-
-      TempFileInfoEntry = CR (Link, FILE_INFO_ENTRY, Link, FILE_INFO_SIGNATURE);
-
-      FreePool (TempFileInfoEntry->FileInfo);
-      FreePool (TempFileInfoEntry->FileNameFirstPart);
-      FreePool (TempFileInfoEntry->FileNameSecondPart);
-      FreePool (TempFileInfoEntry);
-    }
+    FreeFileInfoEntries (FileInfoList, /*FreeInfo=*/TRUE);
 
     *FileNum = 0;
   }
@@ -989,10 +1013,7 @@ GetFileImageInAlphabetFromDir (
       Link = RemoveEntryList (Link);
       Link = Link->BackLink;
 
-      FreePool (FileInfoEntry->FileInfo);
-      FreePool (FileInfoEntry->FileNameFirstPart);
-      FreePool (FileInfoEntry->FileNameSecondPart);
-      FreePool (FileInfoEntry);
+      FreeFileInfoEntry (FileInfoEntry, /*FreeInfo=*/TRUE);
 
       FreePool (TempFilePtrBuf[FileCount].ImageAddress);
       TempFilePtrBuf[FileCount].ImageAddress = NULL;
@@ -1022,16 +1043,7 @@ EXIT:
   //
   // FileInfo will be freed by the caller
   //
-  while (!IsListEmpty (&FileInfoList)) {
-    Link = FileInfoList.ForwardLink;
-    RemoveEntryList (Link);
-
-    FileInfoEntry = CR (Link, FILE_INFO_ENTRY, Link, FILE_INFO_SIGNATURE);
-
-    FreePool (FileInfoEntry->FileNameFirstPart);
-    FreePool (FileInfoEntry->FileNameSecondPart);
-    FreePool (FileInfoEntry);
-  }
+  FreeFileInfoEntries (&FileInfoList, /*FreeInfo=*/FALSE);
 
   return Status;
 }
