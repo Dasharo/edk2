@@ -1497,7 +1497,7 @@ WarnIfBatteryLow (
 }
 
 STATIC
-BOOLEAN
+VOID
 WarnIfFirmwareUpdateMode (
   VOID
 )
@@ -1516,7 +1516,7 @@ WarnIfFirmwareUpdateMode (
   UINTN          SecondsLeft;
 
   if (!IsFumEnabled ()) {
-    return FALSE;
+    return;
   }
 
   PromoteFum ();
@@ -1532,7 +1532,7 @@ WarnIfFirmwareUpdateMode (
 
   // Don't bother checking user presence if FUM was triggered by capsule update
   if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
-    return TRUE;
+    return;
   }
 
   Status = gRT->GetTime (&Time, NULL);
@@ -1617,8 +1617,8 @@ WarnIfFirmwareUpdateMode (
   gST->ConOut->ClearScreen (gST->ConOut);
   DrainInput ();
   BootLogoEnableLogo ();
-  return TRUE;
 }
+
 /**
 
   Acquire the string associated with the Index from smbios structure and return it.
@@ -1936,6 +1936,8 @@ PlatformBootManagerAfterConsole (
   Black.Blue = Black.Green = Black.Red = Black.Reserved = 0;
   White.Blue = White.Green = White.Red = White.Reserved = 0xFF;
 
+  FUMEnabled = IsFumEnabled ();
+
   gST->ConOut->EnableCursor (gST->ConOut, FALSE);
   gST->ConOut->ClearScreen (gST->ConOut);
 
@@ -1962,7 +1964,7 @@ PlatformBootManagerAfterConsole (
   WarnIfSinglePCRBank ();
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
-  FUMEnabled = PcdGetBool (PcdShowFum) && WarnIfFirmwareUpdateMode ();
+  WarnIfFirmwareUpdateMode ();
 
   EfiBootManagerRefreshAllBootOption ();
 
