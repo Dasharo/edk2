@@ -833,6 +833,90 @@ PromoteFum (
   return Status;
 }
 
+STATIC
+EFI_STATUS
+RequestDiskCapsulesBoot (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       VarSize;
+  BOOLEAN     Value;
+
+  Value   = TRUE;
+  VarSize = sizeof (Value);
+
+  // This requests FUM as well.
+  Status = gRT->SetVariable (
+      DASHARO_VAR_DISK_CAPSULES_BOOT,
+      &gDasharoSystemFeaturesGuid,
+      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      VarSize,
+      &Value
+      );
+
+  return Status;
+}
+
+STATIC
+BOOLEAN
+HaveCapsules (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+
+  if (GetBootModeHob () == BOOT_ON_FLASH_UPDATE) {
+    //
+    // Two possibilities:
+    //  - there is an in-RAM capsule(s) and we're ignoring on-disk capsules if
+    //    any are present
+    //  - on-disk capsules were detected by this function on the previous boot
+    //    and we'll try to process them during this boot
+    //
+    return TRUE;
+  }
+
+  if (!CoDCheckCapsuleOnDiskFlag ()) {
+    return FALSE;
+  }
+
+  DEBUG ((DEBUG_INFO, "On-disk capsules: processing request from an OS.\n"));
+
+  //
+  // Worth noting that CoDPresent() always returns FALSE in
+  // PlatformBootManagerBeforeConsole() because storage devices haven't been
+  // initialized yet.
+  //
+  if (!CoDPresent (/*MaxRetry=*/3)) {
+    DEBUG ((DEBUG_INFO, "On-disk capsules: found no capsules.\n"));
+    return FALSE;
+  }
+
+  DEBUG ((
+    DEBUG_INFO,
+    "On-disk capsules: at least one is present on boot device.\n"
+    ));
+
+  Status = RequestDiskCapsulesBoot ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "On-disk capsules: failed requesting disk capsules boot: %r.\n",
+      Status
+      ));
+    return FALSE;
+  }
+
+  DEBUG ((
+    DEBUG_INFO,
+    "On-disk capsules: rebooting to enable handling of capsules in coreboot.\n"
+    ));
+  gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+
+  // Should be unreachable.
+  return FALSE;
+}
 
 /**
   Do the platform specific action before the console is connected.
@@ -857,6 +941,12 @@ PlatformBootManagerBeforeConsole (
   EFI_STATUS                     Status;
   BOOLEAN                        BootMenuEnable;
   UINTN                          VarSize;
+
+  //
+  // This variable communicates EDK's intent to coreboot and shouldn't exist
+  // longer than a single boot.
+  //
+  DropDasharoVar (DASHARO_VAR_DISK_CAPSULES_BOOT);
 
   //
   // Map ESC to Boot Manager Menu
@@ -899,7 +989,7 @@ PlatformBootManagerBeforeConsole (
   // capsules that don't contain embedded drivers if those devices are already
   // available.
   //
-  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+  if (HaveCapsules ()) {
     // Capsules may have their own sanity checks, e.g. AC check on laptops.
     Status = ProcessCapsules ();
     if (EFI_ERROR (Status)) {
@@ -1531,7 +1621,7 @@ WarnIfFirmwareUpdateMode (
   ASSERT_EFI_ERROR (Status);
 
   // Don't bother checking user presence if FUM was triggered by capsule update
-  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+  if (HaveCapsules ()) {
     return;
   }
 
@@ -1973,12 +2063,18 @@ PlatformBootManagerAfterConsole (
   // firmware capsules on first call to ProcessCapsules() in
   // PlatformBootManagerBeforeConsole().
   //
-  if (GetBootModeHob() == BOOT_ON_FLASH_UPDATE) {
+  if (HaveCapsules ()) {
     // Capsules may have their own sanity checks, e.g. AC check on laptops.
     Status = ProcessCapsules ();
     if (EFI_ERROR (Status)) {
       DEBUG((DEBUG_ERROR, "%a(): ProcessCapsule() failed with: %r\n", __FUNCTION__, Status));
     }
+
+    //
+    // This also clears BootNext variable which may be used to find on-disk
+    // capsule, thus this needs to be done after ProcessCapsules().
+    //
+    CoDClearCapsuleOnDiskFlag ();
 
     //
     // Reset the system to disable SMI handler in order to exclude the
@@ -1990,6 +2086,9 @@ PlatformBootManagerAfterConsole (
     // a case when this doesn't happen which is possible on error.
     //
     gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+  } else {
+    // Don't leave the flag in OsIndications set.
+    CoDClearCapsuleOnDiskFlag ();
   }
 
   //

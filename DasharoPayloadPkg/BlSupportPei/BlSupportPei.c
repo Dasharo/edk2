@@ -892,7 +892,13 @@ BlPeiEntryPoint (
     return Status;
   }
 
-  if (GetFirstHob (EFI_HOB_TYPE_UEFI_CAPSULE) != NULL) {
+  if (GetFirstHob (EFI_HOB_TYPE_UEFI_CAPSULE) != NULL || ParseIsDiskCapsulesBoot ()) {
+    if (GetFirstHob (EFI_HOB_TYPE_UEFI_CAPSULE) != NULL) {
+      DEBUG ((DEBUG_INFO, "BootMode: Flash update (for in-RAM capsule(s))\n"));
+    } else {
+      DEBUG ((DEBUG_INFO, "BootMode: Flash update (for on-disk capsule(s))\n"));
+    }
+
     Status = PeiServicesSetBootMode (BOOT_ON_FLASH_UPDATE);
     ASSERT_EFI_ERROR (Status);
   }
