@@ -1421,6 +1421,33 @@ CoDClearCapsuleRelocationInfo (
 }
 
 /**
+  Free resources allocated by GetAllCapsuleOnDisk.
+
+  @param[in]  ImageInfo  An array of data and information of files
+  @param[in]  Count      Length of the array.
+
+**/
+VOID
+FreeImageInfos (
+  IN IMAGE_INFO  *ImageInfo,
+  IN UINTN       Count
+  )
+{
+  UINTN  Index;
+
+  if (Count == 0) {
+    return;
+  }
+
+  for (Index = 0; Index < Count; Index++) {
+    FreePool (ImageInfo[Index].ImageAddress);
+    FreePool (ImageInfo[Index].FileInfo);
+  }
+
+  FreePool (ImageInfo);
+}
+
+/**
   Relocate Capsule on Disk from EFI system partition to a platform-specific NV storage device
   with BlockIo protocol. Relocation device path, identified by PcdCodRelocationDevPath, must
   be a full device path.
@@ -1716,17 +1743,7 @@ EXIT:
     FreePool (CapsuleDataBuf);
   }
 
-  if (CapsuleOnDiskBuf != NULL) {
-    //
-    // Free resources allocated by GetAllCapsuleOnDisk
-    //
-    for (Index = 0; Index < CapsuleOnDiskNum; Index++ ) {
-      FreePool (CapsuleOnDiskBuf[Index].ImageAddress);
-      FreePool (CapsuleOnDiskBuf[Index].FileInfo);
-    }
-
-    FreePool (CapsuleOnDiskBuf);
-  }
+  FreeImageInfos (CapsuleOnDiskBuf, CapsuleOnDiskNum);
 
   if (TempCodFile != NULL) {
     if (EFI_ERROR (Status)) {
@@ -1796,6 +1813,7 @@ RelocateCapsuleToRam (
   CapsuleBuffer = AllocateZeroPool ((CapsuleOnDiskNum + 1) * sizeof (VOID *));
   if (CapsuleBuffer == NULL) {
     DEBUG ((DEBUG_ERROR, "Fail to allocate memory for capsules.\n"));
+    FreeImageInfos (CapsuleOnDiskBuf, CapsuleOnDiskNum);
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -1803,6 +1821,7 @@ RelocateCapsuleToRam (
   if (CapsuleSize == NULL) {
     DEBUG ((DEBUG_ERROR, "Fail to allocate memory for capsules.\n"));
     FreePool (CapsuleBuffer);
+    FreeImageInfos (CapsuleOnDiskBuf, CapsuleOnDiskNum);
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -1825,6 +1844,7 @@ RelocateCapsuleToRam (
     DEBUG ((DEBUG_ERROR, "Fail to allocate memory for name capsule.\n"));
     FreePool (CapsuleBuffer);
     FreePool (CapsuleSize);
+    FreeImageInfos (CapsuleOnDiskBuf, CapsuleOnDiskNum);
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -1854,9 +1874,15 @@ BuildGather:
     if (FileNameCapsule != NULL) {
       FreePool (FileNameCapsule);
     }
+    FreeImageInfos (CapsuleOnDiskBuf, CapsuleOnDiskNum);
 
     return EFI_OUT_OF_RESOURCES;
   }
+
+  for (Index = 0; Index < CapsuleOnDiskNum; Index++) {
+    FreePool (CapsuleOnDiskBuf[Index].FileInfo);
+  }
+  FreePool (CapsuleOnDiskBuf);
 
   //
   // 4. Call UpdateCapsule() service
