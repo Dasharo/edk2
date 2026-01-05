@@ -784,6 +784,15 @@ struct lb_efi_fw_info {
   UINT32 fw_size;                   /* Size of firmware in bytes */
 } __attribute__ ((packed));
 
+#define CB_TAG_BOOT_INFO  0x00a1
+
+struct lb_boot_info {
+  UINT32 tag;
+  UINT32 size;
+  UINT8 is_disk_capsules_boot;  /* Boolean. */
+  UINT8 pad[3];
+} __attribute__ ((packed));
+
 #define CBMEM_ID_TCPA_TCG_LOG 0x54445041 /* TPM log per TPM 1.2 specification */
 #define CBMEM_ID_TPM2_TCG_LOG 0x54504d32 /* TPM log per TPM 2.0 specification */
 
