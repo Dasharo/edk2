@@ -267,4 +267,18 @@ ParseInfoString (
   IN UINTN  Id
   );
 
+/**
+  Parse bootloader's information to check whether EDK should look for on-disk
+  capsules.
+
+  @retval TRUE   Should check for on-disk capsules unless in-RAM capsules are
+                 present.  Must reboot in any case.
+  @retval FALSE  On-disk capsules should not be processed on this boot.
+**/
+BOOLEAN
+EFIAPI
+ParseIsDiskCapsulesBoot (
+  VOID
+  );
+
 #endif
