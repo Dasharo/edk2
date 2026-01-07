@@ -103,3 +103,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemorySpdProfileOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdFumAutoIpxeBoot
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport
