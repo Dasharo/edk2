@@ -165,6 +165,7 @@ typedef struct {
   BOOLEAN  IntelMeMenuShowCbntStatus;
   BOOLEAN  ShowMemorySpdProfile;
   BOOLEAN  ShowMemoryIbecc;
+  BOOLEAN  HaveDiskCapsules;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
