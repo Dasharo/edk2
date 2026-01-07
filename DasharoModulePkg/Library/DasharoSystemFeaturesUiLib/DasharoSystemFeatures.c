@@ -206,6 +206,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(IntelMeMenuShowCbntStatus) = FixedPcdGetBool (PcdIntelMeMenuShowCbntStatus);
   PRIVATE_DATA(ShowMemorySpdProfile) = FixedPcdGetBool(PcdShowMemorySpdProfileOption);
   PRIVATE_DATA(ShowMemoryIbecc) = FixedPcdGetBool(PcdShowMemoryIbeccOption);
+  PRIVATE_DATA(HaveDiskCapsules) = FixedPcdGetBool(PcdCapsuleOnDiskSupport);
 
   // HAP is only available if descriptor is not locked
   VarSize = sizeof (DescriptorWriteable);
