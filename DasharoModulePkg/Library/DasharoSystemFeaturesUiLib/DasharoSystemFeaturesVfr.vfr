@@ -219,7 +219,12 @@ formset
 
     disableif ideqval FeaturesData.ShowIntelMeMenu == 0;
       disableif ideqval FeaturesData.MeHapAvailable == 0;
-        subtitle text = STRING_TOKEN(STR_CAPSULE_UPDATE_MSG);
+        disableif NOT ideqval FeaturesData.HaveDiskCapsules == 0;
+          subtitle text = STRING_TOKEN(STR_CAPSULE_UPDATE_MSG);
+        endif;
+        disableif ideqval FeaturesData.HaveDiskCapsules == 0;
+          subtitle text = STRING_TOKEN(STR_DISK_CAPSULE_UPDATE_MSG);
+        endif;
       endif;
       oneof varid  = FeaturesData.MeMode,
             questionid = INTEL_ME_MODE_QUESTION_ID,
