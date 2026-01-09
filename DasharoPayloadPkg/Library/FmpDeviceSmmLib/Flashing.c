@@ -180,7 +180,7 @@ MigrateRegion (
   if (CurrentRegion == NULL) {
     DEBUG ((
       DEBUG_WARN,
-      "%a(): failed to find %a region in current firmware\n",
+      "%a(): failed to find %a region in current firmware IS THIS DOING ANYTHING?\n",
       __FUNCTION__,
       RegionName
       ));
@@ -414,6 +414,46 @@ MigrateVariables (
 
 STATIC
 BOOLEAN
+MigrateBOOTBLOCK (
+  IN CONST MigrationData  *Data
+  )
+{
+DEBUG ((
+  DEBUG_ERROR,
+  "%a(): Entered, will try to merge BOOTBLOCK\n",
+  __FUNCTION__
+  ));
+
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("BOOTBLOCK", Data, TRUE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+STATIC
+BOOLEAN
+MigrateCOREBOOT (
+  IN CONST MigrationData  *Data
+  )
+{
+  DEBUG ((
+    DEBUG_ERROR,
+    "%a(): Entered, will try to merge COREBOOT\n",
+    __FUNCTION__
+    ));
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("COREBOOT", Data, TRUE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
 MigrateRomhole (
   IN CONST MigrationData  *Data
   )
@@ -640,6 +680,8 @@ IsRangeWriteable (
   CONST Fmap     *FlashMap;
   CONST FmapArea *Region;
 
+  DEBUG ((DEBUG_ERROR, "Entered IsRangeWriteable\n"));
+
   // Reject out-of-bounds upfront
   if (RangeOffset >= ImageLen || RangeLen > ImageLen - RangeOffset)
     return FALSE;
@@ -660,9 +702,11 @@ IsRangeWriteable (
   Region = FmapFindArea(FlashMap, "SI_DESC");
 
   // There is no descriptor, so everything should be unlocked.
-  if (!Region)
+  if (!Region) {
+    DEBUG ((DEBUG_ERROR, "There is no descriptor, so everything should be unlocked.\n"));
     return TRUE;
 
+  }
   // Range overlaps locked descriptor.
   if (RangeOffset + RangeLen > Region->offset &&
       Region->offset + Region->size > RangeOffset)
@@ -696,25 +740,31 @@ IsRangeWriteable (
   // less code than using a new PCD, but also with less flexibility 
   Region = FmapFindArea(FlashMap, "TOPSWAP");
   if (Region) {  
+    DEBUG ((DEBUG_ERROR, "TOPSWAP found, entering its logic\n"));
     // The regions BOOTBLOCK and COREBOOT are to remain read-only golden copies
     // of the firmware if we're using TOP_SWAP_REDUNDANCY
     Region = FmapFindArea(FlashMap, "BOOTBLOCK");
 
     // Range exists and overlaps locked BOOTBLOCK.
     if (Region && RangeOffset + RangeLen > Region->offset &&
-        Region->offset + Region->size > RangeOffset)
+        Region->offset + Region->size > RangeOffset){
+      DEBUG ((DEBUG_ERROR, "Locked the BOOTBLOCK\n"));
       return FALSE;
 
+    }
     Region = FmapFindArea(FlashMap, "COREBOOT");
 
     // Range exists and overlaps locked COREBOOT.
     if (Region && RangeOffset + RangeLen > Region->offset &&
-        Region->offset + Region->size > RangeOffset)
+        Region->offset + Region->size > RangeOffset){
+      DEBUG ((DEBUG_ERROR, "Locked the COREBOOT\n"));
       return FALSE;
+    }
   }
 
   return TRUE;
 }
+
 
 /**
   Migrates data from current firmware to new image before it's written.
@@ -733,6 +783,12 @@ MergeFirmwareImages (
 {
   EFI_STATUS     Status;
   MigrationData  Data;
+
+  DEBUG ((
+    DEBUG_ERROR,
+    "%a(): Entered, will try to merge images\n",
+    __FUNCTION__
+    ));
 
   Data.Current = Current;
 
@@ -794,7 +850,7 @@ MergeFirmwareImages (
   }
 
   if (!MigrateRomhole (&Data)) {
-    DEBUG ((DEBUG_ERROR, "%a(): MigrateRomhole () failed\n", __FUNCTION__));
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateRomhole () failed IS THIS DOING ANYTHING??\n", __FUNCTION__));
     goto Fail;
   }
 
@@ -810,6 +866,14 @@ MergeFirmwareImages (
 
   if (!MigrateSmbiosData (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateSmbiosData () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+  if (!MigrateBOOTBLOCK (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateBOOTBLOCK () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+  if (!MigrateCOREBOOT (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateCOREBOOT () failed\n", __FUNCTION__));
     goto Fail;
   }
 
