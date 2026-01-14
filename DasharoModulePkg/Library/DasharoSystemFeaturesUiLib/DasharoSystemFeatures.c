@@ -621,7 +621,7 @@ DasharoSystemFeaturesRouteConfig (
 
   }
 
-#undef STORE_VAR
+#undef STORE_VAR_IF
 
   Private->DasharoFeaturesData = DasharoFeaturesData;
   return EFI_SUCCESS;
