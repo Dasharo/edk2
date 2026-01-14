@@ -26,24 +26,24 @@ This is an EFI variable name.  It should look roughly like the already existing
 ones.  The rest of the code should use the macro name after adding
 `#include <DasharoOptions.h>` and not the string literal which can have typos.
 
-Add default value in `Library/DasharoVariablesLib/DasharoVariablesLib.c`
+Define a variable in `Library/DasharoVariablesLib/DasharoVariablesLib.c`
 ------------------------------------------------------------------------
 
-Add another `if`-statement to `GetVariableDefault()` setting default variable
-data, its size and additional EFI variable attributes if they are necessary.
+Add another `if`-statement to `GetVariableInfo()` setting default variable
+value, its size and additional EFI variable attributes if they are necessary.
 See below if variable data is not a primitive type.
 
-Updating `GetVariableDefault()` enables resetting and creation (see the next
-step) of the variable with the correct value.
+`GetVariableInfo()` serves as a source of information for other functions and
+enables resetting and creation (see the next step) of the variable with the
+correct value.
 
-If the variable's data is a structure then additionally:
+If the variable's data is a structure, then additionally:
 1. Add a new `DASHARO_*` structure at the bottom of `Include/DasharoOptions.h`.
-2. Add the new structure to `VAR_DATA` in `Include/DasharoOptions.h` as well.
+2. Add the new structure to `DASHARO_VAR_DATA` in `Include/DasharoOptions.h` as
+   well.
 
-Add variable creation in `Library/DasharoVariablesLib/DasharoVariablesLib.c`
-----------------------------------------------------------------------------
-
-By adding one more line to `mAllVariables` array there.
+If the variable should to be created automatically, add it to
+`mAutoCreatedVariables` specifying conditions as an expression of PCDs.
 
 Adding the setting to Dasharo System Features
 =============================================
@@ -62,8 +62,8 @@ field after `// Feature data` like:
   BOOLEAN      NewSetting;
 ```
 
-Add initialization to constructor of `DasharoSystemFeaturesUiLib`
------------------------------------------------------------------
+Add initialization to the constructor of `DasharoSystemFeaturesUiLib`
+---------------------------------------------------------------------
 
 Update `DasharoSystemFeaturesUiLibConstructor()` in
 `Library/DasharoSystemFeaturesUiLib/DasharoSystemFeatures.c` by adding a new
@@ -84,13 +84,13 @@ writing changed values back into EFI variable storage.  Add a line like this to
 the function:
 
 ```
-  STORE_VAR (DASHARO_VAR_NEW_SETTING, NewSetting);
+  STORE_VAR_IF (DASHARO_VAR_NEW_SETTING, NewSetting, TRUE);
 ```
 
-Very similar to `LOAD_VAR`.
-
-Some variables can even be read-only, but add this line anyway for consistency.
-If no value change is detected, nothing gets written.
+This is very similar to `LOAD_VAR`, but may need to reside within some
+`if`-statement and specify a condition which guards when this variable can
+be stored.  A read-only variable, can have `FALSE` for a condition.  If no
+value change is detected at runtime, nothing gets written.
 
 Exposing the setting in Dasharo System Features UI
 ==================================================
@@ -157,8 +157,9 @@ The integer value should be unique.
 Extend callback in `Library/DasharoSystemFeaturesUiLib/DasharoSystemFeatures.c`
 -------------------------------------------------------------------------------
 
-Handle a new case to `switch (QuestionId)` in `DasharoSystemFeaturesCallback()`
-like the following:
+Handle a new case in `switch (QuestionId)` within
+`case EFI_BROWSER_ACTION_DEFAULT_MANUFACTURING` of
+`DasharoSystemFeaturesCallback()` like the following:
 
 ```
       case NEW_SETTING_QUESTION_ID:
@@ -194,3 +195,10 @@ Could be added in the future:
 
 * Adding a new submenu.
 * Controlling feature visibility via PCDs and hiding them in VFR.
+* `supressif` vs. `disableif` in VFR.
+
+References
+==========
+
+Some documentation on the format of `.uni` and `.vfr` files can be found at
+specifications linked in <https://tianocore-docs.github.io/>.
