@@ -352,8 +352,6 @@ MemInfoCallback (
         if (Size >= PEI_MEM_SIZE) {
           *UsableLowMemTop = Base + Size;
         }
-      } else {
-        Attribute &= ~EFI_RESOURCE_ATTRIBUTE_TESTED;
       }
       BuildResourceDescriptorHob (
         EFI_RESOURCE_SYSTEM_MEMORY,
