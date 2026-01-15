@@ -74,6 +74,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdCoDRelocationFileName                    ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleEmbeddedDriverSupport             ## CONSUMES
 
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport                      ## SOMETIMES_CONSUMES
+
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSupportUpdateCapsuleReset ## CONSUMES
 
