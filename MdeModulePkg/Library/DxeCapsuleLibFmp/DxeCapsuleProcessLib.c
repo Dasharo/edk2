@@ -33,6 +33,8 @@
 
 #include <IndustryStandard/WindowsUxCapsule.h>
 
+#include "UpdateReport.h"
+
 extern EDKII_FIRMWARE_MANAGEMENT_PROGRESS_PROTOCOL  *mFmpProgress;
 
 /**
@@ -135,9 +137,10 @@ UINT32      mCapsuleTotalNumber;
 
   Caution: This function may receive untrusted input.
 
-  @param[in]  CapsuleHeader         Points to a capsule header.
-  @param[in]  CapFileName           Capsule file name.
-  @param[out] ResetRequired         Indicates whether reset is required or not.
+  @param[in]     CapsuleHeader      Points to a capsule header.
+  @param[in]     CapFileName        Capsule file name.
+  @param[out]    ResetRequired      Indicates whether reset is required or not.
+  @param[in,out] CapsuleResult      Outcome of processing the capsule.
 
   @retval EFI_SUCESS            Process Capsule Image successfully.
   @retval EFI_UNSUPPORTED       Capsule image is not supported by the firmware.
@@ -149,7 +152,8 @@ EFIAPI
 ProcessThisCapsuleImage (
   IN EFI_CAPSULE_HEADER  *CapsuleHeader,
   IN CHAR16              *CapFileName   OPTIONAL,
-  OUT BOOLEAN            *ResetRequired OPTIONAL
+  OUT BOOLEAN            *ResetRequired OPTIONAL,
+  IN OUT CapsuleResult   *CapsuleResult OPTIONAL
   );
 
 /**
@@ -543,8 +547,9 @@ PopulateCapsuleInConfigurationTable (
 
   Each individual capsule result is recorded in capsule record variable.
 
-  @param[in]  FirstRound         TRUE:  First round. Need skip the FMP capsules with non zero EmbeddedDriverCount.
+  @param[in]      FirstRound     TRUE:  First round. Need skip the FMP capsules with non zero EmbeddedDriverCount.
                                  FALSE: Process rest FMP capsules.
+  @param[in,out]  Report         Pointer to a capsule update report.
 
   @retval EFI_SUCCESS             There is no error when processing capsules.
   @retval EFI_OUT_OF_RESOURCES    No enough resource to process capsules.
@@ -552,7 +557,8 @@ PopulateCapsuleInConfigurationTable (
 **/
 EFI_STATUS
 ProcessTheseCapsules (
-  IN BOOLEAN  FirstRound
+  IN BOOLEAN           FirstRound,
+  IN OUT UpdateReport  *Report
   )
 {
   EFI_STATUS                Status;
@@ -562,6 +568,7 @@ ProcessTheseCapsules (
   UINT16                    EmbeddedDriverCount;
   BOOLEAN                   ResetRequired;
   CHAR16                    *CapsuleName;
+  CapsuleResult             *CapsuleResult;
 
   DEBUG ((DEBUG_ERROR, "%a(): Round #%d.\n", __func__, FirstRound ? 1 : 2));
 
@@ -605,11 +612,15 @@ ProcessTheseCapsules (
     CapsuleHeader = (EFI_CAPSULE_HEADER *)mCapsulePtr[Index];
     CapsuleName   = (mCapsuleNamePtr == NULL) ? NULL : mCapsuleNamePtr[Index];
     if (CompareGuid (&CapsuleHeader->CapsuleGuid, &gWindowsUxCapsuleGuid)) {
+      CapsuleResult = ReportAddCapsule (Report, Index);
+
       DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage (Ux) - 0x%x\n", CapsuleHeader));
       DEBUG ((DEBUG_INFO, "Display logo capsule is found.\n"));
-      Status                     = ProcessThisCapsuleImage (CapsuleHeader, CapsuleName, NULL);
+      Status                     = ProcessThisCapsuleImage (CapsuleHeader, CapsuleName, NULL, CapsuleResult);
       mCapsuleStatusArray[Index] = EFI_SUCCESS;
       DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage (Ux) - %r\n", Status));
+
+      ReportCapsuleOutcome (CapsuleResult, CAPSULE_SUCCESS, Status);
       break;
     }
   }
@@ -636,26 +647,32 @@ ProcessTheseCapsules (
         Status = ValidateFmpCapsule (CapsuleHeader, &EmbeddedDriverCount);
         if (EFI_ERROR (Status)) {
           DEBUG ((DEBUG_ERROR, "ValidateFmpCapsule failed. Ignore!\n"));
+          ReportCapsuleOutcome (ReportAddCapsule (Report, Index), CAPSULE_REFUSED, Status);
           mCapsuleStatusArray[Index] = EFI_ABORTED;
           continue;
         }
       } else {
+        ReportCapsuleOutcome (ReportAddCapsule (Report, Index), CAPSULE_NONFMP, EFI_ABORTED);
         mCapsuleStatusArray[Index] = EFI_ABORTED;
         continue;
       }
 
       if ((!FirstRound) || (EmbeddedDriverCount == 0)) {
+        CapsuleResult = ReportAddCapsule (Report, Index);
+
         DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage - 0x%x\n", CapsuleHeader));
         ResetRequired              = FALSE;
-        Status                     = ProcessThisCapsuleImage (CapsuleHeader, CapsuleName, &ResetRequired);
+        Status                     = ProcessThisCapsuleImage (CapsuleHeader, CapsuleName, &ResetRequired, CapsuleResult);
         mCapsuleStatusArray[Index] = Status;
         DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage - %r\n", Status));
 
         if (Status != EFI_NOT_READY) {
           if (EFI_ERROR (Status)) {
+            ReportCapsuleOutcome (CapsuleResult, CAPSULE_FAILED, Status);
             REPORT_STATUS_CODE (EFI_ERROR_CODE, (EFI_SOFTWARE | PcdGet32 (PcdStatusCodeSubClassCapsule) | PcdGet32 (PcdCapsuleStatusCodeUpdateFirmwareFailed)));
             DEBUG ((DEBUG_ERROR, "Capsule process failed!\n"));
           } else {
+            ReportCapsuleOutcome (CapsuleResult, CAPSULE_SUCCESS, Status);
             REPORT_STATUS_CODE (EFI_PROGRESS_CODE, (EFI_SOFTWARE | PcdGet32 (PcdStatusCodeSubClassCapsule) | PcdGet32 (PcdCapsuleStatusCodeUpdateFirmwareSuccess)));
           }
 
@@ -663,6 +680,12 @@ ProcessTheseCapsules (
           if ((CapsuleHeader->Flags & PcdGet16 (PcdSystemRebootAfterCapsuleProcessFlag)) != 0) {
             mNeedReset = TRUE;
           }
+        } else if (!FirstRound) {
+          // Capsule GUID wasn't matched against any FMP instance.
+          ReportCapsuleOutcome (CapsuleResult, CAPSULE_REJECTED, Status);
+        } else {
+          // This capsule will be revisited.
+          ReportPopCapsule (Report);
         }
       }
     }
@@ -681,6 +704,16 @@ ProcessTheseCapsules (
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, (EFI_SOFTWARE | PcdGet32 (PcdStatusCodeSubClassCapsule) | PcdGet32 (PcdCapsuleStatusCodeProcessCapsulesEnd)));
 
   return Status;
+}
+
+STATIC
+VOID
+FinishCapsuleUpdate (
+  IN UpdateReport  *Report
+  )
+{
+  ReportDisplay (Report);
+  ReportFree (Report);
 }
 
 /**
@@ -737,10 +770,12 @@ ProcessCapsules (
   VOID
   )
 {
+  STATIC UpdateReport  CapsuleReport;
+
   EFI_STATUS  Status;
 
   if (!mDxeCapsuleLibEndOfDxe) {
-    Status = ProcessTheseCapsules (TRUE);
+    Status = ProcessTheseCapsules (TRUE, &CapsuleReport);
 
     //
     // Reboot System if and only if all capsule processed.
@@ -752,10 +787,14 @@ ProcessCapsules (
     if (mNeedReset &&
         (!CoDCheckCapsuleOnDiskFlag () || mCapsuleTotalNumber != 0) &&
         AreAllImagesProcessed ()) {
+      FinishCapsuleUpdate (&CapsuleReport);
       DoResetSystem ();
     }
   } else {
-    Status = ProcessTheseCapsules (FALSE);
+    Status = ProcessTheseCapsules (FALSE, &CapsuleReport);
+
+    FinishCapsuleUpdate (&CapsuleReport);
+
     //
     // Reboot System if required after all capsule processed
     //
