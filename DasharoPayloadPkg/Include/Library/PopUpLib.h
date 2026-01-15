@@ -14,10 +14,67 @@ typedef enum {
   SuccessPopUp,
 } PopupKind;
 
+typedef struct {
+  CHAR16  *Lines[24];
+  UINTN   Length;
+  UINTN   Width;
+} PopUpData;
+
 VOID
 EFIAPI
 DrainInput (
   VOID
+  );
+
+VOID
+EFIAPI
+PopUpInit (
+  OUT PopUpData  *PopUp,
+  IN UINTN       Width
+  );
+
+VOID
+EFIAPI
+AddTitle (
+  IN PopUpData     *PopUp,
+  IN CONST CHAR16  *Line
+  );
+
+VOID
+EFIAPI
+AddLineF (
+  IN PopUpData     *PopUp,
+  IN CONST CHAR16  *Format,
+  ...
+  );
+
+VOID
+EFIAPI
+AddFullLineF (
+  IN PopUpData     *PopUp,
+  IN CONST CHAR16  *Format,
+  ...
+  );
+
+VOID
+EFIAPI
+AddLine (
+  IN PopUpData     *PopUp,
+  IN CONST CHAR16  *Line
+  );
+
+VOID
+EFIAPI
+AddFullLine (
+  IN PopUpData     *PopUp,
+  IN CONST CHAR16  *Line
+  );
+
+VOID
+EFIAPI
+PopUpDraw (
+  IN CONST PopUpData  *PopUp,
+  IN PopupKind        GuiKind
   );
 
 /**
