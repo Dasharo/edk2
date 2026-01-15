@@ -32,10 +32,12 @@
   DxeCapsuleProcessLibNull.c
   DxeCapsuleReportLibNull.c
   DxeCapsuleRuntime.c
+  UpdateReport.c
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -49,7 +51,7 @@
   PrintLib
   HobLib
   BmpSupportLib
-
+  PopUpLib
 
 [Protocols]
   gEsrtManagementProtocolGuid                   ## CONSUMES
