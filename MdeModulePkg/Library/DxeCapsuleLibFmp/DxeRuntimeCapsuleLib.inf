@@ -54,6 +54,9 @@
   BmpSupportLib
   PopUpLib
 
+[Pcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport  ## SOMETIMES_CONSUMES
+
 [Protocols]
   gEsrtManagementProtocolGuid                   ## CONSUMES
   gEfiFirmwareManagementProtocolGuid            ## CONSUMES
