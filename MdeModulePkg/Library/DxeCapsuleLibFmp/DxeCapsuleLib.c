@@ -43,6 +43,8 @@
 #include <Protocol/FirmwareManagementProgress.h>
 #include <Protocol/DevicePath.h>
 
+#include "UpdateReport.h"
+
 EFI_SYSTEM_RESOURCE_TABLE  *mEsrtTable = NULL;
 
 BOOLEAN    mDxeCapsuleLibEndOfDxe      = FALSE;
@@ -1200,9 +1202,10 @@ RecordFmpCapsuleStatus (
 
   This function need support nested FMP capsule.
 
-  @param[in]  CapsuleHeader         Points to a capsule header.
-  @param[in]  CapFileName           Capsule file name.
-  @param[out] ResetRequired         Indicates whether reset is required or not.
+  @param[in]     CapsuleHeader      Points to a capsule header.
+  @param[in]     CapFileName        Capsule file name.
+  @param[out]    ResetRequired      Indicates whether reset is required or not.
+  @param[in,out] CapsuleResult      Outcome of processing the capsule.
 
   @retval EFI_SUCCESS           Process Capsule Image successfully.
   @retval EFI_UNSUPPORTED       Capsule image is not supported by the firmware.
@@ -1210,11 +1213,13 @@ RecordFmpCapsuleStatus (
   @retval EFI_OUT_OF_RESOURCES  Not enough memory.
   @retval EFI_NOT_READY         No FMP protocol to handle this FMP capsule.
 **/
+STATIC
 EFI_STATUS
 ProcessFmpCapsuleImage (
   IN EFI_CAPSULE_HEADER  *CapsuleHeader,
   IN CHAR16              *CapFileName   OPTIONAL,
-  OUT BOOLEAN            *ResetRequired OPTIONAL
+  OUT BOOLEAN            *ResetRequired OPTIONAL,
+  IN OUT CapsuleResult   *CapsuleResult OPTIONAL
   )
 {
   EFI_STATUS                                    Status;
@@ -1231,9 +1236,10 @@ ProcessFmpCapsuleImage (
   UINTN                                         Index2;
   BOOLEAN                                       NotReady;
   BOOLEAN                                       Abort;
+  BOOLEAN                                       PayloadAborted;
 
   if (!IsFmpCapsuleGuid (&CapsuleHeader->CapsuleGuid)) {
-    return ProcessFmpCapsuleImage ((EFI_CAPSULE_HEADER *)((UINTN)CapsuleHeader + CapsuleHeader->HeaderSize), CapFileName, ResetRequired);
+    return ProcessFmpCapsuleImage ((EFI_CAPSULE_HEADER *)((UINTN)CapsuleHeader + CapsuleHeader->HeaderSize), CapFileName, ResetRequired, CapsuleResult);
   }
 
   NotReady = FALSE;
@@ -1279,6 +1285,7 @@ ProcessFmpCapsuleImage (
                );
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "Driver Return Status = %r\n", Status));
+      ReportCapsuleOutcome (CapsuleResult, CAPSULE_DRIVER, Status);
       return Status;
     }
   }
@@ -1327,6 +1334,7 @@ ProcessFmpCapsuleImage (
       continue;
     }
 
+    PayloadAborted = FALSE;
     for (Index2 = 0; Index2 < NumberOfHandles; Index2++) {
       if (Abort) {
         RecordFmpCapsuleStatus (
@@ -1347,6 +1355,7 @@ ProcessFmpCapsuleImage (
                  );
       if (Status != EFI_SUCCESS) {
         Abort = TRUE;
+        PayloadAborted = TRUE;
       } else {
         if (ResetRequired != NULL) {
           *ResetRequired |= ResetRequiredBuffer[Index2];
@@ -1363,6 +1372,17 @@ ProcessFmpCapsuleImage (
         );
     }
 
+    if (PayloadAborted) {
+      // This payload caused the failure.
+      ReportAddPayload (CapsuleResult, Status);
+    } else if (Abort) {
+      // An earlier payload caused the failure.
+      ReportAddPayload (CapsuleResult, EFI_ABORTED);
+    } else {
+      // Success so far.
+      ReportAddPayload (CapsuleResult, EFI_SUCCESS);
+    }
+
     if (HandleBuffer != NULL) {
       FreePool (HandleBuffer);
     }
@@ -1370,6 +1390,10 @@ ProcessFmpCapsuleImage (
     if (ResetRequiredBuffer != NULL) {
       FreePool (ResetRequiredBuffer);
     }
+  }
+
+  if (Abort) {
+    ReportCapsuleOutcome (CapsuleResult, CAPSULE_PAYLOAD, EFI_ABORTED);
   }
 
   if (NotReady) {
@@ -1549,9 +1573,10 @@ SupportCapsuleImage (
 
   Caution: This function may receive untrusted input.
 
-  @param[in]  CapsuleHeader         Points to a capsule header.
-  @param[in]  CapFileName           Capsule file name.
-  @param[out] ResetRequired         Indicates whether reset is required or not.
+  @param[in]     CapsuleHeader      Points to a capsule header.
+  @param[in]     CapFileName        Capsule file name.
+  @param[out]    ResetRequired      Indicates whether reset is required or not.
+  @param[in,out] CapsuleResult      Outcome of processing the capsule.
 
   @retval EFI_SUCCESS           Process Capsule Image successfully.
   @retval EFI_UNSUPPORTED       Capsule image is not supported by the firmware.
@@ -1563,7 +1588,8 @@ EFIAPI
 ProcessThisCapsuleImage (
   IN EFI_CAPSULE_HEADER  *CapsuleHeader,
   IN CHAR16              *CapFileName   OPTIONAL,
-  OUT BOOLEAN            *ResetRequired OPTIONAL
+  OUT BOOLEAN            *ResetRequired OPTIONAL,
+  IN OUT CapsuleResult   *CapsuleResult OPTIONAL
   )
 {
   EFI_STATUS  Status;
@@ -1593,6 +1619,7 @@ ProcessThisCapsuleImage (
     DEBUG ((DEBUG_INFO, "ValidateFmpCapsule - %r\n", Status));
     if (EFI_ERROR (Status)) {
       RecordCapsuleStatusVariable (CapsuleHeader, Status);
+      ReportCapsuleOutcome (CapsuleResult, CAPSULE_NONFMP, Status);
       return Status;
     }
 
@@ -1600,7 +1627,7 @@ ProcessThisCapsuleImage (
     // Process EFI FMP Capsule
     //
     DEBUG ((DEBUG_INFO, "ProcessFmpCapsuleImage ...\n"));
-    Status = ProcessFmpCapsuleImage (CapsuleHeader, CapFileName, ResetRequired);
+    Status = ProcessFmpCapsuleImage (CapsuleHeader, CapFileName, ResetRequired, CapsuleResult);
     DEBUG ((DEBUG_INFO, "ProcessFmpCapsuleImage - %r\n", Status));
 
     return Status;
@@ -1627,7 +1654,7 @@ ProcessCapsuleImage (
   IN EFI_CAPSULE_HEADER  *CapsuleHeader
   )
 {
-  return ProcessThisCapsuleImage (CapsuleHeader, NULL, NULL);
+  return ProcessThisCapsuleImage (CapsuleHeader, NULL, NULL, NULL);
 }
 
 /**
