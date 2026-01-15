@@ -28,12 +28,12 @@
   BaseCryptLib
   BlParseLib
   CbfsLib
-  CustomizedDisplayLib
   DebugLib
   EfiVarsLib
   FmapLib
   HobLib
   MemoryAllocationLib
+  PopUpLib
   PrintLib
   SmmStoreLib
   UefiBootServicesTableLib
@@ -49,9 +49,7 @@
   MdePkg/MdePkg.dec
 
 [Protocols]
-  gEfiGraphicsOutputProtocolGuid  ## CONSUMES
   gEfiSmbiosProtocolGuid          ## CONSUMES
-  gEfiHiiFontProtocolGuid         ## CONSUMES
 
 [Guids]
   gEfiFirmwareInfoHobGuid
