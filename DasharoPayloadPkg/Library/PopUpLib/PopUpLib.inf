@@ -1,0 +1,34 @@
+## @file
+#  A utility library for drawing simple popups.
+#
+#  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: GPL-2-or-later
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PopUpLib
+  FILE_GUID                      = E8222229-BF8F-40E0-B4A5-EBB4031A8A97
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PopUpLib
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  PopUpCore.c
+  PopUpGui.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  BaseMemoryLib
