@@ -101,3 +101,5 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
 
 gDasharoPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A
 gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B
+
+gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|FALSE|BOOLEAN|0x0000000C

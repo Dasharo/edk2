@@ -72,6 +72,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdCodRelocationDevPath                     ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCoDRelocationFileName                    ## CONSUMES
 
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport                      ## SOMETIMES_CONSUMES
+
 [FeaturePcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSupportUpdateCapsuleReset ## CONSUMES
 
