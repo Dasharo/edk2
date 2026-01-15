@@ -280,6 +280,10 @@ ReportDisplay (
   PopUpData  PopUp;
   BOOLEAN    Success;
 
+  if (!FixedPcdGetBool (PcdShowCapsuleReport)) {
+    return;
+  }
+
   PopUpInit (&PopUp, /*Width=*/78);
 
   if (Report->CapsuleCount == 0) {
