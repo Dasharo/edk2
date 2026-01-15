@@ -32,10 +32,12 @@
   DxeCapsuleReportLib.c
   CapsuleOnDisk.c
   CapsuleOnDisk.h
+  UpdateReport.c
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -53,6 +55,7 @@
   FileHandleLib
   UefiBootManagerLib
   VariablePolicyHelperLib
+  PopUpLib
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleMax                               ## CONSUMES
