@@ -50,6 +50,7 @@
 
 [Pcd]
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultFastBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart

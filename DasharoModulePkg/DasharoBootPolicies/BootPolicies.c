@@ -216,7 +216,7 @@ InitializeBootPolicies (
                   &VarSize
                   );
   if (EFI_ERROR (Status))
-    mFastBootPolicy.FastBootEnabled = FALSE;
+    mFastBootPolicy.FastBootEnabled = FixedPcdGetBool(PcdDefaultFastBootEnable);
   else if (!EFI_ERROR (Status) && (VarSize == sizeof(*EfiVar)))
     mFastBootPolicy.FastBootEnabled = *EfiVar;
 
