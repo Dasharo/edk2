@@ -26,7 +26,9 @@ typedef struct {
 } PayloadResult;
 
 typedef struct {
-  UINTN          Index;  // Because capsules can be processed out of order.
+  UINTN               Index;    // Because capsules can be processed out of order.
+  EFI_CAPSULE_HEADER  *Header;
+
   UpdateOutcome  Outcome;
   EFI_STATUS     Status;
 
@@ -67,8 +69,9 @@ ReportFree (
 CapsuleResult *
 EFIAPI
 ReportAddCapsule (
-  IN UpdateReport  *Report,
-  IN UINTN         Index
+  IN UpdateReport        *Report,
+  IN UINTN               Index,
+  IN EFI_CAPSULE_HEADER  *Header
   );
 
 VOID
