@@ -1,13 +1,69 @@
 #include "UpdateReport.h"
 
+#include <Guid/FmpCapsule.h>
+#include <Guid/SystemResourceTable.h>
+
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/DebugLib.h>
+#include <Library/FmpDependencyLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PopUpLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiLib.h>
+
+#pragma pack(1)
+
+typedef struct {
+  UINT32  Signature;
+  UINT32  HeaderSize;
+  UINT32  FwVersion;
+  UINT32  LowestSupportedVersion;
+} FMP_PAYLOAD_HEADER;
+
+#pragma pack()
+
+#define FMP_PAYLOAD_HEADER_SIGNATURE  SIGNATURE_32 ('M', 'S', 'S', '1')
+
+/**
+  Return if this CapsuleGuid is a FMP capsule GUID or not.
+
+  @param[in] CapsuleGuid A pointer to EFI_GUID
+
+  @retval TRUE  It is a FMP capsule GUID.
+  @retval FALSE It is not a FMP capsule GUID.
+**/
+BOOLEAN
+IsFmpCapsuleGuid (
+  IN EFI_GUID  *CapsuleGuid
+  );
+
+/**
+  Return if this FMP is a system FMP or a device FMP, based upon CapsuleHeader.
+
+  @param[in] CapsuleHeader A pointer to EFI_CAPSULE_HEADER
+
+  @retval TRUE  It is a system FMP.
+  @retval FALSE It is a device FMP.
+**/
+BOOLEAN
+IsFmpCapsule (
+  IN EFI_CAPSULE_HEADER  *CapsuleHeader
+  );
+
+/**
+  Gets pointer to the image data from payload's header.
+
+  @param[in]  ImageHeader   The payload image header.
+
+  @return The pointer to the start of the image data.
+**/
+VOID *
+GetFmpImage (
+  IN EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *ImageHeader
+  );
 
 VOID
 EFIAPI
@@ -33,8 +89,9 @@ ReportFree (
 CapsuleResult *
 EFIAPI
 ReportAddCapsule (
-  IN UpdateReport  *Report,
-  IN UINTN         Index
+  IN UpdateReport        *Report,
+  IN UINTN               Index,
+  IN EFI_CAPSULE_HEADER  *Header
   )
 {
   VOID           *Capsules;
@@ -52,6 +109,7 @@ ReportAddCapsule (
   CapsuleResult = &Report->Capsules[Report->CapsuleCount++];
 
   CapsuleResult->Index   = Index;
+  CapsuleResult->Header  = Header;
   CapsuleResult->Outcome = CAPSULE_UNKNOWN;
   CapsuleResult->Status  = EFI_SUCCESS;
 
@@ -163,6 +221,160 @@ OutcomeToString (
   }
 
   return L"BUG: unhandled value of a CAPSULE_* constant!";
+}
+
+STATIC
+BOOLEAN
+FindEsre (
+  IN OUT CONST EFI_SYSTEM_RESOURCE_ENTRY  **Entry
+  )
+{
+  EFI_STATUS                 Status;
+  UINTN                      Index;
+  EFI_SYSTEM_RESOURCE_ENTRY  *Esre;
+  EFI_SYSTEM_RESOURCE_TABLE  *Esrt;
+
+  Status = EfiGetSystemConfigurationTable (&gEfiSystemResourceTableGuid, (VOID **)&Esrt);
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  Esre = (VOID *)&Esrt[1];
+  for (Index = 0; Index < Esrt->FwResourceCount; ++Index) {
+    if (Esre[Index].FwType == ESRT_FW_TYPE_SYSTEMFIRMWARE) {
+      *Entry = &Esre[Index];
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+STATIC
+BOOLEAN
+GetNewBiosVersion (
+  IN CONST UpdateReport               *Report,
+  IN CONST EFI_SYSTEM_RESOURCE_ENTRY  *Esre,
+  OUT UINT32                          *NewVersion
+  )
+{
+  UINTN                                         CapsuleIdx;
+  UINTN                                         PayloadIdx;
+  UINTN                                         ItemCount;
+  UINT32                                        DepExSize;
+  CONST CapsuleResult                           *Capsule;
+  EFI_CAPSULE_HEADER                            *Header;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER        *FmpHdr;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *FmpImageHdr;
+  EFI_FIRMWARE_IMAGE_AUTHENTICATION             *FmpImage;
+  FMP_PAYLOAD_HEADER                            *FmpPayloadHdr;
+  UINT64                                        *ItemOffsetList;
+
+  // We want to get the version from the last capsule in case more than one was
+  // applied in a succession.
+  for (CapsuleIdx = Report->CapsuleCount; CapsuleIdx > 0; --CapsuleIdx) {
+    Capsule = &Report->Capsules[CapsuleIdx - 1];
+
+    if (Capsule->Outcome != CAPSULE_SUCCESS) {
+      continue;
+    }
+
+    Header = Capsule->Header;
+    if (!IsFmpCapsule (Header)) {
+      continue;
+    }
+
+    // An FMP capsule can be nested which is checked for in IsFmpCapsule().
+    if (!IsFmpCapsuleGuid (&Header->CapsuleGuid)) {
+      Header = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+    }
+
+    FmpHdr         = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+    ItemCount      = FmpHdr->EmbeddedDriverCount + FmpHdr->PayloadItemCount;
+    ItemOffsetList = (UINT64 *)&FmpHdr[1];
+
+    for (PayloadIdx = FmpHdr->EmbeddedDriverCount; PayloadIdx < ItemCount; ++PayloadIdx) {
+      FmpImageHdr = (VOID *)((UINT8 *)FmpHdr + ItemOffsetList[PayloadIdx]);
+
+      if (!CompareGuid (&Esre->FwClass, &FmpImageHdr->UpdateImageTypeId)) {
+        continue;
+      }
+
+      FmpImage = GetFmpImage (FmpImageHdr);
+
+      DepExSize = 0;
+      GetImageDependency (FmpImage, FmpImageHdr->UpdateImageSize, &DepExSize, NULL);
+
+      FmpPayloadHdr = (VOID *)((UINT8 *)FmpImage +
+                               sizeof(FmpImage->MonotonicCount) +
+                               FmpImage->AuthInfo.Hdr.dwLength +
+                               DepExSize);
+      if (FmpPayloadHdr->Signature == FMP_PAYLOAD_HEADER_SIGNATURE) {
+        *NewVersion = FmpPayloadHdr->FwVersion;
+        return TRUE;
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+STATIC
+VOID
+EFIAPI
+VersionToStr (
+  IN UINT32      Version,
+  IN OUT CHAR16  *Buffer,
+  IN UINTN       BufferSizeBytes
+  )
+{
+  UINTN  Major;
+  UINTN  Minor;
+  UINTN  Patch;
+  UINTN  RcBuild;
+
+  Major   = Version >> 24;
+  Minor   = (Version >> 16) & 0xff;
+  Patch   = (Version >> 8) & 0xff;
+  RcBuild = Version & 0xff;
+
+  if (RcBuild < 0x80) {
+    UnicodeSPrint (Buffer, BufferSizeBytes, L"v%ld.%ld.%ld-rc%ld", Major, Minor, Patch, RcBuild);
+  } else if (RcBuild == 0x80) {
+    UnicodeSPrint (Buffer, BufferSizeBytes, L"v%ld.%ld.%ld", Major, Minor, Patch);
+  } else {
+    UnicodeSPrint (Buffer, BufferSizeBytes, L"v%ld.%ld.%ld.%ld", Major, Minor, Patch, RcBuild - 0x80);
+  }
+}
+
+STATIC
+VOID
+ReportVersions (
+  IN OUT PopUpData       *PopUp,
+  IN CONST UpdateReport  *Report
+  )
+{
+  CONST EFI_SYSTEM_RESOURCE_ENTRY  *Esre;
+  UINT32                           NewVersion;
+  CHAR16                           OldVersionStr[32];
+  CHAR16                           NewVersionStr[32];
+
+  AddLine (PopUp, L"");
+
+  if (!FindEsre (&Esre)) {
+    AddLine (PopUp, L"Failed to determine version of the running firmware!");
+    return;
+  }
+
+  VersionToStr (Esre->FwVersion, OldVersionStr, sizeof(OldVersionStr));
+
+  // It's possible there were no BIOS updates.
+  if (GetNewBiosVersion (Report, Esre, &NewVersion)) {
+    VersionToStr (NewVersion, NewVersionStr, sizeof(NewVersionStr));
+    AddLineF (PopUp, L"Updated from %s to %s.", OldVersionStr, NewVersionStr);
+  } else {
+    AddLineF (PopUp, L"Version of the running firmware: %s", OldVersionStr);
+  }
 }
 
 STATIC
@@ -294,6 +506,7 @@ ReportDisplay (
     AddLine (&PopUp, L"");
     AddLine (&PopUp, L"This situation is unexpected. Please consider contacting us at");
     AddLine (&PopUp, L"support@dasharo.com describing how this situation occurred.");
+    ReportVersions (&PopUp, Report);
   } else if (AllUpdatesSuccessful (Report)) {
     Success = TRUE;
     AddTitle (&PopUp, L"Firmware Update Succeeded");
@@ -302,6 +515,7 @@ ReportDisplay (
     } else {
       AddLineF (&PopUp, L"Successfully applied all firmware updates (%d capsules).", Report->CapsuleCount);
     }
+    ReportVersions (&PopUp, Report);
   } else {
     Success = FALSE;
     AddTitle (&PopUp, L"Firmware Update Failed");
@@ -316,6 +530,7 @@ ReportDisplay (
     AddLine (&PopUp, L"");
     AddLine (&PopUp, L"Please contact us at support@dasharo.com with a photo of the screen and refer");
     AddLine (&PopUp, L"to the device-specific recovery instructions at <https://docs.dasharo.com>.");
+    ReportVersions (&PopUp, Report);
     AddLine (&PopUp, L"");
     AddLine (&PopUp, L"Details about the update:");
     ReportResults (&PopUp, Report);
