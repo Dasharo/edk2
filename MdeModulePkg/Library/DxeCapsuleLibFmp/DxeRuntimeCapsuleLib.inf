@@ -38,6 +38,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
+  FmpDevicePkg/FmpDevicePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -52,6 +53,8 @@
   HobLib
   BmpSupportLib
   PopUpLib
+  UefiLib
+  FmpDependencyLib
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport  ## SOMETIMES_CONSUMES
@@ -74,6 +77,7 @@
   gEfiEventExitBootServicesGuid           ## CONSUMES ## Event
   gEfiEventVirtualAddressChangeGuid       ## CONSUMES ## Event
   gEdkiiCapsuleOnDiskNameGuid             ## SOMETIMES_CONSUMES ## GUID
+  gEfiSystemResourceTableGuid             ## SOMETIMES_CONSUMES ## GUID
 
 [Depex]
   gEfiVariableWriteArchProtocolGuid

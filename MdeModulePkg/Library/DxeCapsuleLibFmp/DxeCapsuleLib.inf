@@ -37,6 +37,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
+  FmpDevicePkg/FmpDevicePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -55,6 +56,8 @@
   UefiBootManagerLib
   VariablePolicyHelperLib
   PopUpLib
+  UefiLib
+  FmpDependencyLib
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleMax                               ## CONSUMES
@@ -102,6 +105,7 @@
   ## SOMETIMES_PRODUCES ## Variable:L"BootNext"
   gEfiGlobalVariableGuid
   gEdkiiCapsuleOnDiskNameGuid             ## SOMETIMES_CONSUMES ## GUID
+  gEfiSystemResourceTableGuid             ## SOMETIMES_CONSUMES ## GUID
 
 [Depex]
   gEfiVariableWriteArchProtocolGuid

@@ -915,6 +915,34 @@ GetFmpImageInfoDescriptorVer (
 }
 
 /**
+  Gets pointer to the image data from payload's header.
+
+  @param[in]  ImageHeader   The payload image header.
+
+  @return The pointer to the start of the image data.
+**/
+VOID *
+GetFmpImage (
+  IN EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *ImageHeader
+  )
+{
+  if (ImageHeader->Version >= EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION) {
+    return (UINT8 *)(ImageHeader + 1);
+  }
+
+  //
+  // If the EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER is version 1,
+  // Header should exclude UpdateHardwareInstance field, and
+  // ImageCapsuleSupport field if version is 2.
+  //
+  if (ImageHeader->Version == 1) {
+    return (UINT8 *)ImageHeader + OFFSET_OF (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER, UpdateHardwareInstance);
+  }
+
+  return (UINT8 *)ImageHeader + OFFSET_OF (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER, ImageCapsuleSupport);
+}
+
+/**
   Set FMP image data.
 
   @param[in]  Handle        A FMP handle.
@@ -959,20 +987,7 @@ SetFmpImageData (
     mFmpProgress = NULL;
   }
 
-  if (ImageHeader->Version >= EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION) {
-    Image = (UINT8 *)(ImageHeader + 1);
-  } else {
-    //
-    // If the EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER is version 1,
-    // Header should exclude UpdateHardwareInstance field, and
-    // ImageCapsuleSupport field if version is 2.
-    //
-    if (ImageHeader->Version == 1) {
-      Image = (UINT8 *)ImageHeader + OFFSET_OF (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER, UpdateHardwareInstance);
-    } else {
-      Image = (UINT8 *)ImageHeader + OFFSET_OF (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER, ImageCapsuleSupport);
-    }
-  }
+  Image = GetFmpImage (ImageHeader);
 
   if (ImageHeader->UpdateVendorCodeSize == 0) {
     VendorCode = NULL;
