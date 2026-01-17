@@ -612,7 +612,7 @@ ProcessTheseCapsules (
     CapsuleHeader = (EFI_CAPSULE_HEADER *)mCapsulePtr[Index];
     CapsuleName   = (mCapsuleNamePtr == NULL) ? NULL : mCapsuleNamePtr[Index];
     if (CompareGuid (&CapsuleHeader->CapsuleGuid, &gWindowsUxCapsuleGuid)) {
-      CapsuleResult = ReportAddCapsule (Report, Index);
+      CapsuleResult = ReportAddCapsule (Report, Index, CapsuleHeader);
 
       DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage (Ux) - 0x%x\n", CapsuleHeader));
       DEBUG ((DEBUG_INFO, "Display logo capsule is found.\n"));
@@ -647,18 +647,18 @@ ProcessTheseCapsules (
         Status = ValidateFmpCapsule (CapsuleHeader, &EmbeddedDriverCount);
         if (EFI_ERROR (Status)) {
           DEBUG ((DEBUG_ERROR, "ValidateFmpCapsule failed. Ignore!\n"));
-          ReportCapsuleOutcome (ReportAddCapsule (Report, Index), CAPSULE_REFUSED, Status);
+          ReportCapsuleOutcome (ReportAddCapsule (Report, Index, CapsuleHeader), CAPSULE_REFUSED, Status);
           mCapsuleStatusArray[Index] = EFI_ABORTED;
           continue;
         }
       } else {
-        ReportCapsuleOutcome (ReportAddCapsule (Report, Index), CAPSULE_NONFMP, EFI_ABORTED);
+        ReportCapsuleOutcome (ReportAddCapsule (Report, Index, CapsuleHeader), CAPSULE_NONFMP, EFI_ABORTED);
         mCapsuleStatusArray[Index] = EFI_ABORTED;
         continue;
       }
 
       if ((!FirstRound) || (EmbeddedDriverCount == 0)) {
-        CapsuleResult = ReportAddCapsule (Report, Index);
+        CapsuleResult = ReportAddCapsule (Report, Index, CapsuleHeader);
 
         DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage - 0x%x\n", CapsuleHeader));
         ResetRequired              = FALSE;
