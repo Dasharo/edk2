@@ -430,6 +430,42 @@ ReportVersions (
 }
 
 STATIC
+CONST EFI_GUID *
+GetFirstPayloadFwClass (
+  IN CONST CapsuleResult  *Capsule
+  )
+{
+  UINTN                                         PayloadIdx;
+  UINTN                                         ItemCount;
+  EFI_CAPSULE_HEADER                            *Header;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER        *FmpHdr;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *FmpImageHdr;
+  UINT64                                        *ItemOffsetList;
+
+  Header = Capsule->Header;
+  if (!IsFmpCapsule (Header)) {
+    return NULL;
+  }
+
+  // An FMP capsule can be nested which is checked for in IsFmpCapsule().
+  if (!IsFmpCapsuleGuid (&Header->CapsuleGuid)) {
+    Header = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+  }
+
+  FmpHdr         = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+  ItemCount      = FmpHdr->EmbeddedDriverCount + FmpHdr->PayloadItemCount;
+  ItemOffsetList = (UINT64 *)&FmpHdr[1];
+
+  PayloadIdx = FmpHdr->EmbeddedDriverCount;
+  if (PayloadIdx < ItemCount) {
+    FmpImageHdr = (VOID *)((UINT8 *)FmpHdr + ItemOffsetList[PayloadIdx]);
+    return &FmpImageHdr->UpdateImageTypeId;
+  }
+
+  return NULL;
+}
+
+STATIC
 VOID
 EFIAPI
 ReportResults (
@@ -441,6 +477,7 @@ ReportResults (
   UINTN                PayloadIdx;
   CONST CapsuleResult  *Capsule;
   CONST PayloadResult  *Payload;
+  CONST EFI_GUID       *FwClass;
 
   for (CapsuleIdx = 0; CapsuleIdx < Report->CapsuleCount; ++CapsuleIdx) {
     Capsule = &Report->Capsules[CapsuleIdx];
@@ -453,9 +490,19 @@ ReportResults (
     if (Report->CapsuleCount > 1) {
       AddFullLineF (PopUp, L"Capsule #%d", Capsule->Index + 1);
     }
-    AddFullLineF (PopUp, L"- Result: %s", OutcomeToString (Capsule->Outcome));
-    if (Capsule->Status != EFI_SUCCESS) {
-      AddFullLineF (PopUp, L"- Status: %r", Capsule->Status);
+
+    // Can print GUIDs of all payloads if we'll ever use such capsules.
+    FwClass = GetFirstPayloadFwClass (Capsule);
+    if (FwClass == NULL) {
+      AddFullLine (PopUp, L"- GUID: unknown");
+    } else {
+      AddFullLineF (PopUp, L"- GUID: %g", FwClass);
+    }
+
+    if (Capsule->Status == EFI_SUCCESS) {
+      AddFullLineF (PopUp, L"- Result: %s", OutcomeToString (Capsule->Outcome));
+    } else {
+      AddFullLineF (PopUp, L"- Result: %s (error: %r)", OutcomeToString (Capsule->Outcome), Capsule->Status);
     }
 
     for (PayloadIdx = 0; PayloadIdx < Capsule->PayloadCount; ++PayloadIdx) {
