@@ -252,6 +252,58 @@ FindEsre (
 
 STATIC
 BOOLEAN
+BiosUpdateFailed (
+  IN CONST UpdateReport  *Report
+  )
+{
+  UINTN                                         CapsuleIdx;
+  UINTN                                         PayloadIdx;
+  UINTN                                         ItemCount;
+  CONST EFI_SYSTEM_RESOURCE_ENTRY               *Esre;
+  CONST CapsuleResult                           *Capsule;
+  EFI_CAPSULE_HEADER                            *Header;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER        *FmpHdr;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *FmpImageHdr;
+  UINT64                                        *ItemOffsetList;
+
+  if (!FindEsre (&Esre)) {
+    // Assume the worst.
+    return TRUE;
+  }
+
+  // A successful later update overrides any previous failure, so visit the
+  // updates in reverse.
+  for (CapsuleIdx = Report->CapsuleCount; CapsuleIdx > 0; --CapsuleIdx) {
+    Capsule = &Report->Capsules[CapsuleIdx - 1];
+
+    Header = Capsule->Header;
+    if (!IsFmpCapsule (Header)) {
+      continue;
+    }
+
+    // An FMP capsule can be nested which is checked for in IsFmpCapsule().
+    if (!IsFmpCapsuleGuid (&Header->CapsuleGuid)) {
+      Header = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+    }
+
+    FmpHdr         = (VOID *)((UINT8 *)Header + Header->HeaderSize);
+    ItemCount      = FmpHdr->EmbeddedDriverCount + FmpHdr->PayloadItemCount;
+    ItemOffsetList = (UINT64 *)&FmpHdr[1];
+
+    for (PayloadIdx = FmpHdr->EmbeddedDriverCount; PayloadIdx < ItemCount; ++PayloadIdx) {
+      FmpImageHdr = (VOID *)((UINT8 *)FmpHdr + ItemOffsetList[PayloadIdx]);
+
+      if (CompareGuid (&Esre->FwClass, &FmpImageHdr->UpdateImageTypeId)) {
+        return (Capsule->Outcome != CAPSULE_SUCCESS);
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+STATIC
+BOOLEAN
 GetNewBiosVersion (
   IN CONST UpdateReport               *Report,
   IN CONST EFI_SYSTEM_RESOURCE_ENTRY  *Esre,
@@ -519,17 +571,27 @@ ReportDisplay (
   } else {
     Success = FALSE;
     AddTitle (&PopUp, L"Firmware Update Failed");
-    if (Report->CapsuleCount == 1) {
-      AddLine (&PopUp, L"A firmware update was not applied successfully. Depending on the severity of");
-      AddLine (&PopUp, L"the error the device may be unbootable and require external firmware flashing.");
+    if (BiosUpdateFailed (Report)) {
+      if (Report->CapsuleCount == 1) {
+        AddLine (&PopUp, L"A firmware update was not applied successfully.");
+      } else {
+        AddLine (&PopUp, L"Not all firmware updates were applied successfully.");
+      }
+      AddLine (&PopUp, L"Depending on the severity of the error the device may be");
+      AddLine (&PopUp, L"unbootable and require external firmware flashing!");
+      AddLine (&PopUp, L"");
+      AddLine (&PopUp, L"Please contact us at support@dasharo.com with a photo of the screen and refer");
+      AddLine (&PopUp, L"to the device-specific recovery instructions at <https://docs.dasharo.com>.");
     } else {
-      AddLine (&PopUp, L"Not all firmware updates were applied successfully. Depending on the severity");
-      AddLine (&PopUp, L"of the error the device may be unbootable and require external firmware");
-      AddLine (&PopUp, L"flashing.");
+      if (Report->CapsuleCount == 1) {
+        AddLine (&PopUp, L"A firmware update was not applied successfully.");
+      } else {
+        AddLine (&PopUp, L"Not all firmware updates were applied successfully.");
+      }
+      AddLine (&PopUp, L"The system firmware should be intact.");
+      AddLine (&PopUp, L"");
+      AddLine (&PopUp, L"Please contact us at support@dasharo.com with a photo of the screen.");
     }
-    AddLine (&PopUp, L"");
-    AddLine (&PopUp, L"Please contact us at support@dasharo.com with a photo of the screen and refer");
-    AddLine (&PopUp, L"to the device-specific recovery instructions at <https://docs.dasharo.com>.");
     ReportVersions (&PopUp, Report);
     AddLine (&PopUp, L"");
     AddLine (&PopUp, L"Details about the update:");
