@@ -1077,7 +1077,7 @@ IsBootGuardEnabled (
   struct cbfs_image  Cbfs;
   CONST Fmap         *FlashMap;
 
-  if (!GetFmap (Image, ImageLen, &FlashMap)) {
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse firmware\n",
@@ -1086,7 +1086,9 @@ IsBootGuardEnabled (
     return FALSE;
   }
 
-  if (!GetCbfs (Image, FlashMap, &Cbfs)) {
+  // Reading from the Slot A partition for simplicity and compatibility.
+  // If Boot Guard is enabled, both slots must contain the manifest to work.
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT")) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
     return FALSE;
   }
@@ -1307,7 +1309,7 @@ GetOemRootKeyHash (
   UINT8 *HashInput;
   UINTN HashInputLen;
 
-  if (!GetFmap (Image, ImageLen, &ImageFmap)) {
+  if (!GetFmap (Image, ImageLen, &ImageFmap, IsTopSwapActive ())) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse firmware\n",
@@ -1316,7 +1318,9 @@ GetOemRootKeyHash (
     return EFI_NOT_FOUND;
   }
 
-  if (!GetCbfs (Image, ImageFmap, &Cbfs)) {
+  // Reading from the Slot A partition for simplicity and compatibility.
+  // If Boot Guard is enabled, both slots must contain the manifest to work.
+  if (!GetCbfs (Image, ImageFmap, &Cbfs, "COREBOOT")) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
     return EFI_NOT_FOUND;
   }
