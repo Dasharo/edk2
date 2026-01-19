@@ -2,6 +2,7 @@
 
 #include <IndustryStandard/SmBios.h>
 #include <Library/BaseCryptLib.h>
+#include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/CbfsLib.h>
 #include <Library/DebugLib.h>
@@ -9,6 +10,7 @@
 #include <Library/FmapLib.h>
 #include <Library/FmpDeviceLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PciLib.h>
 #include <Library/PrintLib.h>
 #include <Library/SmmStoreLib.h>
 #include <Library/UefiLib.h>
@@ -30,6 +32,7 @@ typedef struct {
   CONST Fmap   *CurrentFmap;
   CONST Fmap   *UpdatedFmap;
   UINTN        FwSize;
+  BOOLEAN      TopSwapActive;
 } MigrationData;
 
 typedef struct {
@@ -91,15 +94,75 @@ typedef struct {
 } __attribute__((packed)) FwstsSmbiosTable;
 
 STATIC
+UINT32
+TranslateOffsetForTopSwap (
+  IN CONST Fmap  *Map,
+  IN UINT32      Offset,
+  IN BOOLEAN     TopSwapActive
+  )
+{
+  CONST FmapArea  *Bootblock;
+  CONST FmapArea  *TopSwap;
+
+  if (!TopSwapActive) {
+    return Offset;
+  }
+
+  //
+  // Intel Top Swap swaps only the two topmost windows. In this layout those are
+  // BOOTBLOCK and TOPSWAP. FMAP offsets are physical, but a full flash dump taken
+  // while TS is active reflects the swapped view in those windows, so translate
+  // the source offsets accordingly.
+  //
+  Bootblock = FmapFindArea (Map, "BOOTBLOCK");
+  TopSwap   = FmapFindArea (Map, "TOPSWAP");
+  if ((Bootblock == NULL) || (TopSwap == NULL)) {
+    return Offset;
+  }
+
+  if (Bootblock->size != TopSwap->size) {
+    return Offset;
+  }
+
+  if ((Offset >= Bootblock->offset) && (Offset < Bootblock->offset + Bootblock->size)) {
+    return (UINT32) (TopSwap->offset + (Offset - Bootblock->offset));
+  }
+
+  if ((Offset >= TopSwap->offset) && (Offset < TopSwap->offset + TopSwap->size)) {
+    return (UINT32) (Bootblock->offset + (Offset - TopSwap->offset));
+  }
+
+  return Offset;
+}
+
+STATIC
+BOOLEAN
+IsTopSwapActive (
+  VOID
+  )
+{
+  //
+  // Intel Top Swap status via PCH BIOS Control (0:1f.0, offset 0xDC).
+  // Bit 4 indicates whether Top Swap is currently active.
+  //
+  UINT8  BiosCntl;
+
+  BiosCntl = PciRead8 (PCI_LIB_ADDRESS (0, 31, 0, 0xDC));
+  return (BiosCntl & (1u << 4)) != 0;
+}
+
+STATIC
 BOOLEAN
 GetFmap (
   IN  CONST UINT8  *Image,
   IN  UINTN        Size,
-  OUT CONST Fmap   **Map
+  OUT CONST Fmap   **Map,
+  IN  BOOLEAN      TopSwapActive
   )
 {
   INTN            FmapOffset;
   CONST FmapArea  *FmapRegion;
+  UINT32          ExpectedOffset;
 
   FmapOffset = FmapFind (Image, Size);
   if (FmapOffset < 0) {
@@ -121,12 +184,13 @@ GetFmap (
     return FALSE;
   }
 
-  if (FmapRegion->offset != FmapOffset) {
+  ExpectedOffset = TranslateOffsetForTopSwap (*Map, FmapRegion->offset, TopSwapActive);
+  if (ExpectedOffset != FmapOffset) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): wrong FMAP offset (expected: 0x%x, actual: 0x%x)\n",
       __FUNCTION__,
-      FmapRegion->offset,
+      ExpectedOffset,
       FmapOffset
       ));
     return FALSE;
@@ -238,6 +302,7 @@ MigrateRegion (
   IN BOOLEAN              OffsetSensitive
   )
 {
+  UINT32          CurrentOffset;
   CONST FmapArea  *CurrentRegion;
   CONST FmapArea  *UpdatedRegion;
 
@@ -287,9 +352,11 @@ MigrateRegion (
     return REGION_OF_DIFFERENT_SIZE;
   }
 
+  CurrentOffset = TranslateOffsetForTopSwap (Data->CurrentFmap, CurrentRegion->offset, Data->TopSwapActive);
+
   CopyMem (
     Data->Updated + UpdatedRegion->offset,
-    Data->Current + CurrentRegion->offset,
+    Data->Current + CurrentOffset,
     UpdatedRegion->size
     );
 
@@ -479,6 +546,46 @@ MigrateVariables (
 
 STATIC
 BOOLEAN
+MigrateBOOTBLOCK (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  DEBUG ((
+    DEBUG_INFO,
+    "%a(): Entered, will try to migrate BOOTBLOCK\n",
+    __FUNCTION__
+    ));
+
+  Status = MigrateRegion ("BOOTBLOCK", Data, TRUE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
+MigrateCOREBOOT (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  DEBUG ((
+    DEBUG_INFO,
+    "%a(): Entered, will try to migrate COREBOOT\n",
+    __FUNCTION__
+    ));
+
+  Status = MigrateRegion ("COREBOOT", Data, TRUE);
+
+  return Status == REGION_MIGRATED;
+}
+
+STATIC
+BOOLEAN
 MigrateRomhole (
   IN CONST MigrationData  *Data
   )
@@ -604,18 +711,20 @@ BOOLEAN
 GetCbfs (
   IN CONST UINT8         *Image,
   IN CONST Fmap          *Fmap,
-  OUT struct cbfs_image  *Cbfs
+  OUT struct cbfs_image  *Cbfs,
+  IN CONST CHAR8         *CbfsRegionName
   )
 {
   struct buffer   Buf;
   CONST FmapArea  *CbRegion;
 
-  CbRegion = FmapFindArea (Fmap, "COREBOOT");
+  CbRegion = FmapFindArea (Fmap, CbfsRegionName);
   if (CbRegion == NULL) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a(): failed to find COREBOOT region\n",
-      __FUNCTION__
+      "%a(): failed to find %a region\n",
+      __FUNCTION__,
+      CbfsRegionName
       ));
     return FALSE;
   }
@@ -623,6 +732,46 @@ GetCbfs (
   buffer_init (&Buf, NULL, (UINT8 *) Image + CbRegion->offset, CbRegion->size);
   if (cbfs_image_from_buffer (Cbfs, &Buf, ~0U) != 0) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+  Checks if an image has Top Swap based redundancy with separate bootblocks.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If separate bootblocks are present
+  @return FALSE   If unified boot block is present
+**/
+BOOLEAN
+IsSplitBootblockPresent (
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  )
+{
+  struct cbfs_image  Cbfs;
+  CONST Fmap         *FlashMap;
+
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "TOPSWAP")) {
+    DEBUG ((DEBUG_INFO, "%a(): Image does not contain TOPSWAP region\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT_TS")) {
+    DEBUG ((DEBUG_INFO, "%a(): Image does not contain COREBOOT_TS region\n", __FUNCTION__));
     return FALSE;
   }
 
@@ -645,13 +794,30 @@ MigrateSmbiosData (
 {
   struct cbfs_image  CurrentCbfs;
   struct cbfs_image  UpdatedCbfs;
+  CONST CHAR8        *CurrentCbfsRegion;
+  CONST CHAR8        *UpdatedCbfsRegion;
 
-  if (!GetCbfs (Data->Current, Data->CurrentFmap, &CurrentCbfs)) {
+  //
+  // Only BOOTBLOCK and TOPSWAP are hardware-swapped. COREBOOT and COREBOOT_TS
+  // are separate physical regions, with the boot selection based on the TS bit.
+  //
+  CurrentCbfsRegion = Data->TopSwapActive ? "COREBOOT_TS" : "COREBOOT";
+
+  //
+  // Slot B is the update target. Prefer COREBOOT_TS in the updated image,
+  // fall back to COREBOOT if COREBOOT_TS does not exist.
+  //
+  UpdatedCbfsRegion = "COREBOOT_TS";
+  if (FmapFindArea (Data->UpdatedFmap, UpdatedCbfsRegion) == NULL) {
+    UpdatedCbfsRegion = "COREBOOT";
+  }
+
+  if (!GetCbfs (Data->Current, Data->CurrentFmap, &CurrentCbfs, CurrentCbfsRegion)) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load current CBFS\n", __FUNCTION__));
     return FALSE;
   }
 
-  if (!GetCbfs (Data->Updated, Data->UpdatedFmap, &UpdatedCbfs)) {
+  if (!GetCbfs (Data->Updated, Data->UpdatedFmap, &UpdatedCbfs, UpdatedCbfsRegion)) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load updated CBFS\n", __FUNCTION__));
     return FALSE;
   }
@@ -710,7 +876,7 @@ IsRangeWriteable (
     return FALSE;
 
   // Something went wrong, assume nothing is writable. Update won't touch anything.
-  if (!GetFmap (Image, ImageLen, &FlashMap)) {
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse current firmware\n",
@@ -756,6 +922,30 @@ IsRangeWriteable (
       Region->offset + Region->size > RangeOffset)
     return FALSE;
 
+  // We're only adding a TOPSWAP region if we're using TOP_SWAP_REDUNDANCY.
+  // I think it can be reliably used to gate locking the Slot A regions with
+  // less code than using a new PCD, but also with less flexibility
+  Region = FmapFindArea(FlashMap, "TOPSWAP");
+  if (Region) {
+    // The regions BOOTBLOCK and COREBOOT are to remain read-only golden copies
+    // of the firmware if we're using TOP_SWAP_REDUNDANCY
+    Region = FmapFindArea(FlashMap, "BOOTBLOCK");
+
+    // Range exists and overlaps locked BOOTBLOCK.
+    if (Region && RangeOffset + RangeLen > Region->offset &&
+        Region->offset + Region->size > RangeOffset){
+      return FALSE;
+    }
+
+    Region = FmapFindArea(FlashMap, "COREBOOT");
+
+    // Range exists and overlaps locked COREBOOT.
+    if (Region && RangeOffset + RangeLen > Region->offset &&
+        Region->offset + Region->size > RangeOffset){
+      return FALSE;
+    }
+  }
+
   return TRUE;
 }
 
@@ -776,6 +966,7 @@ MergeFirmwareImages (
 {
   EFI_STATUS     Status;
   MigrationData  Data;
+  BOOLEAN        SplitBootblockPresent;
 
   Data.Current = Current;
 
@@ -806,7 +997,10 @@ MergeFirmwareImages (
     return NULL;
   }
 
-  if (!GetFmap (Data.Current, Data.FwSize, &Data.CurrentFmap)) {
+  SplitBootblockPresent = IsSplitBootblockPresent (Data.Current, Data.FwSize);
+  Data.TopSwapActive = SplitBootblockPresent && IsTopSwapActive ();
+
+  if (!GetFmap (Data.Current, Data.FwSize, &Data.CurrentFmap, Data.TopSwapActive)) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse current firmware\n",
@@ -815,7 +1009,7 @@ MergeFirmwareImages (
     goto Fail;
   }
 
-  if (!GetFmap (Data.Updated, Data.FwSize, &Data.UpdatedFmap)) {
+  if (!GetFmap (Data.Updated, Data.FwSize, &Data.UpdatedFmap, FALSE)) {
     DEBUG ((
       DEBUG_WARN,
       "%a(): failed to parse updated firmware\n",
@@ -853,6 +1047,16 @@ MergeFirmwareImages (
 
   if (!MigrateSmbiosData (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateSmbiosData () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (SplitBootblockPresent && !MigrateBOOTBLOCK (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateBOOTBLOCK () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (SplitBootblockPresent && !MigrateCOREBOOT (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateCOREBOOT () failed\n", __FUNCTION__));
     goto Fail;
   }
 
@@ -917,7 +1121,7 @@ IsBootGuardEnabled (
   struct cbfs_image  Cbfs;
   CONST Fmap         *FlashMap;
 
-  if (!GetFmap (Image, ImageLen, &FlashMap)) {
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse firmware\n",
@@ -926,7 +1130,9 @@ IsBootGuardEnabled (
     return FALSE;
   }
 
-  if (!GetCbfs (Image, FlashMap, &Cbfs)) {
+  // Reading from the Slot A partition for simplicity and compatibility.
+  // If Boot Guard is enabled, both slots must contain the manifest to work.
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT")) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
     return FALSE;
   }
@@ -1147,7 +1353,7 @@ GetOemRootKeyHash (
   UINT8 *HashInput;
   UINTN HashInputLen;
 
-  if (!GetFmap (Image, ImageLen, &ImageFmap)) {
+  if (!GetFmap (Image, ImageLen, &ImageFmap, IsTopSwapActive ())) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): failed to parse firmware\n",
@@ -1156,7 +1362,9 @@ GetOemRootKeyHash (
     return EFI_NOT_FOUND;
   }
 
-  if (!GetCbfs (Image, ImageFmap, &Cbfs)) {
+  // Reading from the Slot A partition for simplicity and compatibility.
+  // If Boot Guard is enabled, both slots must contain the manifest to work.
+  if (!GetCbfs (Image, ImageFmap, &Cbfs, "COREBOOT")) {
     DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
     return EFI_NOT_FOUND;
   }
