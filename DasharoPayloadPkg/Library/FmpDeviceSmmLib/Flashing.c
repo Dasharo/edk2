@@ -36,58 +36,58 @@ typedef struct {
 } MigrationData;
 
 typedef struct {
-	CONST UINT16 Alg;
-	CONST UINT16 Size;
-	CONST UINT8 Data[];
+  CONST UINT16  Alg;
+  CONST UINT16  Size;
+  CONST UINT8   Data[];
 } __attribute__((packed)) HashStruct;
 
 typedef struct km_hash {
-	CONST UINT64 Usage;
-	CONST HashStruct Hash;
+  CONST UINT64      Usage;
+  CONST HashStruct  Hash;
 } __attribute__((packed)) KmHash;
 
 typedef struct {
-  CONST UINT64 StructureId;
-  CONST UINT8  StructVersion;
-  CONST UINT8  Reserved1[3];
-  CONST UINT16 KeySignatureOffset;
-  CONST UINT8  Reserved2[3];
-  CONST UINT8  KeyManifestRevision;
-  CONST UINT8  KmSvn;
-  CONST UINT8  KeyManifestId;
-  CONST UINT16 KmPubKeyHashAlg;
-  CONST UINT16 KeyCount;
-  CONST KmHash KeyHash[];
+  CONST UINT64  StructureId;
+  CONST UINT8   StructVersion;
+  CONST UINT8   Reserved1[3];
+  CONST UINT16  KeySignatureOffset;
+  CONST UINT8   Reserved2[3];
+  CONST UINT8   KeyManifestRevision;
+  CONST UINT8   KmSvn;
+  CONST UINT8   KeyManifestId;
+  CONST UINT16  KmPubKeyHashAlg;
+  CONST UINT16  KeyCount;
+  CONST KmHash  KeyHash[];
 } __attribute__((packed)) KeyManifestHeader;
 
 typedef struct {
-  CONST UINT8  Version;
-  CONST UINT16 KeySize;
-  CONST UINT32 Exponent;
-  CONST UINT8  Modulus[];
+  CONST UINT8   Version;
+  CONST UINT16  KeySize;
+  CONST UINT32  Exponent;
+  CONST UINT8   Modulus[];
 } __attribute__((packed)) BtgPubKey;
 
 typedef struct {
-  CONST UINT8  Version;
-  CONST UINT16 KeyAlg;
+  CONST UINT8   Version;
+  CONST UINT16  KeyAlg;
 } __attribute__((packed)) KeyAndSigHeader;
 
 typedef struct {
-	UINT8  Type;
-	UINT8  Length;
-	UINT16 Handle;
+  UINT8   Type;
+  UINT8   Length;
+  UINT16  Handle;
 } __attribute__((packed)) SmbiosHeader;
 
 typedef struct {
-  UINT8  HeciName;
-  UINT32 Reg[6];
+  UINT8   HeciName;
+  UINT32  Reg[6];
 } __attribute__((packed)) FwstsRecord;
 
 typedef struct {
-  SmbiosHeader Header;
-  UINT8        Version;
-  UINT8        Count;
-  FwstsRecord  Record;
+  SmbiosHeader  Header;
+  UINT8         Version;
+  UINT8         Count;
+  FwstsRecord   Record;
   // We only care about the first record and we're not sure how many there are
   //FwstsRecord  Record[CONFIG_MAX_MEI_DEVICES];
   //UINT8        Eos[2];
