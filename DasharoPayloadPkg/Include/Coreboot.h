@@ -258,11 +258,12 @@ struct cb_smmstorev2 {
 	UINT32 size;
 	UINT32 num_blocks;	/* Number of writeable blocks in SMM */
 	UINT32 block_size;	/* Size of a block in byte. Default: 64 KiB */
-	UINT32 mmap_addr;	/* MMIO address of the store for read only access */
+	UINT32 mmap_addr;	/* MMIO address of the store for read only access (deprecated)*/
 	UINT32 com_buffer;	/* Physical address of the communication buffer */
 	UINT32 com_buffer_size;	/* Size of the communication buffer in byte */
 	UINT8 apm_cmd;	/* The command byte to write to the APM I/O port */
 	UINT8 unused[3];	/* Set to zero */
+	UINT64 mmap_addr64;	/* MMIO address of the store for read only access */
 };
 
 #define CB_TAG_CBMEM_ENTRY      0x0031
