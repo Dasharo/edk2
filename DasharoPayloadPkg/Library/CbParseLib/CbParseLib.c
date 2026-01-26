@@ -760,13 +760,37 @@ ParseSMMSTOREInfo (
   DEBUG ((DEBUG_INFO, "communication buffer: 0x%x\n", CbSSRec->com_buffer));
   DEBUG ((DEBUG_INFO, "communication buffer size: 0x%x\n", CbSSRec->com_buffer_size));
   DEBUG ((DEBUG_INFO, "MMIO address of store: 0x%x\n", CbSSRec->mmap_addr));
+  if (CbSSRec->size > OFFSET_OF(struct cb_smmstorev2, mmap_addr64)) {
+    DEBUG ((DEBUG_INFO, "MMIO address of store (64bit): 0x%x\n", CbSSRec->mmap_addr64));
+  }
 
   SMMSTOREInfo->ComBuffer = CbSSRec->com_buffer;
   SMMSTOREInfo->ComBufferSize = CbSSRec->com_buffer_size;
   SMMSTOREInfo->BlockSize = CbSSRec->block_size;
   SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
-  SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
   SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
+
+  /*
+   * Detect if 64-bit mmap address is available by comapring the LB entry
+   * size. If the entry is smaller by the size of UINT64 than the new
+   * structure size, it means the MMIo is 32-bit, otherwise new structure is
+   * used and 64-bit address.
+   */
+  if (CbSSRec->size <= OFFSET_OF(struct cb_smmstorev2, mmap_addr64)) {
+    if (CbSSRec->mmap_addr == 0) {
+      return RETURN_NO_MAPPING;
+    }
+    SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
+  } else {
+    SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr64;
+    /* If the map is not set, maybe 32-bit address is, try to use it */
+    if (CbSSRec->mmap_addr64 == 0) {
+      if (CbSSRec->mmap_addr == 0) {
+        return RETURN_NO_MAPPING;
+      }
+      SMMSTOREInfo->MmioAddress = CbSSRec->mmap_addr;
+    }
+  }
 
   return RETURN_SUCCESS;
 }
