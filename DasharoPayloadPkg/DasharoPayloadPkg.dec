@@ -105,3 +105,7 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B
 gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|FALSE|BOOLEAN|0x0000000C
 gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|FALSE|BOOLEAN|0x0000000D
 gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery|FALSE|BOOLEAN|0x0000000E
+
+## Enables smooth per-block progress reporting during capsule updates.
+## When FALSE, progress assumes all blocks differ (coarser reporting).
+gDasharoPayloadPkgTokenSpaceGuid.PcdSmoothCapsuleProgress|FALSE|BOOLEAN|0x0000000F
