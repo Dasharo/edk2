@@ -564,6 +564,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery|TRUE
+  gDasharoPayloadPkgTokenSpaceGuid.PcdSmoothCapsuleProgress|TRUE
 !endif
 
 [PcdsPatchableInModule.common]

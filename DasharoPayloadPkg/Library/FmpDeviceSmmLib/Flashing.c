@@ -200,14 +200,21 @@ GetFmap (
 }
 
 /**
-  Read current firmware in full and return as newly allocated pool memory.
+  Read current firmware in full and return as newly allocated pool memory,
+  with optional progress reporting via callback.
+
+  @param[in] IsDescriptorLocked   Whether the flash descriptor is locked.
+  @param[in] ProgressCallback     Optional callback invoked after each block read.
+  @param[in] ProgressContext      Caller-provided context passed to callback.
 
   @return NULL  On error.
 **/
 VOID *
 EFIAPI
 ReadCurrentFirmware (
-  BOOLEAN IsDescriptorLocked
+  IN BOOLEAN                    IsDescriptorLocked,
+  IN FW_READ_PROGRESS_CALLBACK  ProgressCallback OPTIONAL,
+  IN VOID                       *ProgressContext OPTIONAL
   )
 {
   EFI_STATUS  Status;
@@ -216,6 +223,7 @@ ReadCurrentFirmware (
   UINTN       Block;
   UINTN       BlockSize;
   UINTN       NumBytes;
+  UINTN       BlockCount;
 
   Status = SmmStoreLibGetBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
@@ -251,7 +259,9 @@ ReadCurrentFirmware (
     return NULL;
   }
 
-  for (Block = 0; Block < FwSize / BlockSize; Block++) {
+  BlockCount = FwSize / BlockSize;
+
+  for (Block = 0; Block < BlockCount; Block++) {
     NumBytes = BlockSize;
     Status = SmmStoreLibReadAnyBlock (
                Block,
@@ -278,6 +288,10 @@ ReadCurrentFirmware (
         FreePool (Image);
         return NULL;
       }
+    }
+
+    if (ProgressCallback != NULL) {
+      ProgressCallback (Block, BlockCount, ProgressContext);
     }
   }
 
