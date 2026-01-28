@@ -114,3 +114,7 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|FALSE|BOOLEAN|0x0000000D
 ## Enables best-effort firmware recovery after hitting an I/O error during
 ## firmware update.  When FALSE, no recovery is attempted.
 gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery|FALSE|BOOLEAN|0x0000000E
+
+## Enables smooth per-block progress reporting during capsule updates.
+## When FALSE, progress assumes all blocks differ (coarser reporting).
+gDasharoPayloadPkgTokenSpaceGuid.PcdSmoothCapsuleProgress|FALSE|BOOLEAN|0x0000000F
