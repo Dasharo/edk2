@@ -2,14 +2,34 @@
 #define FLASHING_H__
 
 /**
-  Read current firmware in full and return as newly allocated pool memory.
+  Callback function type for reporting read progress during firmware read.
+
+  @param[in] CurrentBlock   The block that was just read (0-indexed).
+  @param[in] TotalBlocks    Total number of blocks to read.
+  @param[in] Context        Caller-provided context pointer.
+**/
+typedef VOID (*FW_READ_PROGRESS_CALLBACK)(
+  UINTN CurrentBlock,
+  UINTN TotalBlocks,
+  VOID  *Context
+);
+
+/**
+  Read current firmware in full and return as newly allocated pool memory,
+  with optional progress reporting via callback.
+
+  @param[in] IsDescriptorLocked   Whether the flash descriptor is locked.
+  @param[in] ProgressCallback     Optional callback invoked after each block read.
+  @param[in] ProgressContext      Caller-provided context passed to callback.
 
   @return NULL  On error.
 **/
 VOID *
 EFIAPI
 ReadCurrentFirmware (
-  BOOLEAN IsDescriptorLocked
+  IN BOOLEAN                    IsDescriptorLocked,
+  IN FW_READ_PROGRESS_CALLBACK  ProgressCallback OPTIONAL,
+  IN VOID                       *ProgressContext OPTIONAL
   );
 
 /**
