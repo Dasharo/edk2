@@ -729,42 +729,47 @@ FmpDeviceSetImage (
            );
 }
 
-/**
-  Advances progress of the operation by a single step, converts the steps to
-  percents and invokes a callback if there is one.
+//
+// Weight constants for progress calculation.
+// Reading 8 blocks takes approximately the same time as 1 erase+write operation.
+//
+#define READ_BLOCK_WEIGHT   1
+#define UPDATE_BLOCK_WEIGHT  8
 
-  @param[in]      Callback              External callback for progress reporting
-                                        or NULL if there is none.
-  @param[in]      TotalSteps            Total number of flashing steps.
-  @param[in]      By                    How many steps to advance.
-  @param[in, out] Step                  Current step number.
-  @param[in, out] ShouldReportProgress  A flag indicating whether progress needs
-                                        to be reported.
+/**
+  Context structure for tracking progress during firmware update.
+**/
+typedef struct {
+  EFI_FIRMWARE_MANAGEMENT_UPDATE_IMAGE_PROGRESS  Callback;
+  UINTN   TotalUnits;
+  UINTN   CurrentUnits;
+  BOOLEAN ShouldReport;
+} ProgressContext;
+
+/**
+  Reports current progress as a percentage.
+
+  @param[in, out] Ctx  Progress context to update and report from.
 **/
 STATIC
 VOID
-IncrementProgress (
-  IN      EFI_FIRMWARE_MANAGEMENT_UPDATE_IMAGE_PROGRESS  Callback OPTIONAL,
-  IN      UINTN                                          TotalSteps,
-  IN      UINTN                                          By,
-  IN OUT  UINTN                                          *Step,
-  IN OUT  BOOLEAN                                        *ShouldReportProgress
+ReportProgress (
+  IN OUT ProgressContext  *Ctx
   )
 {
   EFI_STATUS  Status;
   UINTN       Progress;
 
-  if (!*ShouldReportProgress) {
+  if (!Ctx->ShouldReport || Ctx->Callback == NULL) {
+    Ctx->ShouldReport = FALSE;
     return;
   }
 
-  if (Callback == NULL) {
-    *ShouldReportProgress = FALSE;
+  if (Ctx->TotalUnits == 0) {
     return;
   }
 
-  *Step += By;
-  Progress = (*Step * 100) / TotalSteps;
+  Progress = (Ctx->CurrentUnits * 100) / Ctx->TotalUnits;
 
   //
   // Value of 0 means "progress reporting is not supported", so avoid using it.
@@ -773,11 +778,92 @@ IncrementProgress (
     Progress = 1;
   }
 
-  Status = Callback (Progress);
+  //
+  // Cap at 100%
+  //
+  if (Progress > 100) {
+    Progress = 100;
+  }
+
+  Status = Ctx->Callback (Progress);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_WARN, "%a(): progress callback failed with: %r\n", __func__, Status));
-    *ShouldReportProgress = FALSE;
+    Ctx->ShouldReport = FALSE;
   }
+}
+
+/**
+  Callback invoked after each block is read during firmware reading.
+
+  @param[in] CurrentBlock   The block that was just read (0-indexed).
+  @param[in] TotalBlocks    Total number of blocks to read.
+  @param[in] Context        Pointer to ProgressContext.
+**/
+STATIC
+VOID
+ReadProgressCallback (
+  UINTN CurrentBlock,
+  UINTN TotalBlocks,
+  VOID  *Context
+  )
+{
+  ProgressContext  *Ctx;
+
+  if (Context == NULL) {
+    return;
+  }
+
+  Ctx = (ProgressContext *)Context;
+  Ctx->CurrentUnits += READ_BLOCK_WEIGHT;
+  ReportProgress (Ctx);
+}
+
+/**
+  Counts the number of blocks that differ between two firmware images.
+
+  @param[in] Image1     First image to compare.
+  @param[in] Image2     Second image to compare.
+  @param[in] Size       Total size of images in bytes.
+  @param[in] BlockSize  Size of each block in bytes.
+
+  @return Number of blocks that differ between the two images.
+**/
+STATIC
+UINTN
+CountDifferingBlocks (
+  IN CONST UINT8  *Image1,
+  IN CONST UINT8  *Image2,
+  IN UINTN        Size,
+  IN UINTN        BlockSize,
+  IN BOOLEAN      DescriptorLocked
+  )
+{
+  UINTN  BlockCount;
+  UINTN  Block;
+  UINTN  DifferingCount;
+  UINTN  Offset;
+
+  if (BlockSize == 0) {
+    return 0;
+  }
+
+  BlockCount = Size / BlockSize;
+  DifferingCount = 0;
+  Offset = 0;
+
+  for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
+    if (CompareMem (Image1 + Offset, Image2 + Offset, BlockSize) == 0) {
+      continue;
+    }
+
+    if (!IsRangeWriteable (Image1, Size, Offset, BlockSize)) {
+      continue;
+    }
+
+    DifferingCount++;
+  }  
+
+  return DifferingCount;
 }
 
 /**
@@ -1020,7 +1106,7 @@ AttemptRecovery (
     return FALSE;
   }
 
-  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked, NULL, NULL);
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1074,7 +1160,7 @@ AttemptRecovery (
   // Judge outcome of the recovery by re-reading the firmware and comparing it
   // against the original.
   //
-  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked, NULL, NULL);
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1184,21 +1270,22 @@ FmpDeviceSetImageWithStatus (
   OUT UINT32                                         *LastAttemptStatus
   )
 {
-  EFI_STATUS  Status;
-  UINTN       BlockSize;
-  UINTN       BlockCount;
-  UINTN       Block;
-  UINTN       NumBytes;
-  UINTN       TotalSteps;
-  UINTN       ReadSteps;
-  UINTN       Step;
-  BOOLEAN     ShouldReportProgress;
-  UINT8       *CurrentImage;
-  UINT8       *UpdatedImage;
-  UINTN       Offset;
-  BOOLEAN     DescriptorLocked;
-  CHAR16      *ErrorString = NULL;
-  UINT32      AttemptSlotB;
+  EFI_STATUS       Status;
+  UINTN            BlockSize;
+  UINTN            BlockCount;
+  UINTN            Block;
+  UINTN            NumBytes;
+  UINT8            *CurrentImage;
+  UINT8            *UpdatedImage;
+  UINTN            Offset;
+  BOOLEAN          DescriptorLocked;
+  CHAR16           *ErrorString = NULL;
+  UINT32           AttemptSlotB;
+  ProgressContext  ProgressCtx;
+  UINTN            DifferingBlocks;
+  UINTN            WrittenBlocks;
+  UINTN            ScaledWriteWeight;
+  BOOLEAN          SmoothProgress;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
 
@@ -1228,17 +1315,32 @@ FmpDeviceSetImageWithStatus (
     BlockSize
     ));
 
-  ShouldReportProgress = TRUE;
-  TotalSteps           = BlockCount * 2; // Erase and write of each block.
-  Step                 = 0;
+  SmoothProgress = FixedPcdGetBool (PcdSmoothCapsuleProgress);
 
-  // Allocate 5% of progress for reading the flash.
-  ReadSteps = (TotalSteps * 5) / 100;
-  TotalSteps += ReadSteps;
+  //
+  // Initialize progress context.
+  // Phase 1 (reading): BlockCount * READ_BLOCK_WEIGHT units
+  // Phase 2 (writing): BlockCount * UPDATE_BLOCK_WEIGHT units (worst case)
+  //
+  // When SmoothProgress is enabled, TotalUnits is recalculated after merge
+  // based on actual differing blocks for accurate progress reporting.
+  //
+  ProgressCtx.Callback = Progress;
+  ProgressCtx.CurrentUnits = 0;
+  ProgressCtx.TotalUnits = BlockCount * READ_BLOCK_WEIGHT + BlockCount * UPDATE_BLOCK_WEIGHT;
+  ProgressCtx.ShouldReport = TRUE;
 
   DescriptorLocked = IsDescriptorLocked();
 
-  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
+  //
+  // Phase 1: Read current firmware.
+  // When SmoothProgress is enabled, report progress after each block read.
+  //
+  CurrentImage = ReadCurrentFirmware (
+                   DescriptorLocked,
+                   SmoothProgress ? ReadProgressCallback : NULL,
+                   SmoothProgress ? &ProgressCtx : NULL
+                   );
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1248,7 +1350,10 @@ FmpDeviceSetImageWithStatus (
     return EFI_END_OF_MEDIA;
   }
 
-  IncrementProgress (Progress, TotalSteps, ReadSteps, &Step, &ShouldReportProgress);
+  if (!SmoothProgress) {
+    ProgressCtx.CurrentUnits = BlockCount * READ_BLOCK_WEIGHT;
+    ReportProgress (&ProgressCtx);
+  }
 
   if (!AreImageBtgKeysCompatible(CurrentImage, Image, ImageSize)) {
     FreePool (CurrentImage);
@@ -1278,15 +1383,49 @@ FmpDeviceSetImageWithStatus (
     return EFI_ABORTED;
   }
 
+  //
+  // Phase 2: Write differing blocks.
+  //
+  ScaledWriteWeight = UPDATE_BLOCK_WEIGHT;
+  if (SmoothProgress) {
+    //
+    // Count how many blocks actually differ to get accurate progress.
+    //
+    DifferingBlocks = CountDifferingBlocks (
+                        CurrentImage,
+                        UpdatedImage,
+                        ImageSize,
+                        BlockSize,
+                        DescriptorLocked
+                      );
+    DEBUG ((DEBUG_INFO, "%a(): %d blocks differ out of %d total\n",
+            __FUNCTION__, DifferingBlocks, BlockCount));
+
+    //
+    // Scale the per-block write weight so that writing all differing blocks
+    // still consumes exactly BlockCount * UPDATE_BLOCK_WEIGHT units, keeping
+    // TotalUnits unchanged and avoiding a sudden progress jump.
+    //
+    if (DifferingBlocks > 0) {
+      ScaledWriteWeight = UPDATE_BLOCK_WEIGHT * BlockCount / DifferingBlocks;
+    }
+  }
+
   Offset = 0;
+  WrittenBlocks = 0;
   for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
     //
     // Save the flash and time by only writing a block if new contents differs
     // from the old one.
     //
     if (CompareMem (CurrentImage + Offset, UpdatedImage + Offset, BlockSize) == 0) {
-      // Erase and write steps.
-      IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
+      if (!SmoothProgress) {
+        //
+        // All blocks counted in TotalUnits, so advance progress for identical ones.
+        //
+        ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT;
+        ReportProgress (&ProgressCtx);
+      }
       continue;
     }
 
@@ -1300,7 +1439,14 @@ FmpDeviceSetImageWithStatus (
         "%a(): range %d - %d is not writeable\n",
         __FUNCTION__, Offset, BlockSize + Offset
         ));
-      IncrementProgress (Progress, TotalSteps, 2, &Step, &ShouldReportProgress);
+      if (!SmoothProgress) {
+        //
+        // In non-smooth mode all blocks are counted in TotalUnits, so advance
+        // progress for non-writeable blocks too.
+        //
+        ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT;
+        ReportProgress (&ProgressCtx);
+      }
       continue;
     }
 
@@ -1309,7 +1455,11 @@ FmpDeviceSetImageWithStatus (
       goto IoError;
     }
 
-    IncrementProgress (Progress, TotalSteps, 1, &Step, &ShouldReportProgress);
+    //
+    // Report progress after erase (half of write weight).
+    //
+    ProgressCtx.CurrentUnits += ScaledWriteWeight / 2;
+    ReportProgress (&ProgressCtx);
 
     NumBytes = BlockSize;
     Status = SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, UpdatedImage + Offset);
@@ -1317,8 +1467,16 @@ FmpDeviceSetImageWithStatus (
       goto IoError;
     }
 
-    IncrementProgress (Progress, TotalSteps, 1, &Step, &ShouldReportProgress);
+    //
+    // Report progress after write (remaining half of write weight).
+    //
+    ProgressCtx.CurrentUnits += ScaledWriteWeight - (ScaledWriteWeight / 2);
+    ReportProgress (&ProgressCtx);
+
+    WrittenBlocks++;
   }
+
+  DEBUG ((DEBUG_INFO, "%a(): wrote %d blocks\n", __FUNCTION__, WrittenBlocks));
 
   FreePool (CurrentImage);
   FreePool (UpdatedImage);
