@@ -105,3 +105,8 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B
 ## stating results and also diagnostic information on failure.  When FALSE, the
 ## system just reboots without saying anything.
 gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|FALSE|BOOLEAN|0x0000000C
+
+## Enables displaying update-specific logo in capsules which is most likely
+## vendor's logo (the regular boot logo is customizable while this one is fixed
+## during build).  When FALSE, a regular boot logo is displayed.
+gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|FALSE|BOOLEAN|0x0000000D
