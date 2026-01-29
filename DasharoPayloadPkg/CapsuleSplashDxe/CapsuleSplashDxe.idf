@@ -1,0 +1,8 @@
+//
+// Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+// SPDX-License-Identifier: GPL-2-or-later
+//
+// Specification of resources that need to be compiled into the DXE.
+//
+
+#image IMG_LOGO Logo.bmp

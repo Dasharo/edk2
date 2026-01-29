@@ -16,13 +16,18 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <Protocol/BootLogo2.h>
 #include <Protocol/GraphicsOutput.h>
+#include <Protocol/HiiDatabase.h>
+#include <Protocol/HiiImageEx.h>
 
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PcdLib.h>
 #include <Library/SafeIntLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+
+#include "Scaling.h"
 
 /**
   scalable-font2 memory management assumes existence of realloc() as defined by
@@ -90,10 +95,15 @@ ssfn_buf_t mFBuf;
 **/
 
 #define WIDTH_PERCENT     75
-#define HEIGHT_PERCENT    60
+#define HEIGHT_PERCENT    (FixedPcdGetBool (PcdShowCapsuleLogo) ? 68 : 60)
 
-#define TOP_MSG_POS_PERCENT     37
-#define BOTTOM_MSG_POS_PERCENT  88
+#define TOP_MSG_POS_PERCENT     (FixedPcdGetBool (PcdShowCapsuleLogo) ? 6 : 37)
+#define BOTTOM_MSG_POS_PERCENT  (FixedPcdGetBool (PcdShowCapsuleLogo) ? 94 : 88)
+
+// Distance of the real logo from the top.
+#define LOGO_TOP_MARGIN_PERCENT     12
+// Distance of the real logo from the progress bar.
+#define LOGO_BOTTOM_MARGIN_PERCENT  3
 
 EFI_STATUS
 SetDummyLogo (
@@ -163,6 +173,89 @@ SetDummyLogo (
   Status = BootLogo2->SetBootLogo (BootLogo2, BltBuffer, OffsetX, 0, Width, Height);
 
   FreePool (BltBuffer);
+
+  return Status;
+}
+
+/**
+  Fetches logo built into the DXE, then proportionally scales it to fit into
+  appropriate rectangular area of the screen, centers and finally draws it.
+
+  @param[in]     GraphicsOutput  GOP to use for drawing the logo.
+  @param[in,out] HiiHandle       HII package of this DXE.
+
+  @retval EFI_SUCCESS  The image was displayed on the screen.
+  @retval Otherwise    Something went wrong.
+**/
+STATIC
+EFI_STATUS
+DrawRealLogo (
+  IN  EFI_GRAPHICS_OUTPUT_PROTOCOL  *GraphicsOutput,
+  IN  EFI_HII_HANDLE                *HiiHandle
+)
+{
+  EFI_STATUS                            Status;
+  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *ModeInfo;
+  UINTN                                 OffsetY;
+  UINTN                                 OffsetX;
+  EFI_HII_IMAGE_EX_PROTOCOL             *HiiImageEx;
+  EFI_IMAGE_INPUT                       Image;
+  EFI_IMAGE_INPUT                       Scaled;
+  float                                 MaxWidth;
+  float                                 MaxHeight;
+  float                                 ScaleFactor;
+
+  Status = gBS->LocateProtocol (&gEfiHiiImageExProtocolGuid, NULL, (VOID **)&HiiImageEx);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to find HiiImageEx protocol: %r\n", __func__, Status));
+    return Status;
+  }
+
+  Status = HiiImageEx->GetImageEx (HiiImageEx, HiiHandle, IMAGE_TOKEN (IMG_LOGO), &Image);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to lookc up logo image: %r\n", __func__, Status));
+    return Status;
+  }
+
+  ModeInfo = GraphicsOutput->Mode->Info;
+
+  // Calculate dimensions of the area available for drawing.
+  MaxWidth  = ModeInfo->HorizontalResolution * WIDTH_PERCENT / 100;
+  MaxHeight = ModeInfo->VerticalResolution * (HEIGHT_PERCENT - LOGO_BOTTOM_MARGIN_PERCENT) / 100;
+
+  // Find the smaller factor of the two dimensions.
+  ScaleFactor = MIN (MaxWidth / Image.Width, MaxHeight / Image.Height);
+
+  //
+  // Make sure the scaling won't change proportions of the original image by
+  // using the same (smaller) factor for both dimensions.
+  //
+  Scaled.Width  = Image.Width * ScaleFactor;
+  Scaled.Height = Image.Height * ScaleFactor;
+
+  // Scaled.Bitmap is set by ScaleImage() on success.
+  Scaled.Flags = Image.Flags;
+
+  Status = ScaleImage (&Image, &Scaled);
+  if (EFI_ERROR (Status)) {
+    Scaled.Bitmap = NULL;
+  } else {
+    Image = Scaled;
+  }
+
+  OffsetX = (ModeInfo->HorizontalResolution - Scaled.Width) / 2;
+  OffsetY = ModeInfo->VerticalResolution * LOGO_TOP_MARGIN_PERCENT / 100 +
+            (MaxHeight - Scaled.Height) / 2;
+
+  Status = GraphicsOutput->Blt (GraphicsOutput, Image.Bitmap, EfiBltBufferToVideo,
+                                0, 0,
+                                OffsetX, OffsetY,
+                                Image.Width, Image.Height,
+                                Image.Width * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+
+  if (Scaled.Bitmap != NULL) {
+    FreePool (Scaled.Bitmap);
+  }
 
   return Status;
 }
@@ -267,6 +360,64 @@ RenderTextCenteredAt (
 }
 
 /**
+  Publish resources of this DXE to HII database, so it's possible to query
+  Logo.bmp bundled with the DXE using EFI_HII_IMAGE_EX_PROTOCOL.
+
+  @param[in]  ImageHandle  Handle for the DXE.
+  @param[out] HiiHandle    HII package handle.
+
+  @retval EFI_SUCCESS  Obtained HII package handle successfully.
+  @retval Otherwise    Something went wrong.
+**/
+STATIC
+EFI_STATUS
+LoadHiiPackage (
+  IN  EFI_HANDLE      ImageHandle,
+  OUT EFI_HII_HANDLE  *HiiHandle
+  )
+{
+  EFI_STATUS                   Status;
+  EFI_HII_PACKAGE_LIST_HEADER  *PackageList;
+  EFI_HII_DATABASE_PROTOCOL    *HiiDatabase;
+
+  Status = gBS->LocateProtocol (
+                  &gEfiHiiDatabaseProtocolGuid,
+                  NULL,
+                  (VOID **)&HiiDatabase
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "HII Database protocol look up failure: %r\n", Status));
+    return Status;
+  }
+
+  //
+  // Retrieve HII package list from ImageHandle.
+  //
+  Status = gBS->OpenProtocol (
+                  ImageHandle,
+                  &gEfiHiiPackageListProtocolGuid,
+                  (VOID **)&PackageList,
+                  ImageHandle,
+                  NULL,
+                  EFI_OPEN_PROTOCOL_GET_PROTOCOL
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "HII Image Package with logo not found in PE/COFF resource section: %r\n", Status));
+    return Status;
+  }
+
+  //
+  // Publish HII package list to HII Database.
+  //
+  return HiiDatabase->NewPackageList (
+                        HiiDatabase,
+                        PackageList,
+                        NULL,
+                        HiiHandle
+                        );
+}
+
+/**
   The Entry Point for CapsuleSplash driver.
 
   @param[in] ImageHandle    The firmware allocated handle for the EFI image.
@@ -285,6 +436,7 @@ CapsuleSplashEntry (
   )
 {
   EFI_STATUS                            Status;
+  EFI_HII_HANDLE                        HiiHandle;
   EFI_GRAPHICS_OUTPUT_PROTOCOL          *GraphicsOutput;
   EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *ModeInfo;
 
@@ -304,6 +456,18 @@ CapsuleSplashEntry (
       ModeInfo->PixelFormat != PixelBlueGreenRedReserved8BitPerColor) {
     DEBUG ((DEBUG_ERROR, "Wrong pixel format\n"));
     return EFI_SUCCESS;
+  }
+
+  if (FixedPcdGetBool (PcdShowCapsuleLogo)) {
+    Status = LoadHiiPackage (ImageHandle, &HiiHandle);
+    if (EFI_ERROR (Status)) {
+      // Absence of the logo is not a reason for stopping.
+      DEBUG ((DEBUG_WARN, "Couldn't load HII package\n"));
+      HiiHandle = NULL;
+    }
+  } else {
+    // Disabling this functionality.
+    HiiHandle = NULL;
   }
 
   //
@@ -329,6 +493,13 @@ CapsuleSplashEntry (
   //
   ZeroMem ((VOID *)GraphicsOutput->Mode->FrameBufferBase,
            GraphicsOutput->Mode->FrameBufferSize);
+
+  if (HiiHandle != NULL) {
+    Status = DrawRealLogo (GraphicsOutput, HiiHandle);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_WARN, "Error while displaying real logo: %r\n", Status));
+    }
+  }
 
   //
   // Print some warnings. Ignore the result, we still want to try printing even

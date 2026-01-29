@@ -563,6 +563,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(CAPSULES_V2)
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport|TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|TRUE
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|TRUE
 !endif
 
 [PcdsPatchableInModule.common]
@@ -827,7 +828,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   }
   MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
   MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
-  DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf
+  DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf {
+    <BuildOptions>
+      # floats are used for image scaling
+      GCC:*_*_*_CC_FLAGS = -mmmx -msse
+  }
   DasharoPayloadPkg/CapsuleChargerCheckDxe/CapsuleChargerCheckDxe.inf
 !endif
 !if $(RAM_DISK_ENABLE) == TRUE
