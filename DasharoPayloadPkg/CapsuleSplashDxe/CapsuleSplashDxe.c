@@ -92,6 +92,9 @@ ssfn_buf_t mFBuf;
 #define WIDTH_PERCENT     75
 #define HEIGHT_PERCENT    60
 
+#define TOP_MSG_POS_PERCENT     37
+#define BOTTOM_MSG_POS_PERCENT  88
+
 EFI_STATUS
 SetDummyLogo (
   IN  EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *ModeInfo
@@ -333,11 +336,11 @@ CapsuleSplashEntry (
   //
   Status = RenderTextCenteredAt("Firmware update in progress",
                                 ModeInfo->HorizontalResolution / 2,
-                                ModeInfo->VerticalResolution * 37 / 100);
+                                ModeInfo->VerticalResolution * TOP_MSG_POS_PERCENT / 100);
 
   Status = RenderTextCenteredAt("Don't turn off your platform!",
                                 ModeInfo->HorizontalResolution / 2,
-                                ModeInfo->VerticalResolution * 88 / 100);
+                                ModeInfo->VerticalResolution * BOTTOM_MSG_POS_PERCENT / 100);
 
   return EFI_SUCCESS;
 }
