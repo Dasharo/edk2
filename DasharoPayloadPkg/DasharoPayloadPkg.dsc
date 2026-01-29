@@ -745,6 +745,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 
 [Components.X64]
 !if $(QEMU_PLATFORM) == TRUE
+  OvmfPkg/QemuVideoDxe/QemuVideoDxe.inf
   OvmfPkg/VirtioPciDeviceDxe/VirtioPciDeviceDxe.inf
   OvmfPkg/Virtio10Dxe/Virtio10.inf
   OvmfPkg/VirtioBlkDxe/VirtioBlk.inf
