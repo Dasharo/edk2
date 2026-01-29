@@ -334,11 +334,11 @@ CapsuleSplashEntry (
   // Print some warnings. Ignore the result, we still want to try printing even
   // if one of the earlier lines fails.
   //
-  Status = RenderTextCenteredAt("Firmware update in progress",
+  Status = RenderTextCenteredAt("Firmware update is in progress...",
                                 ModeInfo->HorizontalResolution / 2,
                                 ModeInfo->VerticalResolution * TOP_MSG_POS_PERCENT / 100);
 
-  Status = RenderTextCenteredAt("Don't turn off your platform!",
+  Status = RenderTextCenteredAt("Don't turn off your device!",
                                 ModeInfo->HorizontalResolution / 2,
                                 ModeInfo->VerticalResolution * BOTTOM_MSG_POS_PERCENT / 100);
 
