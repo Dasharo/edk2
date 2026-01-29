@@ -115,6 +115,7 @@
   DEFINE USE_UEFIVAR_BACKED_TPM_PPI     = FALSE
   DEFINE CAPSULE_SUPPORT                = FALSE
   DEFINE CAPSULE_MAIN_FW_GUID           =
+  DEFINE CAPSULES_V2                    = FALSE
 
   #
   # Network definition
@@ -552,6 +553,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions|$(IOMMU_ENABLE)
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu|$(SERIAL_TERMINAL)
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPs2Option|$(PS2_KEYBOARD_ENABLE)
+!endif
+
+!if $(CAPSULES_V2)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport|TRUE
+  gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|TRUE
 !endif
 
 [PcdsPatchableInModule.common]
