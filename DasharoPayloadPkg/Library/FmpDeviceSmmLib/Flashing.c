@@ -616,6 +616,36 @@ MigrateBootLogo (
 
 STATIC
 BOOLEAN
+MigrateMrcCache (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("RW_MRC_CACHE", Data, FALSE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
+MigrateRecoveryMrcCache (
+  IN CONST MigrationData  *Data
+  )
+{
+  RegionMigrationStatus  Status;
+
+  Status = MigrateRegion ("RECOVERY_MRC_CACHE", Data, FALSE);
+
+  return Status == REGION_MIGRATED
+      || Status == REGION_NOT_IN_SRC
+      || Status == REGION_NOT_IN_DST;
+}
+
+STATIC
+BOOLEAN
 MigrateGbeRegion (
   IN CONST MigrationData  *Data
   )
@@ -1000,6 +1030,16 @@ MergeFirmwareImages (
 
   if (!MigrateGbeRegion (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateGbeRegion () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateMrcCache (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateMrcCache () failed\n", __FUNCTION__));
+    goto Fail;
+  }
+
+  if (!MigrateRecoveryMrcCache (&Data)) {
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateMrcCache () failed\n", __FUNCTION__));
     goto Fail;
   }
 
