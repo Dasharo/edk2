@@ -83,6 +83,8 @@ AddALine (
   IN BOOLEAN       FullWidth
   )
 {
+  UINTN   MaxByteLength;
+  UINTN   LineByteLength;
   UINTN   ByteLength;
   UINTN   Index;
   CHAR16  *Buffer;
@@ -96,7 +98,15 @@ AddALine (
     AddALine (PopUp, L"...", /*FullWidth=*/FALSE);
   }
 
-  ByteLength = FullWidth ? (PopUp->Width + 1) * 2 : StrSize (Line);
+  // `PopUp->Width - 1` here and below because actual width of the contents is
+  // one less than what's passed to CreateMultiStringPopUp().
+  MaxByteLength = (PopUp->Width - 1 + 1) * 2;
+  if (FullWidth) {
+    ByteLength = MaxByteLength;
+  } else {
+    LineByteLength = StrSize (Line);
+    ByteLength     = MIN (MaxByteLength, LineByteLength);
+  }
 
   Buffer = AllocatePool (ByteLength);
   if (Buffer == NULL) {
@@ -106,7 +116,6 @@ AddALine (
   StrnCpyS (Buffer, ByteLength / 2, Line, ByteLength / 2 - 1);
 
   if (FullWidth) {
-    // `- 1` because otherwise the first character gets lost.  Off-by-one error?
     for (Index = StrLen (Buffer); Index < PopUp->Width - 1; ++Index) {
       Buffer[Index] = L' ';
     }
