@@ -29,6 +29,7 @@
 #include <Library/FmpDeviceLib.h>
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PcdLib.h>
 #include <Library/PopUpLib.h>
 #include <Library/PrintLib.h>
 #include <Library/SmmStoreLib.h>
@@ -38,6 +39,10 @@
 #include <Coreboot.h>
 
 #include "Flashing.h"
+
+// Number of times recovery attempts to erase and write a block before moving to
+// the next one.
+#define BLOCK_RECOVERY_ATTEMPTS  3
 
 /**
   This function requests firmware information on the first call, caches it and
@@ -981,6 +986,131 @@ ShowBtgErrorPopup (
 }
 
 /**
+  Attempts to restore firmare to its previous state.
+
+  @param[in] OriginalImage     Firmware image to revert to.
+  @param[in] ImageSize         Size of the image in bytes.
+  @param[in] BlockSize         Size of a single block.
+  @param[in] BlockCount        Number of leading blocks to recover.
+  @param[in] DescriptorLocked  Whether IFD is locked (when locked, some ranges
+                               become read-only).
+
+  @retval TRUE   All requested blocks were reverted to their original state.
+  @retval FALSE  Recovery aborted or at least one block wasn't recovered.
+**/
+STATIC
+BOOLEAN
+AttemptRecovery (
+  IN UINT8    *OriginalImage,
+  IN UINTN    ImageSize,
+  IN UINTN    BlockSize,
+  IN UINTN    BlockCount,
+  IN BOOLEAN  DescriptorLocked
+  )
+{
+  EFI_STATUS  Status;
+  UINT8       *CurrentImage;
+  UINTN       Offset;
+  UINTN       Block;
+  UINTN       NumBytes;
+  UINTN       Try;
+
+  if (!FixedPcdGetBool (PcdCapsuleRecovery)) {
+    DEBUG ((DEBUG_INFO, "%a(): recovery is not enabled\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
+  if (CurrentImage == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to read current firmware the first time\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  Offset = 0;
+  for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
+    //
+    // Skip blocks that didn't change.
+    //
+    if (CompareMem (CurrentImage + Offset, OriginalImage + Offset, BlockSize) == 0) {
+      continue;
+    }
+
+    //
+    // We weren't touching blocks unavailable for writing, so they should not
+    // need a recovery.  Note the use of the original image as the source of
+    // information about ranges.
+    //
+    if (DescriptorLocked && !IsRangeWriteable (OriginalImage, ImageSize, Offset, BlockSize)) {
+      continue;
+    }
+
+    //
+    // Try recovering each block more than once in case that helps.  Should do
+    // no harm other than taking more time, but it's worth a chance of avoiding
+    // bricking the system.
+    //
+    for (Try = 0; Try < BLOCK_RECOVERY_ATTEMPTS; Try++) {
+      //
+      // Unlike normal writing in FmpDeviceSetImageWithStatus(), do not stop at
+      // errors in a hope that whatever gets written is enough for having a
+      // bootable firmware.  Still, don't write blocks that weren't erased.
+      //
+      Status = SmmStoreLibEraseAnyBlock (Block);
+      if (!EFI_ERROR (Status)) {
+        NumBytes = BlockSize;
+        (VOID)SmmStoreLibWriteAnyBlock (Block, 0, &NumBytes, OriginalImage + Offset);
+        break;
+      }
+    }
+  }
+
+  FreePool (CurrentImage);
+
+  //
+  // Judge outcome of the recovery by re-reading the firmware and comparing it
+  // against the original.
+  //
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked);
+  if (CurrentImage == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to read current firmware the second time\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  Offset = 0;
+  for (Block = 0; Block < BlockCount; Block++, Offset += BlockSize) {
+    //
+    // Blocks unavailable for writing may change contents on their own, hence
+    // they must be excluded from the comparison.
+    //
+    if (DescriptorLocked && !IsRangeWriteable (OriginalImage, ImageSize, Offset, BlockSize)) {
+      continue;
+    }
+
+    //
+    // Consider any mismatch an indication of a failed recovery.  Examining any
+    // more blocks won't change the result.
+    //
+    if (CompareMem (CurrentImage + Offset, OriginalImage + Offset, BlockSize) != 0) {
+      break;
+    }
+  }
+
+  FreePool (CurrentImage);
+
+  // Success is defined as all writable blocks within the range being equal to
+  // their initial state.
+  return Block == BlockCount;
+}
+
+/**
   Updates a firmware device with a new firmware image.  This function returns
   EFI_UNSUPPORTED if the firmware image is not updatable.  If the firmware image
   is updatable, the function should perform the following minimal validations
@@ -1234,6 +1364,9 @@ FmpDeviceSetImageWithStatus (
   return EFI_SUCCESS;
 
 IoError:
+  DEBUG ((DEBUG_ERROR, "%a(): flashing has failed at block 0x%x/0x%x\n",
+          __FUNCTION__, Block, BlockCount));
+
   //
   // There are several reasons why we might end up in here:
   //  - an actual issue with the flash chip which is unlikely to allow any
@@ -1250,6 +1383,13 @@ IoError:
   // unpredictable state which can be fully functional, unbootable or something
   // in between.
   //
+  // A simple recovery is attempted to mitigate those issues that can be
+  // recovered from.  Note that the recovery is performed from the start of the
+  // image and up to and including the block at which write error has occurred.
+  // Not considering blocks that should not have changed to avoid doing any
+  // more damage if region ranges or something similar is badly messed up and
+  // could cause writing data to wrong places.
+  //
   // Being optimistic that the firmware is still functional, we're leaving
   // variable services available under assumption that SMMSTORE region hasn't
   // been moved withing the firmware image (most updates don't modify layout).
@@ -1260,17 +1400,25 @@ IoError:
   // If the firmware ends up unbootable, then, in general, external flashing
   // via a programmer needs to be employed to recover the device.
   //
+  if (AttemptRecovery (CurrentImage, ImageSize, BlockSize, Block + 1, DescriptorLocked)) {
+    DEBUG ((DEBUG_INFO, "%a(): successfully reverted to the previous firmware\n", __FUNCTION__));
+
+    Status      = EFI_ABORTED;
+    ErrorString = L"The firmware was recovered after a write failure during the update.";
+  } else {
+    DEBUG ((DEBUG_WARN, "%a(): failed to revert to the previous firmware\n", __FUNCTION__));
+
+    Status      = EFI_DEVICE_ERROR;
+    ErrorString = L"Failed to recover after a write failure.";
+  }
+
+  if (AbortReason != NULL) {
+    *AbortReason = AllocateCopyPool (StrSize (ErrorString), ErrorString);
+  }
+
   FreePool (CurrentImage);
   FreePool (UpdatedImage);
-  DEBUG ((
-    DEBUG_ERROR,
-    "%a(): flashing has failed at block 0x%x/0x%x: %r\n",
-    __func__,
-    Block,
-    BlockCount,
-    EFI_DEVICE_ERROR
-    ));
-  return EFI_DEVICE_ERROR;
+  return Status;
 }
 
 /**
