@@ -123,6 +123,21 @@ AddALine (
   }
 
   PopUp->Lines[PopUp->Length++] = Buffer;
+
+  if (StrLen (Buffer) < StrLen (Line)) {
+    // And continuation of the line, which has the effect of wrapping long
+    // lines.
+    Line += StrLen (Buffer);
+
+    // Because leading spaces are treated specially by CreateMultiStringPopUp(),
+    // skip them when wrapping.
+    while (*Line == L' ') {
+      ++Line;
+    }
+    if (*Line != L'\0') {
+      AddALine (PopUp, Line, FullWidth);
+    }
+  }
 }
 
 STATIC
