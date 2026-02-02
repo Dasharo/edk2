@@ -1389,13 +1389,13 @@ ProcessFmpCapsuleImage (
 
     if (PayloadAborted) {
       // This payload caused the failure.
-      ReportAddPayload (CapsuleResult, Status);
+      ReportAddPayload (CapsuleResult, Status, /*Message=*/NULL);
     } else if (Abort) {
       // An earlier payload caused the failure.
-      ReportAddPayload (CapsuleResult, EFI_ABORTED);
+      ReportAddPayload (CapsuleResult, EFI_ABORTED, /*Message=*/NULL);
     } else {
       // Success so far.
-      ReportAddPayload (CapsuleResult, EFI_SUCCESS);
+      ReportAddPayload (CapsuleResult, EFI_SUCCESS, /*Message=*/NULL);
     }
 
     if (HandleBuffer != NULL) {

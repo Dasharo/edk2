@@ -23,6 +23,7 @@ typedef enum {
 
 typedef struct {
   EFI_STATUS  Status;
+  CHAR16      *Message;  // Optional, can be NULL.
 } PayloadResult;
 
 typedef struct {
@@ -92,7 +93,8 @@ VOID
 EFIAPI
 ReportAddPayload (
   IN OUT CapsuleResult  *Capsule OPTIONAL,
-  IN EFI_STATUS         Status
+  IN EFI_STATUS         Status,
+  IN CONST CHAR16       *Message OPTIONAL
   );
 
 VOID
