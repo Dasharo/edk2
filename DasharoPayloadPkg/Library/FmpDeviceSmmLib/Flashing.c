@@ -239,7 +239,9 @@ ReadCurrentFirmware (
     return NULL;
   }
 
-  Image = AllocatePool (FwSize);
+  // The buffer needs to be zero initialized so we don't get any garbage on
+  // failed reads when they are permitted.
+  Image = AllocateZeroPool (FwSize);
   if (Image == NULL) {
     DEBUG ((
       DEBUG_ERROR,
