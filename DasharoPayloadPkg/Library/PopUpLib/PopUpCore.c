@@ -103,7 +103,7 @@ AddALine (
     return;
   }
 
-  StrCpyS (Buffer, ByteLength / 2, Line);
+  StrnCpyS (Buffer, ByteLength / 2, Line, ByteLength / 2 - 1);
 
   if (FullWidth) {
     // `- 1` because otherwise the first character gets lost.  Off-by-one error?
