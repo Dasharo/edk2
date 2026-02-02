@@ -948,6 +948,12 @@ GetFmpImage (
   @param[in]  Handle        A FMP handle.
   @param[in]  ImageHeader   The payload image header.
   @param[in]  PayloadIndex  The index of the payload.
+  @param[out] AbortReason   A pointer to a pointer to a Null-terminated
+                            Unicode string providing more details on an
+                            aborted operation.  The buffer is allocated with
+                            EFI_BOOT_SERVICES.AllocatePool().  It is the
+                            caller's responsibility to free this buffer with
+                            EFI_BOOT_SERVICES.FreePool().
 
   @return The status of FMP->SetImage.
 **/
@@ -955,14 +961,14 @@ EFI_STATUS
 SetFmpImageData (
   IN EFI_HANDLE                                    Handle,
   IN EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *ImageHeader,
-  IN UINTN                                         PayloadIndex
+  IN UINTN                                         PayloadIndex,
+  OUT CHAR16                                       **AbortReason
   )
 {
   EFI_STATUS                                     Status;
   EFI_FIRMWARE_MANAGEMENT_PROTOCOL               *Fmp;
   UINT8                                          *Image;
   VOID                                           *VendorCode;
-  CHAR16                                         *AbortReason;
   EFI_FIRMWARE_MANAGEMENT_UPDATE_IMAGE_PROGRESS  ProgressCallback;
 
   Status = gBS->HandleProtocol (
@@ -995,7 +1001,6 @@ SetFmpImageData (
     VendorCode = Image + ImageHeader->UpdateImageSize;
   }
 
-  AbortReason = NULL;
   DEBUG ((DEBUG_INFO, "Fmp->SetImage ...\n"));
   DEBUG ((DEBUG_INFO, "ImageTypeId - %g, ", &ImageHeader->UpdateImageTypeId));
   DEBUG ((DEBUG_INFO, "PayloadIndex - 0x%x, ", PayloadIndex));
@@ -1018,6 +1023,8 @@ SetFmpImageData (
     ProgressCallback = NULL;
   }
 
+  *AbortReason = NULL;
+
   Status = Fmp->SetImage (
                   Fmp,
                   ImageHeader->UpdateImageIndex,          // ImageIndex
@@ -1025,7 +1032,7 @@ SetFmpImageData (
                   ImageHeader->UpdateImageSize,           // ImageSize
                   VendorCode,                             // VendorCode
                   ProgressCallback,                       // Progress
-                  &AbortReason                            // AbortReason
+                  AbortReason                             // AbortReason
                   );
   //
   // Set the progress bar to 100% after returning from SetImage()
@@ -1035,9 +1042,8 @@ SetFmpImageData (
   }
 
   DEBUG ((DEBUG_INFO, "Fmp->SetImage - %r\n", Status));
-  if (AbortReason != NULL) {
-    DEBUG ((DEBUG_ERROR, "%s\n", AbortReason));
-    FreePool (AbortReason);
+  if (*AbortReason != NULL) {
+    DEBUG ((DEBUG_ERROR, "Abort reason: %s\n", *AbortReason));
   }
 
   //
@@ -1242,6 +1248,7 @@ ProcessFmpCapsuleImage (
   BOOLEAN                                       NotReady;
   BOOLEAN                                       Abort;
   BOOLEAN                                       PayloadAborted;
+  CHAR16                                        *AbortReason;
 
   if (!IsFmpCapsuleGuid (&CapsuleHeader->CapsuleGuid)) {
     return ProcessFmpCapsuleImage ((EFI_CAPSULE_HEADER *)((UINTN)CapsuleHeader + CapsuleHeader->HeaderSize), CapFileName, ResetRequired, CapsuleResult);
@@ -1340,6 +1347,7 @@ ProcessFmpCapsuleImage (
     }
 
     PayloadAborted = FALSE;
+    AbortReason    = NULL;
     for (Index2 = 0; Index2 < NumberOfHandles; Index2++) {
       if (Abort) {
         RecordFmpCapsuleStatus (
@@ -1356,7 +1364,8 @@ ProcessFmpCapsuleImage (
       Status = SetFmpImageData (
                  HandleBuffer[Index2],
                  ImageHeader,
-                 Index - FmpCapsuleHeader->EmbeddedDriverCount
+                 Index - FmpCapsuleHeader->EmbeddedDriverCount,
+                 &AbortReason
                  );
       if (Status != EFI_SUCCESS) {
         Abort = TRUE;
@@ -1364,6 +1373,12 @@ ProcessFmpCapsuleImage (
       } else {
         if (ResetRequired != NULL) {
           *ResetRequired |= ResetRequiredBuffer[Index2];
+        }
+
+        // Don't assume that it's set only on errors.
+        if (AbortReason != NULL) {
+          FreePool (AbortReason);
+          AbortReason = NULL;
         }
       }
 
@@ -1379,13 +1394,17 @@ ProcessFmpCapsuleImage (
 
     if (PayloadAborted) {
       // This payload caused the failure.
-      ReportAddPayload (CapsuleResult, Status, /*Message=*/NULL);
+      ReportAddPayload (CapsuleResult, Status, AbortReason);
     } else if (Abort) {
       // An earlier payload caused the failure.
       ReportAddPayload (CapsuleResult, EFI_ABORTED, /*Message=*/NULL);
     } else {
       // Success so far.
       ReportAddPayload (CapsuleResult, EFI_SUCCESS, /*Message=*/NULL);
+    }
+
+    if (AbortReason != NULL) {
+      FreePool (AbortReason);
     }
 
     if (HandleBuffer != NULL) {
