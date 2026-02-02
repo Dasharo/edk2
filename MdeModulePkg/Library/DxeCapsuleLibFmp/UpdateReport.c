@@ -72,10 +72,21 @@ ReportFree (
   )
 {
   UINTN          CapsuleIdx;
+  UINTN          PayloadIdx;
   CapsuleResult  *Capsule;
+  PayloadResult  *Payload;
 
   for (CapsuleIdx = 0; CapsuleIdx < Report->CapsuleCount; ++CapsuleIdx) {
     Capsule = &Report->Capsules[CapsuleIdx];
+
+    for (PayloadIdx = 0; PayloadIdx < Capsule->PayloadCount; ++PayloadIdx) {
+      Payload = &Capsule->Payloads[PayloadIdx];
+
+      if (Payload->Message != NULL) {
+        FreePool (Payload->Message);
+      }
+    }
+
     if (Capsule->Payloads != NULL) {
       FreePool (Capsule->Payloads);
     }
@@ -161,7 +172,8 @@ VOID
 EFIAPI
 ReportAddPayload (
   IN OUT CapsuleResult  *Capsule OPTIONAL,
-  IN EFI_STATUS         Status
+  IN EFI_STATUS         Status,
+  IN CONST CHAR16       *Message
   )
 {
   VOID           *Payloads;
@@ -183,6 +195,14 @@ ReportAddPayload (
   PayloadResult = &Capsule->Payloads[Capsule->PayloadCount++];
 
   PayloadResult->Status = Status;
+
+  if (Message != NULL) {
+    //
+    // The field is optional and not much can be done on a failure to copy the
+    // string anyway, so not handling the error.
+    //
+    PayloadResult->Message = AllocateCopyPool (StrSize (Message), Message);
+  }
 }
 
 STATIC
@@ -508,9 +528,18 @@ ReportResults (
     for (PayloadIdx = 0; PayloadIdx < Capsule->PayloadCount; ++PayloadIdx) {
       Payload = &Capsule->Payloads[PayloadIdx];
       if (Capsule->PayloadCount > 1) {
-        AddFullLineF (PopUp, L"- Status of payload #%d: %r", PayloadIdx + 1, Payload->Status);
+        if (Payload->Message == NULL) {
+          AddFullLineF (PopUp, L"- Status of payload #%d: %r", PayloadIdx + 1, Payload->Status);
+        } else {
+          AddFullLineF (PopUp, L"- Status of payload #%d: %r (%s)",
+                        PayloadIdx + 1, Payload->Status, Payload->Message);
+        }
       } else {
-        AddFullLineF (PopUp, L"- Status of payload: %r", Payload->Status);
+        if (Payload->Message == NULL) {
+          AddFullLineF (PopUp, L"- Status of payload: %r", Payload->Status);
+        } else {
+          AddFullLineF (PopUp, L"- Status of payload: %r (%s)", Payload->Status, Payload->Message);
+        }
       }
     }
 
