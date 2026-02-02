@@ -564,6 +564,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport|TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|TRUE
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|TRUE
+  gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery|TRUE
 !endif
 
 [PcdsPatchableInModule.common]

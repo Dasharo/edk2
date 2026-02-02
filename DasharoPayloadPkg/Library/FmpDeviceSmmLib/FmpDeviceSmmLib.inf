@@ -39,11 +39,15 @@
   EfiVarsLib
   FmapLib
   MemoryAllocationLib
+  PcdLib
   PopUpLib
   PrintLib
   SmmStoreLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
+
+[Pcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery  ## CONSUMES
 
 [Packages]
   CryptoPkg/CryptoPkg.dec
