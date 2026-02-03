@@ -101,6 +101,21 @@ const EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  mProgressBarDefaultColor = {
 //
 BOOLEAN  mGraphicsGood = FALSE;
 
+//
+// Set to TRUE after the first GOP lookup attempt to avoid retrying.
+//
+BOOLEAN  mGopChecked = FALSE;
+
+//
+// Set to TRUE when GOP is unavailable and text console is used instead.
+//
+BOOLEAN  mTextFallback = FALSE;
+
+//
+// Text foreground color for the text fallback progress bar.
+//
+UINTN  mTextFallbackColor;
+
 /**
   Internal function used to find the bounds of the white logo (on black or
   red background).
@@ -310,6 +325,109 @@ FindDim (
   mGraphicsGood = TRUE;
 }
 
+//
+// Text fallback rendering when GOP is unavailable
+//
+STATIC
+EFI_STATUS
+ProgressTextFallback (
+  IN UINTN  Completion,
+  IN EFI_GRAPHICS_OUTPUT_BLT_PIXEL_UNION  *Color       OPTIONAL
+  )
+{
+  UINTN  CurrentAttribute;
+  UINTN  Index;
+  
+  //
+  // Do special init on first call of each progress session
+  //
+  if (mPreviousProgress == 100) {
+    Print (L"\n");
+
+    //
+    // Convert pixel color to text foreground color
+    //
+    if (Color == NULL) {
+      mTextFallbackColor = EFI_WHITE;
+    } else {
+      mTextFallbackColor = EFI_BLACK;
+      if (Color->Pixel.Blue >= 0x40) {
+        mTextFallbackColor |= EFI_BLUE;
+      }
+
+      if (Color->Pixel.Green >= 0x40) {
+        mTextFallbackColor |= EFI_GREEN;
+      }
+
+      if (Color->Pixel.Red >= 0x40) {
+        mTextFallbackColor |= EFI_RED;
+      }
+
+      if ((Color->Pixel.Blue >= 0xC0) || (Color->Pixel.Green >= 0xC0) || (Color->Pixel.Red >= 0xC0)) {
+        mTextFallbackColor |= EFI_BRIGHT;
+      }
+
+      if (mTextFallbackColor == EFI_BLACK) {
+        mTextFallbackColor = EFI_WHITE;
+      }
+    }
+
+    //
+    // Clear previous
+    //
+    mPreviousProgress = 0;
+  }
+
+  //
+  // Can not update progress bar if Completion is less than previous
+  //
+  if (Completion < mPreviousProgress) {
+    DEBUG ((DEBUG_WARN, "WARNING: Completion (%d) should not be lesss than Previous (%d)!!!\n", Completion, mPreviousProgress));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Save current text color
+  //
+  CurrentAttribute = (UINTN)gST->ConOut->Mode->Attribute;
+
+  //
+  // Print progress percentage
+  //
+  Print (L"\rUpdate Progress - %3d%% ", Completion);
+
+  //
+  // Set progress bar color
+  //
+  gST->ConOut->SetAttribute (
+                 gST->ConOut,
+                 EFI_TEXT_ATTR (mTextFallbackColor, EFI_BLACK)
+                 );
+
+  //
+  // Print completed portion of progress bar
+  //
+  for (Index = 0; Index < Completion / 2; Index++) {
+    Print (L"%c", BLOCKELEMENT_FULL_BLOCK);
+  }
+
+  //
+  // Restore text color
+  //
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  //
+  // Print remaining portion of progress bar
+  //
+  for ( ; Index < 50; Index++) {
+    Print (L"%c", BLOCKELEMENT_LIGHT_SHADE);
+  }
+
+  mPreviousProgress = Completion;
+
+  return EFI_SUCCESS;
+}
+
 /**
   Function indicates the current completion progress of a firmware update.
   Platform may override with its own specific function.
@@ -360,7 +478,9 @@ DisplayUpdateProgress (
   //
   // Find Graphics Output Protocol if not already set.  1 time.
   //
-  if (mGop == NULL) {
+  if (!mGopChecked) {
+    mGopChecked = TRUE;
+
     Status = gBS->HandleProtocol (
                     gST->ConsoleOutHandle,
                     &gEfiGraphicsOutputProtocolGuid,
@@ -370,23 +490,27 @@ DisplayUpdateProgress (
       Status = gBS->LocateProtocol (&gEfiGraphicsOutputProtocolGuid, NULL, (VOID **)&mGop);
       if (EFI_ERROR (Status)) {
         mGop = NULL;
-        DEBUG ((DEBUG_ERROR, "Show Progress Function could not locate GOP.  Status = %r\n", Status));
-        return EFI_NOT_READY;
+        DEBUG ((DEBUG_WARN, "Show Progress Function could not locate GOP.  Status = %r.  Using text fallback.\n", Status));
+        mTextFallback = TRUE;
       }
     }
 
-    //
-    // Run once
-    //
-    FindDim ();
+    if (!mTextFallback) {
+      //
+      // Run once
+      //
+      FindDim ();
+
+      if (!mGraphicsGood) {
+        DEBUG ((DEBUG_WARN, "Graphics Not Good.  Using text fallback for progress display.\n"));
+        mTextFallback = TRUE;
+      }
+    }
   }
 
-  //
-  // Make sure a valid start, end, and size info are available (find the Logo)
-  //
-  if (!mGraphicsGood) {
-    DEBUG ((DEBUG_INFO, "Graphics Not Good.  Not doing any onscreen visual display\n"));
-    return EFI_NOT_READY;
+  // Fall back to text rendering when GOP is unavailable
+  if (mTextFallback) {
+    return ProgressTextFallback (Completion, Color);
   }
 
   //
