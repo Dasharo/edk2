@@ -1057,54 +1057,6 @@ IsDescriptorLocked (
 }
 
 /**
-  Checks if an image has Boot Guard enabled, by checking is KM and BPM are
-  present in the image.
-
-  @param[in] Image     Image to check
-  @param[in] ImageLen  Size of the image to check
-
-  @return TRUE    If Boot Guard BPM and KM are present
-  @return FALSE   If Boot Guard BPM and KM are absent
-**/
-STATIC
-BOOLEAN
-IsBootGuardEnabled (
-  IN CONST VOID  *Image,
-  IN CONST UINTN ImageLen
-  )
-{
-  struct cbfs_file   *File;
-  struct cbfs_image  Cbfs;
-  CONST Fmap         *FlashMap;
-
-  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): failed to parse firmware\n",
-      __FUNCTION__
-      ));
-    return FALSE;
-  }
-
-  // Reading from the Slot A partition for simplicity and compatibility.
-  // If Boot Guard is enabled, both slots must contain the manifest to work.
-  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT")) {
-    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
-    return FALSE;
-  }
-
-  File = cbfs_get_entry (&Cbfs, "key_manifest.bin");
-  if (File == NULL)
-    return FALSE;
-
-  File = cbfs_get_entry (&Cbfs, "boot_policy_manifest.bin");
-  if (File == NULL)
-    return FALSE;
-
-  return TRUE;
-}
-
-/**
   Extracts the BtgPubKey struct from a Key Manifest buffer.
 
   @param[in]  Km             Key Manifest to parse
@@ -1147,6 +1099,67 @@ GetOemRootKeyFromKm (
   *OemRootKey = PubKey;
 
   return EFI_SUCCESS;
+}
+
+/**
+  Checks if an image has Boot Guard enabled, by checking is KM and BPM are
+  present in the image.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If Boot Guard BPM and KM are present
+  @return FALSE   If Boot Guard BPM and KM are absent
+**/
+STATIC
+BOOLEAN
+IsBootGuardEnabled (
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  )
+{
+  EFI_STATUS         Status;
+  struct cbfs_file   *File;
+  struct cbfs_image  Cbfs;
+  CONST Fmap         *FlashMap;
+  BtgPubKey          *OemKey;
+  UINTN              OemKeyLen;
+
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  // Reading from the Slot A partition for simplicity and compatibility.
+  // If Boot Guard is enabled, both slots must contain the manifest to work.
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT")) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  File = cbfs_get_entry (&Cbfs, "key_manifest.bin");
+  if (File == NULL)
+    return FALSE;
+
+  // Check if the KM contains valid data
+  Status = GetOemRootKeyFromKm(
+    CBFS_SUBHEADER(File),
+    File->len,
+    &OemKey,
+    &OemKeyLen
+  );
+  if (EFI_ERROR(Status))
+    return FALSE;
+
+  File = cbfs_get_entry (&Cbfs, "boot_policy_manifest.bin");
+  if (File == NULL)
+    return FALSE;
+
+  return TRUE;
 }
 
 //
