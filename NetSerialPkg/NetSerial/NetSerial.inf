@@ -1,0 +1,52 @@
+## @file
+#  NetSerial UEFI Driver - Telnet to SerialIO bridge
+#
+#  This driver creates a virtual serial port accessible via Telnet,
+#  allowing remote console access to UEFI Shell and firmware setup.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = NetSerial
+  FILE_GUID                      = 12345678-1234-5678-90AB-CDEF12345678
+  MODULE_TYPE                    = UEFI_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = NetSerialDriverEntryPoint
+  UNLOAD_IMAGE                   = NetSerialDriverUnload
+
+[Sources]
+  NetSerial.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  NetworkPkg/NetworkPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiBootManagerLib
+  UefiLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  PrintLib
+
+[Protocols]
+  gEfiSerialIoProtocolGuid                      ## PRODUCES
+  gEfiDevicePathProtocolGuid                    ## PRODUCES
+  gEfiTcp4ProtocolGuid                          ## CONSUMES
+  gEfiTcp4ServiceBindingProtocolGuid            ## CONSUMES
+  gEfiIp4Config2ProtocolGuid                    ## CONSUMES
+
+[Guids]
+  gEfiGlobalVariableGuid                        ## SOMETIMES_CONSUMES
+
+[Depex]
+  gEfiTcp4ServiceBindingProtocolGuid
+
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DMDEPKG_NDEBUG
