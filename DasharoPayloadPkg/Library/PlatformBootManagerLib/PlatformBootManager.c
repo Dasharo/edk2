@@ -80,7 +80,9 @@ RegisterFtdiUsbUart (
     if (EFI_ERROR (Status)) continue;
 
     if (DeviceDescriptor.IdVendor != 0x0403 ||
-        (DeviceDescriptor.IdProduct != 0x6001 && DeviceDescriptor.IdProduct != 0x6010)) {
+        (DeviceDescriptor.IdProduct != 0x6001 &&
+         DeviceDescriptor.IdProduct != 0x6010 &&
+         DeviceDescriptor.IdProduct != 0x6014)) {
       continue;
     }
 
