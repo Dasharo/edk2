@@ -571,7 +571,7 @@ DasharoEnableFUM (
 
   Enable = TRUE;
   Status = gRT->SetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
       &gDasharoSystemFeaturesGuid,
       EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
       sizeof (Enable),
