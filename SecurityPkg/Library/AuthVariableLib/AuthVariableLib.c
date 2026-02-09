@@ -235,12 +235,12 @@ AuthVariableLibInitialize (
     }
   }
 
-  Status = AuthServiceInternalFindVariable (DASHARO_VAR_FIRMWARE_UPDATE_MODE, &gDasharoSystemFeaturesGuid,
+  Status = AuthServiceInternalFindVariable (DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST, &gDasharoSystemFeaturesGuid,
                                             (VOID **) &Data, &DataSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
+    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST));
   } else {
-    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE));
+    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST));
   }
 
   //

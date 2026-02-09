@@ -773,14 +773,24 @@ IsFumEnabled (
   VarSize = sizeof (FUMEnabled);
 
   Status = gRT->GetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
       &gDasharoSystemFeaturesGuid,
       NULL,
       &VarSize,
       &FUMEnabled
       );
   if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
-    return FALSE;
+    // In case PromoteFum hasn't been called yet
+    Status = gRT->GetVariable (
+        DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
+        &gDasharoSystemFeaturesGuid,
+        NULL,
+        &VarSize,
+        &FUMEnabled
+        );
+    if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
+      return FALSE;
+    }
   }
 
   return FUMEnabled;
@@ -803,11 +813,11 @@ DropFum (
   )
 {
   // Remove the variable to disable FUM on the next boot.
-  DropDasharoVar (DASHARO_VAR_FIRMWARE_UPDATE_MODE);
+  DropDasharoVar (DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST);
 }
 
-// Replace non-volatile FUM variable with a volatile runtime one so applications
-// can detect FUM.
+// Replace non-volatile FUM Request variable with a volatile runtime FUM Active
+// one so applications can detect FUM.
 STATIC
 EFI_STATUS
 PromoteFum (
@@ -822,8 +832,9 @@ PromoteFum (
 
   FUMEnabled = TRUE;
   VarSize = sizeof (FUMEnabled);
+
   Status = gRT->SetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
       &gDasharoSystemFeaturesGuid,
       EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
       VarSize,
