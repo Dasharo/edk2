@@ -196,7 +196,7 @@ InitializeBootPolicies (
   VarSize = sizeof (FUMEnabled);
 
   Status = GetVariable2 (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE,
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
       &gDasharoSystemFeaturesGuid,
       (VOID **) &EfiVar,
       &VarSize
