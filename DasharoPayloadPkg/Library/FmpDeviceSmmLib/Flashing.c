@@ -1430,3 +1430,40 @@ AreImageBtgKeysCompatible (
 
   return KeysCompatible;
 }
+
+/**
+  Checks if an image has Top Swap based redundancy with separate bootblocks.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If separate bootblocks are present
+  @return FALSE   If unified boot block is present
+**/
+BOOLEAN
+IsSplitBootblockPresent (
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  )
+{
+  struct cbfs_image  Cbfs;
+  CONST Fmap         *FlashMap;
+
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  // The TOPSWAP region contains the TS BB. If it exists, we can be reasonably
+  // certain that top swap based bootblock reedundancy is enabled.
+  if (GetCbfs (Image, FlashMap, &Cbfs, "TOPSWAP")) {
+    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
+    return TRUE;
+  }
+
+  return FALSE;
+}

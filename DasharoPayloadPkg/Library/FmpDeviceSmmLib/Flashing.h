@@ -115,4 +115,19 @@ AreImageBtgKeysCompatible (
   IN CONST UINTN ImageSize
   );
 
+/**
+  Checks if an image has Top Swap based redundancy with separate bootblocks.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If separate bootblocks are present
+  @return FALSE   If unified boot block is present
+**/
+BOOLEAN
+IsSplitBootblockPresent (
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  );
+
 #endif // FLASHING_H__
