@@ -737,6 +737,46 @@ GetCbfs (
 }
 
 /**
+  Checks if an image has Top Swap based redundancy with separate bootblocks.
+
+  @param[in] Image     Image to check
+  @param[in] ImageLen  Size of the image to check
+
+  @return TRUE    If separate bootblocks are present
+  @return FALSE   If unified boot block is present
+**/
+BOOLEAN
+IsSplitBootblockPresent (
+  IN CONST VOID  *Image,
+  IN CONST UINTN ImageLen
+  )
+{
+  struct cbfs_image  Cbfs;
+  CONST Fmap         *FlashMap;
+
+  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): failed to parse firmware\n",
+      __FUNCTION__
+      ));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "TOPSWAP")) {
+    DEBUG ((DEBUG_INFO, "%a(): Image does not contain TOPSWAP region\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  if (!GetCbfs (Image, FlashMap, &Cbfs, "COREBOOT_TS")) {
+    DEBUG ((DEBUG_INFO, "%a(): Image does not contain COREBOOT_TS region\n", __FUNCTION__));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
   Migrates data from current firmware to new image before it's written.
 
   @param[in] Data  Description of old and new firmware images.
@@ -924,6 +964,7 @@ MergeFirmwareImages (
 {
   EFI_STATUS     Status;
   MigrationData  Data;
+  BOOLEAN        SplitBootblockPresent;
 
   Data.Current = Current;
 
@@ -954,7 +995,8 @@ MergeFirmwareImages (
     return NULL;
   }
 
-  Data.TopSwapActive = IsTopSwapActive ();
+  SplitBootblockPresent = IsSplitBootblockPresent (Data.Current, Data.FwSize);
+  Data.TopSwapActive = SplitBootblockPresent && IsTopSwapActive ();
 
   if (!GetFmap (Data.Current, Data.FwSize, &Data.CurrentFmap, Data.TopSwapActive)) {
     DEBUG ((
@@ -1006,12 +1048,12 @@ MergeFirmwareImages (
     goto Fail;
   }
 
-  if (!MigrateBOOTBLOCK (&Data)) {
+  if (SplitBootblockPresent && !MigrateBOOTBLOCK (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateBOOTBLOCK () failed\n", __FUNCTION__));
     goto Fail;
   }
 
-  if (!MigrateCOREBOOT (&Data)) {
+  if (SplitBootblockPresent && !MigrateCOREBOOT (&Data)) {
     DEBUG ((DEBUG_ERROR, "%a(): MigrateCOREBOOT () failed\n", __FUNCTION__));
     goto Fail;
   }
@@ -1429,41 +1471,4 @@ AreImageBtgKeysCompatible (
   FreePool (UpdatedOemKeyHash);
 
   return KeysCompatible;
-}
-
-/**
-  Checks if an image has Top Swap based redundancy with separate bootblocks.
-
-  @param[in] Image     Image to check
-  @param[in] ImageLen  Size of the image to check
-
-  @return TRUE    If separate bootblocks are present
-  @return FALSE   If unified boot block is present
-**/
-BOOLEAN
-IsSplitBootblockPresent (
-  IN CONST VOID  *Image,
-  IN CONST UINTN ImageLen
-  )
-{
-  struct cbfs_image  Cbfs;
-  CONST Fmap         *FlashMap;
-
-  if (!GetFmap (Image, ImageLen, &FlashMap, IsTopSwapActive ())) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): failed to parse firmware\n",
-      __FUNCTION__
-      ));
-    return FALSE;
-  }
-
-  // The TOPSWAP region contains the TS BB. If it exists, we can be reasonably
-  // certain that top swap based bootblock reedundancy is enabled.
-  if (GetCbfs (Image, FlashMap, &Cbfs, "TOPSWAP")) {
-    DEBUG ((DEBUG_ERROR, "%a(): failed to load CBFS\n", __FUNCTION__));
-    return TRUE;
-  }
-
-  return FALSE;
 }
