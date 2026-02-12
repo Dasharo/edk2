@@ -106,7 +106,8 @@
 
 #string STR_IOMMU_HANDOFF_PROMPT   #language en-US "Keep IOMMU enabled when transfer control to OS"
 #string STR_IOMMU_HANDOFF_HELP     #language en-US "Keeps IOMMU DMA protection enabled during ExitBootServices when control is passed to the OS.\n\n"
-                                                     "If unsure or see any problems with DMA/IOMMU during OS boot, keep it disabled."
+                                                     "If unsure or see any problems with DMA/IOMMU during OS boot, keep it disabled.\n\n"
+                                                     "PLEASE NOTE that this option is incompatible with Windows on many devices.\n\n"
 
 #string STR_SLEEP_TYPE_PROMPT   #language en-US "Platform sleep type"
 #string STR_SLEEP_TYPE_HELP     #language en-US "Select the sleep type that will be exposed to the OS.\n\n"
