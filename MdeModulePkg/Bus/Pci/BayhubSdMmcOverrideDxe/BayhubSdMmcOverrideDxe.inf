@@ -1,0 +1,44 @@
+## @file
+#  DXE driver that installs EDKII_SD_MMC_OVERRIDE_PROTOCOL for BayHub SD/eMMC
+#  host controllers (vendor ID 0x1217).
+#
+#  Platform firmware that includes SdMmcPciHcDxe should also include this
+#  driver so that BayHub-specific capability overrides and initialisation
+#  hooks are applied automatically via the LocateProtocol mechanism in
+#  SdMmcPciHcDxe.
+#
+#  Copyright (c) 2018 - 2019, BayHub Tech inc. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BayhubSdMmcOverrideDxe
+  FILE_GUID                      = FB099D77-802B-47B5-B271-19AC9BE1F33D
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = BayhubSdMmcOverrideDxeEntryPoint
+
+[Sources]
+  BayhubSdMmcOverrideDxe.c
+  BayhubHost.c
+  BayhubHost.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  DebugLib
+
+[Protocols]
+  gEdkiiSdMmcOverrideProtocolGuid               ## PRODUCES
+  gEfiPciIoProtocolGuid                         ## CONSUMES
+
+[Depex]
+  TRUE
