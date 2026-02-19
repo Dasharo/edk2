@@ -281,4 +281,17 @@ ParseIsDiskCapsulesBoot (
   VOID
   );
 
+/**
+  Find coreboot record with given Tag.
+
+  @param  Tag                The tag id to be found
+
+  @retval NULL              The Tag is not found.
+  @retval Others            The pointer to the record found.
+**/
+VOID *
+FindCbTag (
+  IN  UINT32  Tag
+  );
+
 #endif
