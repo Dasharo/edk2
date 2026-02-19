@@ -856,4 +856,47 @@ struct tcg_efi_spec_id_event {
   /* UINT8 vendor_info[vendor_info_size]; */
 } __attribute__ ((packed));
 
+
+//
+// CMOS option table structures (coreboot cmos.layout ABI)
+//
+
+#define CB_TAG_CMOS_OPTION_TABLE   0x00c8
+
+struct cb_cmos_option_table {
+  UINT32 tag;
+  UINT32 size;           /**< Total size including all sub-records */
+  UINT32 header_length;  /**< Size of this header (without sub-records) */
+};
+
+#define CB_TAG_OPTION   0x00c9
+
+#define CMOS_MAX_NAME_LENGTH  32
+
+#define CMOS_ENTRY_TYPE_ENUM      'e'
+#define CMOS_ENTRY_TYPE_HEX       'h'
+#define CMOS_ENTRY_TYPE_RESERVED  'r'
+#define CMOS_ENTRY_TYPE_STRING    's'
+
+struct cb_cmos_entries {
+  UINT32 tag;
+  UINT32 size;
+  UINT32 bit;       /**< Starting bit position in CMOS RAM */
+  UINT32 length;    /**< Number of bits */
+  UINT32 config;    /**< Type: 'e'=enum, 'h'=hex, 'r'=reserved, 's'=string */
+  UINT32 config_id; /**< Links to cb_cmos_enums.config_id */
+  UINT8  name[CMOS_MAX_NAME_LENGTH];
+};
+
+#define CB_TAG_OPTION_CHECKSUM  0x00cc
+
+struct cb_cmos_checksum {
+  UINT32 tag;
+  UINT32 size;
+  UINT32 range_start;  /**< First bit covered by the checksum */
+  UINT32 range_end;    /**< Last bit covered by the checksum */
+  UINT32 location;     /**< Bit position where the checksum is stored */
+  UINT32 type;         /**< Checksum type (e.g. IP sum) */
+};
+
 #endif // _COREBOOT_PEI_H_INCLUDED_
