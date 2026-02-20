@@ -27,6 +27,7 @@
   BaseMemoryLib
   BaseCryptLib
   BlParseLib
+  CmosOptionsLib
   CbfsLib
   DebugLib
   EfiVarsLib

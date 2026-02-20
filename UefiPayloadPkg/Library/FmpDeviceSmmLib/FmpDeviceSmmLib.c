@@ -24,6 +24,7 @@
 #include <Guid/SystemResourceTable.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/BlParseLib.h>
+#include <Library/CmosOptionsLib.h>
 #include <Library/DebugLib.h>
 #include <Library/FmpDeviceLib.h>
 #include <Library/HobLib.h>
@@ -1067,6 +1068,7 @@ FmpDeviceSetImageWithStatus (
   UINTN       Offset;
   BOOLEAN     DescriptorLocked;
   CHAR16      *ErrorString = NULL;
+  UINT32      AttemptSlotB;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
 
@@ -1192,6 +1194,14 @@ FmpDeviceSetImageWithStatus (
   FreePool (UpdatedImage);
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_SUCCESS;
+
+  /* Check if option for slot B exists, if so, set it */
+  Status = CmosReadOptionByName("attempt_slot_b", &AttemptSlotB);
+  if (!EFI_ERROR(Status) && !AttemptSlotB) {
+    Status = CmosWriteOptionByName("attempt_slot_b", 1);
+    if (EFI_ERROR(Status))
+      DEBUG((DEBUG_ERROR, "%a(): Failed to set Attempt Slot B flag! Status = %r\n", __FUNCTION__, Status));
+  }
 
   //
   // Updating the firmware on system flash overwrites SMMSTORE region which
