@@ -826,7 +826,7 @@ CountDifferingBlocks (
       continue;
     }
 
-    if (!IsRangeWriteable (Image2, Size, Offset, BlockSize)) {
+    if (!IsRangeWriteable (Image1, Size, Offset, BlockSize)) {
       continue;
     }
 
@@ -1248,6 +1248,7 @@ FmpDeviceSetImageWithStatus (
   ProgressContext  ProgressCtx;
   UINTN            DifferingBlocks;
   UINTN            WrittenBlocks;
+  UINTN            ScaledWriteWeight;
   BOOLEAN          SmoothProgress;
 
   *LastAttemptStatus = LAST_ATTEMPT_STATUS_ERROR_UNSUCCESSFUL;
@@ -1340,6 +1341,7 @@ FmpDeviceSetImageWithStatus (
   //
   // Phase 2: Write differing blocks.
   //
+  ScaledWriteWeight = UPDATE_BLOCK_WEIGHT;
   if (SmoothProgress) {
     //
     // Count how many blocks actually differ to get accurate progress.
@@ -1355,10 +1357,13 @@ FmpDeviceSetImageWithStatus (
             __FUNCTION__, DifferingBlocks, BlockCount));
 
     //
-    // Recalculate TotalUnits based on actual differing blocks.
-    // CurrentUnits already has the read progress (BlockCount * READ_BLOCK_WEIGHT).
+    // Scale the per-block write weight so that writing all differing blocks
+    // still consumes exactly BlockCount * UPDATE_BLOCK_WEIGHT units, keeping
+    // TotalUnits unchanged and avoiding a sudden progress jump.
     //
-    ProgressCtx.TotalUnits = BlockCount * READ_BLOCK_WEIGHT + DifferingBlocks * UPDATE_BLOCK_WEIGHT;
+    if (DifferingBlocks > 0) {
+      ScaledWriteWeight = UPDATE_BLOCK_WEIGHT * BlockCount / DifferingBlocks;
+    }
   }
 
   Offset = 0;
@@ -1389,11 +1394,14 @@ FmpDeviceSetImageWithStatus (
         "%a(): range %d - %d is not writeable\n",
         __FUNCTION__, Offset, BlockSize + Offset
         ));
-      //
-      // Block is not writeable but was counted as differing, so advance progress.
-      //
-      ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT;
-      ReportProgress (&ProgressCtx);
+      if (!SmoothProgress) {
+        //
+        // In non-smooth mode all blocks are counted in TotalUnits, so advance
+        // progress for non-writeable blocks too.
+        //
+        ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT;
+        ReportProgress (&ProgressCtx);
+      }
       continue;
     }
 
@@ -1404,7 +1412,7 @@ FmpDeviceSetImageWithStatus (
     //
     // Report progress after erase (half of write weight).
     //
-    ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT / 2;
+    ProgressCtx.CurrentUnits += ScaledWriteWeight / 2;
     ReportProgress (&ProgressCtx);
 
     NumBytes = BlockSize;
@@ -1415,7 +1423,7 @@ FmpDeviceSetImageWithStatus (
     //
     // Report progress after write (remaining half of write weight).
     //
-    ProgressCtx.CurrentUnits += UPDATE_BLOCK_WEIGHT - (UPDATE_BLOCK_WEIGHT / 2);
+    ProgressCtx.CurrentUnits += ScaledWriteWeight - (ScaledWriteWeight / 2);
     ReportProgress (&ProgressCtx);
 
     WrittenBlocks++;
