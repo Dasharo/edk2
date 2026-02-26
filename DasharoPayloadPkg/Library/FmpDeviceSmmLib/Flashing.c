@@ -1053,7 +1053,7 @@ MergeFirmwareImages (
   }
 
   if (!MigrateRecoveryMrcCache (&Data)) {
-    DEBUG ((DEBUG_ERROR, "%a(): MigrateMrcCache () failed\n", __FUNCTION__));
+    DEBUG ((DEBUG_ERROR, "%a(): MigrateRecoveryMrcCache () failed\n", __FUNCTION__));
     goto Fail;
   }
 
