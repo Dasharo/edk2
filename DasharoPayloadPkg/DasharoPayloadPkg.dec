@@ -102,8 +102,18 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdSetupMenuKey|0x0017|UINT16|0x00000008
 gDasharoPayloadPkgTokenSpaceGuid.PcdPrintSolStrings|FALSE|BOOLEAN|0x0000000A
 gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|FALSE|BOOLEAN|0x0000000B
 
+## Enables feedback about the outcome of a firmware update in a form of a dialog
+## stating results and also diagnostic information on failure.  When FALSE, the
+## system just reboots without saying anything.
 gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleReport|FALSE|BOOLEAN|0x0000000C
+
+## Enables displaying update-specific logo in capsules which is most likely
+## vendor's logo (the regular boot logo is customizable while this one is fixed
+## during build).  When FALSE, a regular boot logo is displayed.
 gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo|FALSE|BOOLEAN|0x0000000D
+
+## Enables best-effort firmware recovery after hitting an I/O error during
+## firmware update.  When FALSE, no recovery is attempted.
 gDasharoPayloadPkgTokenSpaceGuid.PcdCapsuleRecovery|FALSE|BOOLEAN|0x0000000E
 
 ## Enables smooth per-block progress reporting during capsule updates.
