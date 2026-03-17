@@ -251,6 +251,7 @@
   FmpDeviceLib|UefiPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
   FmpPayloadHeaderLib|FmpDevicePkg/Library/FmpPayloadHeaderLibV1/FmpPayloadHeaderLibV1.inf
   PopUpLib|DasharoPayloadPkg/Library/PopUpLib/PopUpLib.inf
+  DetectTestKeyLib|FmpDevicePkg/Library/DetectTestKeyLib/DetectTestKeyLib.inf
 !else
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
 !endif
