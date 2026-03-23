@@ -867,8 +867,8 @@ RunDp (
   }
 
   TimerInfo.Frequency  = (UINT32)DivU64x32 (PerformanceProperty->Frequency, 1000);
-  TimerInfo.StartCount = 0;
-  TimerInfo.EndCount   = 0xFFFF;
+  TimerInfo.StartCount = PerformanceProperty->TimerStartValue;
+  TimerInfo.EndCount   = PerformanceProperty->TimerEndValue;
   TimerInfo.CountUp    = TRUE;
 
   //
