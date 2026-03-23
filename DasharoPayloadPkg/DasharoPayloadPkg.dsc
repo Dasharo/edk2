@@ -278,9 +278,18 @@
 !if $(CPU_TIMER_LIB_ENABLE) == TRUE
   TimerLib|UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
 !else
+  # coreboot always uses TSC for timestamps, force correct timer library so performance
+  # measurements are accurate, regardless of the timer built for other modules. Mismatch
+  # of the timers will result in incorrect tick and nanosecond calculations due to
+  # different timer frequency.
+!if $(PERFORMANCE_MEASUREMENT_ENABLE) == TRUE
+  TimerLib|DasharoPayloadPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
+!else
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
-!endif
-!endif
+!endif # PERFORMANCE_MEASUREMENT_ENABLE
+!endif # CPU_TIMER_LIB_ENABLE
+!endif # QEMU_PLATFORM
+
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
 !if (($(USE_CBMEM_FOR_CONSOLE) == TRUE) && ($(TARGET) == RELEASE))
   SerialPortLib|UefiPayloadPkg/Library/CbSerialPortLib/CbSerialPortLib.inf

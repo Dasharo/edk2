@@ -238,6 +238,21 @@ struct cb_vdat {
 };
 
 #define CB_TAG_TIMESTAMPS     0x0016
+
+struct timestamp_entry {
+	UINT32	entry_id;
+	INT64	entry_stamp;
+} __attribute__ ((packed));
+
+struct timestamp_table {
+	UINT64	base_time;
+	UINT16	max_entries;
+	UINT16	tick_freq_mhz;
+	UINT32	num_entries;
+	struct timestamp_entry entries[0]; /* Variable number of entries */
+} __attribute__ ((packed));
+
+
 #define CB_TAG_CBMEM_CONSOLE  0x0017
 struct cbmem_console {
   UINT32    size;
