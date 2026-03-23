@@ -1107,20 +1107,6 @@ ParseVBootWorkbuf (
   return RETURN_SUCCESS;
 }
 
-PACKED struct timestamp_entry {
-	UINT32	entry_id;
-	UINT64	entry_stamp;
-};
-
-PACKED struct timestamp_table {
-	UINT64	base_time;
-	UINT16	max_entries;
-	UINT16	tick_freq_mhz;
-	UINT32	num_entries;
-	struct timestamp_entry entries[0]; /* Variable number of entries */
-};
-
-
 /**
   Parse the coreboot timestamps
 
@@ -1134,19 +1120,56 @@ ParseTimestampTable (
   OUT FIRMWARE_SEC_PERFORMANCE *Performance
   )
 {
-  struct timestamp_table                  *CbTsRec;
+  struct cb_cbmem_entry  *CbEntry;
+  struct timestamp_table *CbTsRec;
+  UINT64  Frequency;
+  UINT64  NanoSeconds;
+  UINT64  Remainder;
+  UINT64  Ticks;
+  INTN    Shift;
+
 
   if (Performance == NULL) {
     return RETURN_INVALID_PARAMETER;
   }
 
-  CbTsRec = FindCbTag (CB_TAG_TIMESTAMPS);
-  if (CbTsRec == NULL) {
-    return RETURN_NOT_FOUND;
+  CbEntry = FindCbTag (CB_TAG_TIMESTAMPS);
+  if (CbEntry == NULL) {
+    DEBUG ((DEBUG_ERROR, "coreboot timestamp entry not found\n"));
+    return 0;
   }
 
+  CbTsRec = (struct timestamp_table *)(UINTN)CbEntry->address;
+  if (CbTsRec == NULL) {
+    DEBUG ((DEBUG_ERROR, "coreboot timestamp table not found\n"));
+    return 0;
+  }
+
+  Frequency = MultU64x32 (CbTsRec->tick_freq_mhz, 1000000u);
+  Ticks = CbTsRec->base_time;
+
+  //
+  //          Ticks
+  // Time = --------- x 1,000,000,000
+  //        Frequency
+  //
+  NanoSeconds = MultU64x32 (DivU64x64Remainder (Ticks, Frequency, &Remainder), 1000000000u);
+
+  //
+  // Ensure (Remainder * 1,000,000,000) will not overflow 64-bit.
+  // Since 2^29 < 1,000,000,000 = 0x3B9ACA00 < 2^30, Remainder should < 2^(64-30) = 2^34,
+  // i.e. highest bit set in Remainder should <= 33.
+  //
+  Shift        = MAX (0, HighBitSet64 (Remainder) - 33);
+  Remainder    = RShiftU64 (Remainder, (UINTN)Shift);
+  Frequency    = RShiftU64 (Frequency, (UINTN)Shift);
+  NanoSeconds += DivU64x64Remainder (MultU64x32 (Remainder, 1000000000u), Frequency, NULL);
+
   /* ResetEnd must be reported in nanoseconds, not ticks */
-  Performance->ResetEnd = DivU64x32(CbTsRec->base_time, CbTsRec->tick_freq_mhz);
+  Performance->ResetEnd = NanoSeconds;
+
+  DEBUG ((DEBUG_INFO, "coreboot Performance->ResetEnd: %llu\n", Performance->ResetEnd));
+
   return RETURN_SUCCESS;
 }
 
