@@ -1136,13 +1136,13 @@ ParseTimestampTable (
   CbEntry = FindCbTag (CB_TAG_TIMESTAMPS);
   if (CbEntry == NULL) {
     DEBUG ((DEBUG_ERROR, "coreboot timestamp entry not found\n"));
-    return 0;
+    return RETURN_NOT_FOUND;
   }
 
   CbTsRec = (struct timestamp_table *)(UINTN)CbEntry->address;
   if (CbTsRec == NULL) {
     DEBUG ((DEBUG_ERROR, "coreboot timestamp table not found\n"));
-    return 0;
+    return RETURN_NOT_FOUND;
   }
 
   Frequency = MultU64x32 (CbTsRec->tick_freq_mhz, 1000000u);
