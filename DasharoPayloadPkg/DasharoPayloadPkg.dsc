@@ -276,8 +276,8 @@
   # coreboot will expose proper ACPI Timer I/O port from QEMU too
   # No need to use OVMF HPET Timer libraries
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
-!else
-!if $(CPU_TIMER_LIB_ENABLE) == TRUE
+!elseif $(CPU_TIMER_LIB_ENABLE) == TRUE
+  # QEMU_PLATFORM and CPU_TIMER_LIB_ENABLE are mutually exclusive
   TimerLib|UefiCpuPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
 !else
   # coreboot always uses TSC for timestamps, force correct timer library so performance
@@ -288,9 +288,8 @@
   TimerLib|DasharoPayloadPkg/Library/CpuTimerLib/BaseCpuTimerLib.inf
 !else
   TimerLib|DasharoPayloadPkg/Library/AcpiTimerLib/AcpiTimerLib.inf
-!endif # PERFORMANCE_MEASUREMENT_ENABLE
-!endif # CPU_TIMER_LIB_ENABLE
-!endif # QEMU_PLATFORM
+!endif
+!endif # $(QEMU_PLATFORM) == FASLE && $(CPU_TIMER_LIB_ENABLE) == FALSE
 
   ResetSystemLib|DasharoPayloadPkg/Library/ResetSystemLib/ResetSystemLib.inf
 !if (($(USE_CBMEM_FOR_CONSOLE) == TRUE) && ($(TARGET) == RELEASE))
