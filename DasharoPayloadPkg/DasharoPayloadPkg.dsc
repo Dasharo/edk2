@@ -111,11 +111,15 @@
   DEFINE RAM_DISK_ENABLE                = FALSE
   DEFINE APU_CONFIG_ENABLE              = FALSE
   DEFINE USE_PLATFORM_GOP               = FALSE
+  DEFINE USE_AMD_PLATFORM_GOP           = FALSE
   DEFINE USE_LAPTOP_LID_LIB             = FALSE
   DEFINE USE_UEFIVAR_BACKED_TPM_PPI     = FALSE
   DEFINE CAPSULE_SUPPORT                = FALSE
   DEFINE CAPSULE_MAIN_FW_GUID           =
   DEFINE CAPSULES_V2                    = FALSE
+
+  DEFINE AMD_GOP_DRIVER_GUID    = 2C4CB22B-E0F8-4457-A238-576A3D0201D6
+  DEFINE AMD_GOP_VBIOS_GUID     = C38A9A34-2005-496E-94F2-8E1020B8FC6E
 
   #
   # Network definition
@@ -995,10 +999,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 
 !if $(USE_PLATFORM_GOP) == TRUE
   DasharoPayloadPkg/PlatformGopPolicy/PlatformGopPolicy.inf
-!else
+!elseif $(USE_AMD_PLATFORM_GOP) == FALSE
   DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
-
 
   #
   # Network Support
