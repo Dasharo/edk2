@@ -36,6 +36,7 @@
   UefiDriverEntryPoint
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
+  DxeServicesLib
   DxeServicesTableLib
   DebugLib
   MemoryAllocationLib
@@ -55,3 +56,6 @@
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
   gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled
+  gDasharoPayloadPkgTokenSpaceGuid.AmdVbiosOptionRomVendorId
+  gDasharoPayloadPkgTokenSpaceGuid.AmdVbiosOptionRomDeviceId
+  gDasharoPayloadPkgTokenSpaceGuid.AmdVbiosOptionRomFileName
