@@ -10,6 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "PciPlatformDxe.h"
 #include <Bus/Pci/PciBusDxe/PciBus.h>
 #include <Bus/Pci/PciBusDxe/PciOptionRomSupport.h>
+#include <Library/DxeServicesLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <DasharoOptions.h>
 
@@ -145,6 +146,127 @@ ShouldLoadOptionRom (
 }
 
 EFI_STATUS
+GetPciRomFromFv (
+  IN        EFI_PCI_IO_PROTOCOL                         *PciIo,
+  OUT       VOID                                        **RomImage,
+  OUT       UINTN                                       *RomSize
+  )
+{
+  EFI_STATUS                    Status;
+  UINT16                        VendorId;
+  UINT16                        DeviceId;
+  UINT16                        OffsetPcir;
+  UINT8                         *RomBarOffset;
+  BOOLEAN                       FirstCheck;
+  PCI_EXPANSION_ROM_HEADER      *RomHeader;
+  PCI_DATA_STRUCTURE            *RomPcir;
+  UINT64                        RomImageSize;
+  UINT32                        LegacyImageLength;
+  UINT8                         CodeType;
+  UINT8                         Indicator;
+
+  if (FixedPcdGet16(AmdVbiosOptionRomVendorId) == 0 ||
+      FixedPcdGet16(AmdVbiosOptionRomDeviceId) == 0) {
+    return EFI_NOT_FOUND;
+  }
+
+  PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, 0, 1, &VendorId);
+  PciIo->Pci.Read (PciIo, EfiPciIoWidthUint16, 2, 1, &DeviceId);
+
+  DEBUG ((DEBUG_INFO, "GetPciRomFromFV for Vid %04X, Did: %04X\n", VendorId, DeviceId));
+
+  if (VendorId != FixedPcdGet16(AmdVbiosOptionRomVendorId) ||
+      DeviceId != FixedPcdGet16(AmdVbiosOptionRomDeviceId)) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = GetSectionFromFv (
+              (CONST EFI_GUID *)PcdGetPtr(AmdVbiosOptionRomFileName),
+              EFI_SECTION_RAW,
+              0,
+              RomImage,
+              RomSize
+              );
+  if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_INFO, "GetPciRomFromFV for Vid %04X, Did: %04X Status: %r\n",
+           VendorId, DeviceId, Status));
+    return Status;
+  }
+
+  DEBUG ((DEBUG_INFO, "GetPciRomFromFV for Vid %04X, Did: %04X ==> RomImage: %llx, Size %llx\n",
+          VendorId, DeviceId, *RomImage, *RomSize));
+
+
+  FirstCheck = TRUE;
+  LegacyImageLength = 0;
+  RomImageSize = 0;
+  RomBarOffset = (UINT8 *)*RomImage;
+
+  do {
+    if ((*RomSize - RomImageSize) < sizeof(PCI_EXPANSION_ROM_HEADER)) {
+      break;
+    }
+
+    RomHeader = (PCI_EXPANSION_ROM_HEADER *)RomBarOffset;
+    DEBUG ((EFI_D_INFO, "%a: RomHeader->Signature %x\n", __FUNCTION__, RomHeader->Signature));
+    if (RomHeader->Signature != PCI_EXPANSION_ROM_HEADER_SIGNATURE) {
+      RomBarOffset = RomBarOffset + 512;
+      if (FirstCheck) {
+        break;
+      } else {
+        RomImageSize = RomImageSize + 512;
+        continue;
+      }
+    }
+
+    FirstCheck  = FALSE;
+    OffsetPcir  = RomHeader->PcirOffset;
+    //
+    // If the pointer to the PCI Data Structure is invalid, no further images can be located.
+    // The PCI Data Structure must be DWORD aligned.
+    //
+    if (OffsetPcir == 0 ||
+        (OffsetPcir & 3) != 0 ||
+        RomImageSize + OffsetPcir + sizeof (PCI_DATA_STRUCTURE) > *RomSize) {
+      break;
+    }
+
+    RomPcir = (PCI_DATA_STRUCTURE *)(RomBarOffset + OffsetPcir);
+
+    DEBUG ((EFI_D_INFO, "%a: RomPcir->Signature %x\n", __FUNCTION__, RomPcir->Signature));
+
+    //
+    // If a valid signature is not present in the PCI Data Structure, no further images can be located.
+    //
+    if (RomPcir->Signature != PCI_DATA_STRUCTURE_SIGNATURE) {
+      break;
+    }
+    if (RomImageSize + RomPcir->ImageLength * 512 > *RomSize) {
+      break;
+    }
+    if (RomPcir->CodeType == PCI_CODE_TYPE_PCAT_IMAGE) {
+      CodeType = PCI_CODE_TYPE_PCAT_IMAGE;
+      LegacyImageLength = ((UINT32)((EFI_LEGACY_EXPANSION_ROM_HEADER *)RomHeader)->Size512) * 512;
+    }
+    Indicator     = RomPcir->Indicator;
+    RomImageSize  = RomImageSize + RomPcir->ImageLength * 512;
+    RomBarOffset  = RomBarOffset + RomPcir->ImageLength * 512;
+  } while (((Indicator & 0x80) == 0x00) && ((RomBarOffset - (UINT8 *)(*RomImage)) < *RomSize));
+
+  //
+  // Some Legacy Cards do not report the correct ImageLength so used the maximum
+  // of the legacy length and the PCIR Image Length
+  //
+  if (CodeType == PCI_CODE_TYPE_PCAT_IMAGE) {
+    RomImageSize = MAX (RomImageSize, LegacyImageLength);
+  }
+
+  *RomSize = RomImageSize;
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
 EFIAPI
 PciGetPciRom (
   IN  CONST EFI_PCI_PLATFORM_PROTOCOL  *This,
@@ -214,6 +336,15 @@ PciGetPciRom (
   DEBUG ((EFI_D_INFO, " PciBus             - %02x\n", PciBus));
   DEBUG ((EFI_D_INFO, " PciDevice          - %02x\n", PciDevice));
   DEBUG ((EFI_D_INFO, " PciFunction        - %02x\n", PciFunction));
+
+
+  if (!EFI_ERROR (GetPciRomFromFv (PciIo, RomImage, RomSize))) {
+    PciIoDevice->EmbeddedRom    = FALSE;
+    PciIoDevice->PciIo.RomSize  = *RomSize;
+    PciIoDevice->PciIo.RomImage = *RomImage;
+
+    return EFI_SUCCESS;
+  }
 
   //
   // 0x30

@@ -208,11 +208,19 @@ FILE FREEFORM = 878AC2CC-5343-46F2-B563-51F89DAF56BA {
   SECTION RAW = DasharoPayloadPkg/vbt.bin
   SECTION UI = "IntelGopVbt"
 }
+!elseif $(USE_AMD_PLATFORM_GOP) == TRUE
+!if "X64" in $(ARCH)
+FILE DRIVER = $(AMD_GOP_DRIVER_GUID) {
+  SECTION PE32 = DasharoPayloadPkg/AmdGopDriver.efi
+  SECTION UI = "AmdGopDriver"
+}
+FILE FREEFORM = $(AMD_GOP_VBIOS_GUID) {
+  SECTION RAW = DasharoPayloadPkg/Vbios.bin
+}
+!endif
 !else
   INF DasharoPayloadPkg/GraphicsOutputDxe/GraphicsOutputDxe.inf
 !endif
-
-
 
 #
 # SCSI/ATA/IDE/DISK Support
