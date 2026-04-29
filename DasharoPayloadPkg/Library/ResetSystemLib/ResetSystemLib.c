@@ -8,6 +8,7 @@
 
 #include <PiDxe.h>
 #include <Library/BaseLib.h>
+#include <Library/CpuLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Library/HobLib.h>
@@ -124,7 +125,11 @@ ResetShutdown (
   // Transform system into S5 sleep state
   //
   PmCtrlReg = (UINTN)mAcpiBoardInfo.PmCtrlRegBase;
-  IoAndThenOr16 (PmCtrlReg, (UINT16) ~0x3c00, (UINT16) (7 << 10));
+  if (StandardSignatureIsAuthenticAMD()) {
+    IoAndThenOr16 (PmCtrlReg, (UINT16) ~0x3c00, (UINT16) (5 << 10));
+  } else {
+    IoAndThenOr16 (PmCtrlReg, (UINT16) ~0x3c00, (UINT16) (7 << 10));
+  }
   IoOr16 (PmCtrlReg, BIT13);
   CpuDeadLoop ();
 
