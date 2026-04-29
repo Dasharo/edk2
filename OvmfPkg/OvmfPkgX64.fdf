@@ -148,6 +148,10 @@ INF  FILE_GUID = $(UP_CPU_PEI_GUID) UefiCpuPkg/CpuMpPei/CpuMpPei.inf
 
 !include OvmfPkg/Include/Fdf/OvmfTpmPei.fdf.inc
 
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/HddPassword/HddPasswordPei.inf
+!endif
+
 ################################################################################
 
 [FV.DXEFV]
@@ -222,6 +226,8 @@ INF  OvmfPkg/VirtioKeyboardDxe/VirtioKeyboard.inf
 !if $(SECURE_BOOT_ENABLE) == TRUE
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   INF  OvmfPkg/IgvmSecureBootDxe/IgvmSecureBootDxe.inf
+  INF  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
+  INF  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
 INF  MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
@@ -295,6 +301,13 @@ INF OvmfPkg/TdxDxe/TdxDxe.inf
 !if $(NETWORK_ENABLE) == TRUE
   INF  OvmfPkg/VirtioNetDxe/VirtioNet.inf
 !endif
+
+INF DasharoModulePkg/DasharoBootPolicies/DasharoBootPolicies.inf
+
+#
+# PKCS7 Verification
+#
+INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 
 #
 # Usb Support
@@ -392,6 +405,14 @@ INF OvmfPkg/Tcg/TdTcg2Dxe/TdTcg2Dxe.inf
   #
 !if $(TPM2_ENABLE) == TRUE || $(CC_MEASUREMENT_ENABLE) == TRUE
 INF MdeModulePkg/Universal/SmbiosMeasurementDxe/SmbiosMeasurementDxe.inf
+!endif
+
+!if $(SATA_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/HddPassword/HddPasswordDxe.inf
+!endif
+
+!if $(SETUP_PASSWORD_ENABLE) == TRUE
+INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 !endif
 
 ################################################################################

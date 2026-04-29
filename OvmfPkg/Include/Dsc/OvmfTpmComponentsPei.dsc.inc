@@ -23,4 +23,7 @@
     <LibraryClasses>
       TpmPlatformHierarchyLib|SecurityPkg/Library/PeiDxeTpmPlatformHierarchyLib/PeiDxeTpmPlatformHierarchyLib.inf
   }
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+  SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+!endif
 !endif
