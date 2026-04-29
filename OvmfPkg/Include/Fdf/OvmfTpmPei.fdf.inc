@@ -12,4 +12,7 @@ INF  OvmfPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
 !endif
 INF  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 INF  SecurityPkg/Tcg/Tcg2PlatformPei/Tcg2PlatformPei.inf
+!if $(OPAL_PASSWORD_ENABLE) == TRUE
+INF SecurityPkg/Tcg/Opal/OpalPassword/OpalPasswordPei.inf
+!endif
 !endif
