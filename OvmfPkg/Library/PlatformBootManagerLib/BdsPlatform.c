@@ -642,7 +642,7 @@ PlatformBootManagerBeforeConsole (
 
   PlatformRegisterFvBootOption (
     &gUiAppFileGuid,
-    L"EFI Firmware Setup",
+    L"Setup",
     LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_APP,
     FirmwareSetupEnabled
     );
