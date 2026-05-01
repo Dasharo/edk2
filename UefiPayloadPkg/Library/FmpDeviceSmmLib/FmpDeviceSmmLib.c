@@ -23,10 +23,12 @@
 #include <Guid/FirmwareInfoGuid.h>
 #include <Guid/SystemResourceTable.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/BlParseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/FmpDeviceLib.h>
 #include <Library/HobLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PrintLib.h>
 #include <Library/SmmStoreLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -51,6 +53,9 @@ GetFwInfo (
   STATIC BOOLEAN        Initialized;
 
   EFI_HOB_GUID_TYPE  *GuidHob;
+  CONST CHAR8        *CbVersion;
+  CONST CHAR8        *CbExtraVersion;
+  EFI_STATUS         Status;
 
   if (Info == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -58,12 +63,30 @@ GetFwInfo (
 
   if (!Initialized) {
     GuidHob = GetFirstGuidHob (&gEfiFirmwareInfoHobGuid);
-    if (GuidHob == NULL) {
-      DEBUG ((DEBUG_ERROR, "%a(): failed to query firmware information\n", __func__));
-      return EFI_UNSUPPORTED;
+    if (GuidHob != NULL) {
+      Storage = *(FIRMWARE_INFO *)GET_GUID_HOB_DATA (GuidHob);
+    } else {
+      // Fallback for firmwmare that doesn't produce that HOB.
+      Status = ParseFwInfo (&Storage.Type, &Storage.Version, &Storage.LowestSupportedVersion, &Storage.ImageSize);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "%a(): ParseFwInfo() failed with: %r\n", __func__, Status));
+        return Status;
+      }
+
+      CbVersion      = ParseInfoString (CB_TAG_VERSION);
+      CbExtraVersion = ParseInfoString (CB_TAG_EXTRA_VERSION);
+
+      if (CbVersion == NULL) {
+        CbVersion = "";
+      }
+
+      if (CbExtraVersion == NULL) {
+        CbExtraVersion = "";
+      }
+
+      AsciiSPrint (Storage.VersionStr, sizeof (Storage.VersionStr), "%a%a", CbVersion, CbExtraVersion);
     }
 
-    Storage     = *(FIRMWARE_INFO *)GET_GUID_HOB_DATA (GuidHob);
     Initialized = TRUE;
   }
 

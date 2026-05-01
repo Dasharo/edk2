@@ -24,14 +24,17 @@
 
 [LibraryClasses]
   BaseMemoryLib
+  BlParseLib
   DebugLib
   HobLib
   MemoryAllocationLib
+  PrintLib
   SmmStoreLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
 
 [Packages]
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
   FmpDevicePkg/FmpDevicePkg.dec
   MdeModulePkg/MdeModulePkg.dec
