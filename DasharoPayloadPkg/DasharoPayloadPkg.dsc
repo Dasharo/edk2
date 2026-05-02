@@ -28,6 +28,13 @@
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
 
   #
+  # Use the Dasharo graphical FORM_DISPLAY_ENGINE provider in place of
+  # MdeModulePkg's text-mode DisplayEngineDxe. Set to FALSE to fall back
+  # to the stock text-mode setup browser.
+  #
+  DEFINE USE_GRAPHICAL_SETUP          = TRUE
+
+  #
   # SBL:      UEFI payload for Slim Bootloader
   # COREBOOT: UEFI payload for coreboot
   #
@@ -799,6 +806,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|DasharoModulePkg/Library/DasharoSystemFeaturesUiLib/DasharoSystemFeaturesUiLib.inf
+      NULL|DasharoPayloadPkg/Library/DasharoSaveExitUiLib/DasharoSaveExitUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
@@ -863,7 +871,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+!if $(USE_GRAPHICAL_SETUP) == TRUE
+  DasharoPayloadPkg/GraphicsDisplayEngineDxe/GraphicsDisplayEngineDxe.inf
+!else
   MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+!endif
   DasharoPayloadPkg/BlSupportDxe/BlSupportDxe.inf
   CrScreenshotDxe/CrScreenshotDxe.inf {
     <BuildOptions>

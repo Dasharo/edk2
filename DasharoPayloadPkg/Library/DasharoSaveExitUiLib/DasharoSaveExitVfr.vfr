@@ -1,0 +1,70 @@
+/** @file
+  Dasharo Save & Exit formset.
+
+  Provides the action items that show up on the Save & Exit tab. Each item
+  is a `text` opcode with INTERACTIVE flag + unique question ID; the
+  config-access callback in DasharoSaveExit.c maps each ID to a browser
+  action request (or, for Reset System, calls gRT->ResetSystem directly).
+
+  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+**/
+
+#include "DasharoSaveExit.h"
+
+formset
+  guid      = DASHARO_SAVE_EXIT_GUID,
+  title     = STRING_TOKEN(STR_SAVE_EXIT_TITLE),
+  help      = STRING_TOKEN(STR_SAVE_EXIT_HELP),
+  classguid = gEfiIfrFrontPageGuid,
+
+  form formid = DASHARO_SAVE_EXIT_FORM_ID,
+       title  = STRING_TOKEN(STR_SAVE_EXIT_TITLE);
+
+    action
+      questionid = KEY_SAVE_AND_EXIT,
+      prompt     = STRING_TOKEN(STR_SAVE_AND_EXIT),
+      help       = STRING_TOKEN(STR_SAVE_AND_EXIT_HELP),
+      flags      = INTERACTIVE,
+      config     = STRING_TOKEN(STR_EMPTY),
+    endaction;
+
+    action
+      questionid = KEY_DISCARD_AND_EXIT,
+      prompt     = STRING_TOKEN(STR_DISCARD_AND_EXIT),
+      help       = STRING_TOKEN(STR_DISCARD_AND_EXIT_HELP),
+      flags      = INTERACTIVE,
+      config     = STRING_TOKEN(STR_EMPTY),
+    endaction;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY);
+
+    action
+      questionid = KEY_SAVE,
+      prompt     = STRING_TOKEN(STR_SAVE),
+      help       = STRING_TOKEN(STR_SAVE_HELP),
+      flags      = INTERACTIVE,
+      config     = STRING_TOKEN(STR_EMPTY),
+    endaction;
+
+    action
+      questionid = KEY_DISCARD,
+      prompt     = STRING_TOKEN(STR_DISCARD),
+      help       = STRING_TOKEN(STR_DISCARD_HELP),
+      flags      = INTERACTIVE,
+      config     = STRING_TOKEN(STR_EMPTY),
+    endaction;
+
+    subtitle text = STRING_TOKEN(STR_EMPTY);
+
+    action
+      questionid = KEY_RESET_SYSTEM,
+      prompt     = STRING_TOKEN(STR_RESET_SYSTEM),
+      help       = STRING_TOKEN(STR_RESET_SYSTEM_HELP),
+      flags      = INTERACTIVE,
+      config     = STRING_TOKEN(STR_EMPTY),
+    endaction;
+
+  endform;
+
+endformset;

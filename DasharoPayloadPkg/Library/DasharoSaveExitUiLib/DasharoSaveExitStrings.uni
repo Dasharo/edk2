@@ -1,0 +1,28 @@
+/** @file
+  Dasharo Save & Exit UI library — string table.
+
+  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+**/
+
+#langdef en-US "English"
+
+#string STR_SAVE_EXIT_TITLE                  #language en-US "Save & Exit"
+#string STR_SAVE_EXIT_HELP                   #language en-US "Save / discard / reset options"
+
+#string STR_SAVE_AND_EXIT                    #language en-US "Save changes and exit (reboot)"
+#string STR_SAVE_AND_EXIT_HELP               #language en-US "Save all changes and reboot to apply them."
+
+#string STR_DISCARD_AND_EXIT                 #language en-US "Discard changes and exit"
+#string STR_DISCARD_AND_EXIT_HELP            #language en-US "Discard all unsaved changes and exit setup."
+
+#string STR_SAVE                             #language en-US "Save changes"
+#string STR_SAVE_HELP                        #language en-US "Save all changes; remain in setup. Most settings only take effect after a reboot."
+
+#string STR_DISCARD                          #language en-US "Discard changes"
+#string STR_DISCARD_HELP                     #language en-US "Discard all unsaved changes; remain in setup."
+
+#string STR_RESET_SYSTEM                     #language en-US "Reset system"
+#string STR_RESET_SYSTEM_HELP                #language en-US "Reboot the system. Unsaved changes are lost."
+
+#string STR_EMPTY                            #language en-US ""

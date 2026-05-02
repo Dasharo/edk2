@@ -1,0 +1,53 @@
+## @file
+#  Dasharo Save & Exit UI library — adds the Save & Exit tab to the front
+#  page (via classguid = gEfiIfrFrontPageGuid) with action items for
+#  save / discard / reset.
+#
+#  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DasharoSaveExitUiLib
+  FILE_GUID                      = 8FA1B244-9CDF-4A2E-AA34-5B7E89432101
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = NULL|DXE_DRIVER UEFI_APPLICATION
+  CONSTRUCTOR                    = DasharoSaveExitUiLibConstructor
+  DESTRUCTOR                     = DasharoSaveExitUiLibDestructor
+
+[Sources]
+  DasharoSaveExit.h
+  DasharoSaveExit.c
+  DasharoSaveExitVfr.vfr
+  DasharoSaveExitStrings.uni
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  HiiLib
+  MemoryAllocationLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiHiiServicesLib
+
+[Guids]
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID  (classguid for placement on the front page)
+  gEfiIfrTianoGuid                              ## CONSUMES ## GUID  (extended IFR opcodes)
+
+[Protocols]
+  gEfiDevicePathProtocolGuid                    ## PRODUCES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gEdkiiFormBrowserEx2ProtocolGuid              ## CONSUMES
+
+[Depex]
+  gEfiHiiDatabaseProtocolGuid

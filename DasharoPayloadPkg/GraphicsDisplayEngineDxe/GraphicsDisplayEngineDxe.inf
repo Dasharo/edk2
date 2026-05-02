@@ -1,0 +1,59 @@
+## @file
+#  Dasharo graphical FORM_DISPLAY_ENGINE_PROTOCOL provider.
+#
+#  Renders the HII setup menu graphically on GOP while mirroring an in-sync
+#  text view to serial-only consoles. Falls back to plain text when no GOP
+#  is available.
+#
+#  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = GraphicsDisplayEngineDxe
+  FILE_GUID                      = 7C5A0C11-2A5D-4F0A-9E8E-5CF6B1E1A401
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = GraphicsDisplayEngineEntry
+
+[Sources]
+  GraphicsDisplayEngine.c
+  GraphicsDisplayEngine.h
+  Output.c
+  SystemInfo.c
+  Tabs.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  DebugLib
+  BaseMemoryLib
+  BaseLib
+  PrintLib
+  HiiLib
+  MemoryAllocationLib
+  DevicePathLib
+
+[Protocols]
+  gEdkiiFormDisplayEngineProtocolGuid           ## PRODUCES
+  gEdkiiFormBrowserEx2ProtocolGuid              ## CONSUMES
+  gEfiGraphicsOutputProtocolGuid                ## SOMETIMES_CONSUMES
+  gEfiSimpleTextOutProtocolGuid                 ## CONSUMES
+  gEfiDevicePathProtocolGuid                    ## CONSUMES
+  gEfiSimpleTextInputExProtocolGuid             ## CONSUMES
+
+[Guids]
+  gEfiSmbios3TableGuid                          ## SOMETIMES_CONSUMES
+  gEfiSmbiosTableGuid                           ## SOMETIMES_CONSUMES
+
+[Depex]
+  gEfiHiiDatabaseProtocolGuid AND
+  gEfiHiiConfigRoutingProtocolGuid AND
+  gEdkiiFormBrowserEx2ProtocolGuid
