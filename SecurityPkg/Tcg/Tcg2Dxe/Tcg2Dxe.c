@@ -2869,13 +2869,27 @@ PublishTpm2 (
   InterfaceType = PcdGet8(PcdActiveTpmInterfaceType);
   switch (InterfaceType) {
   case Tpm2PtpInterfaceCrb:
-    mTpm2AcpiTemplate.StartMethod = EFI_TPM2_ACPI_TABLE_START_METHOD_COMMAND_RESPONSE_BUFFER_INTERFACE;
     mTpm2AcpiTemplate.AddressOfControlArea = PcdGet64 (PcdTpmBaseAddress) + 0x40;
-    ControlArea = (EFI_TPM2_ACPI_CONTROL_AREA *)(UINTN)mTpm2AcpiTemplate.AddressOfControlArea;
-    ControlArea->CommandSize  = 0xF80;
-    ControlArea->ResponseSize = 0xF80;
-    ControlArea->Command      = PcdGet64 (PcdTpmBaseAddress) + 0x80;
-    ControlArea->Response     = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    if (FixedPcdGetBool (PcdAmdFtpmActive)) {
+      //
+      // AMD fTPM exposes a reduced CRB whose CommandSize / Command /
+      // ResponseSize / Response fields (CRB+0x58/0x5C/0x64/0x68) are
+      // already programmed by coreboot to point at RAM-side cmd/resp
+      // buffers. Writing the standard CRB+0x80 layout here would
+      // clobber those pointers in MMIO. Also advertise StartMethod =
+      // ACPI so the OS uses _DSM rather than the standard
+      // CrbControlRequest doorbell at CRB+0x40, which AMD doesn't
+      // implement.
+      //
+      mTpm2AcpiTemplate.StartMethod = EFI_TPM2_ACPI_TABLE_START_METHOD_ACPI;
+    } else {
+      mTpm2AcpiTemplate.StartMethod = EFI_TPM2_ACPI_TABLE_START_METHOD_COMMAND_RESPONSE_BUFFER_INTERFACE;
+      ControlArea = (EFI_TPM2_ACPI_CONTROL_AREA *)(UINTN)mTpm2AcpiTemplate.AddressOfControlArea;
+      ControlArea->CommandSize  = 0xF80;
+      ControlArea->ResponseSize = 0xF80;
+      ControlArea->Command      = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+      ControlArea->Response     = PcdGet64 (PcdTpmBaseAddress) + 0x80;
+    }
     break;
   case Tpm2PtpInterfaceFifo:
   case Tpm2PtpInterfaceTis:

@@ -1,0 +1,37 @@
+## @file
+#  Tpm2DeviceLib backed by AMD's PSP fTPM.
+#
+#  Replaces the stock Tpm2DeviceLibDTpm for builds where the TPM is the
+#  AMD firmware TPM. The reduced CRB protocol that AMD exposes is
+#  incompatible with the standard TCG CRB driver in SecurityPkg.
+#
+#  Copyright (c) 2026, 3mdeb.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = Tpm2DeviceLibAmdFtpm
+  FILE_GUID      = 2AE8D4B8-ABE8-4913-9F03-63BF7F9579F0
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 1.0
+  LIBRARY_CLASS  = Tpm2DeviceLib|PEIM DXE_DRIVER DXE_RUNTIME_DRIVER UEFI_APPLICATION UEFI_DRIVER
+
+[Sources]
+  Tpm2DeviceLibAmdFtpm.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SecurityPkg/SecurityPkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  PcdLib
+  TimerLib
+
+[FixedPcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdAmdPspv2MboxCmdOffset    ## CONSUMES

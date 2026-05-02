@@ -84,6 +84,21 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x10000017
 # If set to TRUE, Boot Manager will unconditionally add PS keyboard to ConIn.
 gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE|BOOLEAN|0x10000018
 
+## AMD PSPv2 mailbox command-register offset within the PSP MMIO window.
+#  AMD fTPM detection in Tcg2ConfigPei reads PSP_ADDR_MSR (0xC00110A2) to
+#  obtain the PSP MMIO base, then computes the fTPM CRB register block at
+#  base + (this offset) - 0xA0. Defaults to 0x10570 (Picasso/Cezanne/Vermeer);
+#  override to 0x10970 for Glinda/Turin in the DSC.
+gDasharoPayloadPkgTokenSpaceGuid.PcdAmdPspv2MboxCmdOffset|0x10570|UINT32|0x1000001C
+
+## TRUE when the platform's TPM2 is the AMD PSP fTPM (reduced CRB layout +
+#  ACPI-start dispatch). Set by the build glue when CONFIG_AMD_CRB_FTPM=y.
+#  Tcg2Dxe consumes this to (1) keep its hands off the CRB control-area
+#  registers that coreboot already programmed and (2) advertise
+#  StartMethod = ACPI in the TPM2 table so the OS uses _DSM instead of
+#  the standard CrbControlRequest doorbell that AMD doesn't expose.
+gDasharoPayloadPkgTokenSpaceGuid.PcdAmdFtpmActive|FALSE|BOOLEAN|0x1000001D
+
 [PcdsFixedAtBuild]
 ## Specifies the initial value for Register_A in RTC.
 # @Prompt Initial value for Register_A in RTC.

@@ -96,6 +96,9 @@
   DEFINE SECURE_BOOT_ENABLE             = FALSE
   DEFINE SECURE_BOOT_DEFAULT_ENABLE     = TRUE
   DEFINE TPM_ENABLE                     = TRUE
+  # Use the AMD-fTPM-aware Tpm2DeviceLib instead of the stock CRB driver.
+  # Set by the coreboot make glue when CONFIG_AMD_CRB_FTPM is selected.
+  DEFINE EDK2_AMD_FTPM                  = FALSE
   DEFINE SATA_PASSWORD_ENABLE           = FALSE
   DEFINE OPAL_PASSWORD_ENABLE           = FALSE
   DEFINE LOAD_OPTION_ROMS               = TRUE
@@ -432,7 +435,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(TPM_ENABLE) == TRUE
   BaseCryptLib|CryptoPkg/Library/BaseCryptLibMbedTls/PeiCryptLib.inf
   Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+!if $(EDK2_AMD_FTPM) == TRUE
+  Tpm2DeviceLib|DasharoPayloadPkg/Library/Tpm2DeviceLibAmdFtpm/Tpm2DeviceLibAmdFtpm.inf
+!else
   Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibDTpm/Tpm2DeviceLibDTpm.inf
+!endif
   Tcg2PhysicalPresenceLib|SecurityPkg/Library/PeiTcg2PhysicalPresenceLib/PeiTcg2PhysicalPresenceLib.inf
 !endif
   PerformanceLib|MdeModulePkg/Library/PeiPerformanceLib/PeiPerformanceLib.inf
@@ -661,6 +668,12 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|100
 
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+  # Patched at PEI by Tcg2ConfigPei from coreboot's TPM2 ACPI table so AMD
+  # fTPM (and any other CRB TPM whose CRB lives outside the legacy MMIO
+  # window) gets the right base. Falls back to 0xFED40000 when no override
+  # is found.
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress|0xFED40000
 
   # No need to initialize TPM again, coreboot already did that
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
@@ -1007,14 +1020,22 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !if $(TPM_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Dxe/Tcg2Dxe.inf {
     <LibraryClasses>
+!if $(EDK2_AMD_FTPM) == TRUE
+      Tpm2DeviceLib|DasharoPayloadPkg/Library/Tpm2DeviceLibAmdFtpm/Tpm2DeviceLibAmdFtpm.inf
+!else
       Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
       NULL|SecurityPkg/Library/Tpm2DeviceLibDTpm/Tpm2InstanceLibDTpm.inf
+!endif
       HashLib|SecurityPkg/Library/HashLibBaseCryptoRouter/HashLibBaseCryptoRouterDxe.inf
       NULL|SecurityPkg/Library/HashInstanceLibSha1/HashInstanceLibSha1.inf
       NULL|SecurityPkg/Library/HashInstanceLibSha256/HashInstanceLibSha256.inf
       NULL|SecurityPkg/Library/HashInstanceLibSha384/HashInstanceLibSha384.inf
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
+    <PcdsFixedAtBuild>
+!if $(EDK2_AMD_FTPM) == TRUE
+      gDasharoPayloadPkgTokenSpaceGuid.PcdAmdFtpmActive|TRUE
+!endif
   }
   SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
   SecurityPkg/Tcg/TcgDxe/TcgDxe.inf {

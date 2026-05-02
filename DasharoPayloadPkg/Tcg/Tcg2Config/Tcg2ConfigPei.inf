@@ -30,7 +30,9 @@
 
 [LibraryClasses]
   PeimEntryPoint
+  BaseLib
   DebugLib
+  PcdLib
   PeiServicesLib
   Tpm12CommandLib
   Tpm12DeviceLib
@@ -46,6 +48,11 @@
 
 [Pcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid                 ## PRODUCES
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress                  ## SOMETIMES_PRODUCES
+  gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType          ## SOMETIMES_PRODUCES
+
+[FixedPcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdAmdPspv2MboxCmdOffset        ## CONSUMES
 
 [Depex.IA32, Depex.X64]
   TRUE

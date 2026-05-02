@@ -46,6 +46,7 @@
   SecurityPkg/SecurityPkg.dec
   CryptoPkg/CryptoPkg.dec
   DasharoModulePkg/DasharoModulePkg.dec
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
 
 [LibraryClasses]
   MemoryAllocationLib
@@ -120,6 +121,9 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdEnableSpdmDeviceAuthentication           ## CONSUMES
   gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType                   ## CONSUMES
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress                           ## CONSUMES
+
+[FixedPcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdAmdFtpmActive                         ## CONSUMES
 
 [Depex]
   gEfiAcpiTableProtocolGuid AND
