@@ -105,6 +105,7 @@
       CapsuleUpdatePolicyLib|FmpDevicePkg/Library/CapsuleUpdatePolicyLibNull/CapsuleUpdatePolicyLibNull.inf
   }
   FmpDevicePkg/DetectTestKeyDxe/DetectTestKeyDxe.inf
+  FmpDevicePkg/SealedCapsulesDxe/SealedCapsulesDxe.inf
   FmpDevicePkg/FmpDxe/FmpDxe.inf {
     <Defines>
       #
