@@ -2126,6 +2126,38 @@ EfiBootManagerBoot (
     BmReportLoadFailure (EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED, Status);
   }
 
+  //
+  // Handle the scenario where iPXE silently fails to boot due to lack of
+  // connection. Catching boots that exit with a warning as well, hence
+  // not EFI_ERROR ().
+  //
+  if (Status != EFI_SUCCESS ) {
+    //
+    // Match on whether the entry is memmapped rather than if Description
+    // contains iPXE, since the boot entry name is platform vendor-specific.
+    //
+    if ((DevicePathType (BootOption->FilePath) == HARDWARE_DEVICE_PATH) &&
+          (DevicePathSubType (BootOption->FilePath) == HW_MEMMAP_DP)) {
+      if (gST->ConOut != NULL) {
+        gST->ConOut->ClearScreen (gST->ConOut);
+
+        AsciiPrint (
+            "Booting '%s' failed due to '%r'.\n"
+            "If you were attempting network boot, check that your\n"
+            "network adapter is plugged in and operational.\n"
+            "Press any key to continue...\n",
+            BootOption->Description, BootOption->Status);
+      }
+
+      if (gST->ConIn != NULL) {
+        Status = gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &Index);
+        ASSERT_EFI_ERROR (Status);
+        ASSERT (Index == 0);
+        while (!EFI_ERROR (gST->ConIn->ReadKeyStroke (gST->ConIn, &Key))) {}
+      }
+    }
+  }
+
   PERF_END_EX (gImageHandle, "BdsAttempt", NULL, 0, (UINT32)OptionNumber);
 
   //
