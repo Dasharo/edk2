@@ -2124,26 +2124,21 @@ EfiBootManagerBoot (
     // Report Status Code with the failure status to indicate that boot failure
     //
     BmReportLoadFailure (EFI_SW_DXE_BS_EC_BOOT_OPTION_FAILED, Status);
-  }
-
-  //
-  // Handle the scenario where iPXE silently fails to boot due to lack of
-  // connection. Catching boots that exit with a warning as well, hence
-  // not EFI_ERROR ().
-  //
-  if (Status != EFI_SUCCESS ) {
     //
-    // Match on whether the entry is memmapped rather than if Description
-    // contains iPXE, since the boot entry name is platform vendor-specific.
+    // Handle the scenario where iPXE silently fails to boot due to lack of connection,
+    // DHCP/DNS error, wrong date etc.. Match on whether the entry is memmapped
+    // rather than if Description contains iPXE, since the boot entry name is platform
+    // vendor-specific.
     //
     if ((DevicePathType (BootOption->FilePath) == HARDWARE_DEVICE_PATH) &&
-          (DevicePathSubType (BootOption->FilePath) == HW_MEMMAP_DP)) {
+        (DevicePathSubType (BootOption->FilePath) == HW_MEMMAP_DP) &&
+        (Status != EFI_ABORTED)) {
       if (gST->ConOut != NULL) {
         gST->ConOut->ClearScreen (gST->ConOut);
 
         AsciiPrint (
-            "Booting '%s' failed due to '%r'.\n"
-            "If you were attempting network boot, check that your\n"
+            "Booting '%s' failed with '%r' error.\n"
+            "If you were attempting a network boot, check that your\n"
             "network adapter is plugged in and operational.\n"
             "Press any key to continue...\n",
             BootOption->Description, BootOption->Status);
