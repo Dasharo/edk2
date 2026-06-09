@@ -439,6 +439,7 @@ CapsuleSplashEntry (
   EFI_HII_HANDLE                        HiiHandle;
   EFI_GRAPHICS_OUTPUT_PROTOCOL          *GraphicsOutput;
   EFI_GRAPHICS_OUTPUT_MODE_INFORMATION  *ModeInfo;
+  CONST CHAR8                           *Message;
 
   //
   // Find GOP and ensure that pixel size is 32b.
@@ -501,11 +502,16 @@ CapsuleSplashEntry (
     }
   }
 
+  if (FixedPcdGetBool (PcdEcFirmware))
+    Message = "EC firmware update is in progress...";
+  else
+    Message = "Firmware update is in progress...";
+
   //
   // Print some warnings. Ignore the result, we still want to try printing even
   // if one of the earlier lines fails.
   //
-  Status = RenderTextCenteredAt("Firmware update is in progress...",
+  Status = RenderTextCenteredAt(Message,
                                 ModeInfo->HorizontalResolution / 2,
                                 ModeInfo->VerticalResolution * TOP_MSG_POS_PERCENT / 100);
 
