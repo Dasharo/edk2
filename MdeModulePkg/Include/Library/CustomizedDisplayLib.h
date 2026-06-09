@@ -250,18 +250,6 @@ GetPopupColor (
   );
 
 /**
-  Get OEM/Vendor specific title attribute colors.
-
-  @retval  Byte code color setting for title bar color.
-**/
-UINT8
-EFIAPI
-GetTitleColor (
-  VOID
-  );
-
-
-/**
   Get OEM/Vendor specific popup attribute colors.
 
   @retval  Byte code color setting for popup inverse color.
@@ -357,28 +345,6 @@ GetFieldTextColor (
 UINT8
 EFIAPI
 GetSubTitleTextColor (
-  VOID
-  );
-
-/**
-  Get OEM/Vendor specific banner color attribute.
-
-  @retval  Byte code color setting for banner text color.
-**/
-UINT8
-EFIAPI
-GetBannerColor (
-  VOID
-  );
-
-/**
-  Get OEM/Vendor specific key help text color attribute.
-
-  @retval  Byte code color setting for key help text color.
-**/
-UINT8
-EFIAPI
-GetKeyHelpColor (
   VOID
   );
 
