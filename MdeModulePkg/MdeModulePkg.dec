@@ -2021,6 +2021,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0C|UINT8|0x00010311
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x70|UINT8|0x00010312
   gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x70|UINT8|0x00010313
+  gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserErrorTextColor|0x0C|UINT8|0x00010314
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 } | VOID* | 0x00010400
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue  | { 0x00, 0x00, 0x00, 0x98 } | VOID* | 0x00010401
@@ -2030,6 +2031,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta    | { 0x00, 0x98, 0x00, 0x98 } | VOID* | 0x00010405
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown      | { 0x00, 0x98, 0x98, 0x00 } | VOID* | 0x00010406
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray  | { 0x00, 0x98, 0x98, 0x98 } | VOID* | 0x00010407
+  
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray   | { 0x00, 0x30, 0x30, 0x30 } | VOID* | 0x00010408
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue      | { 0x00, 0x00, 0x00, 0xFF } | VOID* | 0x00010409
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen       | { 0x00, 0x00, 0xFF, 0x00 } | VOID* | 0x0001040A
