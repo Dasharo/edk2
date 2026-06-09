@@ -84,6 +84,8 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x10000017
 # Useful for laptops where the PS/2 keyboard is always connected.
 # If set to TRUE, Boot Manager will unconditionally add PS keyboard to ConIn.
 gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE|BOOLEAN|0x10000018
+## Indicates that a capsule update targets an EC.
+gDasharoPayloadPkgTokenSpaceGuid.PcdEcFirmware|FALSE|BOOLEAN|0x10000019
 
 [PcdsFixedAtBuild]
 ## Specifies the initial value for Register_A in RTC.
