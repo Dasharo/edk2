@@ -55,6 +55,7 @@ gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserPickListBackgroundColor|0x30       # Wh
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowTextColor|0x0F                # White text
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserArrowBackgroundColor|0x60          # Grey bg
 gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserFieldGrayedTestColor|0x07          # Light grey text
+gEfiMdeModulePkgTokenSpaceGuid.PcdBrowserErrorTextColor|0x0C                # Bright Red text
 
 gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack      | { 0x00, 0x00, 0x00, 0x00 }    # 0 Plain black
 gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue  | { 0x00, 0x00, 0x00, 0x98 }    # 1 Dark green
