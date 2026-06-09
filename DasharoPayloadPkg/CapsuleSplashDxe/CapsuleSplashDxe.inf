@@ -47,6 +47,7 @@
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdShowCapsuleLogo  ## CONSUMES
+  gDasharoPayloadPkgTokenSpaceGuid.PcdEcFirmware       ## CONSUMES
 
 [Protocols]
   gEfiGraphicsOutputProtocolGuid       ## CONSUMES
