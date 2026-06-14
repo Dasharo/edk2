@@ -847,6 +847,18 @@ ProcessCapsules (
     Status = ProcessTheseCapsules (TRUE, &CapsuleReport);
 
     //
+    // Processing of mNeedReset set by the first invocation of
+    // ProcessTheseCapsules() will be handled on the second one.  Otherwise,
+    // the system hangs on displaying update report as console hasn't been
+    // initialized yet.
+    //
+    // This will make the system get further in the boot process, but when
+    // there is no FmpDxe as part of the firmware the only time a reboot happens
+    // this early is when something goes wrong (like when no capsules are
+    // discovered).
+    //
+   } else {
+    //
     // Reboot System if and only if all capsule processed.
     // If not, defer reset to 2nd process.
     //
@@ -859,7 +871,7 @@ ProcessCapsules (
       FinishCapsuleUpdate (&CapsuleReport);
       DoResetSystem ();
     }
-  } else {
+
     Status = ProcessTheseCapsules (FALSE, &CapsuleReport);
 
     FinishCapsuleUpdate (&CapsuleReport);
