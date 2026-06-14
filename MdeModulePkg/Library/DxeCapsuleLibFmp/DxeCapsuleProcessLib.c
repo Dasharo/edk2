@@ -266,6 +266,7 @@ InitCapsulePtr (
   HobPointer.Raw = GetHobList ();
   while ((HobPointer.Raw = GetNextHob (EFI_HOB_TYPE_UEFI_CAPSULE, HobPointer.Raw)) != NULL) {
     if (!IsValidCapsuleHeader ((VOID *)(UINTN)HobPointer.Capsule->BaseAddress, HobPointer.Capsule->Length)) {
+      DEBUG ((DEBUG_ERROR, "%a(): invalid capsule at 0x%x\n", __func__, HobPointer.Capsule->BaseAddress));
       HobPointer.Header->HobType = EFI_HOB_TYPE_UNUSED; // Mark this hob as invalid
     } else {
       if (IsCapsuleNameCapsule ((VOID *)(UINTN)HobPointer.Capsule->BaseAddress)) {
@@ -779,7 +780,7 @@ DoResetSystem (
   VOID
   )
 {
-  DEBUG ((DEBUG_INFO, "Capsule Request Cold Reboot."));
+  DEBUG ((DEBUG_INFO, "Capsule Request Cold Reboot.\n"));
 
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, (EFI_SOFTWARE | PcdGet32 (PcdStatusCodeSubClassCapsule) | PcdGet32 (PcdCapsuleStatusCodeResettingSystem)));
 
