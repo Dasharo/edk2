@@ -780,7 +780,8 @@ struct cb_range {
 	UINT32 range_size;
 } __attribute__((packed));
 
-#define CB_TAG_FW_INFO  0x0045
+#define CB_TAG_FW_INFO     0x0045
+#define CB_TAG_EC_FW_INFO  0x00a2
 
 #define CB_TAG_RB_INFO  0x0048
 
