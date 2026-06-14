@@ -281,18 +281,40 @@ BlDxeEntryPoint (
 
   Status = ParseFwInfo (&FwGuid, &FwVersion, &FwLsv, &FwSize);
   if (!EFI_ERROR (Status)) {
-    Esrt = AllocateZeroPool (sizeof (EFI_SYSTEM_RESOURCE_TABLE) + sizeof (EFI_SYSTEM_RESOURCE_ENTRY));
+    Esrt = AllocateZeroPool (sizeof (EFI_SYSTEM_RESOURCE_TABLE) + 2 * sizeof (EFI_SYSTEM_RESOURCE_ENTRY));
     ASSERT (Esrt != NULL);
 
     Esrt->FwResourceVersion  = EFI_SYSTEM_RESOURCE_TABLE_FIRMWARE_RESOURCE_VERSION;
     Esrt->FwResourceCount    = 1;
-    Esrt->FwResourceCountMax = 1;
+    Esrt->FwResourceCountMax = 2;
 
     Esre = (EFI_SYSTEM_RESOURCE_ENTRY *)&Esrt[1];
     CopyMem (&Esre->FwClass, &FwGuid, sizeof (EFI_GUID));
     Esre->FwType                   = ESRT_FW_TYPE_SYSTEMFIRMWARE;
     Esre->FwVersion                = FwVersion;
     Esre->LowestSupportedFwVersion = FwLsv;
+
+    //
+    // Querying this information here assumes that EC information can't be
+    // provided on its own, which is most likely to always hold.
+    //
+    Status = ParseEcFwInfo (&FwGuid, &FwVersion, &FwLsv, &FwSize);
+    if (!EFI_ERROR (Status)) {
+      Esrt->FwResourceCount = 2;
+
+      CopyMem (&Esre[1].FwClass, &FwGuid, sizeof (EFI_GUID));
+      //
+      // There may be no prohibition against there being two system firmware
+      // entries (although DxeCapsuleLibFmp/UpdateReport.c looks up main
+      // firmware by type, it will work fine as long as main firmware comes
+      // first), but it may also be of no use to do that.  So even though EC can
+      // be thought of as integral part of the system, not marking it as such as
+      // nothing may depend on it anyway.
+      //
+      Esre[1].FwType                   = ESRT_FW_TYPE_DEVICEFIRMWARE;
+      Esre[1].FwVersion                = FwVersion;
+      Esre[1].LowestSupportedFwVersion = FwLsv;
+    }
 
     Status = gBS->InstallConfigurationTable (&gEfiSystemResourceTableGuid, Esrt);
     ASSERT_EFI_ERROR (Status);
