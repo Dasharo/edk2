@@ -86,6 +86,8 @@ gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms|TRUE|BOOLEAN|0x10000017
 gDasharoPayloadPkgTokenSpaceGuid.PcdSkipPs2Detect|FALSE|BOOLEAN|0x10000018
 ## Indicates that a capsule update targets an EC.
 gDasharoPayloadPkgTokenSpaceGuid.PcdEcFirmware|FALSE|BOOLEAN|0x10000019
+## Specifies size of EC's flash chip.
+gDasharoPayloadPkgTokenSpaceGuid.PcdEcFlashSize|0x00000000|UINT32|0x1000001a
 
 [PcdsFixedAtBuild]
 ## Specifies the initial value for Register_A in RTC.

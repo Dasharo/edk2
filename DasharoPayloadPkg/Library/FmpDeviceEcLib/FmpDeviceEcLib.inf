@@ -1,0 +1,45 @@
+## @file
+#  Implements FmpDeviceLib for Dasharo EC.
+#
+#  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION     = 0x00010005
+  BASE_NAME       = FmpDeviceEcLib
+  FILE_GUID       = CE6E58D7-856F-4D89-805F-108F86DB9150
+  MODULE_TYPE     = DXE_DRIVER
+  VERSION_STRING  = 1.0
+  LIBRARY_CLASS   = FmpDeviceLib|DXE_DRIVER UEFI_DRIVER
+  CONSTRUCTOR     = FmpDeviceEcLibConstructor
+
+[Sources]
+  EcFlashing.c
+  FmpDeviceEcLib.c
+
+[LibraryClasses]
+  BaseMemoryLib
+  BlParseLib
+  DebugLib
+  HobLib
+  IoLib
+  MemoryAllocationLib
+  PcdLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+
+[Pcd]
+  gDasharoPayloadPkgTokenSpaceGuid.PcdEcFlashSize  ## CONSUMES
+
+[Packages]
+  DasharoPayloadPkg/DasharoPayloadPkg.dec
+  FmpDevicePkg/FmpDevicePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+
+[Protocols]
+  gEdkiiPlatformSpecificResetHandlerProtocolGuid
