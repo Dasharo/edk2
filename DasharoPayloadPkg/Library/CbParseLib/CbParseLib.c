@@ -1245,6 +1245,48 @@ ParseBootLogo (
 /**
   Parse firmware information passed in by coreboot
 
+  @param  Tag      CBMEM tag id.
+  @param  Guid     Kind of the firmware.
+  @param  Version  Current version.
+  @param  Lsv      Lowest supported version.
+  @param  Size     Firmware size in bytes.
+
+  @retval RETURN_INVALID_PARAMETER  At least one of the parameters is NULL.
+  @retval RETURN_SUCCESS            Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND          coreboot table is missing.
+**/
+STATIC
+RETURN_STATUS
+EFIAPI
+GetFwInfo (
+  IN  UINT32    Tag,
+  OUT EFI_GUID  *Guid,
+  OUT UINT32    *Version,
+  OUT UINT32    *Lsv,
+  OUT UINT32    *Size
+  )
+{
+  struct lb_efi_fw_info  *FwInfo;
+
+  if (Guid == NULL || Version == NULL || Lsv == NULL || Size == NULL) {
+    return RETURN_INVALID_PARAMETER;
+  }
+
+  FwInfo = FindCbTag (Tag);
+  if (FwInfo == NULL) {
+    return RETURN_NOT_FOUND;
+  }
+
+  CopyMem (Guid, &FwInfo->guid, sizeof (*Guid));
+  *Version = FwInfo->version;
+  *Lsv = FwInfo->lowest_supported_version;
+  *Size = FwInfo->fw_size;
+  return RETURN_SUCCESS;
+}
+
+/**
+  Parse firmware information passed in by coreboot
+
   @param  Guid     Kind of the firmware.
   @param  Version  Current version.
   @param  Lsv      Lowest supported version.
@@ -1263,22 +1305,31 @@ ParseFwInfo (
   OUT UINT32    *Size
   )
 {
-  struct lb_efi_fw_info  *FwInfo;
+  return GetFwInfo (CB_TAG_FW_INFO, Guid, Version, Lsv, Size);
+}
 
-  if (Guid == NULL || Version == NULL || Lsv == NULL || Size == NULL) {
-    return RETURN_INVALID_PARAMETER;
-  }
+/**
+  Parse EC firmware information passed in by coreboot
 
-  FwInfo = FindCbTag (CB_TAG_FW_INFO);
-  if (FwInfo == NULL) {
-    return RETURN_NOT_FOUND;
-  }
+  @param  Guid     Kind of the firmware.
+  @param  Version  Current version.
+  @param  Lsv      Lowest supported version.
+  @param  Size     Firmware size in bytes.
 
-  CopyMem (Guid, &FwInfo->guid, sizeof (*Guid));
-  *Version = FwInfo->version;
-  *Lsv = FwInfo->lowest_supported_version;
-  *Size = FwInfo->fw_size;
-  return RETURN_SUCCESS;
+  @retval RETURN_INVALID_PARAMETER  At least one of the parameters is NULL.
+  @retval RETURN_SUCCESS            Successfully parsed capsules.
+  @retval RETURN_NOT_FOUND          coreboot table is missing.
+**/
+RETURN_STATUS
+EFIAPI
+ParseEcFwInfo (
+  OUT EFI_GUID  *Guid,
+  OUT UINT32    *Version,
+  OUT UINT32    *Lsv,
+  OUT UINT32    *Size
+  )
+{
+  return GetFwInfo (CB_TAG_EC_FW_INFO, Guid, Version, Lsv, Size);
 }
 
 /**
