@@ -122,6 +122,7 @@
   DEFINE USE_UEFIVAR_BACKED_TPM_PPI     = FALSE
   DEFINE CAPSULE_SUPPORT                = FALSE
   DEFINE CAPSULE_MAIN_FW_GUID           =
+  DEFINE CAPSULE_EC_FW_GUID             =
   DEFINE CAPSULES_V2                    = FALSE
 
   DEFINE AMD_GOP_DRIVER_GUID    = 2C4CB22B-E0F8-4457-A238-576A3D0201D6
@@ -284,7 +285,6 @@
   # No need to save/restore FMP dependencies until they are utilized
   FmpDependencyDeviceLib|FmpDevicePkg/Library/FmpDependencyDeviceLibNull/FmpDependencyDeviceLibNull.inf
   FmpDependencyLib|FmpDevicePkg/Library/FmpDependencyLib/FmpDependencyLib.inf
-  FmpDeviceLib|UefiPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
   FmpPayloadHeaderLib|FmpDevicePkg/Library/FmpPayloadHeaderLibV1/FmpPayloadHeaderLibV1.inf
   FmpPayloadLib|FmpDevicePkg/Library/FmpPayloadLib/FmpPayloadLib.inf
   PopUpLib|DasharoPayloadPkg/Library/PopUpLib/PopUpLib.inf
@@ -881,15 +881,50 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 !else
       !include DasharoPayloadPkg/CapsuleRootKey.inc
 !endif
+    <LibraryClasses>
+      FmpDeviceLib|UefiPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
   }
   MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
   MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
   DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf {
+    <Defines>
+      FILE_GUID = E1CBE3CC-3D32-44CF-8DB9-2A78BA16F2F6
     <BuildOptions>
       # floats are used for image scaling
       GCC:*_*_*_CC_FLAGS = -mmmx -msse
   }
   DasharoPayloadPkg/CapsuleChargerCheckDxe/CapsuleChargerCheckDxe.inf
+!if $(CAPSULE_EC_FW_GUID) != ""
+  FmpDevicePkg/FmpDxe/FmpDxe.inf {
+    <Defines>
+      # FmpDxe interprets its FILE_GUID as firmware GUID.  This allows including
+      # multiple FmpDxe instances along each other targeting different
+      # components.
+      FILE_GUID = $(CAPSULE_EC_FW_GUID)
+    <PcdsFixedAtBuild>
+      gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceImageIdName|L"EC Firmware"
+      # Public certificate used for validation of UEFI capsules
+      #
+      # See BaseTools/Source/Python/Pkcs7Sign/Readme.md for more details on such
+      # PCDs and include files.
+!if $(CAPSULES_V2)
+      !include BaseTools/Source/Python/Pkcs7Sign/TestRoot.cer.gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr.inc
+!else
+      !include DasharoPayloadPkg/CapsuleRootKey.inc
+!endif
+    <LibraryClasses>
+      FmpDeviceLib|DasharoPayloadPkg/Library/FmpDeviceEcLib/FmpDeviceEcLib.inf
+  }
+  DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf {
+    <Defines>
+      FILE_GUID = 8C675702-A60D-462C-B950-12F00FFDFFF3
+    <PcdsFixedAtBuild>
+      gDasharoPayloadPkgTokenSpaceGuid.PcdEcFirmware|TRUE
+    <BuildOptions>
+      # floats are used for image scaling
+      GCC:*_*_*_CC_FLAGS = -mmmx -msse
+  }
+!endif
 !if $(CAPSULES_V2)
   FmpDevicePkg/DetectTestKeyDxe/DetectTestKeyDxe.inf
   FmpDevicePkg/SealedCapsulesDxe/SealedCapsulesDxe.inf
