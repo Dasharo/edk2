@@ -885,7 +885,6 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
       FmpDeviceLib|UefiPayloadPkg/Library/FmpDeviceSmmLib/FmpDeviceSmmLib.inf
   }
   MdeModulePkg/Application/CapsuleApp/CapsuleApp.inf
-  MdeModulePkg/Universal/EsrtDxe/EsrtDxe.inf
   DasharoPayloadPkg/CapsuleSplashDxe/CapsuleSplashDxe.inf {
     <Defines>
       FILE_GUID = E1CBE3CC-3D32-44CF-8DB9-2A78BA16F2F6
