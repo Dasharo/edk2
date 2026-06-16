@@ -19,6 +19,9 @@
 #include <Protocol/EsrtManagement.h>
 #include <Protocol/FirmwareManagementProgress.h>
 
+#include <Guid/FmpCapsule.h>
+#include <Guid/SystemResourceTable.h>
+
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -231,6 +234,102 @@ UpdateImageProgress (
 }
 
 /**
+  Extracts GUID of the payload of an FMP capsule.
+
+  @param[in]      CapsuleHeader  Capsule to process.
+  @param[in,out]  Guid           Storage for the GUID.
+
+  @retval TRUE   Extracted GUID of the only payload.
+  @retval FALSE  The capsule is not of FMP kind.
+                 The capsule fails to validate.
+                 Number of payloads isn't exactly one.
+**/
+STATIC
+BOOLEAN
+GetPayloadGuid (
+  IN     EFI_CAPSULE_HEADER  *CapsuleHeader,
+  IN OUT EFI_GUID            *Guid
+  )
+{
+  EFI_STATUS                                    Status;
+  UINT16                                        EmbeddedDriverCount;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER        *FmpHeader;
+  EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER  *ImageHeader;
+  UINT64                                        *OffsetList;
+
+  // Basic type and contents validation are necessary for use right after
+  // capsules were discovered.
+  if (!IsFmpCapsule (CapsuleHeader)) {
+    return FALSE;
+  }
+
+  Status = ValidateFmpCapsule (CapsuleHeader, &EmbeddedDriverCount);
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  FmpHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_HEADER *)((UINT8 *)CapsuleHeader + CapsuleHeader->HeaderSize);
+  if (FmpHeader->PayloadItemCount != 1) {
+    // Produce predictable results by rejecting capsules with multiple payloads.
+    return FALSE;
+  }
+
+  OffsetList  = (UINT64 *)&FmpHeader[1];
+  ImageHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER *)((UINT8 *)FmpHeader + OffsetList[0]);
+
+  *Guid = ImageHeader->UpdateImageTypeId;
+
+  return TRUE;
+}
+
+/**
+  Checks whether capsule corresponds to the main firmware (where EDK lives).
+
+  @param[in]  CapsuleHeader  Capsule to check.
+
+  @retval TRUE   The capsule updates the main firmware.
+  @retval FALSE  Not a main-firmware capsule or something went wrong.
+**/
+STATIC
+BOOLEAN
+IsMainFirmwareCapsule (
+  IN EFI_CAPSULE_HEADER  *CapsuleHeader
+  )
+{
+  EFI_STATUS                 Status;
+  UINTN                      Index;
+  EFI_GUID                   Guid;
+  EFI_SYSTEM_RESOURCE_ENTRY  *Esre;
+  EFI_SYSTEM_RESOURCE_TABLE  *Esrt;
+
+  if (!GetPayloadGuid (CapsuleHeader, &Guid)) {
+    return FALSE;
+  }
+
+  Status = EfiGetSystemConfigurationTable (&gEfiSystemResourceTableGuid, (VOID **)&Esrt);
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  Esre = (VOID *)&Esrt[1];
+  for (Index = 0; Index < Esrt->FwResourceCount; ++Index) {
+    if (CompareGuid (&Esre[Index].FwClass, &Guid)) {
+      return (Esre[Index].FwType == ESRT_FW_TYPE_SYSTEMFIRMWARE);
+    }
+
+    if (Esre[Index].FwType == ESRT_FW_TYPE_SYSTEMFIRMWARE) {
+      //
+      // Break to imply that the first system firmware is the main one to be
+      // consistent with FindEsre() in UpdateReport.c nearby.
+      //
+      break;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
   This function initializes the mCapsulePtr, mCapsuleStatusArray and mCapsuleTotalNumber.
 **/
 VOID
@@ -252,6 +351,7 @@ InitCapsulePtr (
   IMAGE_INFO            *CapsuleOnDiskBuf;
   EFI_HANDLE            EspFsHandle;
   UINT16                LoadOptionNumber;
+  VOID                  *Tmp;
 
   CapsuleNameNumber             = 0;
   CapsuleNameTotalNumber        = 0;
@@ -406,6 +506,37 @@ InitCapsulePtr (
     }
   } else {
     mCapsuleNamePtr = NULL;
+  }
+
+  //
+  // Move all non-system capsules to be beginning of the list as updating system
+  // firmware disables EFI variables services which breaks LoadImage() and
+  // prevents processing any other capsule with embedded drivers.
+  //
+  // Things to note:
+  //  - this is not guaranteed to work and nothing terrible will happen if it
+  //    doesn't
+  //  - this can't be made to work in general because capsules can contain
+  //    multiple payloads that can be of different kinds
+  //
+  Index2 = 0;
+  for (Index = 0; Index < mCapsuleTotalNumber; Index++) {
+    if (!IsMainFirmwareCapsule (mCapsulePtr[Index])) {
+      Tmp                 = mCapsulePtr[Index2];
+      mCapsulePtr[Index2] = mCapsulePtr[Index];
+      mCapsulePtr[Index]  = Tmp;
+
+      if (mCapsuleNamePtr != NULL) {
+        // Capsule names are in 1-to-1 correspondence with capsules, so keep
+        // them in sync.  Not really making use of the name and they may not
+        // even work, but updating is easy.
+        Tmp                     = mCapsuleNamePtr[Index2];
+        mCapsuleNamePtr[Index2] = mCapsuleNamePtr[Index];
+        mCapsuleNamePtr[Index]  = Tmp;
+      }
+
+      Index2++;
+    }
   }
 
   for (Index = 0; Index < CapsuleOnDiskNum; Index++) {
