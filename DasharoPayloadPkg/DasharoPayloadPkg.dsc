@@ -24,6 +24,12 @@
   OUTPUT_DIRECTORY                    = Build/DasharoPayloadPkgX64
   FLASH_DEFINITION                    = DasharoPayloadPkg/DasharoPayloadPkg.fdf
 
+  #
+  # Override this if build output is located outside of EDK's root directory to
+  # make build paths reproducible in this scenario.
+  #
+  DEFINE EDK2_WORKSPACE               = $(WORKSPACE)
+
   DEFINE SOURCE_DEBUG_ENABLE          = FALSE
   DEFINE PS2_KEYBOARD_ENABLE          = FALSE
 
@@ -159,7 +165,30 @@
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
   INTEL:RELEASE_*_*_CC_FLAGS     = /D MDEPKG_NDEBUG
   MSFT:RELEASE_*_*_CC_FLAGS      = /D MDEPKG_NDEBUG
+!else
+  #
+  # With the console enabled, ASSERT() stays compiled in, which embeds the
+  # absolute __FILE__ source path of each module into the image. Remap the
+  # EDK II workspace prefix to a relative path so the strings (and therefore
+  # the image) are reproducible regardless of where coreboot is checked out.
+  # -ffile-prefix-map covers __FILE__ (and any debug info); GCC >= 8 / Clang >= 10.
+  #
+  # Using overridable $(EDK2_WORKSPACE) that defaults to $(WORKSPACE) because
+  # $(WORKSPACE) is adjusted by the build system to point at EDK's root
+  # directory, which leaves out paths to auto-generated files in $PWD/Build/
+  # uncovered by -ffile-prefix-map option.
+  #
+  GCC:RELEASE_*_*_CC_FLAGS       = -ffile-prefix-map=$(EDK2_WORKSPACE)/=
 !endif
+  #
+  # Strip the absolute build path that GenFw embeds into the PE/COFF debug
+  # directory (NB10/RSDS CodeView entry) of RELEASE images, and zero the
+  # timestamp. Without this the payload is not bit-for-bit reproducible: the
+  # path depends on where coreboot was checked out (e.g. the EDK II workspace
+  # under payloads/external/edk2/workspace). Mirrors upstream OvmfPkg, which
+  # does the same in its release DSCs (TianoCore PR #1513).
+  #
+  RELEASE_*_*_GENFW_FLAGS        = --zero
 
 
 ################################################################################
