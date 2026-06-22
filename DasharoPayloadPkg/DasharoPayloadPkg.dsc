@@ -716,6 +716,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|100
 
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+  gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType|0xFF
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x0000001F
+  gEfiSecurityPkgTokenSpaceGuid.PcdCRBIdleByPass|0xFF
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2NumberOfPCRBanks|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress|0xFED40000
 
   # No need to initialize TPM again, coreboot already did that
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0

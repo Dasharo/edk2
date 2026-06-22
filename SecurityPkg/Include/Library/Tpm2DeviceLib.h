@@ -17,6 +17,7 @@ typedef enum {
   Tpm2PtpInterfaceTis,
   Tpm2PtpInterfaceFifo,
   Tpm2PtpInterfaceCrb,
+  Tpm2PtpInterfaceAmdCrb,
   Tpm2PtpInterfaceMax,
 } TPM2_PTP_INTERFACE_TYPE;
 
