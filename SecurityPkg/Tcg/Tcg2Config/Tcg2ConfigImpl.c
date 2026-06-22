@@ -961,6 +961,7 @@ InstallTcg2ConfigForm (
       case Tpm2PtpInterfaceFifo:
         HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_TCG2_DEVICE_INTERFACE_STATE_CONTENT), L"PTP FIFO", NULL);
         break;
+      case Tpm2PtpInterfaceAmdCrb:
       case Tpm2PtpInterfaceCrb:
         HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_TCG2_DEVICE_INTERFACE_STATE_CONTENT), L"PTP CRB", NULL);
         break;
@@ -975,6 +976,11 @@ InstallTcg2ConfigForm (
         Tcg2ConfigInfo.TpmDeviceInterfacePtpFifoSupported = FALSE;
         Tcg2ConfigInfo.TpmDeviceInterfacePtpCrbSupported  = FALSE;
         HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_TCG2_DEVICE_INTERFACE_CAPABILITY_CONTENT), L"TIS", NULL);
+        break;
+      case Tpm2PtpInterfaceAmdCrb:
+        Tcg2ConfigInfo.TpmDeviceInterfacePtpFifoSupported = FALSE;
+        Tcg2ConfigInfo.TpmDeviceInterfacePtpCrbSupported  = TRUE;
+        HiiSetString (PrivateData->HiiHandle, STRING_TOKEN (STR_TCG2_DEVICE_INTERFACE_CAPABILITY_CONTENT), L"PTP CRB", NULL);
         break;
       case Tpm2PtpInterfaceFifo:
       case Tpm2PtpInterfaceCrb:
