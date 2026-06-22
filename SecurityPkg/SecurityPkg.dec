@@ -582,6 +582,7 @@
   #  0x00 - FIFO interface as defined in TIS 1.3 is active.<BR>
   #  0x01 - FIFO interface as defined in PTP for TPM 2.0 is active.<BR>
   #  0x02 - CRB interface is active.<BR>
+  #  0x03 - AMD fTPM CRB interface is active.<BR>
   #  0xFF - Contains no current active TPM interface type.<BR>
   #
   # @Prompt current active TPM interface type.
