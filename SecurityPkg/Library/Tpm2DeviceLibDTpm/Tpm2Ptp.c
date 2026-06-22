@@ -102,6 +102,35 @@ PtpCrbWaitRegisterBits (
 }
 
 /**
+  Check whether the AMD CRB TPM processed the command.
+
+  @param[in]  CrbReg       Address to teh CRB register set.
+  @param[in]  TimeOut      The max wait time (unit MicroSecond) when checking register.
+
+  @retval     EFI_SUCCESS  The register satisfies the check bit.
+  @retval     EFI_TIMEOUT  The register can't run into the expected status in time.
+**/
+EFI_STATUS
+PtpAmdCrbWaitStatus (
+  IN      PTP_CRB_REGISTERS_PTR  CrbReg,
+  IN      UINT32  TimeOut
+  )
+{
+  UINT32  WaitTime;
+
+  for (WaitTime = 0; WaitTime < TimeOut; WaitTime += 30) {
+    if (MmioRead32 ((UINTN)&CrbReg->CrbControlStart == 0) ||
+        MmioRead32 ((UINTN)&CrbReg->CrbControlStatus)) {
+      return EFI_SUCCESS;
+    }
+
+    MicroSecondDelay (30);
+  }
+
+  return EFI_TIMEOUT;
+}
+
+/**
   Get the control of TPM chip.
 
   @param[in] CrbReg                Pointer to CRB register.
@@ -121,6 +150,11 @@ PtpCrbRequestUseTpm (
 
   if (!Tpm2IsPtpPresence (CrbReg)) {
     return EFI_NOT_FOUND;
+  }
+
+  // Localities not supported on AMD fTPM.
+  if (GetCachedPtpInterface () == Tpm2PtpInterfaceAmdCrb) {
+    return EFI_SUCCESS;
   }
 
   //
@@ -149,6 +183,219 @@ PtpCrbRequestUseTpm (
              0,
              PTP_TIMEOUT_A
              );
+  return Status;
+}
+
+/**
+  Send a command to TPM for execution and return response data.
+
+  @param[in]      CrbReg        TPM register space base address.
+  @param[in]      BufferIn      Buffer for command data.
+  @param[in]      SizeIn        Size of command data.
+  @param[in, out] BufferOut     Buffer for response data.
+  @param[in, out] SizeOut       Size of response data.
+
+  @retval EFI_SUCCESS           Operation completed successfully.
+  @retval EFI_BAD_BUFFER_SIZE   Command data buffer or resposne is too big
+  @retval EFI_BUFFER_TOO_SMALL  Response data buffer is too small.
+  @retval EFI_DEVICE_ERROR      Unexpected device behavior.
+  @retval EFI_UNSUPPORTED       Unsupported TPM version
+
+**/
+EFI_STATUS
+PtpAmdCrbTpmCommand (
+  IN     PTP_CRB_REGISTERS_PTR  CrbReg,
+  IN     UINT8                  *BufferIn,
+  IN     UINT32                 SizeIn,
+  IN OUT UINT8                  *BufferOut,
+  IN OUT UINT32                 *SizeOut
+  )
+{
+  EFI_STATUS  Status;
+  UINT32      Index;
+  UINT32      TpmOutSize;
+  UINT16      Data16;
+  UINT32      Data32;
+  UINT8       RetryCnt;
+  UINT64      CmdBuf;
+  UINT64      RespBuf;
+  TPM2_COMMAND_HEADER *TpmHdr;
+  TPM_CC      TpmCommandCode;
+
+  if (SizeIn > SIZE_16KB) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Input buffer bigger than TPM2 buffer!\n"));
+    return EFI_BAD_BUFFER_SIZE;
+  }
+
+  DEBUG_CODE_BEGIN ();
+  UINTN  DebugSize;
+
+  DEBUG ((DEBUG_VERBOSE, "PtpAmdCrbTpmCommand Send - "));
+  if (SizeIn > 0x100) {
+    DebugSize = 0x40;
+  } else {
+    DebugSize = SizeIn;
+  }
+
+  for (Index = 0; Index < DebugSize; Index++) {
+    DEBUG ((DEBUG_VERBOSE, "%02x ", BufferIn[Index]));
+  }
+
+  if (DebugSize != SizeIn) {
+    DEBUG ((DEBUG_VERBOSE, "...... "));
+    for (Index = SizeIn - 0x20; Index < SizeIn; Index++) {
+      DEBUG ((DEBUG_VERBOSE, "%02x ", BufferIn[Index]));
+    }
+  }
+
+  DEBUG ((DEBUG_VERBOSE, "\n"));
+  DEBUG_CODE_END ();
+  TpmOutSize = 0;
+
+  RetryCnt = 0;
+  while (TRUE) {
+    Status = PtpCrbWaitRegisterBits (
+               &CrbReg->CrbControlStart,
+               0,
+               PTP_CRB_CONTROL_START,
+               PTP_TIMEOUT_C
+               );
+    if (EFI_ERROR (Status)) {
+      RetryCnt++;
+      if (RetryCnt < RETRY_CNT_MAX) {
+        continue;
+      } else {
+        return EFI_DEVICE_ERROR;
+      }
+    }
+    break;
+  }
+
+  CmdBuf = MmioRead32 ((UINTN)&CrbReg->CrbControlCommandAddressHigh);
+  CmdBuf = LShiftU64 (CmdBuf, 32);
+  CmdBuf |= MmioRead32 ((UINTN)&CrbReg->CrbControlCommandAddressLow);
+
+  if (CmdBuf == 0) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Command buffer is null!\n"));
+    return EFI_DEVICE_ERROR;
+  }
+
+  CopyMem ((VOID *)(UINTN)CmdBuf, BufferIn, SizeIn);
+
+  RespBuf = MmioRead64 ((UINTN)&CrbReg->CrbControlResponseAddrss);
+  MmioWrite32 ((UINTN)&CrbReg->CrbControlResponseSize, SIZE_16KB);
+
+  if (RespBuf == 0) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Response buffer is null!\n"));
+    return EFI_DEVICE_ERROR;
+  }
+
+  SetMem ((VOID *)(UINTN)RespBuf, SIZE_16KB, 0x0);
+
+  TpmHdr = (TPM2_COMMAND_HEADER *)(UINTN)CmdBuf;
+  TpmCommandCode = SwapBytes32 (TpmHdr->commandCode);
+
+  MmioWrite8 ((UINTN)&CrbReg->CrbControlStart, PTP_CRB_CONTROL_START);
+  if ((TpmCommandCode == TPM_CC_CreatePrimary) ||
+      (TpmCommandCode == TPM_CC_Create)) {
+    Status = PtpCrbWaitRegisterBits (
+              &CrbReg->CrbControlStart,
+              0,
+              PTP_CRB_CONTROL_START,
+              PTP_TIMEOUT_MAX
+              );
+  } else {
+    Status = PtpCrbWaitRegisterBits (
+              &CrbReg->CrbControlStart,
+              0,
+              PTP_CRB_CONTROL_START,
+              PTP_TIMEOUT_B
+              );
+  }
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Command execution failure!\n"));
+    goto AmdCrbExit;
+  }
+
+  if (MmioRead32 ((UINTN)&CrbReg->CrbControlStatus) & PTP_CRB_CONTROL_AREA_STATUS_TPM_STATUS) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Error: %08x\n", MmioRead32 ((UINTN)&CrbReg->CrbControlStatus)));
+    Status = EFI_DEVICE_ERROR;
+    goto AmdCrbExit;
+  }
+
+  RespBuf = MmioRead64 ((UINTN)&CrbReg->CrbControlResponseAddrss);
+  if (RespBuf == 0) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Response bufferafter command is null!\n"));
+    Status = EFI_DEVICE_ERROR;
+    goto AmdCrbExit;
+  }
+
+  if (*SizeOut < sizeof (TPM2_RESPONSE_HEADER)) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Output buffer to small to hold TPM2 Response Header!\n"));
+    Status = EFI_BUFFER_TOO_SMALL;
+    goto AmdCrbExit;
+  }
+
+  //
+  // Get response data header
+  //
+  CopyMem (BufferOut, (VOID *)(UINTN)RespBuf, sizeof (TPM2_RESPONSE_HEADER));
+
+  DEBUG_CODE_BEGIN ();
+  DEBUG ((DEBUG_VERBOSE, "PtpAmdCrbTpmCommand ReceiveHeader - "));
+  for (Index = 0; Index < sizeof (TPM2_RESPONSE_HEADER); Index++) {
+    DEBUG ((DEBUG_VERBOSE, "%02x ", BufferOut[Index]));
+  }
+
+  DEBUG ((DEBUG_VERBOSE, "\n"));
+  DEBUG_CODE_END ();
+  //
+  // Check the response data header (tag, parasize and returncode)
+  //
+  CopyMem (&Data16, BufferOut, sizeof (UINT16));
+  // TPM2 should not use this RSP_COMMAND
+  if (SwapBytes16 (Data16) == TPM_ST_RSP_COMMAND) {
+    DEBUG ((DEBUG_ERROR, "TPM2: TPM_ST_RSP error - %x\n", TPM_ST_RSP_COMMAND));
+    Status = EFI_UNSUPPORTED;
+    goto AmdCrbExit;
+  }
+
+  CopyMem (&Data32, (BufferOut + 2), sizeof (UINT32));
+  TpmOutSize = SwapBytes32 (Data32);
+  if (*SizeOut < TpmOutSize) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Output buffer to small to hold whole TPM2 Response!\n"));
+    //
+    // Command completed, but buffer is not enough
+    //
+    Status = EFI_BUFFER_TOO_SMALL;
+    goto AmdCrbExit;
+  }
+
+  if (TpmOutSize > SIZE_16KB) {
+    DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - TPM buffer to small to hold TPM2 Response!\n"));
+    Status = EFI_BAD_BUFFER_SIZE;
+    goto AmdCrbExit;
+  }
+
+  *SizeOut = TpmOutSize;
+  //
+  // Continue reading the remaining data. For simplicity copy whole response
+  //
+  CopyMem (BufferOut, (VOID *)(UINTN)RespBuf, TpmOutSize);
+
+  DEBUG_CODE_BEGIN ();
+  DEBUG ((DEBUG_VERBOSE, "PtpAmdCrbTpmCommand Receive - "));
+  for (Index = 0; Index < TpmOutSize; Index++) {
+    DEBUG ((DEBUG_VERBOSE, "%02x ", BufferOut[Index]));
+  }
+
+  DEBUG ((DEBUG_VERBOSE, "\n"));
+  DEBUG_CODE_END ();
+
+AmdCrbExit:
+  MmioWrite32 ((UINTN)&CrbReg->CrbControlCommandSize, SIZE_16KB);
+  MmioWrite32 ((UINTN)&CrbReg->CrbControlResponseSize, SIZE_16KB);
+
   return Status;
 }
 
@@ -512,45 +759,54 @@ DumpPtpInfo (
     return;
   }
 
-  InterfaceId.Uint32         = MmioRead32 ((UINTN)&((PTP_CRB_REGISTERS *)Register)->InterfaceId);
-  InterfaceCapability.Uint32 = MmioRead32 ((UINTN)&((PTP_FIFO_REGISTERS *)Register)->InterfaceCapability);
-  StatusEx                   = MmioRead8 ((UINTN)&((PTP_FIFO_REGISTERS *)Register)->StatusEx);
+  /* InterfaceID not supported on AMD fTPM */
+  PtpInterface = GetCachedPtpInterface ();
+  if (PtpInterface != Tpm2PtpInterfaceAmdCrb) {
+    InterfaceId.Uint32         = MmioRead32 ((UINTN)&((PTP_CRB_REGISTERS *)Register)->InterfaceId);
+    InterfaceCapability.Uint32 = MmioRead32 ((UINTN)&((PTP_FIFO_REGISTERS *)Register)->InterfaceCapability);
+    StatusEx                   = MmioRead8 ((UINTN)&((PTP_FIFO_REGISTERS *)Register)->StatusEx);
 
-  //
-  // Dump InterfaceId Register for PTP
-  //
-  DEBUG ((DEBUG_INFO, "InterfaceId - 0x%08x\n", InterfaceId.Uint32));
-  DEBUG ((DEBUG_INFO, "  InterfaceType    - 0x%02x\n", InterfaceId.Bits.InterfaceType));
-  if (InterfaceId.Bits.InterfaceType != PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_TIS) {
-    DEBUG ((DEBUG_INFO, "  InterfaceVersion - 0x%02x\n", InterfaceId.Bits.InterfaceVersion));
-    DEBUG ((DEBUG_INFO, "  CapFIFO          - 0x%x\n", InterfaceId.Bits.CapFIFO));
-    DEBUG ((DEBUG_INFO, "  CapCRB           - 0x%x\n", InterfaceId.Bits.CapCRB));
-  }
+    //
+    // Dump InterfaceId Register for PTP
+    //
+    DEBUG ((DEBUG_INFO, "InterfaceId - 0x%08x\n", InterfaceId.Uint32));
+    DEBUG ((DEBUG_INFO, "  InterfaceType    - 0x%02x\n", InterfaceId.Bits.InterfaceType));
+    if (InterfaceId.Bits.InterfaceType != PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_TIS) {
+      DEBUG ((DEBUG_INFO, "  InterfaceVersion - 0x%02x\n", InterfaceId.Bits.InterfaceVersion));
+      DEBUG ((DEBUG_INFO, "  CapFIFO          - 0x%x\n", InterfaceId.Bits.CapFIFO));
+      DEBUG ((DEBUG_INFO, "  CapCRB           - 0x%x\n", InterfaceId.Bits.CapCRB));
+    }
 
-  //
-  // Dump Capability Register for TIS and FIFO
-  //
-  DEBUG ((DEBUG_INFO, "InterfaceCapability - 0x%08x\n", InterfaceCapability.Uint32));
-  if ((InterfaceId.Bits.InterfaceType == PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_TIS) ||
-      (InterfaceId.Bits.InterfaceType == PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_FIFO))
-  {
-    DEBUG ((DEBUG_INFO, "  InterfaceVersion - 0x%x\n", InterfaceCapability.Bits.InterfaceVersion));
-  }
+    //
+    // Dump Capability Register for TIS and FIFO
+    //
+    DEBUG ((DEBUG_INFO, "InterfaceCapability - 0x%08x\n", InterfaceCapability.Uint32));
+    if ((InterfaceId.Bits.InterfaceType == PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_TIS) ||
+        (InterfaceId.Bits.InterfaceType == PTP_INTERFACE_IDENTIFIER_INTERFACE_TYPE_FIFO))
+    {
+      DEBUG ((DEBUG_INFO, "  InterfaceVersion - 0x%x\n", InterfaceCapability.Bits.InterfaceVersion));
+    }
 
-  //
-  // Dump StatusEx Register for PTP FIFO
-  //
-  DEBUG ((DEBUG_INFO, "StatusEx - 0x%02x\n", StatusEx));
-  if (InterfaceCapability.Bits.InterfaceVersion == INTERFACE_CAPABILITY_INTERFACE_VERSION_PTP) {
-    DEBUG ((DEBUG_INFO, "  TpmFamily - 0x%x\n", (StatusEx & PTP_FIFO_STS_EX_TPM_FAMILY) >> PTP_FIFO_STS_EX_TPM_FAMILY_OFFSET));
+    //
+    // Dump StatusEx Register for PTP FIFO
+    //
+    DEBUG ((DEBUG_INFO, "StatusEx - 0x%02x\n", StatusEx));
+    if (InterfaceCapability.Bits.InterfaceVersion == INTERFACE_CAPABILITY_INTERFACE_VERSION_PTP) {
+      DEBUG ((DEBUG_INFO, "  TpmFamily - 0x%x\n", (StatusEx & PTP_FIFO_STS_EX_TPM_FAMILY) >> PTP_FIFO_STS_EX_TPM_FAMILY_OFFSET));
+    }
+
   }
 
   Vid          = 0xFFFF;
   Did          = 0xFFFF;
   Rid          = 0xFF;
-  PtpInterface = GetCachedPtpInterface ();
   DEBUG ((DEBUG_INFO, "PtpInterface - %x\n", PtpInterface));
   switch (PtpInterface) {
+    case Tpm2PtpInterfaceAmdCrb:
+      Vid = 0x1022; // AMD PCI ID
+      Did = 0;
+      Rid = 0;
+      break;
     case Tpm2PtpInterfaceCrb:
       Vid = MmioRead16 ((UINTN)&((PTP_CRB_REGISTERS *)Register)->Vid);
       Did = MmioRead16 ((UINTN)&((PTP_CRB_REGISTERS *)Register)->Did);
@@ -596,6 +852,14 @@ DTpm2SubmitCommand (
 
   PtpInterface = GetCachedPtpInterface ();
   switch (PtpInterface) {
+    case Tpm2PtpInterfaceAmdCrb:
+      return PtpAmdCrbTpmCommand (
+               (PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress),
+               InputParameterBlock,
+               InputParameterBlockSize,
+               OutputParameterBlock,
+               OutputParameterBlockSize
+               );
     case Tpm2PtpInterfaceCrb:
       return PtpCrbTpmCommand (
                (PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress),
@@ -635,6 +899,7 @@ DTpm2RequestUseTpm (
 
   PtpInterface = GetCachedPtpInterface ();
   switch (PtpInterface) {
+    case Tpm2PtpInterfaceAmdCrb:
     case Tpm2PtpInterfaceCrb:
       return PtpCrbRequestUseTpm ((PTP_CRB_REGISTERS_PTR)(UINTN)PcdGet64 (PcdTpmBaseAddress));
     case Tpm2PtpInterfaceFifo:

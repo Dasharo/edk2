@@ -40,6 +40,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/Tpm2CommandLib.h>
 #include <Library/UefiLib.h>
 #include <Library/HobLib.h>
+#include <Library/IoLib.h>
 
 //
 // Physical Presence Interface Version supported by Platform
@@ -828,6 +829,10 @@ PublishTpm2 (
 
   InterfaceType = PcdGet8 (PcdActiveTpmInterfaceType);
   switch (InterfaceType) {
+    case Tpm2PtpInterfaceAmdCrb:
+      mTpm2AcpiTemplate.StartMethod          = EFI_TPM2_ACPI_TABLE_START_METHOD_ACPI;
+      mTpm2AcpiTemplate.AddressOfControlArea = PcdGet64 (PcdTpmBaseAddress) + 0x40;
+      break;
     case Tpm2PtpInterfaceCrb:
       mTpm2AcpiTemplate.StartMethod          = EFI_TPM2_ACPI_TABLE_START_METHOD_COMMAND_RESPONSE_BUFFER_INTERFACE;
       mTpm2AcpiTemplate.AddressOfControlArea = PcdGet64 (PcdTpmBaseAddress) + 0x40;

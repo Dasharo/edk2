@@ -35,17 +35,25 @@
   Tpm12CommandLib
   Tpm12DeviceLib
   Tpm2DeviceLib
+  HobLib
+  PcdLib
 
 [Guids]
   gEfiTpmDeviceSelectedGuid           ## PRODUCES ## GUID # Used as a PPI GUID
   gEfiTpmDeviceInstanceTpm20DtpmGuid  ## SOMETIMES_CONSUMES
   gEfiTpmDeviceInstanceTpm12Guid      ## SOMETIMES_CONSUMES
+  gUefiSystemTableInfoGuid            ## CONSUMES
 
 [Ppis]
   gPeiTpmInitializationDonePpiGuid    ## SOMETIMES_PRODUCES
 
 [Pcd]
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid                 ## PRODUCES
+  gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask
+  gEfiSecurityPkgTokenSpaceGuid.PcdCRBIdleByPass
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2NumberOfPCRBanks
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress
 
 [Depex.IA32, Depex.X64]
   TRUE
