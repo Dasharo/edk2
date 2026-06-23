@@ -21,6 +21,7 @@
 
 [LibraryClasses]
   IoLib
+  UefiBootServicesTableLib
 
 [Sources]
   System76EcLib.c

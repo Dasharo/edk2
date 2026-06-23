@@ -5,11 +5,13 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
-
+#include <Uefi.h>
 #include <Library/IoLib.h>
 
 // From coreboot/src/drivers/system76_ec/system76_ec.c {
 #define SYSTEM76_EC_BASE 0x0E00
+
+static BOOLEAN flush_pending = FALSE;
 
 static inline UINT8 system76_ec_read(UINT8 addr) {
     return IoRead8(SYSTEM76_EC_BASE + (UINT16)addr);
@@ -19,6 +21,13 @@ static inline void system76_ec_write(UINT8 addr, UINT8 data) {
     IoWrite8(SYSTEM76_EC_BASE + (UINT16)addr, data);
 }
 
+static void system76_ec_wait(void) {
+    if (flush_pending) {
+        while (system76_ec_read(0) != 0) {}
+        system76_ec_write(3, 0);
+        flush_pending = FALSE;
+    }
+}
 void system76_ec_init(void) {
     // Clear entire command region
     for (int i = 0; i < 256; i++) {
@@ -28,16 +37,13 @@ void system76_ec_init(void) {
 
 void system76_ec_flush(void) {
     // Send command
+    system76_ec_wait();
     system76_ec_write(0, 4);
-
-    // Wait for command completion
-    while (system76_ec_read(0) != 0) {}
-
-    // Clear length
-    system76_ec_write(3, 0);
+    flush_pending = TRUE;
 }
 
 void system76_ec_print(UINT8 byte) {
+    system76_ec_wait();
     // Read length
     UINT8 len = system76_ec_read(3);
     // Write data at offset
@@ -45,12 +51,35 @@ void system76_ec_print(UINT8 byte) {
     // Update length
     system76_ec_write(3, len + 1);
 
-    // If we hit the end of the buffer, or were given a newline, flush
-    if (byte == '\n' || len >= 128) {
+    // If we hit the end of the buffer, flush
+    if (len >= 128 || byte == '\n') {
         system76_ec_flush();
     }
 }
 // } From coreboot/src/drivers/system76_ec/system76_ec.c
+
+#include <Library/UefiBootServicesTableLib.h>
+
+STATIC EFI_EVENT  mFlushTimer = NULL;
+
+STATIC VOID EFIAPI
+system76_ec_flush_tick (IN EFI_EVENT Event, IN VOID *Context) {
+    if (system76_ec_read(3) != 0) {
+        system76_ec_flush();
+    }
+}
+
+STATIC VOID
+system76_ec_arm_flush_timer (VOID) {
+    if (mFlushTimer != NULL || gBS == NULL) {
+        return;
+    }
+    if (EFI_ERROR (gBS->CreateEvent (EVT_TIMER | EVT_NOTIFY_SIGNAL,
+            TPL_NOTIFY, system76_ec_flush_tick, NULL, &mFlushTimer))) {
+        return;
+    }
+    gBS->SetTimer (mFlushTimer, TimerPeriodic, 1000000); // 100ms
+}
 
 // Implement SerialPortLib {
 #include <Library/SerialPortLib.h>
@@ -85,6 +114,7 @@ SerialPortWrite (
         system76_ec_print(Buffer[i]);
     }
 
+    system76_ec_arm_flush_timer();
     return NumberOfBytes;
 }
 
