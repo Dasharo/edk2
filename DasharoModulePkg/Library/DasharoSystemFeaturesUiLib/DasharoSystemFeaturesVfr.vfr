@@ -149,6 +149,14 @@ formset
       endcheckbox;
     endif;
 
+    disableif ideqval FeaturesData.SecurityMenuShowStm == 0;
+      checkbox varid  = FeaturesData.StmEnable,
+               prompt = STRING_TOKEN(STR_STM_PROMPT),
+               help   = STRING_TOKEN(STR_STM_HELP),
+               flags  = RESET_REQUIRED,
+      endcheckbox;
+    endif;
+
     disableif ideqval FeaturesData.ShowFum == 0;
       subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
       subtitle text = STRING_TOKEN(STR_EMPTY_STRING);

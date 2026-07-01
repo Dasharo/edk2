@@ -76,6 +76,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_FAST_BOOT,  FixedPcdGetBool (PcdFastBootFeatureEnabled) },
   { DASHARO_VAR_USB_PORT_POWER, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption) },
   { DASHARO_VAR_DGPU_STATE, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption) },
+  { DASHARO_VAR_STM, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowSecurityStmOption) },
 };
 
 /**
@@ -203,6 +204,9 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_DGPU_STATE) == 0) {
     Data.Uint8 = DASHARO_DGPU_ENABLED;
     Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_STM) == 0) {
+    Data.Boolean = FALSE;
+    Size = sizeof (Data.Boolean);
   } else {
     DEBUG ((EFI_D_ERROR, "%a(): Unknown variable: %s.\n", __FUNCTION__, VarName));
     ASSERT ((0 && "No default value set for a variable."));
