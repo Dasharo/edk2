@@ -90,3 +90,4 @@
   gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled
   gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityStmOption

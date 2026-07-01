@@ -104,3 +104,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryIbeccOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdFumAutoIpxeBoot
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityStmOption

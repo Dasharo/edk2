@@ -48,6 +48,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_USB_STACK                     L"UsbDriverStack"
 #define DASHARO_VAR_WATCHDOG                      L"WatchdogConfig"
 #define DASHARO_VAR_WATCHDOG_AVAILABLE            L"WatchdogAvailable"
+#define DASHARO_VAR_STM                           L"STM"
 
 // Other
 #define DASHARO_VAR_SMBIOS_UUID  L"Type1UUID"
