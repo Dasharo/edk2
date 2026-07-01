@@ -207,6 +207,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowMemorySpdProfile) = FixedPcdGetBool(PcdShowMemorySpdProfileOption);
   PRIVATE_DATA(ShowMemoryIbecc) = FixedPcdGetBool(PcdShowMemoryIbeccOption);
   PRIVATE_DATA(HaveDiskCapsules) = FixedPcdGetBool(PcdCapsuleOnDiskSupport);
+  PRIVATE_DATA(SecurityMenuShowStm) = FixedPcdGetBool (PcdShowSecurityStmOption);
 
   // HAP is only available if descriptor is not locked
   VarSize = sizeof (DescriptorWriteable);
@@ -229,6 +230,7 @@ DasharoSystemFeaturesUiLibConstructor (
                                      FixedPcdGetBool (PcdSecurityShowCameraOption) ||
                                      FixedPcdGetBool (PcdShowLockBios) ||
                                      FixedPcdGetBool (PcdShowSmmBwp) ||
+                                     FixedPcdGetBool (PcdShowSecurityStmOption) ||
                                      FixedPcdGetBool (PcdShowFum);
 
   if (PRIVATE_DATA(ShowChipsetMenu))
@@ -307,6 +309,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_HYPER_THREADING, HyperThreading);
   LOAD_VAR (DASHARO_VAR_USB_PORT_POWER, UsbPortPower);
   LOAD_VAR (DASHARO_VAR_DGPU_STATE, DGPUState);
+  LOAD_VAR (DASHARO_VAR_STM, StmEnable);
 
 #undef LOAD_VAR
 
@@ -567,6 +570,7 @@ DasharoSystemFeaturesRouteConfig (
       STORE_VAR_IF (DASHARO_VAR_IOMMU_CONFIG, IommuConfig, FixedPcdGetBool (PcdShowIommuOptions));
       STORE_VAR_IF (DASHARO_VAR_LOCK_BIOS, LockBios, FixedPcdGetBool (PcdShowLockBios));
       STORE_VAR_IF (DASHARO_VAR_SMM_BWP, SmmBwp, FixedPcdGetBool (PcdShowSmmBwp));
+      STORE_VAR_IF (DASHARO_VAR_STM, StmEnable, FixedPcdGetBool (PcdShowSecurityStmOption));
   }
 
   if (FixedPcdGetBool (PcdShowMemoryMenu)) {
