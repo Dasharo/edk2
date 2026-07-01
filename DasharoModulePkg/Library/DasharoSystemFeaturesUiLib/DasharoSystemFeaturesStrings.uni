@@ -333,3 +333,7 @@
 #string STR_S_CRTM_STATUS_BTG     #language en-US "Boot Guard established"
 #string STR_S_CRTM_STATUS_TXT     #language en-US "Intel TXT Established"
 #string STR_S_CRTM_STATUS_BTG_TXT #language en-US "Boot Guard and TXT established"
+
+#string STR_STM_PROMPT            #language en-US "Enable SMI Transfer Monitor"
+#string STR_STM_HELP              #language en-US "Enables loading the SMI Transfer Monitor (STM) during boot to containerize SMI handlers when OS is running.\n\n"
+                                                  "STM requires support from operating system to be functional."
