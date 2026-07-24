@@ -141,6 +141,7 @@ DasharoSystemFeaturesUiLibConstructor (
   EFI_STATUS  Status;
   UINTN       BufferSize, VarSize;
   UINT8       DescriptorWriteable;
+  UINT8       DgpuPresent;
 
   if (!FixedPcdGetBool (PcdShowMenu))
     return EFI_SUCCESS;
@@ -220,6 +221,23 @@ DasharoSystemFeaturesUiLibConstructor (
 
   if (!EFI_ERROR(Status))
       PRIVATE_DATA(MeHapAvailable) &= DescriptorWriteable;
+
+  // Disable dGPU option if a dgpu is not detected on the device
+  VarSize = sizeof (DgpuPresent);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_DGPU_PRESENT,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &DgpuPresent
+      );
+  // EFI_ERROR(Status) is true when DGPUPresent was not set.
+  // Hide the option until we are sure the device supports dgpu.
+  // Otherwise it would be possible to set invalid state and break the video
+  // output
+  if (EFI_ERROR(Status) || !DgpuPresent)
+      PRIVATE_DATA(PowerMenuShowDGPUPower) = 0;
+
 
   // Ensure at least one option is visible in given menu (if enabled), otherwise hide it
   if (PRIVATE_DATA(ShowSecurityMenu))

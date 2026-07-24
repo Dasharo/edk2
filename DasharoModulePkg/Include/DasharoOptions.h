@@ -20,6 +20,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_CORE_ACTIVE_COUNT             L"CoreActiveCount"
 #define DASHARO_VAR_CPU_THROTTLING_OFFSET         L"CpuThrottlingOffset"
 #define DASHARO_VAR_DESCRIPTOR_WRITEABLE          L"DescriptorWriteable"
+#define DASHARO_VAR_DGPU_PRESENT                  L"DGPUPresent"
 #define DASHARO_VAR_DGPU_STATE                    L"DGPUState"
 #define DASHARO_VAR_DISK_CAPSULES_BOOT            L"DiskCapsulesBoot"
 #define DASHARO_VAR_ENABLE_CAMERA                 L"EnableCamera"
