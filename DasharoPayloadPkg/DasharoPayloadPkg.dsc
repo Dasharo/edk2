@@ -731,6 +731,8 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
 !endif
 
+!include DasharoPayloadPkg/DasharoColorTheme.dsc.inc
+
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|L"TCG2_VERSION"|gTcg2ConfigFormSetGuid|0x0|"1.3"|NV,BS

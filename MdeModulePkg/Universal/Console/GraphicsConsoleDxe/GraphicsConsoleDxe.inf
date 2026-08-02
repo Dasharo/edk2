@@ -68,5 +68,23 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow                 ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn              ## SOMETIMES_CONSUMES
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack         ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteGreen         ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown         ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen    ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow        ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite         ## CONSUMES
+
+
 [UserExtensions.TianoCore."ExtraFiles"]
   GraphicsConsoleDxeExtra.uni

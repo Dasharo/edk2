@@ -56,6 +56,7 @@
   DebugLib
   PcdLib
   BaseLib
+  PrintLib
 
 [Guids]
   ## SOMETIMES_PRODUCES ## Variable:L"ConInDev"
@@ -88,6 +89,23 @@
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType           ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable    ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteGreen          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed            ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta   ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown          ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightBlue      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan      ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta        ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow         ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite          ## CONSUMES
+
 
 # [Event]
 # # Relative timer event set by UnicodeToEfiKey(), used to be one 2 seconds input timeout.
