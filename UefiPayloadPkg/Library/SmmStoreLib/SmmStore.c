@@ -23,6 +23,7 @@
  */
 STATIC SMM_STORE_COM_BUF     *mArgComBuf;
 STATIC EFI_PHYSICAL_ADDRESS  mArgComBufPhys;
+STATIC EFI_PHYSICAL_ADDRESS  mSmmComBufPhys;
 
 /*
  * Metadata provided by the first stage bootloader.
@@ -181,7 +182,16 @@ ReadBlock (
   mArgComBuf->Read.BufOffset = Offset;
   mArgComBuf->Read.BlockId   = Lba;
 
-  Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd, mArgComBufPhys);
+  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
+      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
+    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
+             mArgComBuf, sizeof(*mArgComBuf));
+    Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd,
+                      (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
+  } else {
+    Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd, mArgComBufPhys);
+  }
+
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -282,6 +292,14 @@ WriteBlock (
 
   CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
 
+  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
+      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
+    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
+             mArgComBuf, sizeof(*mArgComBuf));
+    return CallSmm (mSmmStoreInfo->ApmCmd, WriteCmd,
+                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
+  }
+
   return CallSmm (mSmmStoreInfo->ApmCmd, WriteCmd, mArgComBufPhys);
 }
 
@@ -361,6 +379,14 @@ SmmStoreLibEraseBlock (
 
   mArgComBuf->Clear.BlockId = Lba;
 
+  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
+      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
+    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
+             mArgComBuf, sizeof(*mArgComBuf));
+    return CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_CLEAR,
+                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
+  }
+
   return CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_CLEAR, mArgComBufPhys);
 }
 
@@ -381,6 +407,15 @@ SmmStoreLibEraseAnyBlock (
   }
 
   mArgComBuf->Clear.BlockId = Lba;
+
+  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
+      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
+    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
+             mArgComBuf, sizeof(*mArgComBuf));
+    return CallSmm (mSmmStoreInfo->ApmCmd,
+                    SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR,
+                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
+  }
 
   return CallSmm (
            mSmmStoreInfo->ApmCmd,
@@ -404,7 +439,9 @@ SmmStoreLibVirtualAddressChange (
   IN CONVERT_POINTER_CALLBACK  ConvertPointer
   )
 {
-  ConvertPointer (0x0, (VOID **)&mArgComBuf);
+  if (mArgComBuf != NULL) {
+    ConvertPointer (0x0, (VOID **)&mArgComBuf);
+  }
   if (mSmmStoreInfo != NULL) {
     ConvertPointer (0x0, (VOID **)&mSmmStoreInfo->ComBuffer);
     ConvertPointer (0x0, (VOID **)&mSmmStoreInfo);
@@ -493,6 +530,8 @@ SmmStoreLibInitialize (
   }
 
   mArgComBuf = (VOID *)mArgComBufPhys;
+
+  mSmmComBufPhys = mSmmStoreInfo->ComBuffer;
 
   //
   // Finally mark the SMM communication buffer provided by CB or SBL as runtime memory
