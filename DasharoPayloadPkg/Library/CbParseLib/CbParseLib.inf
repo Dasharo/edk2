@@ -46,4 +46,4 @@
 
 [Guids]
   gUniversalPayloadPciRootBridgeInfoGuid
-
+  gEfiCfrSetupMenuFormGuid

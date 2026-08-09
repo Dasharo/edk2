@@ -898,6 +898,14 @@ BlPeiEntryPoint (
   }
 
   //
+  // Parse the misc info provided by bootloader
+  //
+  Status = ParseMiscInfo ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Error when parsing misc info, Status = %r\n", Status));
+  }
+
+  //
   // Parse platform specific information.
   //
   Status = ParsePlatformInfo ();
@@ -925,6 +933,7 @@ BlPeiEntryPoint (
     Status = PeiServicesSetBootMode (BOOT_ON_FLASH_UPDATE);
     ASSERT_EFI_ERROR (Status);
   }
+
 
   //
   // Mask off all legacy 8259 interrupt sources

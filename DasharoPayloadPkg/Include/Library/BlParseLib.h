@@ -307,4 +307,20 @@ ParseRootBridgeInfo (
   VOID
   );
 
+/**
+  Parse and handle the misc info provided by bootloader
+
+  @retval RETURN_SUCCESS               The misc information was parsed successfully.
+  @retval RETURN_INCOMPATIBLE_VERSION  The provided CFR data does not match the expected version.
+  @retval RETURN_CRC_ERROR             The calculated checksum does not match the supplied one.
+  @retval RETURN_NOT_FOUND             Could not find required misc info.
+  @retval RETURN_OUT_OF_RESOURCES      Insufficant memory space.
+
+**/
+RETURN_STATUS
+EFIAPI
+ParseMiscInfo (
+  VOID
+  );
+
 #endif
