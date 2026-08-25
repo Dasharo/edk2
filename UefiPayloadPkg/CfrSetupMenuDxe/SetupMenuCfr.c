@@ -222,6 +222,113 @@ CfrProduceHiiForDependency (
 }
 
 /**
+  CFR forms are emitted as HII forms of their own, but HII forms cannot be
+  nested. Therefore forms are queued while their parent is being processed
+  and their bodies are emitted afterwards, one after another.
+
+**/
+typedef struct {
+  CFR_OPTION_FORM  *CfrForm;
+  EFI_FORM_ID      FormId;
+  EFI_STRING_ID    TitleStringId;
+} CFR_PENDING_FORM;
+
+STATIC CFR_PENDING_FORM  *mCfrPendingForms     = NULL;
+STATIC UINTN             mCfrPendingFormCount  = 0;
+STATIC UINTN             mCfrPendingFormMax    = 0;
+
+#define CFR_PENDING_FORM_GROWTH  8
+
+/**
+  Assign a HII form ID to a CFR form and queue it for later processing.
+
+  @retval  The form ID assigned to the CFR form, or 0 on allocation failure.
+
+**/
+STATIC
+EFI_FORM_ID
+EFIAPI
+CfrQueuePendingForm (
+  IN CFR_OPTION_FORM  *CfrForm,
+  IN EFI_STRING_ID    TitleStringId
+  )
+{
+  CFR_PENDING_FORM  *NewQueue;
+
+  if (mCfrPendingFormCount == mCfrPendingFormMax) {
+    NewQueue = ReallocatePool (
+                 mCfrPendingFormMax * sizeof (CFR_PENDING_FORM),
+                 (mCfrPendingFormMax + CFR_PENDING_FORM_GROWTH) * sizeof (CFR_PENDING_FORM),
+                 mCfrPendingForms
+                 );
+    ASSERT (NewQueue != NULL);
+    if (NewQueue == NULL) {
+      DEBUG ((DEBUG_ERROR, "CFR: Failed to allocate memory for form queue!\n"));
+      return 0;
+    }
+
+    mCfrPendingForms    = NewQueue;
+    mCfrPendingFormMax += CFR_PENDING_FORM_GROWTH;
+  }
+
+  mCfrPendingForms[mCfrPendingFormCount].CfrForm       = CfrForm;
+  mCfrPendingForms[mCfrPendingFormCount].FormId        = (EFI_FORM_ID)(CFR_FORM_ID_START + mCfrPendingFormCount);
+  mCfrPendingForms[mCfrPendingFormCount].TitleStringId = TitleStringId;
+  mCfrPendingFormCount++;
+
+  return mCfrPendingForms[mCfrPendingFormCount - 1].FormId;
+}
+
+/**
+  Close the HII form currently being emitted and open a new one.
+
+  HII forms are not nested, so the enclosing scope of a form is the formset.
+  The form opened last is closed by the `endform` of the static VFR.
+
+**/
+STATIC
+VOID
+EFIAPI
+CfrProduceHiiFormStart (
+  IN VOID           *StartOpCodeHandle,
+  IN EFI_FORM_ID    FormId,
+  IN EFI_STRING_ID  TitleStringId
+  )
+{
+  EFI_IFR_END   EndOpCode;
+  EFI_IFR_FORM  FormOpCode;
+  UINT8         *TempHiiBuffer;
+
+  //
+  // Terminate the scope of the form emitted before this one
+  //
+  EndOpCode.Header.OpCode = EFI_IFR_END_OP;
+  EndOpCode.Header.Length = sizeof (EFI_IFR_END);
+  EndOpCode.Header.Scope  = 0;
+
+  TempHiiBuffer = HiiCreateRawOpCodes (
+                    StartOpCodeHandle,
+                    (UINT8 *)&EndOpCode,
+                    sizeof (EFI_IFR_END)
+                    );
+  ASSERT (TempHiiBuffer != NULL);
+
+  FormOpCode.Header.OpCode = EFI_IFR_FORM_OP;
+  FormOpCode.Header.Length = sizeof (EFI_IFR_FORM);
+  // Forms are new scopes
+  FormOpCode.Header.Scope  = 1;
+  FormOpCode.FormId        = FormId;
+  FormOpCode.FormTitle     = TitleStringId;
+
+  TempHiiBuffer = HiiCreateRawOpCodes (
+                    StartOpCodeHandle,
+                    (UINT8 *)&FormOpCode,
+                    sizeof (EFI_IFR_FORM)
+                    );
+  ASSERT (TempHiiBuffer != NULL);
+}
+
+/**
   Produce variable and VARSTORE for CFR option name.
 
 **/
@@ -339,12 +446,11 @@ CfrProduceStorageForOption (
 }
 
 /**
-  Process one CFR form - its UI name - and create HII component.
-  Therefore, *do not* advanced index by the size field.
+  Process one CFR form: create a `goto` to it in the form currently being
+  emitted and queue the form so that its own body is emitted later.
 
-  It's currently too difficult to produce form HII IFR, because these
-  seem unable to be nested, so generating the VfrBin at runtime would be required.
-  However, maybe we'll look into that, or HII "scopes" later.
+  The children of this form are handled when its body is emitted, so the
+  whole subtree is skipped here by advancing the index by the size field.
 
 **/
 STATIC
@@ -363,12 +469,14 @@ CfrProcessFormOption (
   CHAR16              *HiiFormNameString;
   EFI_STRING_ID       HiiFormNameStringId;
   UINT8               *TempHiiBuffer;
+  UINTN               OptionProcessedLength;
+  EFI_FORM_ID         FormId;
 
   //
   // Extract variable-length fields that follow the header
   //
-  *ProcessedLength += sizeof (CFR_OPTION_FORM);
-  CfrFormName = CfrExtractVarBinary ((UINT8 *)Option, ProcessedLength, CB_TAG_CFR_VARCHAR_UI_NAME);
+  OptionProcessedLength = sizeof (CFR_OPTION_FORM);
+  CfrFormName = CfrExtractVarBinary ((UINT8 *)Option, &OptionProcessedLength, CB_TAG_CFR_VARCHAR_UI_NAME);
   ASSERT (CfrFormName != NULL);
 
   // Dependency values are optional
@@ -390,6 +498,12 @@ CfrProcessFormOption (
   CfrConvertVarBinaryToStrings (CfrFormName, &HiiFormNameString, &HiiFormNameStringId);
   FreePool (HiiFormNameString);
 
+  FormId = CfrQueuePendingForm (Option, HiiFormNameStringId);
+  if (FormId == 0) {
+    *ProcessedLength += Option->size;
+    return;
+  }
+
   if (Option->dependency_id) {
     CfrProduceHiiForDependency (
       StartOpCodeHandle,
@@ -406,8 +520,9 @@ CfrProcessFormOption (
     CfrProduceHiiForFlags (StartOpCodeHandle, EFI_IFR_GRAY_OUT_IF_OP);
   }
 
-  TempHiiBuffer = HiiCreateSubTitleOpCode (
+  TempHiiBuffer = HiiCreateGotoOpCode (
                     StartOpCodeHandle,
+                    FormId,
                     HiiFormNameStringId,
                     STRING_TOKEN (STR_EMPTY_STRING),
                     0,
@@ -428,6 +543,8 @@ CfrProcessFormOption (
     TempHiiBuffer = HiiCreateEndOpCode (StartOpCodeHandle);
     ASSERT (TempHiiBuffer != NULL);
   }
+
+  *ProcessedLength += Option->size;
 }
 
 /**
@@ -872,7 +989,80 @@ CfrProcessCharacterOption (
 }
 
 /**
+  Emit the body of a CFR form into the HII form currently being built.
+
+  Nested forms are turned into `goto` statements and queued, so this only
+  walks the direct children of the form.
+
+**/
+STATIC
+VOID
+EFIAPI
+CfrProcessFormBody (
+  IN CFR_OPTION_FORM  *CfrForm,
+  IN VOID             *StartOpCodeHandle
+  )
+{
+  UINTN            ProcessedLength;
+  CFR_VARBINARY    *CfrFormName;
+  CFR_OPTION_FORM  *CfrFormData;
+
+  //
+  // The UI name of the form has already been consumed by the caller
+  //
+  ProcessedLength = sizeof (CFR_OPTION_FORM);
+  CfrFormName = CfrExtractVarBinary ((UINT8 *)CfrForm, &ProcessedLength, CB_TAG_CFR_VARCHAR_UI_NAME);
+  ASSERT (CfrFormName != NULL);
+
+  while (ProcessedLength < CfrForm->size) {
+    CfrFormData = (CFR_OPTION_FORM *)((UINT8 *)CfrForm + ProcessedLength);
+
+    switch (CfrFormData->tag) {
+      case CB_TAG_CFR_OPTION_FORM:
+        DEBUG ((DEBUG_INFO, "CFR: Nested form, will produce goto\n"));
+        CfrProcessFormOption (
+          (CFR_OPTION_FORM *)CfrFormData,
+          StartOpCodeHandle,
+          &ProcessedLength
+          );
+        break;
+      case CB_TAG_CFR_OPTION_ENUM:
+      case CB_TAG_CFR_OPTION_NUMBER:
+      case CB_TAG_CFR_OPTION_BOOL:
+        CfrProcessNumericOption (
+          (CFR_OPTION_NUMERIC *)CfrFormData,
+          StartOpCodeHandle,
+          &ProcessedLength
+          );
+        break;
+      case CB_TAG_CFR_OPTION_VARCHAR:
+      case CB_TAG_CFR_OPTION_COMMENT:
+        CfrProcessCharacterOption (
+          (CFR_OPTION_VARCHAR *)CfrFormData,
+          StartOpCodeHandle,
+          &ProcessedLength
+          );
+        break;
+      default:
+        DEBUG ((
+          DEBUG_ERROR,
+          "CFR: Offset 0x%x - Unexpected entry 0x%x (size 0x%x)!\n",
+          ProcessedLength,
+          CfrFormData->tag,
+          CfrFormData->size
+          ));
+        ProcessedLength += CfrFormData->size;
+        break;
+    }
+  }
+}
+
+/**
   Create runtime components by iterating CFR forms.
+
+  The static form of the formset only holds `goto` statements to the
+  top-level CFR forms. Every CFR form, nested ones included, is emitted as
+  a HII form of its own, appended after the static form.
 
 **/
 VOID
@@ -888,9 +1078,8 @@ CfrCreateRuntimeComponents (
   EFI_HOB_GUID_TYPE   *GuidHob;
   CFR_OPTION_FORM     *CfrFormHob;
   UINTN               ProcessedLength;
-  CFR_OPTION_FORM     *CfrFormData;
+  UINTN               Index;
   EFI_STATUS          Status;
-  UINT8               *TempHiiBuffer;
 
   //
   // Allocate GUIDed markers at runtime component offset in IFR
@@ -924,7 +1113,7 @@ CfrCreateRuntimeComponents (
   EndLabel->Number       = LABEL_RT_COMP_END;
 
   //
-  // For each HOB, create forms
+  // Each HOB holds a top-level form. Reference them from the static form.
   //
   GuidHob = GetFirstGuidHob (&gEfiCfrSetupMenuFormGuid);
   while (GuidHob != NULL) {
@@ -937,61 +1126,25 @@ CfrCreateRuntimeComponents (
       &ProcessedLength
       );
 
-    //
-    // Process form tree
-    //
-    while (ProcessedLength < CfrFormHob->size) {
-      CfrFormData = (CFR_OPTION_FORM *)((UINT8 *)CfrFormHob + ProcessedLength);
-
-      switch (CfrFormData->tag) {
-        case CB_TAG_CFR_OPTION_FORM:
-          DEBUG ((DEBUG_INFO, "CFR: Nested form, will produce subtitle\n"));
-          CfrProcessFormOption (
-            (CFR_OPTION_FORM *)CfrFormData,
-            StartOpCodeHandle,
-            &ProcessedLength
-            );
-          break;
-        case CB_TAG_CFR_OPTION_ENUM:
-        case CB_TAG_CFR_OPTION_NUMBER:
-        case CB_TAG_CFR_OPTION_BOOL:
-          CfrProcessNumericOption (
-            (CFR_OPTION_NUMERIC *)CfrFormData,
-            StartOpCodeHandle,
-            &ProcessedLength
-            );
-          break;
-        case CB_TAG_CFR_OPTION_VARCHAR:
-        case CB_TAG_CFR_OPTION_COMMENT:
-          CfrProcessCharacterOption (
-            (CFR_OPTION_VARCHAR *)CfrFormData,
-            StartOpCodeHandle,
-            &ProcessedLength
-            );
-          break;
-        default:
-          DEBUG ((
-            DEBUG_ERROR,
-            "CFR: Offset 0x%x - Unexpected entry 0x%x (size 0x%x)!\n",
-            ProcessedLength,
-            CfrFormData->tag,
-            CfrFormData->size
-            ));
-          ProcessedLength += CfrFormData->size;
-          break;
-      }
-    }
-
-    TempHiiBuffer = HiiCreateSubTitleOpCode (
-                      StartOpCodeHandle,
-                      STRING_TOKEN (STR_EMPTY_STRING),
-                      0,
-                      0,
-                      0
-                  );
-    ASSERT (TempHiiBuffer != NULL);
-
     GuidHob = GetNextGuidHob (&gEfiCfrSetupMenuFormGuid, GET_NEXT_HOB (GuidHob));
+  }
+
+  //
+  // Emit the queued forms. Processing a form appends the forms nested in it
+  // to the queue, so the loop condition is evaluated on every iteration.
+  //
+  // Every form starts by closing the scope of the form emitted before it,
+  // which leaves exactly one form open. That one is closed by the `endform`
+  // following the end label of the static VFR.
+  //
+  for (Index = 0; Index < mCfrPendingFormCount; Index++) {
+    CfrProduceHiiFormStart (
+      StartOpCodeHandle,
+      mCfrPendingForms[Index].FormId,
+      mCfrPendingForms[Index].TitleStringId
+      );
+
+    CfrProcessFormBody (mCfrPendingForms[Index].CfrForm, StartOpCodeHandle);
   }
 
   //
@@ -1008,4 +1161,11 @@ CfrCreateRuntimeComponents (
 
   HiiFreeOpCodeHandle (StartOpCodeHandle);
   HiiFreeOpCodeHandle (EndOpCodeHandle);
+
+  if (mCfrPendingForms != NULL) {
+    FreePool (mCfrPendingForms);
+    mCfrPendingForms = NULL;
+    mCfrPendingFormCount = 0;
+    mCfrPendingFormMax = 0;
+  }
 }
