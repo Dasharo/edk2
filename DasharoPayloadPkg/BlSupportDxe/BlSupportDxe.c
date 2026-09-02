@@ -101,6 +101,85 @@ ReserveResourceInGcd (
   return Status;
 }
 
+/**
+  Modifies the attributes to Runtime type for PCIe MMCONF memory region.
+
+  @retval EFI_SUCCESS           The attributes were set for the memory region.
+  @retval EFI_INVALID_PARAMETER Length is zero.
+  @retval EFI_NOT_FOUND         Length is zero.
+  @retval EFI_UNSUPPORTED       The processor does not support one or more bytes of the memory
+                                resource range specified by BaseAddress and Length.
+  @retval EFI_UNSUPPORTED       The bit mask of attributes is not support for the memory resource
+                                range specified by BaseAddress and Length.
+  @retval EFI_ACCESS_DEFINED    The attributes for the memory resource range specified by
+                                BaseAddress and Length cannot be modified.
+  @retval EFI_OUT_OF_RESOURCES  There are not enough system resources to modify the attributes of
+                                the memory resource range.
+  @retval EFI_NOT_AVAILABLE_YET The attributes cannot be set because CPU architectural protocol is
+                                not available yet.
+**/
+STATIC
+EFI_STATUS
+SetPcieMmconfMemoryAttributesRunTime (
+  VOID
+  )
+{
+  EFI_STATUS                       Status;
+  EFI_GCD_MEMORY_SPACE_DESCRIPTOR  Descriptor;
+  EFI_HOB_GUID_TYPE                *GuidHob;
+  ACPI_BOARD_INFO                  *AcpiBoardInfo;
+
+  GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
+  if (GuidHob == NULL) {
+    return EFI_NOT_FOUND;
+  }
+  AcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
+
+  Status = gDS->GetMemorySpaceDescriptor (AcpiBoardInfo->PcieBaseAddress, &Descriptor);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_INFO, "%a: GetMemorySpaceDescriptor failed\n", __func__));
+    return Status;
+  }
+
+  if (Descriptor.GcdMemoryType == EfiGcdMemoryTypeNonExistent) {
+    Status = gDS->AddMemorySpace (
+                    EfiGcdMemoryTypeMemoryMappedIo,
+                    AcpiBoardInfo->PcieBaseAddress,
+                    AcpiBoardInfo->PcieBaseSize,
+                    EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+                    );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "%a: AddMemorySpace failed\n", __func__));
+      return Status;
+    }
+
+    Status = gDS->SetMemorySpaceAttributes (
+                    AcpiBoardInfo->PcieBaseAddress,
+                    AcpiBoardInfo->PcieBaseSize,
+                    EFI_MEMORY_RUNTIME
+                    );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "%a:%d SetMemorySpaceAttributes failed\n", __func__, __LINE__));
+      return Status;
+    }
+  } else if (!(Descriptor.Attributes & EFI_MEMORY_RUNTIME)) {
+    Status = gDS->SetMemorySpaceAttributes (
+                    AcpiBoardInfo->PcieBaseAddress,
+                    AcpiBoardInfo->PcieBaseSize,
+                    Descriptor.Attributes | EFI_MEMORY_RUNTIME
+                    );
+
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "%a:%d SetMemorySpaceAttributes failed\n", __func__, __LINE__));
+      return Status;
+    }
+  } else {
+    DEBUG ((DEBUG_INFO, "%a: PCIe MMCONF memory space with runtime attribute already exists\n", __func__));
+  }
+
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS
 EFIAPI
 BlDxeInstallSMBIOStables(
@@ -241,6 +320,9 @@ BlDxeEntryPoint (
   ASSERT_EFI_ERROR (Status);
 
   Status = ReserveResourceInGcd (TRUE, EfiGcdMemoryTypeMemoryMappedIo, 0xFED00000, SIZE_1KB, 0, ImageHandle); // HPET
+  ASSERT_EFI_ERROR (Status);
+
+  Status = SetPcieMmconfMemoryAttributesRunTime ();
   ASSERT_EFI_ERROR (Status);
 
   //
