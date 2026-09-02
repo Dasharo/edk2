@@ -872,22 +872,9 @@ BlPeiEntryPoint (
     ASSERT (NewAcpiBoardInfo != NULL);
     CopyMem (NewAcpiBoardInfo, &AcpiBoardInfo, sizeof (ACPI_BOARD_INFO));
     DEBUG ((DEBUG_INFO, "Create acpi board info guid hob\n"));
-  }
 
-  //
-  // Reserve MMCONF range
-  //
-  BuildResourceDescriptorHob (
-    EFI_RESOURCE_MEMORY_RESERVED,
-    (
-    EFI_RESOURCE_ATTRIBUTE_PRESENT |
-    EFI_RESOURCE_ATTRIBUTE_INITIALIZED |
-    EFI_RESOURCE_ATTRIBUTE_TESTED |
-    EFI_RESOURCE_ATTRIBUTE_UNCACHEABLE
-    ),
-    AcpiBoardInfo.PcieBaseAddress,
-    AcpiBoardInfo.PcieBaseSize
-    );
+    BuildMemoryMappedIoRangeHob (AcpiBoardInfo.PcieBaseAddress, AcpiBoardInfo.PcieBaseSize);
+  }
 
   // Build SEC Performance Data Hob
   Status =   ParseTimestampTable(&Performance);
@@ -895,6 +882,14 @@ BlPeiEntryPoint (
     BuildGuidDataHob (&gEfiFirmwarePerformanceGuid, &Performance, sizeof (Performance));
   } else {
     DEBUG ((DEBUG_ERROR, "Error when parsing timestamp info, Status = %r\n", Status));
+  }
+
+  //
+  // Parse the misc info provided by bootloader
+  //
+  Status = ParseMiscInfo ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Error when parsing misc info, Status = %r\n", Status));
   }
 
   //
@@ -925,6 +920,7 @@ BlPeiEntryPoint (
     Status = PeiServicesSetBootMode (BOOT_ON_FLASH_UPDATE);
     ASSERT_EFI_ERROR (Status);
   }
+
 
   //
   // Mask off all legacy 8259 interrupt sources

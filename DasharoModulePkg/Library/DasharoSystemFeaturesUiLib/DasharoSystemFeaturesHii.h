@@ -166,6 +166,7 @@ typedef struct {
   BOOLEAN  ShowMemorySpdProfile;
   BOOLEAN  ShowMemoryIbecc;
   BOOLEAN  HaveDiskCapsules;
+  BOOLEAN  SecurityMenuShowStm;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
@@ -203,6 +204,7 @@ typedef struct {
   UINT8                    UsbPortPower;
   UINT8                    DGPUState;
   BOOLEAN                  MemoryIbecc;
+  BOOLEAN                  StmEnable;
   // FIXME: Do not put anything after IBG_STATUS. There is something wrong
   // with alignments/accesses to this structure, which causes values
   // overwrites that are after IBG_STATUS in the DASHARO_FEATURES_DATA

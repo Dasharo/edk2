@@ -362,6 +362,7 @@
   CbfsLib|DasharoPayloadPkg/Library/CbfsLib/CbfsLib.inf
   EfiVarsLib|DasharoPayloadPkg/Library/EfiVarsLib/EfiVarsLib.inf
   CmosOptionsLib|DasharoPayloadPkg/Library/CmosOptionsLib/CmosOptionsLib.inf
+  CfrHelpersLib|UefiPayloadPkg/Library/CfrHelpersLib/CfrHelpersLib.inf
 
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   LockBoxLib|MdeModulePkg/Library/LockBoxNullLib/LockBoxNullLib.inf
@@ -855,6 +856,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
+  UefiPayloadPkg/CfrSetupMenuDxe/CfrSetupMenuDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
