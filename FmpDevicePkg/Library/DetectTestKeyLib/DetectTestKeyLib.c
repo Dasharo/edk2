@@ -62,7 +62,7 @@ DetectTestKey (
   //
   PublicKeyDataXdr    = PcdGetPtr (PcdFmpDevicePkcs7CertBufferXdr);
   PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
-  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdr == PublicKeyDataXdrEnd)) {
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
     return;
   }
 
