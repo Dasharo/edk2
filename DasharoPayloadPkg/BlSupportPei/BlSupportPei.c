@@ -37,6 +37,48 @@ EFI_PEI_GRAPHICS_DEVICE_INFO_HOB mDefaultGraphicsDeviceInfo = {
 };
 
 /**
+  This function is called after PEI core discover memory and finish migration.
+
+  @param[in] PeiServices    Pointer to PEI Services Table.
+  @param[in] NotifyDesc     Pointer to the descriptor for the Notification event that
+                            caused this function to execute.
+  @param[in] Ppi            Pointer to the PPI data associated with this function.
+
+  @retval EFI_STATUS        Always return EFI_SUCCESS
+**/
+EFI_STATUS
+EFIAPI
+BlMemoryDiscoveredNotify (
+  IN EFI_PEI_SERVICES           **PeiServices,
+  IN EFI_PEI_NOTIFY_DESCRIPTOR  *NotifyDesc,
+  IN VOID                       *Ppi
+  )
+
+{
+  EFI_STATUS Status;
+  //
+  // Parse the misc info provided by bootloader (currently CFR for coreboot)
+  // after PEI memory is installed, so that we don't run out of temporary
+  // memory due to lots of HOBs created by the ParseMiscInfo if a lot of CFR
+  // options are passed by coreboot. If we run out of memory for HOBs, they
+  // are being discarded, which may cause issues with booting in the worst case.
+  // Best case is that we lose some CFR options.
+  //
+  Status = ParseMiscInfo ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Error when parsing misc info, Status = %r\n", Status));
+  }
+
+  return Status;
+}
+
+EFI_PEI_NOTIFY_DESCRIPTOR  mBlMemoryDiscoveredNotifyDesc = {
+  (EFI_PEI_PPI_DESCRIPTOR_NOTIFY_CALLBACK | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST),
+  &gEfiPeiMemoryDiscoveredPpiGuid,
+  BlMemoryDiscoveredNotify
+};
+
+/**
   Create memory mapped io resource hob.
 
   @param  MmioBase    Base address of the memory mapped io range
@@ -885,14 +927,6 @@ BlPeiEntryPoint (
   }
 
   //
-  // Parse the misc info provided by bootloader
-  //
-  Status = ParseMiscInfo ();
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Error when parsing misc info, Status = %r\n", Status));
-  }
-
-  //
   // Parse platform specific information.
   //
   Status = ParsePlatformInfo ();
@@ -921,6 +955,11 @@ BlPeiEntryPoint (
     ASSERT_EFI_ERROR (Status);
   }
 
+  //
+  // Register MemoryDiscovered Notify to run ParseMiscInfo
+  //
+  Status = PeiServicesNotifyPpi (&mBlMemoryDiscoveredNotifyDesc);
+  ASSERT_EFI_ERROR (Status);
 
   //
   // Mask off all legacy 8259 interrupt sources
