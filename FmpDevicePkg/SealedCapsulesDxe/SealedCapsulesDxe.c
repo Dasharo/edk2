@@ -148,7 +148,7 @@ CheckFmpImageSignature (
   PublicKeyDataXdr    = PcdGetPtr (PcdFmpDevicePkcs7CertBufferXdr);
   PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
 
-  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdr == PublicKeyDataXdrEnd)) {
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
     DEBUG ((DEBUG_ERROR, "%a(): invalid PKCS7 XDR, aborting.\n", __func__));
     return EFI_ABORTED;
   }
