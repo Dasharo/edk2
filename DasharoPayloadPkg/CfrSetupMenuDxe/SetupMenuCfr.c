@@ -177,7 +177,7 @@ CfrProduceStorageForOption (
                VARIABLE_POLICY_TYPE_LOCK_NOW
                );
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_WARN, "CFR: Failed to lock variable \"%s\"!\n", VariableCfrName));
+      DEBUG ((DEBUG_WARN, "CFR: Failed to set policy for variable \"%s\"!\n", VariableCfrName));
     }
   }
 
