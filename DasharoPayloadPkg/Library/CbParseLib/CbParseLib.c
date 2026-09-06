@@ -1266,7 +1266,7 @@ ParseBootLogo (
   )
 {
   struct cb_cbmem_ref *CbLogo;
-  struct cb_bootlogo_header *CbLogoHeader;
+  struct cb_sized_data_header *CbLogoHeader;
 
   CbLogo = FindCbTag (CB_TAG_LOGO);
   if (CbLogo == NULL) {
@@ -1274,7 +1274,7 @@ ParseBootLogo (
     return RETURN_NOT_FOUND;
   }
 
-  CbLogoHeader = (struct cb_bootlogo_header*)(UINTN) CbLogo->cbmem_addr;
+  CbLogoHeader = (struct cb_sized_data_header*)(UINTN) CbLogo->cbmem_addr;
 
   *BmpAddress = CbLogo->cbmem_addr + sizeof(*CbLogoHeader);
   *BmpSize = CbLogoHeader->size;
@@ -1545,6 +1545,43 @@ ParseMiscInfo (
 
     ProcessedLength += CfrSetupMenuForm->size;
   }
+
+  return RETURN_SUCCESS;
+}
+
+/**
+  Parse firmware root key data.
+
+  @param  Data      Pointer to the data.
+  @param  DataSize  Data size in bytes.
+
+  @retval RETURN_SUCCESS  Successfully parsed the data.
+  @retval Others          The data wasn't found or something else went wrong.
+**/
+RETURN_STATUS
+EFIAPI
+ParseFwRootKey (
+  OUT CONST VOID  **Data,
+  OUT UINTN       *DataSize
+  )
+{
+  struct cb_cbmem_ref          *Ref;
+  struct cb_sized_data_header  *SizedData;
+
+  Ref = FindCbTag (CB_TAG_FW_ROOT_KEY);
+  if (Ref == NULL) {
+    DEBUG ((DEBUG_INFO, "Didn't find firmware root key tag.\n"));
+    return RETURN_NOT_FOUND;
+  }
+
+  SizedData = (struct cb_sized_data_header *)(UINTN) Ref->cbmem_addr;
+  if (SizedData == NULL) {
+    DEBUG ((DEBUG_ERROR, "Firmware root key tag is broken.\n"));
+    return RETURN_LOAD_ERROR;
+  }
+
+  *Data     = &SizedData[1];
+  *DataSize = SizedData->size;
 
   return RETURN_SUCCESS;
 }
