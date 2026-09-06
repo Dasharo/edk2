@@ -149,6 +149,11 @@ CheckFmpImageSignature (
   PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
 
   if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
+    PublicKeyDataXdr    = PcdGetPtr (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+    PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+  }
+
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
     DEBUG ((DEBUG_ERROR, "%a(): invalid PKCS7 XDR, aborting.\n", __func__));
     return EFI_ABORTED;
   }
@@ -162,7 +167,7 @@ CheckFmpImageSignature (
   }
 
   //
-  // Structure of PcdFmpDevicePkcs7CertBufferXdr:
+  // Structure of a PcdFmpDevice[System]Pkcs7CertBufferXdr:
   //  - an entry:
   //    + length of a public key as 32-bit big-endian
   //    + a public key

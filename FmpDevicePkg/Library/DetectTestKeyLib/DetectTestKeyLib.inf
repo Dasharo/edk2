@@ -35,4 +35,5 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdTestKeyUsed
   gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceImageIdName
   gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceSystemPkcs7CertBufferXdr
   gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceTestKeySha256Digest
