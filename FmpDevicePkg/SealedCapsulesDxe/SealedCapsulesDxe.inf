@@ -34,7 +34,8 @@
   UefiDriverEntryPoint
 
 [Pcd]
-  gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr  ## CONSUMES
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDevicePkcs7CertBufferXdr        ## CONSUMES
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceSystemPkcs7CertBufferXdr  ## CONSUMES
 
 [Guids]
   gEfiCertPkcs7Guid   ## CONSUMES

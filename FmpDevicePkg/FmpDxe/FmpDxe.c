@@ -875,12 +875,17 @@ CheckTheImageInternal (
   PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
 
   if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
+    PublicKeyDataXdr    = PcdGetPtr (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+    PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+  }
+
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
     DEBUG ((DEBUG_ERROR, "FmpDxe(%s): Invalid certificate, skipping it.\n", mImageIdName));
     Status                 = EFI_ABORTED;
     LocalLastAttemptStatus = LAST_ATTEMPT_STATUS_DRIVER_ERROR_INVALID_CERTIFICATE;
   } else {
     //
-    // Try each key from PcdFmpDevicePkcs7CertBufferXdr
+    // Try each key
     //
     for (Index = 1; PublicKeyDataXdr < PublicKeyDataXdrEnd; Index++) {
       Index++;

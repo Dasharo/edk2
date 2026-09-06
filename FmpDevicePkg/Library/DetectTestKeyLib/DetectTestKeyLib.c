@@ -57,11 +57,17 @@ DetectTestKey (
     return;
   }
 
-  //
-  // If PcdFmpDevicePkcs7CertBufferXdr is invalid, then skip test key detection
-  //
   PublicKeyDataXdr    = PcdGetPtr (PcdFmpDevicePkcs7CertBufferXdr);
   PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDevicePkcs7CertBufferXdr);
+  if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
+    PublicKeyDataXdr    = PcdGetPtr (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+    PublicKeyDataXdrEnd = PublicKeyDataXdr + PcdGetSize (PcdFmpDeviceSystemPkcs7CertBufferXdr);
+  }
+
+  //
+  // If PcdFmpDevicePkcs7CertBufferXdr and PcdFmpDeviceSystemPkcs7CertBufferXdr
+  // are invalid, then skip test key detection
+  //
   if ((PublicKeyDataXdr == NULL) || (PublicKeyDataXdrEnd - PublicKeyDataXdr < 4)) {
     return;
   }
@@ -75,7 +81,7 @@ DetectTestKey (
   }
 
   //
-  // Loop through all keys in PcdFmpDevicePkcs7CertBufferXdr
+  // Loop through all keys in the PCD
   //
   while (!TestKeyUsed && PublicKeyDataXdr < PublicKeyDataXdrEnd) {
     if (PublicKeyDataXdr + sizeof (UINT32) > PublicKeyDataXdrEnd) {
@@ -101,7 +107,7 @@ DetectTestKey (
     }
 
     //
-    // Hash public key from PcdFmpDevicePkcs7CertBufferXdr using SHA256.
+    // Hash public key from the PCD using SHA256.
     // If error occurs computing SHA256, then assume test key is in use.
     //
     ZeroMem (Digest, SHA256_DIGEST_SIZE);
