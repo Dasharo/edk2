@@ -148,5 +148,16 @@
   # @Prompt Firmware Device Lock Event GUID.
   gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceLockEventGuid|{0}|VOID*|0x4000000F
 
+  ## One or more PKCS7 certificates used to verify a system firmware device capsule
+  #  update image.  Encoded using the Variable-Length Opaque Data format of RFC
+  #  4506 External Data Representation Standard (XDR).  The default value is
+  #  empty with 0 certificates.
+  #
+  #  This PCD is used as a fallback when PcdFmpDevicePkcs7CertBufferXdr isn't
+  #  defined.  This enables configuring a system-wide key that can be
+  #  overwritten per module at built-time via PcdFmpDevicePkcs7CertBufferXdr.
+  # @Prompt One or more XDR encoded PKCS7 certificates used to verify system firmware device capsule update images.
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceSystemPkcs7CertBufferXdr|{0x0}|VOID*|0x40000012
+
 [UserExtensions.TianoCore."ExtraFiles"]
   FmpDevicePkgExtra.uni
