@@ -342,4 +342,20 @@ ParseMiscInfo (
   VOID
   );
 
+/**
+  Parse firmware root key data.
+
+  @param  Data      Pointer to the data.
+  @param  DataSize  Data size in bytes.
+
+  @retval RETURN_SUCCESS  Successfully parsed the data.
+  @retval Others          The data wasn't found or something else went wrong.
+**/
+RETURN_STATUS
+EFIAPI
+ParseFwRootKey (
+  OUT CONST VOID  **Data,
+  OUT UINTN       *DataSize
+  );
+
 #endif

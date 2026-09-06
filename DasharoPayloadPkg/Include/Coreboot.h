@@ -730,10 +730,11 @@ struct cb_vboot_workbuf_v2 {
   UINT32 kernel_key_size;
 } __attribute__((packed));
 
-#define CB_TAG_LOGO       0x00a0
+#define CB_TAG_LOGO         0x00a0
+#define CB_TAG_FW_ROOT_KEY  0x00a3
 
-struct cb_bootlogo_header {
-	UINT64 size;
+struct cb_sized_data_header {
+  UINT64 size;
 } __attribute__((packed));
 
 /* Helpful macros */
