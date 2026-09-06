@@ -32,6 +32,7 @@
   MdeModulePkg/MdeModulePkg.dec
   DasharoPayloadPkg/DasharoPayloadPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
+  FmpDevicePkg/FmpDevicePkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -43,6 +44,7 @@
   HobLib
   BlParseLib
   MemoryAllocationLib
+  PcdLib
 
 [Guids]
   gEfiAcpiTableGuid
@@ -57,6 +59,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoHorizontalResolution
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceSystemPkcs7CertBufferXdr
 
 [Protocols]
   gEfiSmbiosProtocolGuid

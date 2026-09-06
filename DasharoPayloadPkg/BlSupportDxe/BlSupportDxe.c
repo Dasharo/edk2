@@ -311,6 +311,8 @@ BlDxeEntryPoint (
   UINT32                                  FwSize;
   EFI_SYSTEM_RESOURCE_TABLE               *Esrt;
   EFI_SYSTEM_RESOURCE_ENTRY               *Esre;
+  CONST VOID                              *RootKey;
+  UINTN                                   RootKeySize;
 
   Status = EFI_SUCCESS;
   //
@@ -400,6 +402,15 @@ BlDxeEntryPoint (
 
     Status = gBS->InstallConfigurationTable (&gEfiSystemResourceTableGuid, Esrt);
     ASSERT_EFI_ERROR (Status);
+  }
+
+  Status = ParseFwRootKey (&RootKey, &RootKeySize);
+  if (!EFI_ERROR(Status)) {
+    Status = PcdSetPtrS (PcdFmpDeviceSystemPkcs7CertBufferXdr, &RootKeySize, RootKey);
+    if (EFI_ERROR(Status)) {
+      DEBUG ((DEBUG_INFO, "Failed to store bootloader's root keys to PCD: %r.\n", Status));
+      ASSERT_EFI_ERROR (Status);
+    }
   }
 
   return EFI_SUCCESS;

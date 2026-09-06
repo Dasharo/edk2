@@ -573,10 +573,6 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdSdMmcGenericTimeoutValue|$(SD_MMC_TIMEOUT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleFmpSupport|$(CAPSULE_SUPPORT)
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleEmbeddedDriverSupport|$(CAPSULE_SUPPORT)
-!if $(CAPSULES_V2)
-  # Root key for signing the outer capsule.
-  !include DasharoPayloadPkg/CapsuleRootKey.inc
-!endif
 
   gDasharoPayloadPkgTokenSpaceGuid.PcdSerialOnSuperIo|$(UART_ON_SUPERIO)
 
@@ -722,6 +718,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiSecurityPkgTokenSpaceGuid.PcdCRBIdleByPass|0xFF
   gEfiSecurityPkgTokenSpaceGuid.PcdTcg2NumberOfPCRBanks|0
   gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress|0xFED40000
+
+  # 4092 is the size allocated for the value of this PCD.
+  gFmpDevicePkgTokenSpaceGuid.PcdFmpDeviceSystemPkcs7CertBufferXdr|{0x0}|VOID*|4092
 
   # No need to initialize TPM again, coreboot already did that
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|0
