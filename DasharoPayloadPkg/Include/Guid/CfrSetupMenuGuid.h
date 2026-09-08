@@ -45,6 +45,7 @@ enum cfr_option_flags {
 #define CB_TAG_CFR_VARCHAR_UI_NAME      0x0008
 #define CB_TAG_CFR_VARCHAR_UI_HELPTEXT  0x0009
 #define CB_TAG_CFR_VARCHAR_DEF_VALUE    0x000a
+#define CB_TAG_CFR_DEP_VALUES           0x000c
 #pragma pack (1)
 typedef struct {
   UINT32  tag;          /*
