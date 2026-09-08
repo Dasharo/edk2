@@ -46,7 +46,6 @@
 [Guids]
   gEfiCfrSetupMenuFormGuid
   gEficorebootNvDataGuid
-  gEfiHiiPlatformSetupFormsetGuid               ## CONSUMES ## GUID (Indicate the formset class guid to be displayed)
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid
 
