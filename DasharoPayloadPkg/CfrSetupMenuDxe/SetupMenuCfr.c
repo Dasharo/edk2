@@ -304,6 +304,7 @@ CfrProcessNumericOption (
   CFR_VARBINARY   *CfrOptionName;
   CFR_VARBINARY   *CfrDisplayName;
   CFR_VARBINARY   *CfrHelpText;
+  CFR_VARBINARY   *CfrDepValues;
   UINTN           QuestionIdVarStoreId;
   UINT8           QuestionFlags;
   VOID            *DefaultOpCodeHandle;
@@ -332,6 +333,13 @@ CfrProcessNumericOption (
   CfrHelpText = CfrExtractVarBinary ((UINT8 *)Option, &OptionProcessedLength, CB_TAG_CFR_VARCHAR_UI_HELPTEXT);
   if (CfrHelpText != NULL) {
     ASSERT (CfrHelpText->tag == CB_TAG_CFR_VARCHAR_UI_HELPTEXT);
+  }
+
+  // Dependency values are optional
+  CfrDepValues = CfrExtractVarBinary ((UINT8 *)Option, &OptionProcessedLength, CB_TAG_CFR_DEP_VALUES);
+  if (CfrDepValues != NULL) {
+    ASSERT (CfrDepValues->tag == CB_TAG_CFR_DEP_VALUES);
+    // Not implemented, parsing to not fail due to dependencies being there.
   }
 
   DEBUG ((
