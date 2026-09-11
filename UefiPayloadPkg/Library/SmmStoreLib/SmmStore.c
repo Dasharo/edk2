@@ -75,6 +75,41 @@ CallSmm (
 }
 
 /**
+  Calls into SMM passing the contents of mArgComBuf as the argument.
+
+  The argument buffer is placed right after the data region of the ComBuffer
+  whenever the bootloader provided enough space for it, so that the SMM handler
+  has to deal with a single communication buffer only. Otherwise a pointer to
+  the separately allocated argument buffer is passed.
+
+  @param SubCmd  The subcommand to execute in the Smi handler.
+
+  @retval EFI_NO_RESPONSE       The SmmStore is not present or didn't response.
+  @retval EFI_UNSUPPORTED       The request isn't supported.
+  @retval EFI_DEVICE_ERROR      An error occurred while executing the request.
+  @retval EFI_SUCCESS           The operation was executed successfully.
+
+  @note Validation of mSmmStoreInfo must be done by the calling code.
+
+**/
+STATIC
+EFI_STATUS
+CallSmmWithArgs (
+  IN  UINT8  SubCmd
+  )
+{
+  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
+      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
+    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
+             mArgComBuf, sizeof(*mArgComBuf));
+    return CallSmm (mSmmStoreInfo->ApmCmd, SubCmd,
+                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
+  }
+
+  return CallSmm (mSmmStoreInfo->ApmCmd, SubCmd, mArgComBufPhys);
+}
+
+/**
   Get the SmmStore block size
 
   @param BlockSize    The pointer to store the block size in.
@@ -182,15 +217,7 @@ ReadBlock (
   mArgComBuf->Read.BufOffset = Offset;
   mArgComBuf->Read.BlockId   = Lba;
 
-  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
-      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
-    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
-             mArgComBuf, sizeof(*mArgComBuf));
-    Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd,
-                      (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
-  } else {
-    Status = CallSmm (mSmmStoreInfo->ApmCmd, ReadCmd, mArgComBufPhys);
-  }
+  Status = CallSmmWithArgs (ReadCmd);
 
   if (EFI_ERROR (Status)) {
     return Status;
@@ -292,15 +319,7 @@ WriteBlock (
 
   CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + Offset), Buffer, *NumBytes);
 
-  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
-      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
-    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
-             mArgComBuf, sizeof(*mArgComBuf));
-    return CallSmm (mSmmStoreInfo->ApmCmd, WriteCmd,
-                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
-  }
-
-  return CallSmm (mSmmStoreInfo->ApmCmd, WriteCmd, mArgComBufPhys);
+  return CallSmmWithArgs (WriteCmd);
 }
 
 /**
@@ -379,15 +398,7 @@ SmmStoreLibEraseBlock (
 
   mArgComBuf->Clear.BlockId = Lba;
 
-  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
-      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
-    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
-             mArgComBuf, sizeof(*mArgComBuf));
-    return CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_CLEAR,
-                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
-  }
-
-  return CallSmm (mSmmStoreInfo->ApmCmd, SMMSTORE_CMD_RAW_CLEAR, mArgComBufPhys);
+  return CallSmmWithArgs (SMMSTORE_CMD_RAW_CLEAR);
 }
 
 /**
@@ -408,20 +419,7 @@ SmmStoreLibEraseAnyBlock (
 
   mArgComBuf->Clear.BlockId = Lba;
 
-  if ((mSmmStoreInfo->ComBufferSize > mSmmStoreInfo->BlockSize) &&
-      ((mSmmStoreInfo->ComBufferSize - mSmmStoreInfo->BlockSize) >= sizeof(*mArgComBuf))) {
-    CopyMem ((VOID *)(UINTN)(mSmmStoreInfo->ComBuffer + mSmmStoreInfo->BlockSize),
-             mArgComBuf, sizeof(*mArgComBuf));
-    return CallSmm (mSmmStoreInfo->ApmCmd,
-                    SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR,
-                    (UINTN)(mSmmComBufPhys + mSmmStoreInfo->BlockSize));
-  }
-
-  return CallSmm (
-           mSmmStoreInfo->ApmCmd,
-           SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR,
-           mArgComBufPhys
-           );
+  return CallSmmWithArgs (SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR);
 }
 
 /**
