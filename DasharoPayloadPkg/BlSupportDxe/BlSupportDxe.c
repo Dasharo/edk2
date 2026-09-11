@@ -106,7 +106,7 @@ ReserveResourceInGcd (
 
   @retval EFI_SUCCESS           The attributes were set for the memory region.
   @retval EFI_INVALID_PARAMETER Length is zero.
-  @retval EFI_NOT_FOUND         Length is zero.
+  @retval EFI_NOT_FOUND         gUefiAcpiBoardInfoGuid HOB wasn't found.
   @retval EFI_UNSUPPORTED       The processor does not support one or more bytes of the memory
                                 resource range specified by BaseAddress and Length.
   @retval EFI_UNSUPPORTED       The bit mask of attributes is not support for the memory resource
