@@ -19,4 +19,10 @@
 #define CFR_COMPONENT_START  0x1000
 #define LABEL_RT_COMP_END    0xefff
 
+//
+// Form IDs of the forms generated at runtime from CFR. Form IDs live in a
+// namespace of their own, so this may overlap with the question IDs above.
+//
+#define CFR_FORM_ID_START    0x1000
+
 #endif
