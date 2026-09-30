@@ -656,6 +656,7 @@ BlPeiEntryPoint (
   ACPI_BOARD_INFO                  *NewAcpiBoardInfo;
   SMMSTORE_INFO                    SMMSTOREInfo;
   SMMSTORE_INFO                    *NewSMMSTOREInfo;
+  BOOLEAN                          CmosCleared;
   TCG_PHYSICAL_PRESENCE_INFO       PhysicalPresenceInfo;
   TCG_PHYSICAL_PRESENCE_INFO       *NewPhysicalPresenceInfo;
   EFI_PEI_GRAPHICS_INFO_HOB        GfxInfo;
@@ -827,7 +828,16 @@ BlPeiEntryPoint (
     // parts of the variable store are invalid, this is when we need to
     // initialize it with defaults.
     //
-    if (EFI_ERROR (Status) && GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid) == NULL) {
+    // The bootloader also asks for the defaults when the CMOS contents were
+    // lost. SmmStoreFvb then wipes and reformats the store.
+    //
+    CmosCleared = ParseWasCmosCleared ();
+    if (CmosCleared) {
+      DEBUG ((DEBUG_INFO, "CMOS was cleared, resetting the firmware settings\n"));
+    }
+
+    if (CmosCleared ||
+        (EFI_ERROR (Status) && GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid) == NULL)) {
       Status = PeiServicesSetBootMode (BOOT_WITH_DEFAULT_SETTINGS);
       DEBUG ((DEBUG_INFO, "BootMode: Boot with default settings\n"));
       ASSERT_EFI_ERROR (Status);
