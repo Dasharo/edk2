@@ -812,6 +812,12 @@ struct lb_boot_info {
   UINT32 size;
   UINT8 is_disk_capsules_boot;  /* Boolean. */
   UINT8 pad[3];
+  /*
+   * Appended rather than taken from pad[], which older coreboot versions leave
+   * uninitialised: check that size covers a field before reading it.
+   */
+  UINT8 cmos_was_cleared;       /* Boolean. */
+  UINT8 pad2[3];
 } __attribute__ ((packed));
 
 #define CBMEM_ID_TCPA_TCG_LOG 0x54445041 /* TPM log per TPM 1.2 specification */

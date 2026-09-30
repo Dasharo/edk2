@@ -303,6 +303,19 @@ ParseIsDiskCapsulesBoot (
   );
 
 /**
+  Parse bootloader's information to check whether the CMOS contents were lost
+  and the firmware settings must be reset to their defaults.
+
+  @retval TRUE   The CMOS was cleared, reset the settings on this boot.
+  @retval FALSE  The settings must be kept.
+**/
+BOOLEAN
+EFIAPI
+ParseWasCmosCleared (
+  VOID
+  );
+
+/**
   Find coreboot record with given Tag.
 
   @param  Tag                The tag id to be found

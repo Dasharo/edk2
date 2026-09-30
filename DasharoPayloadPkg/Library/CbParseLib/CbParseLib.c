@@ -1421,6 +1421,33 @@ ParseIsDiskCapsulesBoot (
 }
 
 /**
+  Parse bootloader's information to check whether the CMOS contents were lost
+  and the firmware settings must be reset to their defaults.
+
+  @retval TRUE   The CMOS was cleared, reset the settings on this boot.
+  @retval FALSE  The settings must be kept.
+**/
+BOOLEAN
+EFIAPI
+ParseWasCmosCleared (
+  VOID
+  )
+{
+  struct lb_boot_info  *BootInfo;
+
+  BootInfo = FindCbTag (CB_TAG_BOOT_INFO);
+  if (BootInfo == NULL) {
+    return FALSE;
+  }
+
+  if (BootInfo->size < OFFSET_OF (struct lb_boot_info, cmos_was_cleared) + sizeof (BootInfo->cmos_was_cleared)) {
+    return FALSE;
+  }
+
+  return BootInfo->cmos_was_cleared != 0;
+}
+
+/**
   Find the bootloaders RootBridge info and create Payload Root Bridges HOB.
 
   @retval RETURN_SUCCESS           Successfully created the Payload Root Bridges HOB.
