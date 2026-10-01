@@ -1597,6 +1597,102 @@ WarnIfBatteryLow (
   BootLogoEnableLogo ();
 }
 
+/**
+  Tell the user that the firmware settings were reset because the CMOS
+  contents were lost. The setup password and the Secure Boot configuration
+  are kept across that reset by SmmStoreFvb.
+**/
+STATIC
+VOID
+WarnIfCmosCleared (
+  VOID
+  )
+{
+  EFI_STATUS     Status;
+  EFI_EVENT      TimerEvent;
+  EFI_EVENT      Events[2];
+  UINTN          Index;
+  EFI_INPUT_KEY  Key;
+  CHAR16         DelayLine[81];
+  BOOLEAN        CursorVisible;
+  UINTN          CurrentAttribute;
+  UINTN          SecondsLeft;
+
+  if (!ParseWasCmosCleared ()) {
+    return;
+  }
+
+  Status = gBS->CreateEvent (
+      EVT_TIMER,
+      TPL_CALLBACK,
+      NULL,
+      NULL,
+      &TimerEvent
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  CurrentAttribute = gST->ConOut->Mode->Attribute;
+  CursorVisible    = gST->ConOut->Mode->CursorVisible;
+
+  gST->ConOut->EnableCursor (gST->ConOut, FALSE);
+
+  DrainInput ();
+  gBS->SetTimer (TimerEvent, TimerPeriodic, 1 * 1000 * 1000 * 10);
+
+  Events[0] = gST->ConIn->WaitForKey;
+  Events[1] = TimerEvent;
+
+  SecondsLeft = 10;
+  while (SecondsLeft > 0) {
+    UnicodeSPrint (
+        DelayLine,
+        sizeof (DelayLine),
+        L"(The boot process will continue automatically in %d second%a.)",
+        SecondsLeft,
+        SecondsLeft == 1 ? "" : "s"
+        );
+
+    CreateMultiStringPopUp (
+        78,
+        10,
+        L"!!! NOTICE !!!",
+        L"",
+        L"The CMOS contents were lost, so the firmware settings have been",
+        L"restored to their defaults.",
+        L"",
+        L"Your setup password and UEFI Secure Boot configuration have been",
+        L"preserved.",
+        L"",
+        L"Press ENTER key to continue.",
+        DelayLine
+        );
+
+    Status = gBS->WaitForEvent (2, Events, &Index);
+    ASSERT_EFI_ERROR (Status);
+
+    if (Index == 0) {
+      Status = gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      ASSERT_EFI_ERROR (Status);
+
+      if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+        break;
+      }
+    } else {
+      SecondsLeft--;
+    }
+  }
+
+  Status = gBS->CloseEvent (TimerEvent);
+  ASSERT_EFI_ERROR (Status);
+
+  gST->ConOut->EnableCursor (gST->ConOut, CursorVisible);
+  gST->ConOut->SetAttribute (gST->ConOut, CurrentAttribute);
+
+  gST->ConOut->ClearScreen (gST->ConOut);
+  DrainInput ();
+  BootLogoEnableLogo ();
+}
+
 STATIC
 VOID
 WarnIfFirmwareUpdateMode (
@@ -2067,6 +2163,7 @@ PlatformBootManagerAfterConsole (
 #endif
   WarnIfBatteryLow ();
   WarnIfRecoveryBoot ();
+  WarnIfCmosCleared ();
   WarnIfFirmwareUpdateMode ();
 
   EfiBootManagerRefreshAllBootOption ();
