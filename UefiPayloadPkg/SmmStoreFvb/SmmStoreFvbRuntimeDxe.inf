@@ -19,12 +19,15 @@
   SmmStoreFvbRuntimeDxe.c
   SmmStoreFvbRuntime.h
   SmmStoreFvbRuntime.c
+  SmmStoreVarPreserve.c
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
+  SecurityPkg/SecurityPkg.dec
+  DasharoModulePkg/DasharoModulePkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -44,6 +47,13 @@
   gEfiEventVirtualAddressChangeGuid
   gEdkiiNvVarStoreFormattedGuid     ## PRODUCES ## PROTOCOL
   gEdkiiFaultTolerantWriteGuid      ## CONSUMES
+  gEfiGlobalVariableGuid            ## SOMETIMES_CONSUMES ## Variable:L"PK"
+  gEfiImageSecurityDatabaseGuid     ## SOMETIMES_CONSUMES ## Variable:L"db"
+  gEfiCertDbGuid                    ## SOMETIMES_CONSUMES ## Variable:L"certdb"
+  gEfiVendorKeysNvGuid              ## SOMETIMES_CONSUMES ## Variable:L"VendorKeysNv"
+  gEfiSecureBootEnableDisableGuid   ## SOMETIMES_CONSUMES ## Variable:L"SecureBootEnable"
+  gEfiCustomModeEnableGuid          ## SOMETIMES_CONSUMES ## Variable:L"CustomMode"
+  gUserAuthenticationGuid           ## SOMETIMES_CONSUMES ## Variable:L"Password"
 
 [Protocols]
   gEfiDevicePathProtocolGuid          ## BY_START
