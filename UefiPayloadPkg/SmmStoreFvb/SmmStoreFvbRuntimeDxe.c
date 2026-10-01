@@ -773,8 +773,40 @@ EXIT:
 }
 
 /**
+  Erase the whole variable storage (variables, FTW working block and FTW
+  spare) and write fresh FV and variable store headers.
+
+  @param Instance                    Pointer to SmmStore instance
+
+ **/
+STATIC
+EFI_STATUS
+FormatVariableStorage (
+  IN SMMSTORE_INSTANCE  *Instance
+  )
+{
+  EFI_STATUS  Status;
+  UINT32      FvbNumLba;
+
+  FvbNumLba = (PcdGet32 (PcdFlashNvStorageVariableSize) +
+               PcdGet32 (PcdFlashNvStorageFtwWorkingSize) +
+               PcdGet32 (PcdFlashNvStorageFtwSpareSize)) / Instance->BlockSize;
+
+  Status = FvbEraseBlocks (&Instance->FvbProtocol, (EFI_LBA)0, FvbNumLba, EFI_LBA_LIST_TERMINATOR);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  // Install all appropriate headers
+  return InitializeFvAndVariableStoreHeaders (Instance);
+}
+
+/**
   Initialized the Firmware Volume if necessary and installs the
   gEdkiiNvVarStoreFormattedGuid protocol.
+
+  In BOOT_WITH_DEFAULT_SETTINGS boot mode the store is reformatted even if
+  it is valid, keeping only the variables listed in SmmStoreVarPreserve.c.
 
   @param Instance                    Pointer to SmmStore instance
 
@@ -786,13 +818,19 @@ FvbInitialize (
   )
 {
   EFI_STATUS     Status;
-  UINT32         FvbNumLba;
   EFI_BOOT_MODE  BootMode;
+  UINT8          *Preserved;
+  UINTN          PreservedSize;
 
   ASSERT ((Instance != NULL));
 
+  Preserved     = NULL;
+  PreservedSize = 0;
+
   BootMode = GetBootModeHob ();
   if (BootMode == BOOT_WITH_DEFAULT_SETTINGS) {
+    // Failure to save only means that nothing is kept
+    SavePreservedVariables (Instance, &Preserved, &PreservedSize);
     Status = EFI_INVALID_PARAMETER;
   } else {
     // Determine if there is a valid header at the beginning of the NorFlash
@@ -809,20 +847,21 @@ FvbInitialize (
       __func__
       ));
 
-    // Erase all the NorFlash that is reserved for variable storage
-    FvbNumLba = (PcdGet32 (PcdFlashNvStorageVariableSize) +
-                 PcdGet32 (PcdFlashNvStorageFtwWorkingSize) +
-                 PcdGet32 (PcdFlashNvStorageFtwSpareSize)) / Instance->BlockSize;
-
-    Status = FvbEraseBlocks (&Instance->FvbProtocol, (EFI_LBA)0, FvbNumLba, EFI_LBA_LIST_TERMINATOR);
+    Status = FormatVariableStorage (Instance);
     if (EFI_ERROR (Status)) {
-      return Status;
+      goto Exit;
     }
 
-    // Install all appropriate headers
-    Status = InitializeFvAndVariableStoreHeaders (Instance);
-    if (EFI_ERROR (Status)) {
-      return Status;
+    if (PreservedSize != 0) {
+      Status = RestorePreservedVariables (Instance, Preserved, PreservedSize);
+      if (EFI_ERROR (Status)) {
+        // Don't leave a partially written variable behind
+        DEBUG ((DEBUG_ERROR, "%a: Failed to restore preserved variables: %r\n", __func__, Status));
+        Status = FormatVariableStorage (Instance);
+        if (EFI_ERROR (Status)) {
+          goto Exit;
+        }
+      }
     }
   } else {
     DEBUG ((DEBUG_INFO, "%a: FVB header is valid\n", __func__));
@@ -839,6 +878,11 @@ FvbInitialize (
                   NULL
                   );
   ASSERT_EFI_ERROR (Status);
+
+Exit:
+  if (Preserved != NULL) {
+    FreePool (Preserved);
+  }
 
   return Status;
 }
