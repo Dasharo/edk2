@@ -46,6 +46,11 @@ struct _SMMSTORE_INSTANCE {
 //
 
 EFI_STATUS
+ValidateFvHeader (
+  VOID
+  );
+
+EFI_STATUS
 EFIAPI
 FvbInitialize (
   IN SMMSTORE_INSTANCE  *Instance
@@ -106,6 +111,24 @@ EFIAPI
 FvbEraseBlocks (
   IN CONST  EFI_FIRMWARE_VOLUME_BLOCK2_PROTOCOL  *This,
   ...
+  );
+
+//
+// SmmStoreVarPreserve.c
+//
+
+EFI_STATUS
+SavePreservedVariables (
+  IN  SMMSTORE_INSTANCE  *Instance,
+  OUT UINT8              **Entries,
+  OUT UINTN              *Size
+  );
+
+EFI_STATUS
+RestorePreservedVariables (
+  IN  SMMSTORE_INSTANCE  *Instance,
+  IN  UINT8              *Entries,
+  IN  UINTN              Size
   );
 
 #endif // SMM_STORE_DXE_H_
