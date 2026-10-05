@@ -179,6 +179,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowSerialPortMenu) = FixedPcdGetBool (PcdShowSerialPortMenu);
   PRIVATE_DATA(ShowCpuMenu) = FixedPcdGetBool (PcdShowCpuMenu);
   // Set feature visibility
+  PRIVATE_DATA(UsbMenuShowUsbStack) = FixedPcdGetBool (PcdUsbMenuShowUsbStackOption);
   PRIVATE_DATA(PowerMenuShowFanCurve) = FixedPcdGetBool (PcdPowerMenuShowFanCurve);
   PRIVATE_DATA(PowerMenuShowSleepType) = FixedPcdGetBool (PcdPowerMenuShowSleepType);
   PRIVATE_DATA(PowerMenuShowBatteryThresholds) = FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds);
@@ -318,6 +319,9 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_SMM_BWP, SmmBwp);
   LOAD_VAR (DASHARO_VAR_USB_MASS_STORAGE, UsbMassStorage);
   LOAD_VAR (DASHARO_VAR_USB_STACK, UsbStack);
+  // With the option hidden the stack is always on, see DasharoBootPolicies
+  if (!FixedPcdGetBool (PcdUsbMenuShowUsbStackOption))
+    PRIVATE_DATA(UsbStack) = TRUE;
   LOAD_VAR (DASHARO_VAR_WATCHDOG, WatchdogConfig);
   LOAD_VAR (DASHARO_VAR_SMALL_CORE_ACTIVE_COUNT, SmallCoreActiveCount);
   LOAD_VAR (DASHARO_VAR_CORE_ACTIVE_COUNT, BigCoreActiveCount);
