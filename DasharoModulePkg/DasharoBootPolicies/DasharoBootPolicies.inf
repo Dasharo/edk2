@@ -53,6 +53,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirectionDefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSerialRedirection2DefaultState
   gDasharoSystemFeaturesTokenSpaceGuid.PcdHave2ndUart
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdUsbMenuShowUsbStackOption
   gEfiMdeModulePkgTokenSpaceGuid.PcdConInConnectOnDemand
   gEfiMdeModulePkgTokenSpaceGuid.PcdFastPS2Detection
   gEfiMdePkgTokenSpaceGuid.PcdFastBootFeatureEnabled

@@ -191,12 +191,14 @@ formset
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
 
     disableif ideqval FeaturesData.ShowUsbMenu == 0;
-      checkbox name   = UsbStack,
-              varid  = FeaturesData.UsbStack,
-              prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
-              help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
-              flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
-      endcheckbox;
+      suppressif ideqval FeaturesData.UsbMenuShowUsbStack == 0;
+        checkbox name   = UsbStack,
+                varid  = FeaturesData.UsbStack,
+                prompt = STRING_TOKEN(STR_USB_STACK_ENABLE_PROMPT),
+                help   = STRING_TOKEN(STR_USB_STACK_ENABLE_HELP),
+                flags  = CHECKBOX_DEFAULT | RESET_REQUIRED,
+        endcheckbox;
+      endif;
 
       suppressif  questionref(UsbStack) == FALSE;
         checkbox varid  = FeaturesData.UsbMassStorage,

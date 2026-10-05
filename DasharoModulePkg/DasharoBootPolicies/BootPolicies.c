@@ -95,6 +95,10 @@ InitializeBootPolicies (
   else
     mUsbStackPolicy.UsbStackEnabled = TRUE; // enable USB by default
 
+  // A hidden option can't be turned back on, so ignore a stale variable
+  if (!FixedPcdGetBool(PcdUsbMenuShowUsbStackOption))
+    mUsbStackPolicy.UsbStackEnabled = TRUE;
+
   if (mUsbStackPolicy.UsbStackEnabled) {
     gBS->InstallMultipleProtocolInterfaces (
       &ImageHandle,

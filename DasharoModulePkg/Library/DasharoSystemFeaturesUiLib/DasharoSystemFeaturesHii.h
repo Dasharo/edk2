@@ -132,6 +132,7 @@ typedef struct {
   BOOLEAN  ShowSecurityMenu;
   BOOLEAN  ShowIntelMeMenu;
   BOOLEAN  ShowUsbMenu;
+  BOOLEAN  UsbMenuShowUsbStack;
   BOOLEAN  ShowNetworkMenu;
   BOOLEAN  ShowChipsetMenu;
   BOOLEAN  ShowPowerMenu;
