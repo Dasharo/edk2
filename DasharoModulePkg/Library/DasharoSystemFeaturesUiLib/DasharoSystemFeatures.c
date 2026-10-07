@@ -209,8 +209,9 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowMemorySpdProfile) = FixedPcdGetBool(PcdShowMemorySpdProfileOption);
   PRIVATE_DATA(ShowMemoryIbecc) = FixedPcdGetBool(PcdShowMemoryIbeccOption);
   PRIVATE_DATA(HaveDiskCapsules) = FixedPcdGetBool(PcdCapsuleOnDiskSupport);
+  PRIVATE_DATA(PciMenuShowBifurcation) = FixedPcdGetBool (PcdPciMenuShowBifurcation);
 
-  // HAP is only available if descriptor is not locked
+  // HAP and bifurcation are only available if descriptor is not locked
   VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
       DASHARO_VAR_DESCRIPTOR_WRITEABLE,
@@ -220,8 +221,10 @@ DasharoSystemFeaturesUiLibConstructor (
       &DescriptorWriteable
       );
 
-  if (!EFI_ERROR(Status))
+  if (!EFI_ERROR(Status)) {
       PRIVATE_DATA(MeHapAvailable) &= DescriptorWriteable;
+      PRIVATE_DATA(PciMenuShowBifurcation) &= DescriptorWriteable;
+  }
 
   // Disable dGPU option if a dgpu is not detected on the device
   VarSize = sizeof (DgpuPresent);
@@ -310,6 +313,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_ME_MODE, MeMode);
   LOAD_VAR (DASHARO_VAR_NETWORK_BOOT, NetworkBoot);
   LOAD_VAR (DASHARO_VAR_OPTION_ROM_POLICY, OptionRomExecution);
+  LOAD_VAR (DASHARO_VAR_PCIE_BIFURCATION, PcieBifurcation);
   LOAD_VAR (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState);
   LOAD_VAR (DASHARO_VAR_PS2_CONTROLLER, Ps2Controller);
   LOAD_VAR (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled);
@@ -615,6 +619,8 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_RESIZEABLE_BARS_ENABLED, ResizeableBarsEnabled, FixedPcdGetBool (PcdPciMenuShowResizeableBars));
   }
 
+  STORE_VAR_IF (DASHARO_VAR_PCIE_BIFURCATION, PcieBifurcation, PrivateData->PciMenuShowBifurcation);
+
   if (FixedPcdGetBool (PcdShowSerialPortMenu)) {
     STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION, SerialPortRedirection, TRUE);
     STORE_VAR_IF (DASHARO_VAR_SERIAL_REDIRECTION2, SerialPort2Redirection, FixedPcdGetBool (PcdHave2ndUart));
@@ -754,6 +760,9 @@ DasharoSystemFeaturesCallback (
         break;
       case SLEEP_TYPE_QUESTION_ID:
         Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_SLEEP_TYPE).Uint8;
+        break;
+      case PCIE_BIFURCATION_QUESTION_ID:
+        Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_PCIE_BIFURCATION).Uint8;
         break;
       case HYPER_THREADING_QUESTION_ID:
         Value->b = DasharoGetVariableDefault (DASHARO_VAR_HYPER_THREADING).Boolean;

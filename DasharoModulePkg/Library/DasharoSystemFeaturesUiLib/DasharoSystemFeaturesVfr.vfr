@@ -58,7 +58,7 @@ formset
         help   = STRING_TOKEN(STR_DASHARO_POWER_CONFIGURATION_HELP);
     endif;
 
-    suppressif ideqval FeaturesData.ShowPciMenu == 0;
+    suppressif ideqval FeaturesData.ShowPciMenu == 0 AND ideqval FeaturesData.PciMenuShowBifurcation == 0;
       goto DASHARO_PCI_CONFIGURATION_FORM_ID,
         prompt = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE),
         help   = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_HELP);
@@ -956,6 +956,19 @@ formset
        title  = STRING_TOKEN(STR_DASHARO_PCI_CONFIGURATION_TITLE);
 
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
+
+    // Not under ShowPciMenu, so that it can be shown without the other options
+    disableif ideqval FeaturesData.PciMenuShowBifurcation == 0;
+      oneof varid  = FeaturesData.PcieBifurcation,
+            questionid = PCIE_BIFURCATION_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_PCIE_BIFURCATION_PROMPT),
+            help   = STRING_TOKEN(STR_PCIE_BIFURCATION_HELP),
+            flags  = INTERACTIVE | RESET_REQUIRED,
+
+            option text = STRING_TOKEN(STR_PCIE_BIFURCATION_1X4), value = PCIE_BIFURCATION_1X4, flags = 0;
+            option text = STRING_TOKEN(STR_PCIE_BIFURCATION_2X2), value = PCIE_BIFURCATION_2X2, flags = 0;
+      endoneof;
+    endif;
 
     disableif ideqval FeaturesData.ShowPciMenu == 0;
       disableif ideqval FeaturesData.PciMenuShowResizeableBars == 0;

@@ -167,6 +167,7 @@ typedef struct {
   BOOLEAN  ShowMemorySpdProfile;
   BOOLEAN  ShowMemoryIbecc;
   BOOLEAN  HaveDiskCapsules;
+  BOOLEAN  PciMenuShowBifurcation;
   // Feature data
   BOOLEAN                  LockBios;
   BOOLEAN                  SmmBwp;
@@ -204,6 +205,7 @@ typedef struct {
   UINT8                    UsbPortPower;
   UINT8                    DGPUState;
   BOOLEAN                  MemoryIbecc;
+  UINT8                    PcieBifurcation;
   // FIXME: Do not put anything after IBG_STATUS. There is something wrong
   // with alignments/accesses to this structure, which causes values
   // overwrites that are after IBG_STATUS in the DASHARO_FEATURES_DATA
@@ -230,6 +232,9 @@ typedef struct {
 #define OPTION_ROM_POLICY_DISABLE_ALL  DASHARO_OPTION_ROM_POLICY_DISABLE_ALL
 #define OPTION_ROM_POLICY_ENABLE_ALL   DASHARO_OPTION_ROM_POLICY_ENABLE_ALL
 #define OPTION_ROM_POLICY_VGA_ONLY     DASHARO_OPTION_ROM_POLICY_VGA_ONLY
+
+#define PCIE_BIFURCATION_1X4           DASHARO_PCIE_BIFURCATION_1X4
+#define PCIE_BIFURCATION_2X2           DASHARO_PCIE_BIFURCATION_2X2
 
 #define SLEEP_TYPE_S0IX                DASHARO_SLEEP_TYPE_S0IX
 #define SLEEP_TYPE_S3                  DASHARO_SLEEP_TYPE_S3
@@ -280,5 +285,6 @@ typedef struct {
 #define IBG_BOOT_STATUS_QUESTION_ID          0x8012
 #define IBG_ACM_STATUS_QUESTION_ID           0x8013
 #define IBG_ACM_POLICY_STATUS_QUESTION_ID    0x8014
+#define PCIE_BIFURCATION_QUESTION_ID         0x8015
 
 #endif
