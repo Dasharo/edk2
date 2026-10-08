@@ -77,6 +77,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define DASHARO_PCIE_BIFURCATION_1X4           0
 #define DASHARO_PCIE_BIFURCATION_2X2           1
+#define DASHARO_PCIE_BIFURCATION_4X1           2
 
 #define DASHARO_SLEEP_TYPE_S0IX                0
 #define DASHARO_SLEEP_TYPE_S3                  1

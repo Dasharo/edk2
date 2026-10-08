@@ -149,6 +149,7 @@
                                                     "Do not remove power during that reset."
 #string STR_PCIE_BIFURCATION_1X4     #language en-US "1x4"
 #string STR_PCIE_BIFURCATION_2X2     #language en-US "2x2"
+#string STR_PCIE_BIFURCATION_4X1     #language en-US "4x1"
 
 #string STR_OPTION_ROM_PROMPT   #language en-US  "OptionROM Execution Policy"
 #string STR_OPTION_ROM_HELP     #language en-US  "This option allows control over which OptionROMs get loaded."
