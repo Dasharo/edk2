@@ -967,6 +967,7 @@ formset
 
             option text = STRING_TOKEN(STR_PCIE_BIFURCATION_1X4), value = PCIE_BIFURCATION_1X4, flags = 0;
             option text = STRING_TOKEN(STR_PCIE_BIFURCATION_2X2), value = PCIE_BIFURCATION_2X2, flags = 0;
+            option text = STRING_TOKEN(STR_PCIE_BIFURCATION_4X1), value = PCIE_BIFURCATION_4X1, flags = 0;
       endoneof;
     endif;
 
