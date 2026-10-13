@@ -202,6 +202,7 @@ DasharoSystemFeaturesUiLibConstructor (
   PRIVATE_DATA(ShowPowerFailureState) = FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN;
   PRIVATE_DATA(HideFanCurveOff) = !FixedPcdGetBool (PcdPowerMenuShowFanCurveOffOption);
   PRIVATE_DATA(PowerMenuShowUsbPower) = FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption);
+  PRIVATE_DATA(PowerMenuShowRenderStandby) = FixedPcdGetBool (PcdPowerMenuShowRenderStandbyOption);
   PRIVATE_DATA(PowerMenuShowDGPUPower) = FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption);
   PRIVATE_DATA(DgpuOnlyAvailable) = FixedPcdGetBool (PcdDgpuOnlyAvailable);
   PRIVATE_DATA(IntelMeMenuShowCbntStatus) = FixedPcdGetBool (PcdIntelMeMenuShowCbntStatus);
@@ -248,6 +249,7 @@ DasharoSystemFeaturesUiLibConstructor (
                                   FixedPcdGetBool (PcdShowCpuThrottlingThreshold) ||
                                   FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption) ||
                                   FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption) ||
+                                  FixedPcdGetBool (PcdPowerMenuShowRenderStandbyOption) ||
                                   (FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
 
   if (PRIVATE_DATA(ShowCpuMenu))
@@ -318,6 +320,7 @@ DasharoSystemFeaturesUiLibConstructor (
   LOAD_VAR (DASHARO_VAR_USB_PORT_POWER, UsbPortPower);
   LOAD_VAR (DASHARO_VAR_DGPU_STATE, DGPUState);
   LOAD_VAR (DASHARO_VAR_STM, StmEnable);
+  LOAD_VAR (DASHARO_VAR_RENDER_STANDBY, RenderStandby);
 
 #undef LOAD_VAR
 
@@ -598,6 +601,7 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, FixedPcdGetBool (PcdShowCpuThrottlingThreshold));
     STORE_VAR_IF (DASHARO_VAR_USB_PORT_POWER, UsbPortPower, FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption));
     STORE_VAR_IF (DASHARO_VAR_DGPU_STATE, DGPUState, FixedPcdGetBool (PcdPowerMenuShowDGPUPowerOption));
+    STORE_VAR_IF (DASHARO_VAR_RENDER_STANDBY, RenderStandby, FixedPcdGetBool (PcdPowerMenuShowRenderStandbyOption));
   }
 
   if (FixedPcdGetBool (PcdShowPciMenu)) {
