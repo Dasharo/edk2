@@ -66,6 +66,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIntelMeMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowUsbMenu
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdUsbMenuShowUsbStackOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowNetworkMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
