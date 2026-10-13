@@ -35,6 +35,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_ME_MODE                       L"MeMode"
 #define DASHARO_VAR_NETWORK_BOOT                  L"NetworkBoot"
 #define DASHARO_VAR_OPTION_ROM_POLICY             L"OptionRomPolicy"
+#define DASHARO_VAR_PCIE_BIFURCATION              L"PcieBifurcation"
 #define DASHARO_VAR_POWER_FAILURE_STATE           L"PowerFailureState"
 #define DASHARO_VAR_PS2_CONTROLLER                L"Ps2Controller"
 #define DASHARO_VAR_RESIZEABLE_BARS_ENABLED       L"PCIeResizeableBarsEnabled"
@@ -73,6 +74,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_OPTION_ROM_POLICY_DISABLE_ALL  0
 #define DASHARO_OPTION_ROM_POLICY_ENABLE_ALL   1
 #define DASHARO_OPTION_ROM_POLICY_VGA_ONLY     2
+
+#define DASHARO_PCIE_BIFURCATION_1X4           0
+#define DASHARO_PCIE_BIFURCATION_2X2           1
 
 #define DASHARO_SLEEP_TYPE_S0IX                0
 #define DASHARO_SLEEP_TYPE_S3                  1
