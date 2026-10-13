@@ -141,6 +141,15 @@
                                                         "Enabling this option can cause conflicts with GPU virtualization.\n\n"
                                                         "Requested size might exceed maximum BAR size of the firmware in which case performance might be reduced."
 
+#string STR_PCIE_BIFURCATION_PROMPT  #language en-US "PCIe Bifurcation"
+#string STR_PCIE_BIFURCATION_HELP    #language en-US "Selects how the lanes of the bifurcatable PCIe slot are split.\n\n"
+                                                    "1x4: one x4 link (default, e.g. a single NVMe drive).\n"
+                                                    "2x2: two x2 links, for a carrier or riser that supports it.\n\n"
+                                                    "Changing this rewrites the flash descriptor and resets the platform once. "
+                                                    "Do not remove power during that reset."
+#string STR_PCIE_BIFURCATION_1X4     #language en-US "1x4"
+#string STR_PCIE_BIFURCATION_2X2     #language en-US "2x2"
+
 #string STR_OPTION_ROM_PROMPT   #language en-US  "OptionROM Execution Policy"
 #string STR_OPTION_ROM_HELP     #language en-US  "This option allows control over which OptionROMs get loaded."
 
