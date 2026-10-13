@@ -186,6 +186,10 @@
 #string STR_DGPU_ENABLE_POWER_IGPU_ONLY         #language en-US "iGPU Only"
 #string STR_DGPU_ENABLE_POWER_DGPU_ONLY         #language en-US "dGPU Only"
 
+#string STR_RENDER_STANDBY_PROMPT       #language en-US "Integrated GPU Render Standby"
+#string STR_RENDER_STANDBY_HELP         #language en-US "Enables the Render Standby (RC6) power-saving state of the iGPU, which powers down the render engine while it is idle.\n\n"
+                                                        "Enabling it reduces idle power consumption. Leave it disabled if you experience graphics hangs, flickering or resume issues."
+
 #string STR_MEMORY_PROFILE_PROMPT   #language en-US  "Memory SPD Profile"
 #string STR_MEMORY_PROFILE_HELP     #language en-US  "This option selects memory profile applied to RAM modules.\n\n"
                                                        "Selecting an XMP profile may result in unstable memory modules and even prevent system from booting.\n\n"

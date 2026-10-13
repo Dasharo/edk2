@@ -148,6 +148,7 @@ typedef struct {
   BOOLEAN  PowerMenuShowSleepType;
   BOOLEAN  PowerMenuShowBatteryThresholds;
   BOOLEAN  PowerMenuShowUsbPower;
+  BOOLEAN  PowerMenuShowRenderStandby;
   BOOLEAN  PowerMenuShowDGPUPower;
   BOOLEAN  DasharoEnterprise;
   BOOLEAN  SecurityMenuShowIommu;
@@ -204,6 +205,7 @@ typedef struct {
   UINT8                    CoreActiveCount;
   UINT8                    CoreMaxCount;
   UINT8                    UsbPortPower;
+  BOOLEAN                  RenderStandby;
   UINT8                    DGPUState;
   BOOLEAN                  MemoryIbecc;
   BOOLEAN                  StmEnable;

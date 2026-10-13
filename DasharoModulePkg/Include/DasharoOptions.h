@@ -38,6 +38,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_PCIE_BIFURCATION              L"PcieBifurcation"
 #define DASHARO_VAR_POWER_FAILURE_STATE           L"PowerFailureState"
 #define DASHARO_VAR_PS2_CONTROLLER                L"Ps2Controller"
+#define DASHARO_VAR_RENDER_STANDBY                L"RenderStandby"
 #define DASHARO_VAR_RESIZEABLE_BARS_ENABLED       L"PCIeResizeableBarsEnabled"
 #define DASHARO_VAR_SERIAL_REDIRECTION            L"SerialRedirection"
 #define DASHARO_VAR_SERIAL_REDIRECTION2           L"SerialRedirection2"
