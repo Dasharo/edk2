@@ -955,6 +955,14 @@ formset
       endoneof;
     endif;
 
+    disableif ideqval FeaturesData.PowerMenuShowRenderStandby == 0;
+        checkbox varid  = FeaturesData.RenderStandby,
+                  prompt = STRING_TOKEN(STR_RENDER_STANDBY_PROMPT),
+                  help   = STRING_TOKEN(STR_RENDER_STANDBY_HELP),
+                  flags  = RESET_REQUIRED,
+        endcheckbox;
+    endif;
+
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EMPTY_STRING);
     subtitle text = STRING_TOKEN(STR_EXIT_STRING);
