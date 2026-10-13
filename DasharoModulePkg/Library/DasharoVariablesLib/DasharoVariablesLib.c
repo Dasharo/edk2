@@ -59,6 +59,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_ME_MODE, FixedPcdGetBool (PcdShowIntelMeMenu) },
   { DASHARO_VAR_NETWORK_BOOT, FixedPcdGetBool (PcdShowNetworkMenu) },
   { DASHARO_VAR_OPTION_ROM_POLICY, FixedPcdGetBool (PcdShowPciMenu) },
+  { DASHARO_VAR_PCIE_BIFURCATION, FixedPcdGetBool (PcdPciMenuShowBifurcation) },
   { DASHARO_VAR_POWER_FAILURE_STATE, FixedPcdGetBool (PcdShowPowerMenu) && (FixedPcdGet8 (PcdDefaultPowerFailureState) != DASHARO_POWER_FAILURE_STATE_HIDDEN) },
   { DASHARO_VAR_PS2_CONTROLLER, FixedPcdGetBool (PcdShowChipsetMenu) && FixedPcdGetBool (PcdShowPs2Option) },
   { DASHARO_VAR_RESIZEABLE_BARS_ENABLED, FixedPcdGetBool (PcdShowPciMenu) && FixedPcdGetBool (PcdPciMenuShowResizeableBars) },
@@ -144,6 +145,9 @@ GetVariableInfo (
     Data.Uint8 = FixedPcdGetBool (PcdLoadOptionRoms)
       ? DASHARO_OPTION_ROM_POLICY_ENABLE_ALL
       : DASHARO_OPTION_ROM_POLICY_DISABLE_ALL;
+    Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_PCIE_BIFURCATION) == 0) {
+    Data.Uint8 = DASHARO_PCIE_BIFURCATION_1X4;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_POWER_FAILURE_STATE) == 0) {
     Data.Uint8 = FixedPcdGet8 (PcdDefaultPowerFailureState);

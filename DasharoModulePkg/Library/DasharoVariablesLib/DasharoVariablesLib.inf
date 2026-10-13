@@ -60,6 +60,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowSleepType
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPciMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowResizeableBars
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPciMenuShowBifurcation
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowBatteryThresholds
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowMemoryMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSerialPortMenu
