@@ -83,21 +83,18 @@ InitializeBootPolicies (
     DEBUG ((EFI_D_INFO, "Boot Policy: Enabling network stack\n"));
   }
 
-  Status = GetVariable2 (
-             DASHARO_VAR_USB_STACK,
-             &gDasharoSystemFeaturesGuid,
-             (VOID **) &EfiVar,
-             &VarSize
-             );
-
-  if ((Status == EFI_SUCCESS) && (VarSize == sizeof(*EfiVar)))
-    mUsbStackPolicy.UsbStackEnabled = *EfiVar;
-  else
-    mUsbStackPolicy.UsbStackEnabled = TRUE; // enable USB by default
-
   // A hidden option can't be turned back on, so ignore a stale variable
-  if (!FixedPcdGetBool(PcdUsbMenuShowUsbStackOption))
-    mUsbStackPolicy.UsbStackEnabled = TRUE;
+  if (FixedPcdGetBool(PcdUsbMenuShowUsbStackOption)) {
+    Status = GetVariable2 (
+               DASHARO_VAR_USB_STACK,
+               &gDasharoSystemFeaturesGuid,
+               (VOID **) &EfiVar,
+               &VarSize
+               );
+
+    if ((Status == EFI_SUCCESS) && (VarSize == sizeof(*EfiVar)))
+      mUsbStackPolicy.UsbStackEnabled = *EfiVar;
+  }
 
   if (mUsbStackPolicy.UsbStackEnabled) {
     gBS->InstallMultipleProtocolInterfaces (
