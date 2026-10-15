@@ -169,12 +169,21 @@ typedef struct {
   CHAR8     Ascii;
 } UNICODE_TO_CHAR;
 
+typedef struct {
+  UINT8 r;
+  UINT8 g;
+  UINT8 b;
+} TerminalEfiColor;
+VOID CopyTerminalPaletteColor(IN UINT8* Src, OUT TerminalEfiColor* Dest);
+VOID InitSerialColors (VOID);
+
 //
 // Global Variables
 //
 extern EFI_DRIVER_BINDING_PROTOCOL   gTerminalDriverBinding;
 extern EFI_COMPONENT_NAME_PROTOCOL   gTerminalComponentName;
 extern EFI_COMPONENT_NAME2_PROTOCOL  gTerminalComponentName2;
+extern TerminalEfiColor mTerminalEfiColors[16];
 
 /**
   The user Entry Point for module Terminal. The user code starts with this function.
