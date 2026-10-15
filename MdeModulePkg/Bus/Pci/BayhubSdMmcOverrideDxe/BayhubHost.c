@@ -8,7 +8,6 @@
 **/
 
 #include "BayhubHost.h"
-#include "SdMmcPciHcDxe.h"
 #include <Protocol/PciIo.h>
 
 /* Driver global variables*/
@@ -383,10 +382,10 @@ BhtDbgDump (
     DEBUG ((DEBUG_INFO, "HOST_CLK_DRIVE_STRENGTH: 0x%x\n", HOST_CLK_DRIVE_STRENGTH));
     DEBUG ((DEBUG_INFO, "HOST_DAT_DRIVE_STRENGTH: 0x%x\n", HOST_DAT_DRIVE_STRENGTH));
     DEBUG ((DEBUG_INFO, "Host register 0x24: 0x%08X\n", BhtMmRead32 (PciIo, SD_MMC_HC_PRESENT_STATE)));
-    DEBUG ((DEBUG_INFO, "Host register 0x28: 0x%08X\n", BhtMmRead32 (PciIo, SD_MMC_HC_HOST_CTRL1)));
+    DEBUG ((DEBUG_INFO, "Host register 0x28: 0x%08X\n", BhtMmRead32 (PciIo, 0x28)));
     DEBUG ((DEBUG_INFO, "Host register 0x2C: 0x%08X\n", BhtMmRead32 (PciIo, SD_MMC_HC_CLOCK_CTRL)));
-    DEBUG ((DEBUG_INFO, "Host register 0x30: 0x%08X\n", BhtMmRead32 (PciIo, SD_MMC_HC_NOR_INT_STS)));
-    DEBUG ((DEBUG_INFO, "Host register 0x3C: 0x%08X\n", BhtMmRead32 (PciIo, SD_MMC_HC_AUTO_CMD_ERR_STS)));
+    DEBUG ((DEBUG_INFO, "Host register 0x30: 0x%08X\n", BhtMmRead32 (PciIo, 0x30)));
+    DEBUG ((DEBUG_INFO, "Host register 0x3C: 0x%08X\n", BhtMmRead32 (PciIo, 0x3C)));
     DEBUG ((DEBUG_INFO, "Host register 0x110: 0x%08X\n", BhtMmRead32 (PciIo, 0x110)));
     DEBUG ((DEBUG_INFO, "Host register 0x114: 0x%08X\n", BhtMmRead32 (PciIo, 0x114)));
     DEBUG ((DEBUG_INFO, "Host register 0x1A8: 0x%08X\n", BhtMmRead32 (PciIo, 0x1A8)));
@@ -420,6 +419,7 @@ BhtHostInit (
 {
   UINT16      EmmcVar;
   UINT32      Value32;
+  UINT32      TmpOrData;
   EFI_STATUS  Status;
 
   if (BhtHostPciSupportType (PciIo) == EMMC_HOST) {
@@ -449,45 +449,151 @@ BhtHostInit (
   BhtPciOr32 (PciIo, 0x3E4, BIT22);
 
   // enable internal clk
-  Value32 = BIT0;
-  Status  = SdMmcHcOrMmio (PciIo, Slot, SD_MMC_HC_CLOCK_CTRL, sizeof (Value32), &Value32);
+  Value32    = BIT0;
+  Status     = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &TmpOrData);
+  TmpOrData |= Value32;
+  Status     = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint32, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &TmpOrData);
 
   // reset pll start
-  Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, TRUE, sizeof (Value32), &Value32);
+  Status   = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
   Value32 |= BIT12;
-  Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, FALSE, sizeof (Value32), &Value32);
+  Status   = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
   gBS->Stall (1);
 
   // reset pll end
-  Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, TRUE, sizeof (Value32), &Value32);
+  Status   = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
   Value32 &= ~BIT12;
   Value32 |= BIT18;
-  Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, FALSE, sizeof (Value32), &Value32);
+  Status   = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
 
   // wait BaseClk stable 0x1CC bit14
-  Status = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, TRUE, sizeof (Value32), &Value32);
+  Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
   while (!(Value32 & BIT14)) {
     gBS->Stall (100);
-    Status = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, TRUE, sizeof (Value32), &Value32);
+    Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
     DEBUG ((DEBUG_INFO, "1CC=0x%08x\n", Value32));
   }
 
   if (Value32 & BIT18) {
     // Wait 2nd Card Detect debounce Finished by wait twice of debounce max time
     while (1) {
-      Status = SdMmcHcRwMmio (PciIo, Slot, SD_MMC_HC_PRESENT_STATE, TRUE, sizeof (Value32), &Value32);
+      Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, SD_MMC_HC_PRESENT_STATE, 1, &Value32);
       if (((Value32 >> 16) & 0x01) == ((Value32 >> 18) & 0x01)) {
         break;
       }
     }
 
     // force pll active end
-    Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, TRUE, sizeof (Value32), &Value32);
+    Status   = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
     Value32 &= ~BIT18;
-    Status   = SdMmcHcRwMmio (PciIo, Slot, 0x1CC, FALSE, sizeof (Value32), &Value32);
+    Status   = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint32, Slot, 0x1CC, 1, &Value32);
   }
 
   return Status;
+}
+
+/**
+  Supply the SD clock at 400KHz for BayHub host initialization.
+
+  Programs the SDHCI Clock Control register to supply 400KHz from a
+  200MHz base clock using the 10-bit divisor format (SDHCI v3.0+).
+
+  @param[in] PciIo          The PCI IO protocol instance.
+  @param[in] Slot           The slot number (used as BAR index).
+  @param[in] ControllerVer  The host controller specification version.
+
+  @retval EFI_SUCCESS       Clock supplied successfully.
+  @retval EFI_TIMEOUT       Internal clock did not stabilise.
+  @retval Others            A PCI IO operation failed.
+
+**/
+STATIC
+EFI_STATUS
+BhtHostClockSupply (
+  IN EFI_PCI_IO_PROTOCOL  *PciIo,
+  IN UINT8                Slot,
+  IN UINT16               ControllerVer
+  )
+{
+  EFI_STATUS  Status;
+  UINT16      ClockCtrl;
+  UINT32      Divisor;
+  UINT32      SettingFreq;
+  UINT32      Remainder;
+  UINT32      StallCount;
+
+  //
+  // Stop SD clock by clearing SD Clock Enable (bit 2).
+  //
+  Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &ClockCtrl);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  ClockCtrl &= (UINT16) ~BIT2;
+  Status     = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &ClockCtrl);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Calculate the divisor for 400KHz from 200MHz base clock.
+  // BayHub always programs a 200MHz base clock in BhtHostInit.
+  //
+  Divisor     = 0;
+  SettingFreq = 200 * 1000;  // 200MHz in KHz units
+  while (400 < SettingFreq) {
+    Divisor++;
+    SettingFreq = (200 * 1000) / (2 * Divisor);
+    Remainder   = (200 * 1000) % (2 * Divisor);
+    if ((400 == SettingFreq) && (Remainder == 0)) {
+      break;
+    }
+
+    if ((400 == SettingFreq) && (Remainder != 0)) {
+      SettingFreq++;
+    }
+  }
+
+  DEBUG ((DEBUG_INFO, "BhtHostClockSupply: 200MHz base, divisor %d, ~%dKHz\n", Divisor, SettingFreq));
+
+  //
+  // Program divisor and enable Internal Clock.
+  // BayHub controllers implement SDHCI v3.0 which uses a 10-bit divisor:
+  //   ClockCtrl[15:8] = Divisor[7:0], ClockCtrl[7:6] = Divisor[9:8].
+  //
+  ASSERT (Divisor <= 0x3FF);
+  ClockCtrl  = (UINT16)(((Divisor & 0xFF) << 8) | ((Divisor & 0x300) >> 2));
+  ClockCtrl |= BIT0;  // Internal Clock Enable
+  Status     = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &ClockCtrl);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Wait for Internal Clock Stable (bit 1).
+  //
+  StallCount = 0;
+  do {
+    gBS->Stall (1000);
+    Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &ClockCtrl);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    StallCount++;
+  } while (!(ClockCtrl & BIT1) && (StallCount < 1000));
+
+  if (!(ClockCtrl & BIT1)) {
+    DEBUG ((DEBUG_ERROR, "BhtHostClockSupply: Internal Clock Stable timeout\n"));
+    return EFI_TIMEOUT;
+  }
+
+  //
+  // Enable SD Clock (bit 2).
+  //
+  ClockCtrl |= BIT2;
+  return PciIo->Mem.Write (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CLOCK_CTRL, 1, &ClockCtrl);
 }
 
 /**
@@ -507,15 +613,17 @@ BhtHostVoltageSet (
   IN  UINT8                Slot
   )
 {
-  EFI_STATUS              Status;
-  UINT8                   HostCtrl2;
-  UINT16                  ControllerVer;
-  SD_MMC_HC_PRIVATE_DATA  Private;
+  EFI_STATUS  Status;
+  UINT8       HostCtrl2;
+  UINT8       TmpCtrl2;
+  UINT16      ControllerVer;
 
   if (BhtHostPciSupportType (PciIo) == EMMC_HOST) {
     // 1.8V signaling enable
     HostCtrl2 = BIT3;
-    Status    = SdMmcHcOrMmio (PciIo, Slot, SD_MMC_HC_HOST_CTRL2, sizeof (HostCtrl2), &HostCtrl2);
+    Status    = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint8, Slot, SD_MMC_HC_HOST_CTRL2, 1, &TmpCtrl2);
+    TmpCtrl2 |= HostCtrl2;
+    Status    = PciIo->Mem.Write (PciIo, EfiPciIoWidthUint8, Slot, SD_MMC_HC_HOST_CTRL2, 1, &TmpCtrl2);
     gBS->Stall (5000);
     if (EFI_ERROR (Status)) {
       return Status;
@@ -526,15 +634,14 @@ BhtHostVoltageSet (
     gBS->Stall (10000);
   }
 
-  Status = SdMmcHcRwMmio (PciIo, Slot, SD_MMC_HC_CTRL_VER, TRUE, sizeof (ControllerVer), &ControllerVer);
+  Status = PciIo->Mem.Read (PciIo, EfiPciIoWidthUint16, Slot, SD_MMC_HC_CTRL_VER, 1, &ControllerVer);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
   ControllerVer &= 0x0f;
 
-  Private.PciIo                   = PciIo;
-  Private.BaseClkFreq[Slot]       = 200;
-  Private.ControllerVersion[Slot] = ControllerVer;
-
-  Status = SdMmcHcClockSupply (&Private, Slot, 0, TRUE, 400);
+  Status = BhtHostClockSupply (PciIo, Slot, ControllerVer);
 
   return Status;
 }
@@ -643,9 +750,9 @@ BhtHostOverrideCapability (
   IN OUT  UINT32      *BaseClkFreq
   )
 {
-  EFI_STATUS           Status;
-  EFI_PCI_IO_PROTOCOL  *PciIo;
-  SD_MMC_HC_SLOT_CAP   *Cap;
+  EFI_STATUS              Status;
+  EFI_PCI_IO_PROTOCOL     *PciIo;
+  BHT_SD_MMC_HC_SLOT_CAP  *Cap;
 
   Status = gBS->HandleProtocol (
                   ControllerHandle,

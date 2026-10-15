@@ -41,8 +41,6 @@
   SdMmcPciHci.h
   SdMmcPciHci.c
   ComponentName.c
-  BayhubHost.c
-  BayhubHost.h
 
 [Packages]
   MdePkg/MdePkg.dec
