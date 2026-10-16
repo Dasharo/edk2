@@ -393,6 +393,15 @@ INF DasharoModulePkg/UserAuthenticationDxe/UserAuthenticationDxe.inf
 INF IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
 !endif
 
+!if $(IPMI_ENABLE) == TRUE
+INF IpmiFeaturePkg/GenericIpmi/Dxe/GenericIpmi.inf
+!endif
+
+# Must come after SmbiosMeasurementDxe, see GigabyteBmcSysInfoEntryPoint()
+!if $(GIGABYTE_BMC_SYSINFO_ENABLE) == TRUE
+INF DasharoPayloadPkg/GigabyteBmcSysInfoDxe/GigabyteBmcSysInfoDxe.inf
+!endif
+
 !if $(APU_CONFIG_ENABLE) == TRUE
 INF DasharoPayloadPkg/ApuConfigurationUi/ApuConfigurationUi.inf
 !endif
