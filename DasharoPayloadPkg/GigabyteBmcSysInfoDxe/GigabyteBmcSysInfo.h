@@ -30,6 +30,15 @@
 #define GBT_IANA_BYTE2                 0x00
 #define GBT_SUBCMD_GET_SHM_ADDR        0x0A
 #define GBT_SUBCMD_SET_SMBIOS_READY    0x0B
+#define GBT_SUBCMD_SET_BIOS_READY      0x57
+
+//
+// POST complete ("BIOS ready") GPIO, active low, read by the BMC through the
+// CPLD. coreboot configures it as an output and passes it in its table under
+// this name: port = address of the GPIO control register, value = the bits
+// in it to clear (active low) or set (active high) to assert the GPIO.
+//
+#define GBT_POST_COMPLETE_GPIO_NAME    "POST complete"
 
 //
 // ASPEED BMC VGA function and its P2A (PCI-to-AHB) bridge, all in BAR1.
@@ -48,6 +57,11 @@ typedef struct {
   UINT8    Iana[3];
   UINT8    SubCmd;
 } GBT_OEM_REQUEST;
+
+typedef struct {
+  GBT_OEM_REQUEST    Hdr;
+  UINT8              Data;            // 0: start the BMC's device discovery
+} GBT_SET_BIOS_READY_REQUEST;
 
 typedef struct {
   GBT_OEM_REQUEST    Hdr;
