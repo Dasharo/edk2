@@ -24,6 +24,11 @@
    4. Tells the BMC the payload is complete:
         IPMI NetFn 0x2E Cmd 0x20, data 0A 3C 00 0B, UINT16 total size,
         UINT16 total size - 34, UINT16 0
+   5. Signals that POST is complete, as GbtBiosReady.efi does, also when the
+      steps above failed: drives the "POST complete" GPIO from the coreboot
+      table to its active level and sends
+        IPMI NetFn 0x2E Cmd 0x20, data 0A 3C 00 57 00
+      which makes the BMC start its MCTP and I3C device discovery.
 
   The BMC (firmware 13.06.29) validates the SMBIOS entry point checksum and
   that a type 127 terminated table follows it, then stores the SMBIOS data;
@@ -40,12 +45,15 @@
 #include <Guid/SmBios.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/BlParseLib.h>
 #include <Library/DebugLib.h>
+#include <Library/IoLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Protocol/IpmiTransportProtocol.h>
 #include <Protocol/PciIo.h>
+#include <Coreboot.h>
 
 #include "GigabyteBmcSysInfo.h"
 
@@ -170,6 +178,62 @@ SetSmbiosReady (
   }
 
   return Status;
+}
+
+STATIC
+EFI_STATUS
+SetBiosReady (
+  VOID
+  )
+{
+  GBT_SET_BIOS_READY_REQUEST  Request;
+  UINT8                       Response[32];
+  UINT32                      ResponseSize;
+
+  Request.Hdr.Iana[0] = GBT_IANA_BYTE0;
+  Request.Hdr.Iana[1] = GBT_IANA_BYTE1;
+  Request.Hdr.Iana[2] = GBT_IANA_BYTE2;
+  Request.Hdr.SubCmd  = GBT_SUBCMD_SET_BIOS_READY;
+  Request.Data        = 0;
+
+  return SendOemCommand (GBT_IPMI_CMD_OEM_SET, &Request, sizeof (Request), Response, sizeof (Response), &ResponseSize);
+}
+
+/**
+  Drives the POST complete GPIO coreboot passed in its table to its active
+  level and tells the BMC that POST is complete.
+**/
+STATIC
+VOID
+SignalPostComplete (
+  VOID
+  )
+{
+  UINT32         Register;
+  UINT32         Polarity;
+  UINT32         Bits;
+  RETURN_STATUS  ParseStatus;
+  EFI_STATUS     Status;
+
+  ParseStatus = ParseGpio (GBT_POST_COMPLETE_GPIO_NAME, &Register, &Polarity, &Bits);
+  if (RETURN_ERROR (ParseStatus)) {
+    DEBUG ((DEBUG_WARN, "GbtSysInfo: no \"%a\" GPIO from coreboot\n", GBT_POST_COMPLETE_GPIO_NAME));
+  } else {
+    if (Polarity == CB_GPIO_ACTIVE_HIGH) {
+      MmioOr32 (Register, Bits);
+    } else {
+      MmioAnd32 (Register, ~Bits);
+    }
+
+    DEBUG ((DEBUG_INFO, "GbtSysInfo: POST complete GPIO asserted (0x%08x bits 0x%08x)\n", Register, Bits));
+  }
+
+  Status = SetBiosReady ();
+  DEBUG ((
+    EFI_ERROR (Status) ? DEBUG_ERROR : DEBUG_INFO,
+    "GbtSysInfo: BIOS ready: %r\n",
+    Status
+    ));
 }
 
 STATIC
@@ -534,6 +598,8 @@ Exit:
   if (Info.LanEntries != NULL) {
     FreePool (Info.LanEntries);
   }
+
+  SignalPostComplete ();
 }
 
 EFI_STATUS
