@@ -111,6 +111,14 @@
   DEFINE SYSTEM76_EC_LOGGING            = FALSE
   DEFINE ABOVE_4G_MEMORY                = TRUE
   DEFINE IOMMU_ENABLE                   = FALSE
+  #
+  # IPMI KCS transport from edk2-platforms IpmiFeaturePkg (needs
+  # USE_EDK2_PLATFORMS) and, on top of it, sending the system information
+  # to Gigabyte AMI BMCs (MZ33-AR1 and similar).
+  #
+  DEFINE IPMI_ENABLE                    = FALSE
+  DEFINE IPMI_KCS_BASE                  = 0xCA2
+  DEFINE GIGABYTE_BMC_SYSINFO_ENABLE    = FALSE
   DEFINE SD_MMC_TIMEOUT                 = 1000000
   DEFINE BATTERY_CHECK                  = FALSE
   DEFINE PERFORMANCE_MEASUREMENT_ENABLE = FALSE
@@ -687,6 +695,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 ################################################################################
 
 [PcdsDynamicDefault]
+!if $(IPMI_ENABLE) == TRUE
+  gIpmiFeaturePkgTokenSpaceGuid.PcdIpmiIoBaseAddress|$(IPMI_KCS_BASE)
+!endif
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
@@ -1150,6 +1161,20 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
 
 !if $(IOMMU_ENABLE) == TRUE
   IntelSiliconPkg/Feature/VTd/IntelVTdDxe/IntelVTdDxe.inf
+!endif
+
+!if $(IPMI_ENABLE) == TRUE
+!if $(USE_EDK2_PLATFORMS) != TRUE
+!error "IPMI_ENABLE requires USE_EDK2_PLATFORMS"
+!endif
+  IpmiFeaturePkg/GenericIpmi/Dxe/GenericIpmi.inf
+!endif
+
+!if $(GIGABYTE_BMC_SYSINFO_ENABLE) == TRUE
+!if $(IPMI_ENABLE) != TRUE
+!error "GIGABYTE_BMC_SYSINFO_ENABLE requires IPMI_ENABLE"
+!endif
+  DasharoPayloadPkg/GigabyteBmcSysInfoDxe/GigabyteBmcSysInfoDxe.inf
 !endif
 
 !if $(PERFORMANCE_MEASUREMENT_ENABLE)
