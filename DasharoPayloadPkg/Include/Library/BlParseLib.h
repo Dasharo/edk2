@@ -371,4 +371,28 @@ ParseFwRootKey (
   OUT UINTN       *DataSize
   );
 
+/**
+  Find a GPIO the bootloader passed to the payload by its name.
+
+  @param  Name      Name of the GPIO, at most 16 characters.
+  @param  Port      Bootloader specific GPIO identifier, e.g. the GPIO number
+                    or the address of its control register.
+  @param  Polarity  If not NULL, set to CB_GPIO_ACTIVE_LOW or
+                    CB_GPIO_ACTIVE_HIGH.
+  @param  Value     If not NULL, set to the bootloader specific value, e.g.
+                    the GPIO level or the bits to change in the register at
+                    Port.
+
+  @retval RETURN_SUCCESS    The GPIO was found.
+  @retval RETURN_NOT_FOUND  There is no GPIO of that name.
+**/
+RETURN_STATUS
+EFIAPI
+ParseGpio (
+  IN  CONST CHAR8  *Name,
+  OUT UINT32       *Port,
+  OUT UINT32       *Polarity  OPTIONAL,
+  OUT UINT32       *Value     OPTIONAL
+  );
+
 #endif
