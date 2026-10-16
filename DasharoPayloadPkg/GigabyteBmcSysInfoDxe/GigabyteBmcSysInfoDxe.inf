@@ -1,0 +1,53 @@
+## @file
+#  Sends host system information (SMBIOS, disks, NICs, CPU) to Gigabyte
+#  AMI MegaRAC BMCs via Gigabyte OEM IPMI commands and the ASPEED P2A bridge.
+#
+#  Copyright (c) 2026, 3mdeb Sp. z o.o. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010017
+  BASE_NAME                      = GigabyteBmcSysInfoDxe
+  FILE_GUID                      = 5C8D2F64-3B0E-4A4E-9C77-1E6A9B2D4F10
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = GigabyteBmcSysInfoEntryPoint
+
+[Sources]
+  GigabyteBmcSysInfo.h
+  GigabyteBmcSysInfoDxe.c
+  Network.c
+  PciUtil.c
+  SmbiosOem.c
+  Storage.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IpmiFeaturePkg/IpmiFeaturePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Guids]
+  gEfiSmbios3TableGuid                    ## CONSUMES ## SystemTable
+  gEfiDiskInfoAhciInterfaceGuid           ## CONSUMES
+
+[Protocols]
+  gIpmiTransportProtocolGuid              ## CONSUMES
+  gEfiPciIoProtocolGuid                   ## CONSUMES
+  gEfiSmbiosProtocolGuid                  ## CONSUMES
+  gEfiDiskInfoProtocolGuid                ## CONSUMES
+  gEfiNvmExpressPassThruProtocolGuid      ## CONSUMES
+  gEfiSimpleNetworkProtocolGuid           ## SOMETIMES_CONSUMES
+
+[Depex]
+  gEfiSmbiosProtocolGuid
