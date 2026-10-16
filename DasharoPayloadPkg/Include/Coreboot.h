@@ -823,6 +823,26 @@ struct lb_boot_info {
   UINT8 pad2[3];
 } __attribute__ ((packed));
 
+#define CB_TAG_GPIO  0x0013
+
+#define CB_GPIO_ACTIVE_LOW       0
+#define CB_GPIO_ACTIVE_HIGH      1
+#define CB_GPIO_MAX_NAME_LENGTH  16
+
+struct cb_gpio {
+  UINT32 port;      /* Bootloader specific, e.g. a GPIO number or register address */
+  UINT32 polarity;  /* CB_GPIO_ACTIVE_LOW or CB_GPIO_ACTIVE_HIGH */
+  UINT32 value;     /* Bootloader specific, e.g. the level or the bits of the register at port */
+  UINT8 name[CB_GPIO_MAX_NAME_LENGTH];  /* Not NUL terminated if 16 chars long */
+} __attribute__ ((packed));
+
+struct cb_gpios {
+  UINT32 tag;
+  UINT32 size;
+  UINT32 count;
+  struct cb_gpio gpios[0];
+} __attribute__ ((packed));
+
 #define CBMEM_ID_TCPA_TCG_LOG 0x54445041 /* TPM log per TPM 1.2 specification */
 #define CBMEM_ID_TPM2_TCG_LOG 0x54504d32 /* TPM log per TPM 2.0 specification */
 
