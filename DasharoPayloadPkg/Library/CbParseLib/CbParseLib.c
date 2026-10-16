@@ -1664,3 +1664,63 @@ ParseFwRootKey (
 
   return RETURN_SUCCESS;
 }
+
+/**
+  Find a GPIO the bootloader passed to the payload by its name.
+
+  @param  Name      Name of the GPIO, at most 16 characters.
+  @param  Port      Bootloader specific GPIO identifier, e.g. the GPIO number
+                    or the address of its control register.
+  @param  Polarity  If not NULL, set to CB_GPIO_ACTIVE_LOW or
+                    CB_GPIO_ACTIVE_HIGH.
+  @param  Value     If not NULL, set to the bootloader specific value, e.g.
+                    the GPIO level or the bits to change in the register at
+                    Port.
+
+  @retval RETURN_SUCCESS    The GPIO was found.
+  @retval RETURN_NOT_FOUND  There is no GPIO of that name.
+**/
+RETURN_STATUS
+EFIAPI
+ParseGpio (
+  IN  CONST CHAR8  *Name,
+  OUT UINT32       *Port,
+  OUT UINT32       *Polarity  OPTIONAL,
+  OUT UINT32       *Value     OPTIONAL
+  )
+{
+  struct cb_gpios  *CbGpios;
+  struct cb_gpio   *Gpio;
+  UINT32           Count;
+  UINT32           Index;
+
+  if (AsciiStrLen (Name) > CB_GPIO_MAX_NAME_LENGTH) {
+    return RETURN_NOT_FOUND;
+  }
+
+  CbGpios = FindCbTag (CB_TAG_GPIO);
+  if ((CbGpios == NULL) || (CbGpios->size < sizeof (*CbGpios))) {
+    return RETURN_NOT_FOUND;
+  }
+
+  Count = MIN (CbGpios->count, (CbGpios->size - sizeof (*CbGpios)) / sizeof (struct cb_gpio));
+  for (Index = 0; Index < Count; Index++) {
+    Gpio = &CbGpios->gpios[Index];
+    if (AsciiStrnCmp ((CHAR8 *)Gpio->name, Name, CB_GPIO_MAX_NAME_LENGTH) != 0) {
+      continue;
+    }
+
+    *Port = Gpio->port;
+    if (Polarity != NULL) {
+      *Polarity = Gpio->polarity;
+    }
+
+    if (Value != NULL) {
+      *Value = Gpio->value;
+    }
+
+    return RETURN_SUCCESS;
+  }
+
+  return RETURN_NOT_FOUND;
+}
