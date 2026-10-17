@@ -275,7 +275,7 @@ GetPayloadGuid (
   }
 
   OffsetList  = (UINT64 *)&FmpHeader[1];
-  ImageHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER *)((UINT8 *)FmpHeader + OffsetList[0]);
+  ImageHeader = (EFI_FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER *)((UINT8 *)FmpHeader + OffsetList[EmbeddedDriverCount]);
 
   *Guid = ImageHeader->UpdateImageTypeId;
 
