@@ -51,11 +51,23 @@ steps:
     environment:
       GITEA_TOKEN:
         from_secret: GITEA_BUILDER_TOKEN_REPO_READ
+      GITHUB_TOKEN:
+        from_secret: CONTENT_STATUSES_CI_TOKEN
     when:
       - matrix:
           BOARD: "?*"
     commands:
       - task --taskfile .ci/Taskfile.yml ci:clone-coreboot COREBOOT_REV="${COREBOOT_REV}"
+
+
+  - name: report-init
+    image: git.3mdeb.com/dasharo/coreboot-build-ci:latest
+    environment:
+      GITHUB_REPO: Dasharo/edk2
+      GITHUB_TOKEN:
+        from_secret: CONTENT_STATUSES_CI_TOKEN
+    commands:
+      - task --taskfile .ci/Taskfile.yml ci:report:init BOARD="${BOARD}"
 
 
   - name: ec
@@ -70,7 +82,7 @@ steps:
     environment:
       GITEA_TOKEN:
         from_secret: GITEA_BUILDER_TOKEN_REPO_READ
-      HOSTPATH: /var/tmp/coreboot-builds/${CI_REPO_NAME}-${CI_PIPELINE_NUMBER}-${BOARD}
+      HOSTPATH: /var/tmp/coreboot-builds/${CI_REPO_NAME}/${CI_PIPELINE_NUMBER}-${BOARD}
     commands:
       - docker run --rm -v /var/tmp/coreboot-builds:/w alpine rm -rf /w/{{base .HOSTPATH}}
       - |
@@ -99,7 +111,7 @@ steps:
       - /var/tmp/coreboot-builds:/var/tmp/coreboot-builds
     environment:
       SSH_AUTH_SOCK: /tmp/no-ssh-agent
-      HOSTPATH: /var/tmp/coreboot-builds/${CI_REPO_NAME}-${CI_PIPELINE_NUMBER}-${BOARD}
+      HOSTPATH: /var/tmp/coreboot-builds/${CI_REPO_NAME}/${CI_PIPELINE_NUMBER}-${BOARD}
     when:
       - matrix:
           BOARD: "?*"
@@ -152,3 +164,29 @@ steps:
         task --taskfile .ci/Taskfile.yml ci:test \
         TEST_CONFIG=${TEST_CONFIG} MANUAL_TESTS_LIST="${MANUAL_TESTS_LIST}" \
         QEMU="${QEMU}"
+
+
+  - name: report
+    image: git.3mdeb.com/dasharo/coreboot-build-ci:latest
+    when:
+      - status: [success, failure]
+    environment:
+      GITHUB_REPO: Dasharo/edk2
+      GITHUB_TOKEN:
+        from_secret: CONTENT_STATUSES_CI_TOKEN
+      WOODPECKER_TOKEN:
+        from_secret: WOODPECKER_BUILDER_API_TOKEN
+    commands:
+      - task --taskfile .ci/Taskfile.yml ci:report:publish BOARD="${BOARD}"
+
+
+  - name: cleanup
+    image: git.3mdeb.com/dasharo/coreboot-build-ci:latest
+    when:
+      - status: [success, failure]
+    volumes:
+      - /var/tmp/coreboot-builds:/var/tmp/coreboot-builds
+    environment:
+      HOSTPATH: /var/tmp/coreboot-builds/${CI_REPO_NAME}/${CI_PIPELINE_NUMBER}-${BOARD}
+    commands:
+      - task --taskfile .ci/Taskfile.yml ci:cleanup HOSTPATH="$${HOSTPATH}"
