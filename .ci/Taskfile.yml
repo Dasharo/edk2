@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: 2026 3mdeb <contact@3mdeb.com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version: '3'
+
+vars:
+  REPO_ROOT:
+    sh: git rev-parse --show-toplevel
+  COREBOOT_TASKFILE: '{{.REPO_ROOT}}/coreboot/.ci/Taskfile.yml'
+  EDK2_SEED: Dasharo
+  EDK2_REPO: '/build/coreboot/{{.EDK2_SEED}}'
+  EDK2_HEAD:
+    sh: git rev-parse HEAD
+
+tasks:
+  ci:clone-coreboot:
+    desc: Clone Dasharo coreboot and seed it with this EDK2 checkout
+    dir: '{{.REPO_ROOT}}'
+    env:
+      #  TODO use `dasharo` or an SHA once the CI is merged
+      COREBOOT_REV: '{{.COREBOOT_REV | default "woodpecker-build-test-ci"}}'
+    cmds:
+      - rm -rf coreboot
+      - git clone --recurse-submodules https://ci:$GITEA_TOKEN@git.3mdeb.com/Dasharo/coreboot.git coreboot
+      - cd coreboot && git checkout --recurse-submodules "${COREBOOT_REV}"
+      - git clone . coreboot/{{.EDK2_SEED}}
+
+  ci:blobs:
+    desc: Download blobs
+    cmds:
+      - task -t {{.COREBOOT_TASKFILE}} ci:blobs BLOBS="{{.BLOBS}}"
+
+  ci:build-ec:
+    desc: Build EC
+    cmds:
+      - >
+        task -t {{.COREBOOT_TASKFILE}} ci:build-ec
+        EC_BOARD_VENDOR="{{.EC_BOARD_VENDOR}}" EC_BOARD_MODEL="{{.EC_BOARD_MODEL}}"
+        HOSTPATH="{{.HOSTPATH}}" EC_REV="{{.EC_REV}}"
+
+  ci:build-coreboot:
+    desc: Build coreboot with the EDK2 revision of this checkout
+    cmds:
+      - >
+        task -t {{.COREBOOT_TASKFILE}} ci:build-coreboot
+        BOARD="{{.BOARD}}" HOSTPATH="{{.HOSTPATH}}"
+        EDK2_REPO="{{.EDK2_REPO}}" EDK2_REV="{{.EDK2_REV | default .EDK2_HEAD}}"
+
+  ci:test:
+    desc: Run tests on build firmware
+    cmds:
+      - >
+        task -t {{.COREBOOT_TASKFILE}} ci:test
+        TEST_CONFIG="../{{.TEST_CONFIG}}"
+        MANUAL_TESTS_LIST="{{if .MANUAL_TESTS_LIST}}../{{.MANUAL_TESTS_LIST}}{{end}}"
+        QEMU="{{.QEMU}}"
