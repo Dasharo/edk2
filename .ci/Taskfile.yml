@@ -22,7 +22,7 @@ tasks:
       COREBOOT_REV: '{{.COREBOOT_REV | default "woodpecker-build-test-ci"}}'
     cmds:
       - rm -rf coreboot
-      - git clone --recurse-submodules https://ci:$GITEA_TOKEN@git.3mdeb.com/Dasharo/coreboot.git coreboot
+      - git ${GITHUB_TOKEN:+-c url.https://x-access-token:$GITHUB_TOKEN@github.com/.insteadOf=https://github.com/} clone --recurse-submodules https://ci:$GITEA_TOKEN@git.3mdeb.com/Dasharo/coreboot.git coreboot
       - cd coreboot && git checkout --recurse-submodules "${COREBOOT_REV}"
       - git clone . coreboot/{{.EDK2_SEED}}
 
@@ -55,3 +55,30 @@ tasks:
         TEST_CONFIG="../{{.TEST_CONFIG}}"
         MANUAL_TESTS_LIST="{{if .MANUAL_TESTS_LIST}}../{{.MANUAL_TESTS_LIST}}{{end}}"
         QEMU="{{.QEMU}}"
+
+  ci:report:init:
+    desc: Create CI result object on GH
+    dir: '{{.REPO_ROOT}}'
+    requires:
+      vars: [BOARD]
+    env:
+      BOARD: '{{.BOARD}}'
+    cmds:
+      - bash coreboot/.ci/github-status.sh init
+
+  ci:report:publish:
+    desc: Publish CI results of this workflow to GH
+    dir: '{{.REPO_ROOT}}'
+    requires:
+      vars: [BOARD]
+    env:
+      BOARD: '{{.BOARD}}'
+    cmds:
+      - bash coreboot/.ci/github-status.sh publish
+
+  ci:cleanup:
+    desc: Clean up the coreboot clone, its artifacts and the scratch build directory
+    dir: '{{.REPO_ROOT}}'
+    cmds:
+      - rm -rf coreboot
+      - '{{if .HOSTPATH}}rm -rf {{.HOSTPATH}}{{end}}'
