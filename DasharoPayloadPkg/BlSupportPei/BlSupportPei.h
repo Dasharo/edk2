@@ -35,6 +35,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/TcgPhysicalPresenceGuid.h>
 #include <Guid/FirmwarePerformance.h>
 #include <Ppi/MasterBootMode.h>
+#include <Ppi/FirmwareVolumeInfoMeasurementExcluded.h>
 #include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
 
 #endif
