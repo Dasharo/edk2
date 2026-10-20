@@ -93,3 +93,4 @@
   gEfiMdePkgTokenSpaceGuid.PcdQuietBootFeatureEnabled
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityStmOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSmmBwpDefaultState
