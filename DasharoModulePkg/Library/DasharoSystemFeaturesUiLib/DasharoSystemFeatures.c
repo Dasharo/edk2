@@ -760,6 +760,9 @@ DasharoSystemFeaturesCallback (
       case CPU_THROTTLING_OFFSET_QUESTION_ID:
         Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_CPU_THROTTLING_OFFSET).Uint8;
         break;
+      case SMM_BWP_QUESTION_ID:
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_SMM_BWP).Boolean;
+        break;
       default:
         Status = EFI_UNSUPPORTED;
         break;

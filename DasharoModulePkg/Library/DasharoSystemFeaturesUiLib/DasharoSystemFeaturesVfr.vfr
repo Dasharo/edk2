@@ -102,9 +102,10 @@ formset
 
     disableif ideqval FeaturesData.ShowSmmBwp == 0;
       checkbox varid  = FeaturesData.SmmBwp,
+               questionid = SMM_BWP_QUESTION_ID,
                prompt = STRING_TOKEN(STR_SMM_BWP_PROMPT),
                help   = STRING_TOKEN(STR_SMM_BWP_HELP),
-               flags  = RESET_REQUIRED,
+               flags  = INTERACTIVE | RESET_REQUIRED,
       endcheckbox;
     endif;
 

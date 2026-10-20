@@ -171,7 +171,7 @@ GetVariableInfo (
     Data.Uint8 = FixedPcdGetBool (PcdSleepTypeDefaultS3) ? DASHARO_SLEEP_TYPE_S3 : DASHARO_SLEEP_TYPE_S0IX;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_SMM_BWP) == 0) {
-    Data.Boolean = FALSE;
+    Data.Boolean = FixedPcdGetBool (PcdSmmBwpDefaultState);
     Size = sizeof (Data.Boolean);
   } else if (StrCmp (VarName, DASHARO_VAR_USB_MASS_STORAGE) == 0) {
     Data.Boolean = TRUE;

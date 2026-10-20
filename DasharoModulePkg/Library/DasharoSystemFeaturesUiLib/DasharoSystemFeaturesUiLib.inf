@@ -108,3 +108,4 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdFumAutoIpxeBoot
   gEfiMdeModulePkgTokenSpaceGuid.PcdCapsuleOnDiskSupport
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityStmOption
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdSmmBwpDefaultState
