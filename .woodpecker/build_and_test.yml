@@ -65,7 +65,7 @@ steps:
     environment:
       GITHUB_REPO: Dasharo/edk2
       GITHUB_TOKEN:
-        from_secret: GITHUB_SYNC_TOKEN
+        from_secret: CONTENT_STATUSES_CI_TOKEN
     commands:
       - task --taskfile .ci/Taskfile.yml ci:report:init BOARD="${BOARD}"
 
@@ -173,7 +173,7 @@ steps:
     environment:
       GITHUB_REPO: Dasharo/edk2
       GITHUB_TOKEN:
-        from_secret: GITHUB_SYNC_TOKEN
+        from_secret: CONTENT_STATUSES_CI_TOKEN
       WOODPECKER_TOKEN:
         from_secret: WOODPECKER_BUILDER_API_TOKEN
     commands:
