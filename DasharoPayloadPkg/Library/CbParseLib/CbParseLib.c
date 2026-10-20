@@ -526,7 +526,7 @@ ParseMemoryInfo (
     } else {
       Tolud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOLUD)) & 0xFFF00000;
       Touud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD)) & 0xFFF00000;
-      Touud |= RShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
+      Touud |= LShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
     }
   } else if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x1022) /* AMD */ {
     Tolud = AsmReadMsr64(MSR_TOP_MEM);
