@@ -304,7 +304,7 @@ INF SecurityPkg/Pkcs7Verify/Pkcs7VerifyDxe/Pkcs7VerifyDxe.inf
 
   # gDefaultPKFileGuid
   FILE FREEFORM = 85254EA7-4759-4FC4-82D4-5EED5FB0A4A0 {
-    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/pk.crt
+    SECTION RAW = DasharoPayloadPkg/SecureBootDefaultKeys/WindowsOEMDevicesPK.der
     SECTION UI = "DefaultPkCert"
   }
 
