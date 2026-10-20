@@ -448,6 +448,42 @@ ParseCbMemTable (
 #define TOLUD       0xBC
 #define TOUUD       0xA8
 
+/*
+ * Xeon SP Memory Map/VT-d device. It is at 00:00.0 on Sapphire Rapids and
+ * newer, and at 00:05.0 on Skylake-SP and Cooper Lake.
+ */
+#define XEON_SP_TOLM          0xD0
+#define XEON_SP_VTD_DID       0x09A2
+#define XEON_SP_TOHM          0xC8
+#define XEON_SKX_VTD_DEV      5
+#define XEON_SKX_VTD_DID      0x2024
+#define XEON_SKX_TOHM         0xD4
+
+/**
+  Read TOLM and TOHM from the Xeon SP Memory Map/VT-d device and convert them
+  to TOLUD/TOUUD equivalents. Both are inclusive limits with 64MB granularity.
+
+  @param  VtdDev    PCI_LIB_ADDRESS of the Memory Map/VT-d device
+  @param  TohmReg   Offset of the TOHM register
+  @param  Tolud     Returns the top of low usable DRAM
+  @param  Touud     Returns the top of upper usable DRAM
+
+**/
+STATIC
+VOID
+GetXeonSpTolmTohm (
+  IN  UINTN   VtdDev,
+  IN  UINT32  TohmReg,
+  OUT UINT64  *Tolud,
+  OUT UINT64  *Touud
+  )
+{
+  *Tolud = (PciRead32(VtdDev + XEON_SP_TOLM) & 0xFC000000) + SIZE_64MB;
+  *Touud = LShiftU64(PciRead32(VtdDev + TohmReg + 4), 32);
+  *Touud |= PciRead32(VtdDev + TohmReg) & 0xFC000000;
+  *Touud += SIZE_64MB;
+}
+
 /**
   Acquire the memory information from the coreboot table in memory.
 
@@ -482,9 +518,16 @@ ParseMemoryInfo (
   Touud = 0;
 
   if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x8086) /* Intel */ {
-    Tolud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOLUD)) & 0xFFF00000;
-    Touud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD)) & 0xFFF00000;
-    Touud |= RShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
+    if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x02)) == XEON_SP_VTD_DID) {
+      GetXeonSpTolmTohm (PCI_LIB_ADDRESS(0, 0, 0, 0), XEON_SP_TOHM, &Tolud, &Touud);
+    } else if (PciRead32(PCI_LIB_ADDRESS(0, XEON_SKX_VTD_DEV, 0, 0x00)) ==
+               (0x8086 | (XEON_SKX_VTD_DID << 16))) {
+      GetXeonSpTolmTohm (PCI_LIB_ADDRESS(0, XEON_SKX_VTD_DEV, 0, 0), XEON_SKX_TOHM, &Tolud, &Touud);
+    } else {
+      Tolud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOLUD)) & 0xFFF00000;
+      Touud = PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD)) & 0xFFF00000;
+      Touud |= RShiftU64(PciRead32(PCI_LIB_ADDRESS(0, 0, 0, TOUUD + 4)), 32);
+    }
   } else if (PciRead16(PCI_LIB_ADDRESS(0, 0, 0, 0x00)) == 0x1022) /* AMD */ {
     Tolud = AsmReadMsr64(MSR_TOP_MEM);
     Touud = AsmReadMsr64(MSR_TOM2);
