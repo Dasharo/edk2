@@ -610,6 +610,11 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gDasharoPayloadPkgTokenSpaceGuid.PcdSmoothCapsuleProgress|TRUE
 !endif
 
+!if $(TPM_ENABLE) == TRUE
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcgLogAreaMinLen|0x40000
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2FinalLogAreaLen|0x10000
+!endif
+
 [PcdsPatchableInModule.common]
 !if ($(TARGET) == DEBUG || $(USE_CBMEM_FOR_CONSOLE) == TRUE)
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|TRUE
