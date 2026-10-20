@@ -32,6 +32,24 @@ EFI_PEI_PPI_DESCRIPTOR   mPpiBootMode[] = {
   }
 };
 
+//
+// coreboot measures the whole payload file, PEIFV included, before jumping to
+// it. Exclude PEIFV from being measured again by Tcg2Pei, since by then XIP
+// PEIMs have already modified their writable data inside it.
+//
+EFI_PEI_FIRMWARE_VOLUME_INFO_MEASUREMENT_EXCLUDED_PPI mPeiFvExcludedPpi = {
+  1,
+  { { 0, 0 } }
+};
+
+EFI_PEI_PPI_DESCRIPTOR   mPpiPeiFvExcluded[] = {
+  {
+    EFI_PEI_PPI_DESCRIPTOR_PPI | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST,
+    &gEfiPeiFirmwareVolumeInfoMeasurementExcludedPpiGuid,
+    &mPeiFvExcludedPpi
+  }
+};
+
 EFI_PEI_GRAPHICS_DEVICE_INFO_HOB mDefaultGraphicsDeviceInfo = {
   MAX_UINT16, MAX_UINT16, MAX_UINT16, MAX_UINT16, MAX_UINT8,  MAX_UINT8
 };
@@ -832,6 +850,15 @@ BlPeiEntryPoint (
   ASSERT_EFI_ERROR (Status);
 
   Status = PeiServicesInstallPpi (mPpiBootMode);
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // PEIFV is the BFV at the start of the payload FD
+  //
+  mPeiFvExcludedPpi.Fv[0].FvBase   = PcdGet32 (PcdPayloadFdMemBase);
+  mPeiFvExcludedPpi.Fv[0].FvLength = ((EFI_FIRMWARE_VOLUME_HEADER *)(UINTN)
+                                      PcdGet32 (PcdPayloadFdMemBase))->FvLength;
+  Status = PeiServicesInstallPpi (mPpiPeiFvExcluded);
   ASSERT_EFI_ERROR (Status);
 
   //

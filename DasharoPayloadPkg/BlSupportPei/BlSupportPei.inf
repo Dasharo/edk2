@@ -73,6 +73,7 @@
 [Ppis]
   gEfiPeiMasterBootModePpiGuid
   gEfiPeiMemoryDiscoveredPpiGuid
+  gEfiPeiFirmwareVolumeInfoMeasurementExcludedPpiGuid
 
 [Pcd]
   gDasharoPayloadPkgTokenSpaceGuid.PcdPayloadFdMemBase
