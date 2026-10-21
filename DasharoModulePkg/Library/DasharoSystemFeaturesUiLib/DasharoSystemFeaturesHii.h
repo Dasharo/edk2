@@ -292,5 +292,7 @@ typedef struct {
 #define IBG_ACM_POLICY_STATUS_QUESTION_ID    0x8014
 #define PCIE_BIFURCATION_QUESTION_ID         0x8015
 #define SMM_BWP_QUESTION_ID                  0x8016
+#define IOMMU_ENABLE_QUESTION_ID             0x8017
+#define IOMMU_HANDOFF_QUESTION_ID            0x8018
 
 #endif

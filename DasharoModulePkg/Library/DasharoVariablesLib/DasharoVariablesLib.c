@@ -123,8 +123,8 @@ GetVariableInfo (
     Data.Uint8 = DASHARO_FAN_CURVE_OPTION_SILENT;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_IOMMU_CONFIG) == 0) {
-    Data.Iommu.IommuEnable = FALSE;
-    Data.Iommu.IommuHandoff = FALSE;
+    Data.Iommu.IommuEnable = FixedPcdGetBool (PcdIommuDefaultState);
+    Data.Iommu.IommuHandoff = FixedPcdGetBool (PcdIommuDefaultState);
     Size = sizeof (Data.Iommu);
   } else if (StrCmp (VarName, DASHARO_VAR_LOCK_BIOS) == 0) {
     Data.Boolean = TRUE;

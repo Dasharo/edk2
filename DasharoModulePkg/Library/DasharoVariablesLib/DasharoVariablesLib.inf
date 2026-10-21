@@ -94,3 +94,4 @@
   gDasharoPayloadPkgTokenSpaceGuid.PcdLoadOptionRoms
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowSecurityStmOption
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSmmBwpDefaultState
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdIommuDefaultState
