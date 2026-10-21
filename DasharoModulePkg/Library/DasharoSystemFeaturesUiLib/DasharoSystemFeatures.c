@@ -763,6 +763,12 @@ DasharoSystemFeaturesCallback (
       case SMM_BWP_QUESTION_ID:
         Value->b = DasharoGetVariableDefault (DASHARO_VAR_SMM_BWP).Boolean;
         break;
+      case IOMMU_ENABLE_QUESTION_ID:
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_IOMMU_CONFIG).Iommu.IommuEnable;
+        break;
+      case IOMMU_HANDOFF_QUESTION_ID:
+        Value->b = DasharoGetVariableDefault (DASHARO_VAR_IOMMU_CONFIG).Iommu.IommuHandoff;
+        break;
       default:
         Status = EFI_UNSUPPORTED;
         break;
