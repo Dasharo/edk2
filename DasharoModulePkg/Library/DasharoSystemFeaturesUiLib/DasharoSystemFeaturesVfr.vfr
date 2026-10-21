@@ -112,16 +112,18 @@ formset
     disableif ideqval FeaturesData.SecurityMenuShowIommu == 0;
       checkbox name   = IommuEnable,
                varid  = FeaturesData.IommuConfig.IommuEnable,
+               questionid = IOMMU_ENABLE_QUESTION_ID,
                prompt = STRING_TOKEN(STR_DMA_PROTECTION_PROMPT),
                help   = STRING_TOKEN(STR_DMA_PROTECTION_HELP),
-               flags  = RESET_REQUIRED,
+               flags  = INTERACTIVE | RESET_REQUIRED,
       endcheckbox;
 
       suppressif questionref(IommuEnable) == FALSE;
         checkbox varid  = FeaturesData.IommuConfig.IommuHandoff,
+                 questionid = IOMMU_HANDOFF_QUESTION_ID,
                  prompt = STRING_TOKEN(STR_IOMMU_HANDOFF_PROMPT),
                  help   = STRING_TOKEN(STR_IOMMU_HANDOFF_HELP),
-                 flags  = RESET_REQUIRED,
+                 flags  = INTERACTIVE | RESET_REQUIRED,
         endcheckbox;
       endif;
     endif;
