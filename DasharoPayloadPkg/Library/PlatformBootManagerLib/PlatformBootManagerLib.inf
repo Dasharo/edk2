@@ -54,6 +54,7 @@
   PlatformHookLib
   Tcg2PhysicalPresenceLib
   TcgPhysicalPresenceLib
+  TpmPlatformHierarchyLib
   CustomizedDisplayLib
   LaptopBatteryLib
   BlParseLib

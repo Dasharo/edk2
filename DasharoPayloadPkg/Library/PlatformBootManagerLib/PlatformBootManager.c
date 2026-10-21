@@ -19,6 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/HobLib.h>
 #include <Library/Tpm2CommandLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
+#include <Library/TpmPlatformHierarchyLib.h>
 #include <Coreboot.h>
 #include <DasharoOptions.h>
 #include <Protocol/UsbIo.h>
@@ -2223,6 +2224,15 @@ PlatformBootManagerAfterConsole (
   //
   Tcg2PhysicalPresenceLibProcessRequest (NULL);
   TcgPhysicalPresenceLibProcessRequest ();
+
+  //
+  // TPM PPI requests are the last users of the TPM platform hierarchy. Close
+  // it before any boot option, shell or setup application is launched, so
+  // that untrusted code cannot use the empty platform auth. Depending on
+  // PcdRandomizePlatformHierarchy, the platform auth is set to a random
+  // value or the platform hierarchy is disabled.
+  //
+  ConfigureTpmPlatformHierarchy ();
 
   SaveSMBIOSFields();
 
