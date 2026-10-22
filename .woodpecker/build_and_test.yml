@@ -11,6 +11,7 @@ when:
 labels:
   network: ${NETWORK}
   kvm: ${QEMU} # set in matrix
+  speed: fast
 
 matrix:
   include:
