@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 when:
-  - branch: dasharo
+  - branch: [dasharo,dasharo-stable202602]
     event: [pull_request, push, manual]
   - branch: woodpecker-build-test-ci
     event: [manual]
