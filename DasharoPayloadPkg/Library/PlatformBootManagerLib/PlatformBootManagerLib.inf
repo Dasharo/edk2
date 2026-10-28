@@ -60,6 +60,7 @@
   BlParseLib
   CapsuleLib
   HobLib
+  DasharoVariablesLib
 
 [Guids]
   gEfiEndOfDxeEventGroupGuid
