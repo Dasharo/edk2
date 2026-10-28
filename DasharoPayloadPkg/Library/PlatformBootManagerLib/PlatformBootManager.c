@@ -16,6 +16,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/CustomizedDisplayLib.h>
 #include <Library/BlParseLib.h>
 #include <Library/CapsuleLib.h>
+#include <Library/DasharoVariablesLib.h>
 #include <Library/HobLib.h>
 #include <Library/Tpm2CommandLib.h>
 #include <Library/Tcg2PhysicalPresenceLib.h>
@@ -858,7 +859,7 @@ RequestDiskCapsulesBoot (
   Value   = TRUE;
   VarSize = sizeof (Value);
 
-  // This requests FUM as well.
+  // This requests FUM in coreboot as well.
   Status = gRT->SetVariable (
       DASHARO_VAR_DISK_CAPSULES_BOOT,
       &gDasharoSystemFeaturesGuid,
@@ -866,8 +867,16 @@ RequestDiskCapsulesBoot (
       VarSize,
       &Value
       );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
-  return Status;
+  //
+  // Request FUM in EDK as well, same as UpdateCapsule() does for in-RAM
+  // capsules.  Among other things, this disables Secure Boot for the next boot
+  // which is necessary for loading drivers embedded into capsules.
+  //
+  return DasharoEnableFUM ();
 }
 
 STATIC
