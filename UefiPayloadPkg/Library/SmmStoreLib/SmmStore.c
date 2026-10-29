@@ -134,6 +134,25 @@ SmmStoreLibGetBlockSize (
 }
 
 /**
+  Get size of a block for the command.
+
+  @param[in] Cmd  Command which is going to be used.
+
+**/
+STATIC
+UINTN
+BlockSizeForCmd (
+  IN UINT8  Cmd
+  )
+{
+  if ((Cmd & SMMSTORE_CMD_FULL_FLASH_SMALL_BLOCKS) != 0) {
+    return mSmmStoreInfo->FullFlashSmallBlockSize;
+  }
+
+  return mSmmStoreInfo->BlockSize;
+}
+
+/**
   Get the SmmStore number of blocks
 
   @param NumBlocks    The pointer to store the number of blocks in.
@@ -207,7 +226,7 @@ ReadBlock (
 {
   EFI_STATUS  Status;
 
-  if (((*NumBytes + Offset) > mSmmStoreInfo->BlockSize) ||
+  if (((*NumBytes + Offset) > BlockSizeForCmd (ReadCmd)) ||
       ((*NumBytes + Offset) > mSmmStoreInfo->ComBufferSize))
   {
     return EFI_INVALID_PARAMETER;
@@ -258,6 +277,49 @@ SmmStoreLibRead (
 }
 
 /**
+  Get flags selecting block size of the *AnyBlock functions.  Small blocks are
+  used if the firmware supports them, otherwise blocks of the store are used, as
+  this is what SMMSTORE_CMD_USE_FULL_FLASH alone always meant.
+
+**/
+STATIC
+UINT8
+AnyBlockCmdFlags (
+  VOID
+  )
+{
+  if (mSmmStoreInfo->FullFlashSmallBlockSize != 0) {
+    return SMMSTORE_CMD_FULL_FLASH_SMALL_BLOCKS;
+  }
+
+  return 0;
+}
+
+/**
+  Get the size of blocks used by the *AnyBlock functions
+
+  @param BlockSize    The pointer to store the block size in.
+
+**/
+EFI_STATUS
+SmmStoreLibGetAnyBlockSize (
+  OUT UINTN  *BlockSize
+  )
+{
+  if (mSmmStoreInfo == NULL) {
+    return EFI_NO_MEDIA;
+  }
+
+  if (BlockSize == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *BlockSize = BlockSizeForCmd (SMMSTORE_CMD_USE_FULL_FLASH | AnyBlockCmdFlags ());
+
+  return EFI_SUCCESS;
+}
+
+/**
   Read from an arbitrary flash location.  The whole flash is represented as a
   sequence of blocks.
 
@@ -280,7 +342,13 @@ SmmStoreLibReadAnyBlock (
     return EFI_NO_MEDIA;
   }
 
-  return ReadBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_READ);
+  return ReadBlock (
+           Lba,
+           Offset,
+           NumBytes,
+           Buffer,
+           SMMSTORE_CMD_USE_FULL_FLASH | AnyBlockCmdFlags () | SMMSTORE_CMD_RAW_READ
+           );
 }
 
 /**
@@ -307,7 +375,7 @@ WriteBlock (
   IN        UINT8    WriteCmd
   )
 {
-  if (((*NumBytes + Offset) > mSmmStoreInfo->BlockSize) ||
+  if (((*NumBytes + Offset) > BlockSizeForCmd (WriteCmd)) ||
       ((*NumBytes + Offset) > mSmmStoreInfo->ComBufferSize))
   {
     return EFI_INVALID_PARAMETER;
@@ -374,7 +442,13 @@ SmmStoreLibWriteAnyBlock (
     return EFI_NO_MEDIA;
   }
 
-  return WriteBlock (Lba, Offset, NumBytes, Buffer, SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_WRITE);
+  return WriteBlock (
+           Lba,
+           Offset,
+           NumBytes,
+           Buffer,
+           SMMSTORE_CMD_USE_FULL_FLASH | AnyBlockCmdFlags () | SMMSTORE_CMD_RAW_WRITE
+           );
 }
 
 /**
@@ -419,7 +493,7 @@ SmmStoreLibEraseAnyBlock (
 
   mArgComBuf->Clear.BlockId = Lba;
 
-  return CallSmmWithArgs (SMMSTORE_CMD_USE_FULL_FLASH | SMMSTORE_CMD_RAW_CLEAR);
+  return CallSmmWithArgs (SMMSTORE_CMD_USE_FULL_FLASH | AnyBlockCmdFlags () | SMMSTORE_CMD_RAW_CLEAR);
 }
 
 /**
@@ -475,14 +549,20 @@ SmmStoreLibInitialize (
   }
 
   //
-  // Place SmmStore information hob in a runtime buffer
+  // Place SmmStore information hob in a runtime buffer.  The hob can come from
+  // firmware of a different version than this driver (e.g. one embedded into an
+  // update capsule), fields missing from it are left zeroed.
   //
-  mSmmStoreInfo = AllocateRuntimePool (GET_GUID_HOB_DATA_SIZE (GuidHob));
+  mSmmStoreInfo = AllocateRuntimeZeroPool (sizeof (*mSmmStoreInfo));
   if (mSmmStoreInfo == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
-  CopyMem (mSmmStoreInfo, GET_GUID_HOB_DATA (GuidHob), GET_GUID_HOB_DATA_SIZE (GuidHob));
+  CopyMem (
+    mSmmStoreInfo,
+    GET_GUID_HOB_DATA (GuidHob),
+    MIN (GET_GUID_HOB_DATA_SIZE (GuidHob), sizeof (*mSmmStoreInfo))
+    );
 
   //
   // Validate input

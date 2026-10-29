@@ -28,6 +28,20 @@ SmmStoreLibGetBlockSize (
   );
 
 /**
+  Get the size of blocks used by the *AnyBlock functions.  It's the small block
+  size reported by the firmware if it supports it (4 KiB), which allows updating
+  flash regions that aren't aligned to the block size of the store, otherwise
+  it's the block size of the store.
+
+  @param BlockSize    The pointer to store the block size in.
+
+**/
+EFI_STATUS
+SmmStoreLibGetAnyBlockSize (
+  OUT UINTN  *BlockSize
+  );
+
+/**
   Get the SmmStore number of blocks
 
   @param NumBlocks    The pointer to store the number of blocks in.

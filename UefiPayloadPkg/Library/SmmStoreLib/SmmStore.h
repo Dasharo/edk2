@@ -24,6 +24,13 @@
 #define SMMSTORE_CMD_USE_FULL_FLASH  0x80
 
 /*
+ * Modifier of raw commands with SMMSTORE_CMD_USE_FULL_FLASH that makes them
+ * operate on smaller blocks.  Firmware reports support and the size of such
+ * blocks in the coreboot table.
+ */
+#define SMMSTORE_CMD_FULL_FLASH_SMALL_BLOCKS  0x40
+
+/*
  * This allows the payload to store raw data in the flash regions.
  * This can be used by a FaultTolerantWrite implementation, that uses at least
  * two regions in an A/B update scheme.

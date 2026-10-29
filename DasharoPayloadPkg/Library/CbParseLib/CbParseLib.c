@@ -853,6 +853,15 @@ ParseSMMSTOREInfo (
   SMMSTOREInfo->NumBlocks = CbSSRec->num_blocks;
   SMMSTOREInfo->ApmCmd = CbSSRec->apm_cmd;
 
+  /* Added later, older coreboot doesn't write it out. */
+  ZeroMem (SMMSTOREInfo->Reserved, sizeof (SMMSTOREInfo->Reserved));
+  if (CbSSRec->size > OFFSET_OF(struct cb_smmstorev2, full_flash_small_block_size)) {
+    SMMSTOREInfo->FullFlashSmallBlockSize = CbSSRec->full_flash_small_block_size;
+  } else {
+    SMMSTOREInfo->FullFlashSmallBlockSize = 0;
+  }
+  DEBUG ((DEBUG_INFO, "full flash small block size: 0x%x\n", SMMSTOREInfo->FullFlashSmallBlockSize));
+
   /*
    * Detect if 64-bit mmap address is available by comapring the LB entry
    * size. If the entry is smaller by the size of UINT64 than the new

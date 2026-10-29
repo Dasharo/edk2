@@ -21,6 +21,14 @@ typedef struct {
   UINT32    BlockSize;
   UINT64    MmioAddress;
   UINT8     ApmCmd;
+  //
+  // Fields below were added later and are absent in HOBs produced by older
+  // firmware, which is detected by the size of the HOB.  Tail padding of the
+  // original structure can contain garbage, hence it's not used.
+  //
+  UINT8     Reserved[7];
+  UINT32    FullFlashSmallBlockSize; // Block size of raw full flash commands
+                                     // with small blocks, zero if unsupported
 } SMMSTORE_INFO;
 
 #endif // SMMSTORE_GUID_H_
