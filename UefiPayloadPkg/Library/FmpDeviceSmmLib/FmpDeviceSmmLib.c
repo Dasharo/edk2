@@ -632,9 +632,9 @@ FmpDeviceCheckImageWithStatus (
     return EFI_ABORTED;
   }
 
-  Status = SmmStoreLibGetBlockSize (&BlockSize);
+  Status = SmmStoreLibGetAnyBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a(): SmmStoreLibGetBlockSize() failed with: %r\n", __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a(): SmmStoreLibGetAnyBlockSize() failed with: %r\n", __func__, Status));
     return Status;
   }
 
@@ -1106,7 +1106,7 @@ AttemptRecovery (
     return FALSE;
   }
 
-  CurrentImage = ReadCurrentFirmware (DescriptorLocked, NULL, NULL);
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked, OriginalImage, ImageSize, NULL, NULL);
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1160,7 +1160,7 @@ AttemptRecovery (
   // Judge outcome of the recovery by re-reading the firmware and comparing it
   // against the original.
   //
-  CurrentImage = ReadCurrentFirmware (DescriptorLocked, NULL, NULL);
+  CurrentImage = ReadCurrentFirmware (DescriptorLocked, OriginalImage, ImageSize, NULL, NULL);
   if (CurrentImage == NULL) {
     DEBUG ((
       DEBUG_ERROR,
@@ -1295,11 +1295,11 @@ FmpDeviceSetImageWithStatus (
   // report abort reason which can't be done in FmpDeviceCheckImageWithStatus().
   //
 
-  Status = SmmStoreLibGetBlockSize (&BlockSize);
+  Status = SmmStoreLibGetAnyBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a(): SmmStoreLibGetBlockSize() failed with: %r\n",
+      "%a(): SmmStoreLibGetAnyBlockSize() failed with: %r\n",
       __func__,
       Status
       ));
@@ -1338,6 +1338,8 @@ FmpDeviceSetImageWithStatus (
   //
   CurrentImage = ReadCurrentFirmware (
                    DescriptorLocked,
+                   Image,
+                   ImageSize,
                    SmoothProgress ? ReadProgressCallback : NULL,
                    SmoothProgress ? &ProgressCtx : NULL
                    );

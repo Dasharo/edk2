@@ -200,10 +200,110 @@ GetFmap (
 }
 
 /**
+  Checks whether host can access Intel ME region despite a locked descriptor,
+  which is the case when Intel ME opened it for an update (HMRFPO).  coreboot
+  reports this via a variable.
+
+  @return TRUE     If ME region is readable and writeable.
+  @return FALSE    Otherwise.
+**/
+STATIC
+BOOLEAN
+IsMeRegionWriteable (
+  VOID
+  )
+{
+  EFI_STATUS     Status;
+  UINTN          VarSize;
+  UINT8          MeRegionWriteable;
+
+  VarSize = sizeof (MeRegionWriteable);
+  Status = gRT->GetVariable (
+      L"MeRegionWriteable",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &MeRegionWriteable
+      );
+
+  // Not reported by coreboot, assume ME region is locked as before.
+  if (EFI_ERROR(Status))
+    return FALSE;
+
+  return MeRegionWriteable != 0;
+}
+
+/**
+  Checks whether a range overlaps an FMAP area.
+
+  @param[in] FlashMap     FMAP to look the area up in.
+  @param[in] AreaName     Name of the area.
+  @param[in] RangeOffset  Offset of the range.
+  @param[in] RangeLen     Length of the range.
+
+  @return TRUE     If the area exists and overlaps the range.
+  @return FALSE    Otherwise.
+**/
+STATIC
+BOOLEAN
+RangeOverlapsArea (
+  IN CONST Fmap   *FlashMap,
+  IN CONST CHAR8  *AreaName,
+  IN UINTN        RangeOffset,
+  IN UINTN        RangeLen
+  )
+{
+  CONST FmapArea *Region;
+
+  Region = FmapFindArea (FlashMap, AreaName);
+  return Region != NULL &&
+         RangeOffset + RangeLen > Region->offset &&
+         Region->offset + Region->size > RangeOffset;
+}
+
+/**
+  Checks if the given range overlaps a region of a locked IFD which host can't
+  read.  Reading such regions isn't merely failing, it can hang the SPI
+  controller, so they must not be accessed at all.
+
+  @param[in] FlashMap    FMAP describing the flash layout.
+  @param[in] RangeOffset Offset of the range to check.
+  @param[in] RangeLen    Length of the range to check.
+
+  @return TRUE     If the range can be read.
+  @return FALSE    If the range overlaps a read-protected region.
+**/
+STATIC
+BOOLEAN
+IsRangeReadable (
+  IN CONST Fmap  *FlashMap,
+  IN UINTN       RangeOffset,
+  IN UINTN       RangeLen
+  )
+{
+  // Device Expansion region (SI_PT in Intel EGS layouts) is locked for reads
+  // and writes.
+  if (RangeOverlapsArea (FlashMap, "SI_PT", RangeOffset, RangeLen))
+    return FALSE;
+
+  if (!IsMeRegionWriteable () &&
+      RangeOverlapsArea (FlashMap, "SI_ME", RangeOffset, RangeLen))
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
   Read current firmware in full and return as newly allocated pool memory,
   with optional progress reporting via callback.
 
+  When descriptor is locked, regions which can't be read according to the
+  layout (FMAP) of LayoutImage are skipped and left zeroed.
+
   @param[in] IsDescriptorLocked   Whether the flash descriptor is locked.
+  @param[in] LayoutImage          Image with the same flash layout as the
+                                  current firmware (e.g. the update image).
+  @param[in] LayoutImageSize      Size of LayoutImage.
   @param[in] ProgressCallback     Optional callback invoked after each block read.
   @param[in] ProgressContext      Caller-provided context passed to callback.
 
@@ -213,10 +313,14 @@ VOID *
 EFIAPI
 ReadCurrentFirmware (
   IN BOOLEAN                    IsDescriptorLocked,
+  IN CONST VOID                 *LayoutImage,
+  IN UINTN                      LayoutImageSize,
   IN FW_READ_PROGRESS_CALLBACK  ProgressCallback OPTIONAL,
   IN VOID                       *ProgressContext OPTIONAL
   )
 {
+  CONST Fmap  *LayoutFmap;
+  INTN        LayoutFmapOffset;
   EFI_STATUS  Status;
   UINT8       *Image;
   UINTN       FwSize;
@@ -224,12 +328,13 @@ ReadCurrentFirmware (
   UINTN       BlockSize;
   UINTN       NumBytes;
   UINTN       BlockCount;
+  BOOLEAN     Skipping;
 
-  Status = SmmStoreLibGetBlockSize (&BlockSize);
+  Status = SmmStoreLibGetAnyBlockSize (&BlockSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a(): SmmStoreLibGetBlockSize() failed with: %r\n",
+      "%a(): SmmStoreLibGetAnyBlockSize() failed with: %r\n",
       __FUNCTION__,
       Status
       ));
@@ -247,6 +352,34 @@ ReadCurrentFirmware (
     return NULL;
   }
 
+  DEBUG ((
+    DEBUG_INFO,
+    "%a(): descriptor %a, ME region %a\n",
+    __FUNCTION__,
+    IsDescriptorLocked ? "locked" : "unlocked",
+    IsMeRegionWriteable () ? "writeable (HMRFPO)" : "locked"
+    ));
+
+  LayoutFmap = NULL;
+  if (IsDescriptorLocked) {
+    //
+    // Only areas of IFD regions are looked up, which aren't affected by Top
+    // Swap, so not validating FMAP's own offset like GetFmap() does.
+    //
+    LayoutFmapOffset = FmapFind ((CONST UINT8 *)LayoutImage, LayoutImageSize);
+    if (LayoutFmapOffset < 0) {
+      DEBUG ((DEBUG_ERROR, "%a(): failed to find FMAP of layout image\n", __FUNCTION__));
+      return NULL;
+    }
+
+    LayoutFmap = (CONST Fmap *)((CONST UINT8 *)LayoutImage + LayoutFmapOffset);
+    // Size of the flash described by FMAP, not of FMAP itself.
+    if (LayoutFmap->size > LayoutImageSize) {
+      DEBUG ((DEBUG_ERROR, "%a(): FMAP of layout image is larger than the image\n", __FUNCTION__));
+      return NULL;
+    }
+  }
+
   // The buffer needs to be zero initialized so we don't get any garbage on
   // failed reads when they are permitted.
   Image = AllocateZeroPool (FwSize);
@@ -260,8 +393,36 @@ ReadCurrentFirmware (
   }
 
   BlockCount = FwSize / BlockSize;
+  Skipping   = FALSE;
 
   for (Block = 0; Block < BlockCount; Block++) {
+    if ((Block * BlockSize) % SIZE_1MB == 0) {
+      DEBUG ((DEBUG_VERBOSE, "%a(): at 0x%x\n", __FUNCTION__, Block * BlockSize));
+    }
+
+    if (LayoutFmap != NULL && !IsRangeReadable (LayoutFmap, Block * BlockSize, BlockSize)) {
+      if (!Skipping) {
+        DEBUG ((
+          DEBUG_INFO,
+          "%a(): not reading protected flash from 0x%x\n",
+          __FUNCTION__,
+          Block * BlockSize
+          ));
+        Skipping = TRUE;
+      }
+
+      if (ProgressCallback != NULL) {
+        ProgressCallback (Block, BlockCount, ProgressContext);
+      }
+
+      continue;
+    }
+
+    if (Skipping) {
+      DEBUG ((DEBUG_INFO, "%a(): reading again from 0x%x\n", __FUNCTION__, Block * BlockSize));
+      Skipping = FALSE;
+    }
+
     NumBytes = BlockSize;
     Status = SmmStoreLibReadAnyBlock (
                Block,
@@ -929,8 +1090,9 @@ IsRangeWriteable (
     return FALSE;
   }
 
-  // If descriptor is locked, IFD, ME, GbE and DevExp2 regions are not
-  // writeable. This is at least true for Dasharo firmware and TrustRoot
+  // If descriptor is locked, IFD, GbE, DevExp and DevExp2 regions are not
+  // writeable, ME region is writeable only when Intel ME opened it for an
+  // update. This is at least true for Dasharo firmware and TrustRoot
   // provisioning scripts.
   Region = FmapFindArea(FlashMap, "SI_DESC");
 
@@ -943,11 +1105,14 @@ IsRangeWriteable (
       Region->offset + Region->size > RangeOffset)
     return FALSE;
 
-  Region = FmapFindArea(FlashMap, "SI_ME");
+  // ME region is writeable only while Intel ME has it opened for an update.
+  if (!IsMeRegionWriteable () &&
+      RangeOverlapsArea (FlashMap, "SI_ME", RangeOffset, RangeLen))
+    return FALSE;
 
-  // Range exists and overlaps locked ME.
-  if (Region && RangeOffset + RangeLen > Region->offset &&
-      Region->offset + Region->size > RangeOffset)
+  // Device Expansion region (SI_PT in Intel EGS layouts) is locked for reads
+  // and writes.
+  if (RangeOverlapsArea (FlashMap, "SI_PT", RangeOffset, RangeLen))
     return FALSE;
 
   Region = FmapFindArea(FlashMap, "RW_UNUSED");

@@ -18,7 +18,13 @@ typedef VOID (*FW_READ_PROGRESS_CALLBACK)(
   Read current firmware in full and return as newly allocated pool memory,
   with optional progress reporting via callback.
 
+  When descriptor is locked, regions which can't be read according to the
+  layout (FMAP) of LayoutImage are skipped and left zeroed.
+
   @param[in] IsDescriptorLocked   Whether the flash descriptor is locked.
+  @param[in] LayoutImage          Image with the same flash layout as the
+                                  current firmware (e.g. the update image).
+  @param[in] LayoutImageSize      Size of LayoutImage.
   @param[in] ProgressCallback     Optional callback invoked after each block read.
   @param[in] ProgressContext      Caller-provided context passed to callback.
 
@@ -28,6 +34,8 @@ VOID *
 EFIAPI
 ReadCurrentFirmware (
   IN BOOLEAN                    IsDescriptorLocked,
+  IN CONST VOID                 *LayoutImage,
+  IN UINTN                      LayoutImageSize,
   IN FW_READ_PROGRESS_CALLBACK  ProgressCallback OPTIONAL,
   IN VOID                       *ProgressContext OPTIONAL
   );
