@@ -1302,6 +1302,7 @@ IsDescriptorLocked (
   EFI_STATUS     Status;
   UINTN          VarSize;
   UINT8          DescriptorWriteable;
+  UINT8          DescriptorOverride;
 
   VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
@@ -1316,7 +1317,23 @@ IsDescriptorLocked (
   if (EFI_ERROR(Status))
     return FALSE;
 
-  return !DescriptorWriteable;
+  if (DescriptorWriteable)
+    return FALSE;
+
+  DescriptorOverride = 0;
+  VarSize = sizeof (DescriptorOverride);
+  Status = gRT->GetVariable (
+      L"DescriptorOverride",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &DescriptorOverride
+      );
+
+  if (!EFI_ERROR(Status) && DescriptorOverride)
+    return FALSE;
+
+  return TRUE;
 }
 
 /**
