@@ -279,6 +279,9 @@ struct cb_smmstorev2 {
 	UINT8 apm_cmd;	/* The command byte to write to the APM I/O port */
 	UINT8 unused[3];	/* Set to zero */
 	UINT64 mmap_addr64;	/* MMIO address of the store for read only access */
+	UINT32 full_flash_small_block_size; /* Block size of raw commands with
+					       SMMSTORE_CMD_FULL_FLASH_SMALL_BLOCKS,
+					       zero if unsupported */
 };
 
 #define CB_TAG_CBMEM_ENTRY      0x0031
