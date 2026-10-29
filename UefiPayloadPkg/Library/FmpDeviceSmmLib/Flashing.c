@@ -1302,6 +1302,7 @@ IsDescriptorLocked (
   EFI_STATUS     Status;
   UINTN          VarSize;
   UINT8          DescriptorWriteable;
+  UINT8          MeRegionWriteable;
 
   VarSize = sizeof (DescriptorWriteable);
   Status = gRT->GetVariable (
@@ -1316,7 +1317,23 @@ IsDescriptorLocked (
   if (EFI_ERROR(Status))
     return FALSE;
 
-  return !DescriptorWriteable;
+  if (DescriptorWriteable)
+    return FALSE;
+
+  MeRegionWriteable = 0;
+  VarSize = sizeof (MeRegionWriteable);
+  Status = gRT->GetVariable (
+      L"MeRegionWriteable",
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &VarSize,
+      &MeRegionWriteable
+      );
+
+  if (!EFI_ERROR(Status) && MeRegionWriteable)
+    return FALSE;
+
+  return TRUE;
 }
 
 /**
