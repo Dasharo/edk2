@@ -19,7 +19,7 @@ tasks:
     dir: '{{.REPO_ROOT}}'
     env:
       #  TODO use `dasharo` or an SHA once the CI is merged
-      COREBOOT_REV: '{{.COREBOOT_REV | default "woodpecker-build-test-ci"}}'
+      COREBOOT_REV: '{{.COREBOOT_REV | default "dasharo"}}'
     cmds:
       - rm -rf coreboot
       - git ${GITHUB_TOKEN:+-c url.https://x-access-token:$GITHUB_TOKEN@github.com/.insteadOf=https://github.com/} clone --recurse-submodules https://ci:$GITEA_TOKEN@git.3mdeb.com/Dasharo/coreboot.git coreboot
