@@ -206,8 +206,7 @@ CheckFmpImageSignature (
       return EFI_SUCCESS;
     }
 
-    PublicKeyDataXdr += PublicKeyDataLength;
-    PublicKeyDataXdr  = (UINT8 *)ALIGN_POINTER (PublicKeyDataXdr, sizeof (UINT32));
+    PublicKeyDataXdr += ALIGN_VALUE (PublicKeyDataLength, sizeof (UINT32));
   }
 
   return EFI_SECURITY_VIOLATION;
