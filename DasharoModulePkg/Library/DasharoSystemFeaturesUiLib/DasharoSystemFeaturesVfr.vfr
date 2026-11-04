@@ -841,7 +841,128 @@ formset
           suppressif ideqval FeaturesData.HideFanCurveOff == 1;
             option text = STRING_TOKEN(STR_FAN_CURVE_OFF), value = FAN_CURVE_OPTION_OFF, flags = 0;
           endif;
+          suppressif ideqval FeaturesData.PowerMenuShowCustomFanCurve == 0;
+            option text = STRING_TOKEN(STR_FAN_CURVE_CUSTOM), value = FAN_CURVE_OPTION_CUSTOM, flags = 0;
+          endif;
       endoneof;
+
+      // Custom fan curve points. Temperatures must increase, duties must not
+      // decrease; each check sits on the later point of the pair.
+      suppressif ideqval FeaturesData.PowerMenuShowCustomFanCurve == 0 OR
+                 NOT ideqval FeaturesData.FanCurveOption == FAN_CURVE_OPTION_CUSTOM;
+        numeric varid   = FeaturesData.CustomFanCurve.PointCount,
+                prompt  = STRING_TOKEN(STR_FAN_POINT_COUNT_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_COUNT_HELP),
+                flags   = READ_ONLY,
+                minimum = DASHARO_FAN_CURVE_MAX_POINTS,
+                maximum = DASHARO_FAN_CURVE_MAX_POINTS,
+                default = DASHARO_FAN_CURVE_MAX_POINTS,
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[0].Temp,
+                questionid = FAN_POINT1_TEMP_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT1_TEMP_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_TEMP_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[0].Duty,
+                questionid = FAN_POINT1_DUTY_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT1_DUTY_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_DUTY_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[1].Temp,
+                questionid = FAN_POINT2_TEMP_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT2_TEMP_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_TEMP_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_TEMP_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[1].Temp <= FeaturesData.CustomFanCurve.Points[0].Temp
+                endif
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[1].Duty,
+                questionid = FAN_POINT2_DUTY_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT2_DUTY_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_DUTY_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_DUTY_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[1].Duty < FeaturesData.CustomFanCurve.Points[0].Duty
+                endif
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[2].Temp,
+                questionid = FAN_POINT3_TEMP_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT3_TEMP_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_TEMP_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_TEMP_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[2].Temp <= FeaturesData.CustomFanCurve.Points[1].Temp
+                endif
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[2].Duty,
+                questionid = FAN_POINT3_DUTY_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT3_DUTY_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_DUTY_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_DUTY_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[2].Duty < FeaturesData.CustomFanCurve.Points[1].Duty
+                endif
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[3].Temp,
+                questionid = FAN_POINT4_TEMP_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT4_TEMP_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_TEMP_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_TEMP_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[3].Temp <= FeaturesData.CustomFanCurve.Points[2].Temp
+                endif
+        endnumeric;
+
+        numeric varid   = FeaturesData.CustomFanCurve.Points[3].Duty,
+                questionid = FAN_POINT4_DUTY_QUESTION_ID,
+                prompt  = STRING_TOKEN(STR_FAN_POINT4_DUTY_PROMPT),
+                help    = STRING_TOKEN(STR_FAN_POINT_DUTY_HELP),
+                flags   = RESET_REQUIRED | INTERACTIVE,
+                minimum = 0,
+                maximum = 100,
+                step    = 1,
+
+                nosubmitif prompt = STRING_TOKEN(STR_FAN_POINT_DUTY_ORDER_ERROR),
+                    ideqid FeaturesData.CustomFanCurve.Points[3].Duty < FeaturesData.CustomFanCurve.Points[2].Duty
+                endif
+        endnumeric;
+      endif;
     endif;
 
     disableif ideqval FeaturesData.PowerMenuShowSleepType == 0;
