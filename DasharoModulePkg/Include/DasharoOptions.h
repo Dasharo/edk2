@@ -19,6 +19,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_BOOT_MANAGER_ENABLED          L"BootManagerEnabled"
 #define DASHARO_VAR_CORE_ACTIVE_COUNT             L"CoreActiveCount"
 #define DASHARO_VAR_CPU_THROTTLING_OFFSET         L"CpuThrottlingOffset"
+#define DASHARO_VAR_CUSTOM_FAN_CURVE              L"CustomFanCurve"
 #define DASHARO_VAR_DESCRIPTOR_WRITEABLE          L"DescriptorWriteable"
 #define DASHARO_VAR_ME_REGION_WRITEABLE           L"MeRegionWriteable"
 #define DASHARO_VAR_DGPU_STATE                    L"DGPUState"
@@ -78,6 +79,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_FAN_CURVE_OPTION_SILENT        0
 #define DASHARO_FAN_CURVE_OPTION_PERFORMANCE   1
 #define DASHARO_FAN_CURVE_OPTION_OFF           2
+#define DASHARO_FAN_CURVE_OPTION_CUSTOM        3
+
+// Capacity of DASHARO_CUSTOM_FAN_CURVE. Raise to allow longer curves
+#define DASHARO_FAN_CURVE_MAX_POINTS           4
 
 #define DASHARO_ME_MODE_ENABLE                 0
 #define DASHARO_ME_MODE_DISABLE_HECI           1
@@ -135,6 +140,16 @@ typedef struct {
   UINT8  StopThreshold;
 } DASHARO_BATTERY_CONFIG;
 
+typedef struct {
+  UINT8  Temp;  // degrees C
+  UINT8  Duty;  // percent
+} DASHARO_FAN_POINT;
+
+typedef struct {
+  UINT8              PointCount;
+  DASHARO_FAN_POINT  Points[DASHARO_FAN_CURVE_MAX_POINTS];
+} DASHARO_CUSTOM_FAN_CURVE;
+
 #pragma pack(pop)
 
 // Set of possible values of Dasharo variables.
@@ -145,6 +160,7 @@ typedef union {
   DASHARO_WATCHDOG_CONFIG  Watchdog;
   DASHARO_IOMMU_CONFIG     Iommu;
   DASHARO_BATTERY_CONFIG   Battery;
+  DASHARO_CUSTOM_FAN_CURVE FanCurve;
 } DASHARO_VAR_DATA;
 
 #endif

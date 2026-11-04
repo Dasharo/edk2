@@ -163,6 +163,7 @@ typedef struct {
   BOOLEAN  ShowCpuHyperThreading;
   BOOLEAN  ShowPowerFailureState;
   BOOLEAN  HideFanCurveOff;
+  BOOLEAN  PowerMenuShowCustomFanCurve;
   BOOLEAN  DgpuOnlyAvailable;
   BOOLEAN  IntelMeMenuShowCbntStatus;
   BOOLEAN  ShowMemorySpdProfile;
@@ -190,6 +191,7 @@ typedef struct {
   BOOLEAN                  EnableCamera;
   BOOLEAN                  EnableWifiBt;
   DASHARO_BATTERY_CONFIG   BatteryConfig;
+  DASHARO_CUSTOM_FAN_CURVE CustomFanCurve;
   UINT8                    MemoryProfile;
   BOOLEAN                  SerialPortRedirection;
   BOOLEAN                  SerialPort2Redirection;
@@ -228,6 +230,7 @@ typedef struct {
 #define FAN_CURVE_OPTION_SILENT        DASHARO_FAN_CURVE_OPTION_SILENT
 #define FAN_CURVE_OPTION_PERFORMANCE   DASHARO_FAN_CURVE_OPTION_PERFORMANCE
 #define FAN_CURVE_OPTION_OFF           DASHARO_FAN_CURVE_OPTION_OFF
+#define FAN_CURVE_OPTION_CUSTOM        DASHARO_FAN_CURVE_OPTION_CUSTOM
 
 #define ME_MODE_ENABLE                 DASHARO_ME_MODE_ENABLE
 #define ME_MODE_DISABLE_HECI           DASHARO_ME_MODE_DISABLE_HECI
@@ -294,5 +297,16 @@ typedef struct {
 #define SMM_BWP_QUESTION_ID                  0x8016
 #define IOMMU_ENABLE_QUESTION_ID             0x8017
 #define IOMMU_HANDOFF_QUESTION_ID            0x8018
+// Custom fan curve points: temp of point N at BASE + 2*N, duty at BASE + 2*N + 1
+#define CUSTOM_FAN_CURVE_QUESTION_ID_BASE    0x8020
+#define CUSTOM_FAN_CURVE_QUESTION_ID_LAST    (CUSTOM_FAN_CURVE_QUESTION_ID_BASE + 2 * DASHARO_FAN_CURVE_MAX_POINTS - 1)
+#define FAN_POINT1_TEMP_QUESTION_ID          0x8020
+#define FAN_POINT1_DUTY_QUESTION_ID          0x8021
+#define FAN_POINT2_TEMP_QUESTION_ID          0x8022
+#define FAN_POINT2_DUTY_QUESTION_ID          0x8023
+#define FAN_POINT3_TEMP_QUESTION_ID          0x8024
+#define FAN_POINT3_DUTY_QUESTION_ID          0x8025
+#define FAN_POINT4_TEMP_QUESTION_ID          0x8026
+#define FAN_POINT4_DUTY_QUESTION_ID          0x8027
 
 #endif

@@ -95,6 +95,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowRenderStandbyOption|FALSE|BOOLEAN|0x000000035
   gDasharoSystemFeaturesTokenSpaceGuid.PcdSmmBwpDefaultState|FALSE|BOOLEAN|0x000000036
   gDasharoSystemFeaturesTokenSpaceGuid.PcdIommuDefaultState|FALSE|BOOLEAN|0x000000037
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuCustomFanCurve|FALSE|BOOLEAN|0x000000038
 
 [PcdsFixedAtBuild,PcdsPatchableInModule,PcdsDynamic,PcdsDynamicEx]
   ## Indicate whether the password is cleared.
