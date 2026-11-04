@@ -51,6 +51,7 @@
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowChipsetMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowPowerMenu
   gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuShowFanCurve
+  gDasharoSystemFeaturesTokenSpaceGuid.PcdPowerMenuCustomFanCurve
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDefaultNetworkBootEnable
   gDasharoSystemFeaturesTokenSpaceGuid.PcdDasharoEnterprise
   gDasharoSystemFeaturesTokenSpaceGuid.PcdShowIommuOptions
