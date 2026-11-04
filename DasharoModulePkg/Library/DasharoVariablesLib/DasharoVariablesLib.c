@@ -49,6 +49,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_BATTERY_CONFIG, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds) },
   { DASHARO_VAR_BOOT_MANAGER_ENABLED, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdDasharoEnterprise) },
   { DASHARO_VAR_CPU_THROTTLING_OFFSET, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdShowCpuThrottlingThreshold) },
+  { DASHARO_VAR_CUSTOM_FAN_CURVE, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) && FixedPcdGetBool (PcdPowerMenuCustomFanCurve)},
   { DASHARO_VAR_ENABLE_CAMERA, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowCameraOption) },
   { DASHARO_VAR_ENABLE_WIFI_BT, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowWiFiBtOption) },
   { DASHARO_VAR_FAN_CURVE_OPTION, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) },
@@ -113,6 +114,15 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_CPU_THROTTLING_OFFSET) == 0) {
     Data.Uint8 = FixedPcdGet8 (PcdCpuThrottlingOffsetDefault);
     Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_CUSTOM_FAN_CURVE) == 0) {
+    // Starting point for editing
+    Data.FanCurve.PointCount = 4;
+    Data.FanCurve.Points[0].Temp = 0;   Data.FanCurve.Points[0].Duty = 20;
+    Data.FanCurve.Points[1].Temp = 70;  Data.FanCurve.Points[1].Duty = 25;
+    Data.FanCurve.Points[2].Temp = 85;  Data.FanCurve.Points[2].Duty = 45;
+    Data.FanCurve.Points[3].Temp = 95;  Data.FanCurve.Points[3].Duty = 100;
+    Size = sizeof (Data.FanCurve);
+    ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_ENABLE_CAMERA) == 0) {
     Data.Boolean = TRUE;
     Size = sizeof (Data.Boolean);
