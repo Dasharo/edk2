@@ -132,6 +132,8 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION) == 0) {
     Data.Uint8 = DASHARO_FAN_CURVE_OPTION_SILENT;
     Size = sizeof (Data.Uint8);
+    // The OS switches to the custom curve after saving one
+    ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_IOMMU_CONFIG) == 0) {
     Data.Iommu.IommuEnable = FixedPcdGetBool (PcdIommuDefaultState);
     Data.Iommu.IommuHandoff = FixedPcdGetBool (PcdIommuDefaultState);
