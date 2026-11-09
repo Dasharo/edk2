@@ -42,6 +42,7 @@ InitializeBootPolicies (
   EFI_STATUS  Status = EFI_SUCCESS;
   BOOLEAN *EfiVar;
   UINTN VarSize = sizeof(BOOLEAN);
+  UINT32 VarAttributes;
   BOOLEAN FUMEnabled;
 
   gBS = SystemTable->BootServices;
@@ -196,14 +197,17 @@ InitializeBootPolicies (
 
   VarSize = sizeof (FUMEnabled);
 
-  Status = GetVariable2 (
+  Status = GetVariable3 (
       DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
       &gDasharoSystemFeaturesGuid,
       (VOID **) &EfiVar,
-      &VarSize
+      &VarSize,
+      &VarAttributes
       );
 
-  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
+  // Ignore the variable if it wasn't created by the firmware
+  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled) ||
+      VarAttributes != DASHARO_FUM_ACTIVE_ATTRIBUTES) {
     FUMEnabled = FALSE;
   } else {
     FUMEnabled = *EfiVar;
