@@ -758,44 +758,85 @@ AddOutput (
     ReportText));
 }
 
+/**
+  Read a boolean FUM variable, ignoring it if its attributes or size don't
+  match what the firmware creates it with.
+
+  @param VarName        Name of the variable in gDasharoSystemFeaturesGuid.
+  @param ExpectedAttrs  Attributes the variable must have.
+  @param Value          Value of the variable on success.
+
+  @retval TRUE   The variable is valid and Value was set.
+  @retval FALSE  The variable doesn't exist or is invalid.
+**/
+STATIC
+BOOLEAN
+ReadFumVariable (
+  IN  CHAR16   *VarName,
+  IN  UINT32   ExpectedAttrs,
+  OUT BOOLEAN  *Value
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       VarSize;
+  UINT32      Attributes;
+
+  VarSize = sizeof (*Value);
+  Status = gRT->GetVariable (
+      VarName,
+      &gDasharoSystemFeaturesGuid,
+      &Attributes,
+      &VarSize,
+      Value
+      );
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  if (Attributes != ExpectedAttrs || VarSize != sizeof (*Value)) {
+    DEBUG ((
+      DEBUG_WARN,
+      "Ignoring %s with unexpected attributes 0x%x or size %lu.\n",
+      VarName,
+      Attributes,
+      (UINT64) VarSize
+      ));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 STATIC
 BOOLEAN
 IsFumEnabled (
   VOID
   )
 {
-  EFI_STATUS  Status;
-  UINTN       VarSize;
-  BOOLEAN     FUMEnabled;
+  BOOLEAN  FUMEnabled;
 
   if (!PcdGetBool (PcdShowFum)) {
     return FALSE;
   }
 
-  VarSize = sizeof (FUMEnabled);
-
-  Status = gRT->GetVariable (
-      DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
-      &gDasharoSystemFeaturesGuid,
-      NULL,
-      &VarSize,
-      &FUMEnabled
-      );
-  if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
-    // In case PromoteFum hasn't been called yet
-    Status = gRT->GetVariable (
-        DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
-        &gDasharoSystemFeaturesGuid,
-        NULL,
-        &VarSize,
+  if (ReadFumVariable (
+        DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
+        DASHARO_FUM_ACTIVE_ATTRIBUTES,
         &FUMEnabled
-        );
-    if (EFI_ERROR(Status) || VarSize != sizeof(FUMEnabled)) {
-      return FALSE;
-    }
+        )) {
+    return FUMEnabled;
   }
 
-  return FUMEnabled;
+  // In case PromoteFum hasn't been called yet
+  if (ReadFumVariable (
+        DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
+        DASHARO_FUM_REQUEST_ATTRIBUTES,
+        &FUMEnabled
+        )) {
+    return FUMEnabled;
+  }
+
+  return FALSE;
 }
 
 STATIC
@@ -832,13 +873,17 @@ PromoteFum (
 
   DropFum ();
 
+  // Remove a variable that might have been created with different attributes,
+  // otherwise setting it would fail.
+  DropDasharoVar (DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE);
+
   FUMEnabled = TRUE;
   VarSize = sizeof (FUMEnabled);
 
   Status = gRT->SetVariable (
       DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE,
       &gDasharoSystemFeaturesGuid,
-      EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+      DASHARO_FUM_ACTIVE_ATTRIBUTES,
       VarSize,
       &FUMEnabled
       );
