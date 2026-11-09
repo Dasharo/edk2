@@ -40,6 +40,18 @@ typedef struct {
    BOOLEAN  Condition;
 } AUTO_VARIABLE;
 
+// Variables in gDasharoSystemFeaturesGuid namespace that are not measured.
+// They hold platform state rather than user configuration and are written by
+// coreboot or by the firmware itself after the first boot (coreboot can't
+// write to an uninitialized SMMSTORE), so measuring them would make PCR values
+// depend on the boot history instead of the configuration.
+STATIC CHAR16 *CONST  mUnmeasuredVariables[] = {
+  DASHARO_VAR_DESCRIPTOR_WRITEABLE,
+  DASHARO_VAR_ME_REGION_WRITEABLE,
+  DASHARO_VAR_SMBIOS_UUID,
+  DASHARO_VAR_SMBIOS_SN,
+};
+
 // List of Dasharo EFI variables in gDasharoSystemFeaturesGuid namespace that
 // are created if missing. Each variable should have a FixedAtBuild PCD which
 // controls the visibility/activity of the variable in the project and must be
@@ -433,6 +445,35 @@ CompareVariableNames (
 }
 
 /**
+  Check whether a variable should be skipped when measuring Dasharo variables.
+
+  @param VarName  Name of the variable.
+  @param Vendor   Namespace of the variable.
+
+  @retval TRUE   The variable is on the mUnmeasuredVariables list.
+  @retval FALSE  The variable should be measured.
+**/
+STATIC
+BOOLEAN
+IsUnmeasuredVariable (
+  CONST CHAR16    *VarName,
+  CONST EFI_GUID  *Vendor
+  )
+{
+  UINTN  Index;
+
+  if (!CompareGuid (Vendor, &gDasharoSystemFeaturesGuid))
+    return FALSE;
+
+  for (Index = 0; Index < ARRAY_SIZE (mUnmeasuredVariables); Index++) {
+    if (StrCmp (VarName, mUnmeasuredVariables[Index]) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
   Measures single all existing variables with the specified GUID.
 
   @param Vendor   Namespace of the variable.
@@ -498,6 +539,9 @@ MeasureVariables (
       break;
 
     if (!CompareGuid (&Guid, Vendor))
+      continue;
+
+    if (IsUnmeasuredVariable (Name, &Guid))
       continue;
 
     if (NameCount == MaxNameCount - 1) {
