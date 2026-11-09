@@ -61,6 +61,16 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_FAST_BOOT    L"FastBoot"
 
 //
+// Expected attributes of firmware update mode (FUM) variables. A variable with
+// any other attributes wasn't created by the firmware and must be ignored.
+//
+#define DASHARO_FUM_REQUEST_ATTRIBUTES  (EFI_VARIABLE_NON_VOLATILE |       \
+                                         EFI_VARIABLE_BOOTSERVICE_ACCESS | \
+                                         EFI_VARIABLE_RUNTIME_ACCESS)
+#define DASHARO_FUM_ACTIVE_ATTRIBUTES   (EFI_VARIABLE_BOOTSERVICE_ACCESS | \
+                                         EFI_VARIABLE_RUNTIME_ACCESS)
+
+//
 // Constants for some of the above EFI variables which typically have a value of
 // UINT8 type.
 //
