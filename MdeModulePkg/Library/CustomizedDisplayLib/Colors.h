@@ -24,7 +24,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define BANNER_TEXT                    PcdGet8 (PcdBrowserBannerTextColor)
 #define BANNER_BACKGROUND              PcdGet8 (PcdBrowserBannerBackgroundColor)
 #define FIELD_TEXT                     PcdGet8 (PcdBrowserFieldTextColor)
-#define FIELD_TEXT_GRAYED              PcdGet8 (PcdBrowserFieldGrayedTextColor)
+#define FIELD_TEXT_GRAYED              PcdGet8 (PcdBrowserFieldGrayedTestColor)
 #define FIELD_BACKGROUND               PcdGet8 (PcdBrowserFieldBackgroundColor)
 #define FIELD_TEXT_HIGHLIGHT           PcdGet8 (PcdBrowserFieldTextHighlightColor)
 #define FIELD_BACKGROUND_HIGHLIGHT     PcdGet8 (PcdBrowserFieldBackgroundHighlightColor)
