@@ -1420,7 +1420,7 @@ IsHotPlugDevice (
 
 TerminalEfiColor mTerminalEfiColors[16];
 
-VOID CopyTerminalPaletteColor(IN UINT8* Src, OUT TerminalEfiColor* Dest) {
+VOID CopyTerminalPaletteColor(OUT TerminalEfiColor* Dest, IN UINT8* Src) {
   Dest->r = Src[1];
   Dest->g = Src[2];
   Dest->b = Src[3];
@@ -1430,20 +1430,20 @@ VOID CopyTerminalPaletteColor(IN UINT8* Src, OUT TerminalEfiColor* Dest) {
 VOID
 InitSerialColors (VOID)
 {
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBlack),      &mTerminalEfiColors[0]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBlue),  &mTerminalEfiColors[1]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteGreen), &mTerminalEfiColors[2]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteCyan),  &mTerminalEfiColors[3]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteRed),   &mTerminalEfiColors[4]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightMagenta),    &mTerminalEfiColors[5]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBrown),      &mTerminalEfiColors[6]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray),  &mTerminalEfiColors[7]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteDarkGray),   &mTerminalEfiColors[8]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightBlue),       &mTerminalEfiColors[9]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGreen),       &mTerminalEfiColors[10]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightCyan),       &mTerminalEfiColors[11]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightRed),        &mTerminalEfiColors[12]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta),    &mTerminalEfiColors[13]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteYellow),     &mTerminalEfiColors[14]);
-  CopyTerminalPaletteColor((UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite),      &mTerminalEfiColors[15]);
+  CopyTerminalPaletteColor(&mTerminalEfiColors[0],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBlack));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[1],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBlue));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[2],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteGreen));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[3],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteCyan));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[4],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteRed));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[5],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightMagenta));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[6],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteBrown));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[7],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[8],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteDarkGray));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[9],  (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightBlue));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[10], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGreen));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[11], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightCyan));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[12], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteLightRed));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[13], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[14], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteYellow));
+  CopyTerminalPaletteColor(&mTerminalEfiColors[15], (UINT8*)PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite));
 }

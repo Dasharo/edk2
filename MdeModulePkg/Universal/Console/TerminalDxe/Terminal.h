@@ -179,7 +179,7 @@ typedef struct {
   UINT8 g;
   UINT8 b;
 } TerminalEfiColor;
-VOID CopyTerminalPaletteColor(IN UINT8* Src, OUT TerminalEfiColor* Dest);
+VOID CopyTerminalPaletteColor(OUT TerminalEfiColor* Dest, IN UINT8* Src);
 VOID InitSerialColors (VOID);
 
 //
