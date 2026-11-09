@@ -99,6 +99,59 @@ VOID  **mAuthVarAddressPointer[11];
 AUTH_VAR_LIB_CONTEXT_IN  *mAuthVarLibContextIn = NULL;
 
 /**
+  Check whether firmware update mode (FUM) was requested for this boot.
+
+  The variable must have exactly the attributes the firmware creates it with
+  and a non-zero value. Existence of the variable alone is not enough, so that
+  it can exist with a FALSE value, and a variable with unexpected attributes
+  (e.g. created by an OS) is ignored.
+
+  @retval TRUE   FUM was requested.
+  @retval FALSE  FUM wasn't requested.
+**/
+STATIC
+BOOLEAN
+IsFumRequested (
+  VOID
+  )
+{
+  EFI_STATUS          Status;
+  AUTH_VARIABLE_INFO  VariableInfo;
+
+  ZeroMem (&VariableInfo, sizeof (VariableInfo));
+  Status = mAuthVarLibContextIn->FindVariable (
+                                   DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
+                                   &gDasharoSystemFeaturesGuid,
+                                   &VariableInfo
+                                   );
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+
+  if (VariableInfo.Attributes != DASHARO_FUM_REQUEST_ATTRIBUTES) {
+    DEBUG ((
+      DEBUG_WARN,
+      "Ignoring %s with unexpected attributes 0x%x.\n",
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
+      VariableInfo.Attributes
+      ));
+    return FALSE;
+  }
+
+  if (VariableInfo.DataSize != sizeof (BOOLEAN)) {
+    DEBUG ((
+      DEBUG_WARN,
+      "Ignoring %s with unexpected size %lu.\n",
+      DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST,
+      (UINT64)VariableInfo.DataSize
+      ));
+    return FALSE;
+  }
+
+  return *(BOOLEAN *)VariableInfo.Data;
+}
+
+/**
   Initialization for authenticated variable services.
   If this initialization returns error status, other APIs will not work
   and expect to be not called then.
@@ -127,6 +180,7 @@ AuthVariableLibInitialize (
   UINT8       SecureBootEnable;
   UINT8       CustomMode;
   UINT32      ListSize;
+  BOOLEAN     FumRequested;
 
   if ((AuthVarLibContextIn == NULL) || (AuthVarLibContextOut == NULL)) {
     return EFI_INVALID_PARAMETER;
@@ -235,13 +289,12 @@ AuthVariableLibInitialize (
     }
   }
 
-  Status = AuthServiceInternalFindVariable (DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST, &gDasharoSystemFeaturesGuid,
-                                            (VOID **) &Data, &DataSize);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_INFO, "Variable %s does not exist.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST));
-  } else {
-    DEBUG ((EFI_D_INFO, "Variable %s exists.\n", DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST));
-  }
+  FumRequested = IsFumRequested ();
+  DEBUG ((
+    EFI_D_INFO,
+    "Firmware update mode %a requested.\n",
+    FumRequested ? "is" : "isn't"
+    ));
 
   //
   // Create "SecureBoot" variable with BS+RT attribute set.
@@ -253,7 +306,7 @@ AuthVariableLibInitialize (
   }
 
   // Disable Secure Boot if FUM enabled in the project and currently active
-  if (PcdGetBool (PcdShowFum) && !EFI_ERROR (Status))
+  if (PcdGetBool (PcdShowFum) && FumRequested)
     SecureBootMode = SECURE_BOOT_MODE_DISABLE;
 
   Status = AuthServiceInternalUpdateVariable (
