@@ -3183,6 +3183,9 @@ UiDisplayMenu (
             gDirection      = 0;
             break;
 
+          //
+          // Ctrl+P: toggle the custom console color theme, see PcdConsoleUseCustomPalette
+          //
           case 'P' - 'A' + 1:
             if (!PcdGetBool (PcdConsoleCustomPaletteToggleAllowed)) {
               break;

@@ -2426,7 +2426,19 @@
   # @Prompt GHCB Pool Size
   gEfiMdeModulePkgTokenSpaceGuid.PcdGhcbSize|0|UINT64|0x00030008
 
+  ## Indicates if the consoles and the Setup browser use the platform's custom color theme
+  #  (PcdGraphicsConsoleColorPalette* and PcdBrowser*Color) instead of the stock EDK II colors.
+  #  UiApp sets it while the Setup UI is shown, EfiBootManagerBoot() clears it while a boot option runs.<BR><BR>
+  #   TRUE  - Use the custom color theme.<BR>
+  #   FALSE - Use the stock EDK II colors.<BR>
+  # @Prompt Use custom console color theme.
   gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette|FALSE|BOOLEAN|0x0003000B
+
+  ## Indicates if Ctrl+P in the Setup browser may toggle PcdConsoleUseCustomPalette.
+  #  UiApp sets it while the Setup UI is shown, EfiBootManagerBoot() clears it while a boot option runs.<BR><BR>
+  #   TRUE  - Ctrl+P toggles the color theme.<BR>
+  #   FALSE - Ctrl+P is ignored.<BR>
+  # @Prompt Allow toggling the console color theme with Ctrl+P.
   gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteToggleAllowed|FALSE|BOOLEAN|0x0003000D
 
 [PcdsDynamicEx]
