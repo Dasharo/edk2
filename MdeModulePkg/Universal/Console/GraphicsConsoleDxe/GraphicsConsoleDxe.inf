@@ -69,7 +69,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteGreen         ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteCyan          ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteRed           ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta  ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta       ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBrown         ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGray     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteDarkGray      ## CONSUMES
@@ -77,7 +77,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightGreen    ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightCyan     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightRed      ## CONSUMES
-  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteMagenta       ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteLightMagenta  ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteYellow        ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteWhite         ## CONSUMES
 

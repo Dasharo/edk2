@@ -94,7 +94,7 @@ InitGraphicsColors (
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[2],  PcdGetPtr(PcdGraphicsConsoleColorPaletteGreen));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[3],  PcdGetPtr(PcdGraphicsConsoleColorPaletteCyan));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[4],  PcdGetPtr(PcdGraphicsConsoleColorPaletteRed));
-  CopyGraphicsPaletteColor(&mGraphicsEfiColors[5],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightMagenta));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[5],  PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[6],  PcdGetPtr(PcdGraphicsConsoleColorPaletteBrown));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[7],  PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGray));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[8],  PcdGetPtr(PcdGraphicsConsoleColorPaletteDarkGray));
@@ -102,7 +102,7 @@ InitGraphicsColors (
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[10], PcdGetPtr(PcdGraphicsConsoleColorPaletteLightGreen));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[11], PcdGetPtr(PcdGraphicsConsoleColorPaletteLightCyan));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[12], PcdGetPtr(PcdGraphicsConsoleColorPaletteLightRed));
-  CopyGraphicsPaletteColor(&mGraphicsEfiColors[13], PcdGetPtr(PcdGraphicsConsoleColorPaletteMagenta));
+  CopyGraphicsPaletteColor(&mGraphicsEfiColors[13], PcdGetPtr(PcdGraphicsConsoleColorPaletteLightMagenta));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[14], PcdGetPtr(PcdGraphicsConsoleColorPaletteYellow));
   CopyGraphicsPaletteColor(&mGraphicsEfiColors[15], PcdGetPtr(PcdGraphicsConsoleColorPaletteWhite));
 }
