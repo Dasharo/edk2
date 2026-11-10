@@ -63,6 +63,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVideoVerticalResolution   ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow                 ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn              ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette   ## CONSUMES
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack         ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue          ## CONSUMES

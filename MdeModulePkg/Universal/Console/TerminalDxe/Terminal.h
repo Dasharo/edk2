@@ -123,6 +123,7 @@ typedef struct {
   EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL    SimpleInputEx;
   LIST_ENTRY                           NotifyList;
   EFI_EVENT                            KeyNotifyProcessEvent;
+  BOOLEAN                              CustomPaletteActive;
 } TERMINAL_DEV;
 
 #define INPUT_STATE_DEFAULT              0x00
@@ -189,6 +190,7 @@ extern EFI_DRIVER_BINDING_PROTOCOL   gTerminalDriverBinding;
 extern EFI_COMPONENT_NAME_PROTOCOL   gTerminalComponentName;
 extern EFI_COMPONENT_NAME2_PROTOCOL  gTerminalComponentName2;
 extern TerminalEfiColor mTerminalEfiColors[16];
+extern UINT8            mDefaultTerminalEfiColors[8];
 
 /**
   The user Entry Point for module Terminal. The user code starts with this function.

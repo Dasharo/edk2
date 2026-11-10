@@ -3183,6 +3183,17 @@ UiDisplayMenu (
             gDirection      = 0;
             break;
 
+          case 'P' - 'A' + 1:
+            if (!PcdGetBool (PcdConsoleCustomPaletteToggleAllowed)) {
+              break;
+            }
+
+            PcdSetBoolS (PcdConsoleUseCustomPalette, !PcdGetBool (PcdConsoleUseCustomPalette));
+            gMisMatch          = TRUE;
+            gUserInput->Action = BROWSER_ACTION_NONE;
+            ControlFlag        = CfExit;
+            break;
+
           //
           // We will push the adjustment of these numeric values directly to the input handler
           //  NOTE: we won't handle manual input numeric

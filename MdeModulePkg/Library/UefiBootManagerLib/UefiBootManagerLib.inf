@@ -123,3 +123,5 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdDriverHealthConfigureForm               ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxRepairCount                          ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdCreatePreInstalledBootOptions           ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette                 ## SOMETIMES_CONSUMES ## SOMETIMES_PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteToggleAllowed       ## SOMETIMES_CONSUMES ## SOMETIMES_PRODUCES

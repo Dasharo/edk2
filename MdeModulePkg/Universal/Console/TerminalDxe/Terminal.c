@@ -109,7 +109,8 @@ TERMINAL_DEV  mTerminalDevTemplate = {
     NULL,
     NULL,
   },
-  NULL // KeyNotifyProcessEvent
+  NULL, // KeyNotifyProcessEvent
+  FALSE
 };
 
 TERMINAL_CONSOLE_MODE_DATA  mTerminalConsoleModeData[] = {
@@ -1419,6 +1420,8 @@ IsHotPlugDevice (
 }
 
 TerminalEfiColor mTerminalEfiColors[16];
+
+UINT8  mDefaultTerminalEfiColors[8] = { 30, 34, 32, 36, 31, 35, 33, 37 };
 
 VOID CopyTerminalPaletteColor(OUT TerminalEfiColor* Dest, IN UINT8* Src) {
   Dest->r = Src[1];

@@ -2426,6 +2426,9 @@
   # @Prompt GHCB Pool Size
   gEfiMdeModulePkgTokenSpaceGuid.PcdGhcbSize|0|UINT64|0x00030008
 
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette|FALSE|BOOLEAN|0x0003000B
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteToggleAllowed|FALSE|BOOLEAN|0x0003000D
+
 [PcdsDynamicEx]
   ## This dynamic PCD enables the default variable setting.
   #  Its value is the default store ID value. The default value is zero as Standard default.

@@ -1003,6 +1003,10 @@ InitializeUserInterface (
   }
 
   gBS->SetWatchdogTimer (0x0000, 0x0000, 0x0000, NULL);
+  Status = PcdSetBoolS (PcdConsoleUseCustomPalette, TRUE);
+  ASSERT_EFI_ERROR (Status);
+  Status = PcdSetBoolS (PcdConsoleCustomPaletteToggleAllowed, TRUE);
+  ASSERT_EFI_ERROR (Status);
   gST->ConOut->ClearScreen (gST->ConOut);
 
   //
@@ -1015,6 +1019,12 @@ InitializeUserInterface (
 
   UiSetConsoleMode (TRUE);
   UiEntry (FALSE);
+  Status = PcdSetBoolS (PcdConsoleCustomPaletteToggleAllowed, FALSE);
+  ASSERT_EFI_ERROR (Status);
+  Status = PcdSetBoolS (PcdConsoleUseCustomPalette, FALSE);
+  ASSERT_EFI_ERROR (Status);
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_TEXT_ATTR (EFI_LIGHTGRAY, EFI_BLACK));
+  gST->ConOut->ClearScreen (gST->ConOut);
   UiSetConsoleMode (FALSE);
 
   UninitializeStringSupport ();

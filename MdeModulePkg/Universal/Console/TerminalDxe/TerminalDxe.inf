@@ -89,6 +89,7 @@
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType           ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdErrorCodeSetVariable    ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlack          ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteBlue           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdGraphicsConsoleColorPaletteGreen          ## CONSUMES

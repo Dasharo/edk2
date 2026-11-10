@@ -63,7 +63,34 @@ EFI_GUID  mFontPackageListGuid = {
 
 CHAR16  mCrLfString[3] = { CHAR_CARRIAGE_RETURN, CHAR_LINEFEED, CHAR_NULL };
 
+EFI_GRAPHICS_OUTPUT_BLT_PIXEL  mDefaultGraphicsEfiColors[16] = {
+  { 0x00, 0x00, 0x00, 0x00 },
+  { 0x98, 0x00, 0x00, 0x00 },
+  { 0x00, 0x98, 0x00, 0x00 },
+  { 0x98, 0x98, 0x00, 0x00 },
+  { 0x00, 0x00, 0x98, 0x00 },
+  { 0x98, 0x00, 0x98, 0x00 },
+  { 0x00, 0x98, 0x98, 0x00 },
+  { 0x98, 0x98, 0x98, 0x00 },
+  { 0x30, 0x30, 0x30, 0x00 },
+  { 0xff, 0x00, 0x00, 0x00 },
+  { 0x00, 0xff, 0x00, 0x00 },
+  { 0xff, 0xff, 0x00, 0x00 },
+  { 0x00, 0x00, 0xff, 0x00 },
+  { 0xff, 0x00, 0xff, 0x00 },
+  { 0x00, 0xff, 0xff, 0x00 },
+  { 0xff, 0xff, 0xff, 0x00 }
+};
+
 EFI_GRAPHICS_OUTPUT_BLT_PIXEL  mGraphicsEfiColors[16];
+
+EFI_GRAPHICS_OUTPUT_BLT_PIXEL *
+GetActiveGraphicsPalette (
+  VOID
+  )
+{
+  return PcdGetBool (PcdConsoleUseCustomPalette) ? mGraphicsEfiColors : mDefaultGraphicsEfiColors;
+}
 
 /**
   test
@@ -1315,7 +1342,7 @@ GraphicsConsoleConOutSetMode (
       //
       Status = GraphicsOutput->Blt (
                                  GraphicsOutput,
-                                 &mGraphicsEfiColors[0],
+                                 GetActiveGraphicsPalette (),
                                  EfiBltVideoFill,
                                  0,
                                  0,
@@ -1590,12 +1617,14 @@ GetTextColors (
   OUT EFI_GRAPHICS_OUTPUT_BLT_PIXEL    *Background
   )
 {
-  INTN  Attribute;
+  INTN                           Attribute;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL  *Palette;
 
   Attribute = This->Mode->Attribute & 0x7F;
+  Palette   = GetActiveGraphicsPalette ();
 
-  *Foreground = mGraphicsEfiColors[Attribute & 0x0f];
-  *Background = mGraphicsEfiColors[Attribute >> 4];
+  *Foreground = Palette[Attribute & 0x0f];
+  *Background = Palette[Attribute >> 4];
 
   return EFI_SUCCESS;
 }

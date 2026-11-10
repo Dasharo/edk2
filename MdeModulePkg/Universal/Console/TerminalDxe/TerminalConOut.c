@@ -568,6 +568,8 @@ TerminalConOutSetAttribute (
   INT32               SavedRow;
   EFI_STATUS          Status;
   TERMINAL_DEV        *TerminalDevice;
+  BOOLEAN             UseCustomPalette;
+  CHAR16              mSetTerminalColorString[64];
 
   SavedColumn = 0;
   SavedRow    = 0;
@@ -588,7 +590,11 @@ TerminalConOutSetAttribute (
   // Skip outputting the command string for the same attribute
   // It improves the terminal performance significantly
   //
-  if (This->Mode->Attribute == (INT32)Attribute) {
+  UseCustomPalette = PcdGetBool (PcdConsoleUseCustomPalette);
+
+  if ((This->Mode->Attribute == (INT32)Attribute) &&
+      (TerminalDevice->CustomPaletteActive == UseCustomPalette))
+  {
     return EFI_SUCCESS;
   }
 
@@ -596,17 +602,30 @@ TerminalConOutSetAttribute (
   //  convert Attribute value to terminal emulator
   //  understandable foreground color
   //
-  ForegroundControl = mTerminalEfiColors[Attribute & 0x0F];
-  BackgroundControl = mTerminalEfiColors[(Attribute >> 4) & 0x07];
+  if (UseCustomPalette) {
+    ForegroundControl = mTerminalEfiColors[Attribute & 0x0F];
+    BackgroundControl = mTerminalEfiColors[(Attribute >> 4) & 0x07];
 
-  //
-  // terminal emulator's control sequence to set attributes
-  //
-  CHAR16 mSetTerminalColorString[64];
-  UnicodeSPrint(mSetTerminalColorString, sizeof(mSetTerminalColorString),
-    L"%c[38;2;%u;%u;%um%c[48;2;%u;%u;%um",
-    ESC, ForegroundControl.r, ForegroundControl.g, ForegroundControl.b,
-    ESC, BackgroundControl.r, BackgroundControl.g, BackgroundControl.b);
+    //
+    // terminal emulator's control sequence to set attributes
+    //
+    UnicodeSPrint(mSetTerminalColorString, sizeof(mSetTerminalColorString),
+      L"%c[38;2;%u;%u;%um%c[48;2;%u;%u;%um",
+      ESC, ForegroundControl.r, ForegroundControl.g, ForegroundControl.b,
+      ESC, BackgroundControl.r, BackgroundControl.g, BackgroundControl.b);
+  } else {
+    UnicodeSPrint (
+      mSetTerminalColorString,
+      sizeof (mSetTerminalColorString),
+      L"%c[%um%c[%um%c[%um",
+      ESC,
+      (UINT32)((Attribute >> 3) & 1),
+      ESC,
+      (UINT32)mDefaultTerminalEfiColors[Attribute & 0x07],
+      ESC,
+      (UINT32)mDefaultTerminalEfiColors[(Attribute >> 4) & 0x07] + 10
+      );
+  }
 
   //
   // save current column and row
@@ -630,6 +649,7 @@ TerminalConOutSetAttribute (
   This->Mode->CursorRow    = SavedRow;
 
   This->Mode->Attribute = (INT32)Attribute;
+  TerminalDevice->CustomPaletteActive = UseCustomPalette;
 
   return EFI_SUCCESS;
 }
