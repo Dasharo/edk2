@@ -1910,6 +1910,8 @@ EfiBootManagerBoot (
   EFI_INPUT_KEY              Key;
   UINTN                      Index;
   UINT8                      *SecureBoot;
+  BOOLEAN                    CustomPaletteActive;
+  BOOLEAN                    PaletteToggleAllowed;
 
   if (BootOption == NULL) {
     return;
@@ -2155,9 +2157,29 @@ EfiBootManagerBoot (
 
   REPORT_STATUS_CODE (EFI_PROGRESS_CODE, PcdGet32 (PcdProgressCodeOsLoaderStart));
 
+  PaletteToggleAllowed = PcdGetBool (PcdConsoleCustomPaletteToggleAllowed);
+  if (PaletteToggleAllowed) {
+    PcdSetBoolS (PcdConsoleCustomPaletteToggleAllowed, FALSE);
+  }
+
+  CustomPaletteActive = PcdGetBool (PcdConsoleUseCustomPalette);
+  if (CustomPaletteActive) {
+    PcdSetBoolS (PcdConsoleUseCustomPalette, FALSE);
+    gST->ConOut->SetAttribute (gST->ConOut, EFI_TEXT_ATTR (EFI_LIGHTGRAY, EFI_BLACK));
+    gST->ConOut->ClearScreen (gST->ConOut);
+  }
+
   Status = gBS->StartImage (ImageHandle, &BootOption->ExitDataSize, &BootOption->ExitData);
   DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Image Return Status = %r\n", Status));
   BootOption->Status = Status;
+
+  if (CustomPaletteActive) {
+    PcdSetBoolS (PcdConsoleUseCustomPalette, TRUE);
+  }
+
+  if (PaletteToggleAllowed) {
+    PcdSetBoolS (PcdConsoleCustomPaletteToggleAllowed, TRUE);
+  }
 
   //
   // Destroy the RAM disk

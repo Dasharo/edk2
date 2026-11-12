@@ -10,6 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #include "Terminal.h"
+#include <Library/PrintLib.h>
 
 //
 // This list is used to define the valid extend chars.
@@ -77,7 +78,6 @@ UNICODE_TO_CHAR  UnicodeToPcAnsiOrAscii[] = {
 
 CHAR16  mSetModeString[]           = { ESC, '[', '=', '3', 'h', 0 };
 CHAR16  mSetModeStringResize[]     = { ESC, '[', '8', ';', '0', '0', '0', ';', '0', '0', '0', 't', 0 };
-CHAR16  mSetAttributeString[]      = { ESC, '[', '0', 'm', ESC, '[', '4', '0', 'm', ESC, '[', '4', '0', 'm', 0 };
 CHAR16  mClearScreenString[]       = { ESC, '[', '2', 'J', 0 };
 CHAR16  mSetCursorPositionString[] = { ESC, '[', '0', '0', '0', ';', '0', '0', '0', 'H', 0 };
 CHAR16  mCursorForwardString[]     = { ESC, '[', '0', '0', '0', 'C', 0 };
@@ -562,13 +562,14 @@ TerminalConOutSetAttribute (
   IN  UINTN                            Attribute
   )
 {
-  UINT8         ForegroundControl;
-  UINT8         BackgroundControl;
-  UINT8         BrightControl;
-  INT32         SavedColumn;
-  INT32         SavedRow;
-  EFI_STATUS    Status;
-  TERMINAL_DEV  *TerminalDevice;
+  TerminalEfiColor    ForegroundControl;
+  TerminalEfiColor    BackgroundControl;
+  INT32               SavedColumn;
+  INT32               SavedRow;
+  EFI_STATUS          Status;
+  TERMINAL_DEV        *TerminalDevice;
+  BOOLEAN             UseCustomPalette;
+  CHAR16              mSetTerminalColorString[64];
 
   SavedColumn = 0;
   SavedRow    = 0;
@@ -589,7 +590,11 @@ TerminalConOutSetAttribute (
   // Skip outputting the command string for the same attribute
   // It improves the terminal performance significantly
   //
-  if (This->Mode->Attribute == (INT32)Attribute) {
+  UseCustomPalette = PcdGetBool (PcdConsoleUseCustomPalette);
+
+  if ((This->Mode->Attribute == (INT32)Attribute) &&
+      (TerminalDevice->CustomPaletteActive == UseCustomPalette))
+  {
     return EFI_SUCCESS;
   }
 
@@ -597,96 +602,30 @@ TerminalConOutSetAttribute (
   //  convert Attribute value to terminal emulator
   //  understandable foreground color
   //
-  switch (Attribute & 0x07) {
-    case EFI_BLACK:
-      ForegroundControl = 30;
-      break;
+  if (UseCustomPalette) {
+    ForegroundControl = mTerminalEfiColors[Attribute & 0x0F];
+    BackgroundControl = mTerminalEfiColors[(Attribute >> 4) & 0x07];
 
-    case EFI_BLUE:
-      ForegroundControl = 34;
-      break;
-
-    case EFI_GREEN:
-      ForegroundControl = 32;
-      break;
-
-    case EFI_CYAN:
-      ForegroundControl = 36;
-      break;
-
-    case EFI_RED:
-      ForegroundControl = 31;
-      break;
-
-    case EFI_MAGENTA:
-      ForegroundControl = 35;
-      break;
-
-    case EFI_BROWN:
-      ForegroundControl = 33;
-      break;
-
-    default:
-
-    case EFI_LIGHTGRAY:
-      ForegroundControl = 37;
-      break;
+    //
+    // terminal emulator's control sequence to set attributes
+    //
+    UnicodeSPrint(mSetTerminalColorString, sizeof(mSetTerminalColorString),
+      L"%c[38;2;%u;%u;%um%c[48;2;%u;%u;%um",
+      ESC, ForegroundControl.r, ForegroundControl.g, ForegroundControl.b,
+      ESC, BackgroundControl.r, BackgroundControl.g, BackgroundControl.b);
+  } else {
+    UnicodeSPrint (
+      mSetTerminalColorString,
+      sizeof (mSetTerminalColorString),
+      L"%c[%um%c[%um%c[%um",
+      ESC,
+      (UINT32)((Attribute >> 3) & 1),
+      ESC,
+      (UINT32)mDefaultTerminalEfiColors[Attribute & 0x07],
+      ESC,
+      (UINT32)mDefaultTerminalEfiColors[(Attribute >> 4) & 0x07] + 10
+      );
   }
-
-  //
-  //  bit4 of the Attribute indicates bright control
-  //  of terminal emulator.
-  //
-  BrightControl = (UINT8)((Attribute >> 3) & 1);
-
-  //
-  //  convert Attribute value to terminal emulator
-  //  understandable background color.
-  //
-  switch ((Attribute >> 4) & 0x07) {
-    case EFI_BLACK:
-      BackgroundControl = 40;
-      break;
-
-    case EFI_BLUE:
-      BackgroundControl = 44;
-      break;
-
-    case EFI_GREEN:
-      BackgroundControl = 42;
-      break;
-
-    case EFI_CYAN:
-      BackgroundControl = 46;
-      break;
-
-    case EFI_RED:
-      BackgroundControl = 41;
-      break;
-
-    case EFI_MAGENTA:
-      BackgroundControl = 45;
-      break;
-
-    case EFI_BROWN:
-      BackgroundControl = 43;
-      break;
-
-    default:
-
-    case EFI_LIGHTGRAY:
-      BackgroundControl = 47;
-      break;
-  }
-
-  //
-  // terminal emulator's control sequence to set attributes
-  //
-  mSetAttributeString[BRIGHT_CONTROL_OFFSET]         = (CHAR16)('0' + BrightControl);
-  mSetAttributeString[FOREGROUND_CONTROL_OFFSET + 0] = (CHAR16)('0' + (ForegroundControl / 10));
-  mSetAttributeString[FOREGROUND_CONTROL_OFFSET + 1] = (CHAR16)('0' + (ForegroundControl % 10));
-  mSetAttributeString[BACKGROUND_CONTROL_OFFSET + 0] = (CHAR16)('0' + (BackgroundControl / 10));
-  mSetAttributeString[BACKGROUND_CONTROL_OFFSET + 1] = (CHAR16)('0' + (BackgroundControl % 10));
 
   //
   // save current column and row
@@ -696,7 +635,7 @@ TerminalConOutSetAttribute (
   SavedRow    = This->Mode->CursorRow;
 
   TerminalDevice->OutputEscChar = TRUE;
-  Status                        = This->OutputString (This, mSetAttributeString);
+  Status                        = This->OutputString (This, mSetTerminalColorString);
   TerminalDevice->OutputEscChar = FALSE;
 
   if (EFI_ERROR (Status)) {
@@ -710,6 +649,7 @@ TerminalConOutSetAttribute (
   This->Mode->CursorRow    = SavedRow;
 
   This->Mode->Attribute = (INT32)Attribute;
+  TerminalDevice->CustomPaletteActive = UseCustomPalette;
 
   return EFI_SUCCESS;
 }

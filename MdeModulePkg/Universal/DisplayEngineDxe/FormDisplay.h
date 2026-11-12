@@ -16,6 +16,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/HiiLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PrintLib.h>
+#include <Library/PcdLib.h>
 #include <Library/CustomizedDisplayLib.h>
 
 #include <Protocol/FormBrowserEx2.h>

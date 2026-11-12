@@ -78,6 +78,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution    ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdTestKeyUsed                     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleUseCustomPalette         ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteToggleAllowed ## PRODUCES
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UiAppExtra.uni

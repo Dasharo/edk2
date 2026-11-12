@@ -532,7 +532,7 @@ CreateDialog (
       //
       // Passing in a space results in the assumption that this is where typing will occur
       //
-      ClearLines (Start + 1, End - 1, Index + 1, Index + 1, POPUP_INVERSE_TEXT | POPUP_INVERSE_BACKGROUND);
+      ClearLines (Start + 1, End - 1, Index + 1, Index + 1, GetPopupInverseColor());
       PrintStringAt (
         ((DimensionsWidth - LibGetStringWidth (String) / 2) / 2) + gScreenDimensions.LeftColumn + 1,
         Index + 1,
@@ -852,7 +852,7 @@ GetInfoTextColor (
   VOID
   )
 {
-  return INFO_TEXT | FIELD_BACKGROUND;
+  return INFO_TEXT | INFO_BACKGROUND;
 }
 
 /**
@@ -866,7 +866,7 @@ GetHelpTextColor (
   VOID
   )
 {
-  return HELP_TEXT | FIELD_BACKGROUND;
+  return HELP_TEXT | HELP_BACKGROUND;
 }
 
 /**
@@ -894,7 +894,7 @@ GetHighlightTextColor (
   VOID
   )
 {
-  return PcdGet8 (PcdBrowserFieldTextHighlightColor) | PcdGet8 (PcdBrowserFieldBackgroundHighlightColor);
+  return FIELD_TEXT_HIGHLIGHT | FIELD_BACKGROUND_HIGHLIGHT;
 }
 
 /**
@@ -908,7 +908,7 @@ GetFieldTextColor (
   VOID
   )
 {
-  return PcdGet8 (PcdBrowserFieldTextColor) | FIELD_BACKGROUND;
+  return FIELD_TEXT | FIELD_BACKGROUND;
 }
 
 /**
@@ -922,7 +922,7 @@ GetSubTitleTextColor (
   VOID
   )
 {
-  return PcdGet8 (PcdBrowserSubtitleTextColor) | FIELD_BACKGROUND;
+  return SUBTITLE_TEXT | FIELD_BACKGROUND;
 }
 
 /**
