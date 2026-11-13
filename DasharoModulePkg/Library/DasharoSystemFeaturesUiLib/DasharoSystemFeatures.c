@@ -712,6 +712,7 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState,
                   FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
     STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, FixedPcdGetBool (PcdPowerMenuShowFanCurve));
+    STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION2, FanCurveOption, FixedPcdGetBool (PcdPowerMenuShowFanCurve));
     // Variable holds multiple curves but we treat them as one in setup menu,
     // so STORE_VAR_IF does not work here
     if (FixedPcdGetBool (PcdPowerMenuCustomFanCurve) &&
