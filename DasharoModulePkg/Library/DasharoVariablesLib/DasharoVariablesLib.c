@@ -65,6 +65,7 @@ STATIC CONST AUTO_VARIABLE mAutoCreatedVariables[] = {
   { DASHARO_VAR_ENABLE_CAMERA, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowCameraOption) },
   { DASHARO_VAR_ENABLE_WIFI_BT, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdSecurityShowWiFiBtOption) },
   { DASHARO_VAR_FAN_CURVE_OPTION, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) },
+  { DASHARO_VAR_FAN_CURVE_OPTION2, FixedPcdGetBool (PcdShowPowerMenu) && FixedPcdGetBool (PcdPowerMenuShowFanCurve) },
   { DASHARO_VAR_IOMMU_CONFIG, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowIommuOptions) },
   { DASHARO_VAR_LOCK_BIOS, FixedPcdGetBool (PcdShowSecurityMenu) && FixedPcdGetBool (PcdShowLockBios) },
   { DASHARO_VAR_MEMORY_PROFILE, FixedPcdGetBool (PcdShowMemoryMenu) && FixedPcdGetBool (PcdShowMemorySpdProfileOption) },
@@ -145,7 +146,8 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_ENABLE_WIFI_BT) == 0) {
     Data.Boolean = TRUE;
     Size = sizeof (Data.Boolean);
-  } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION) == 0) {
+  } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION) == 0 ||
+             StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION2) == 0) {
     Data.Uint8 = DASHARO_FAN_CURVE_OPTION_SILENT;
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_IOMMU_CONFIG) == 0) {

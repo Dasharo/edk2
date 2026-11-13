@@ -27,6 +27,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_ENABLE_CAMERA                 L"EnableCamera"
 #define DASHARO_VAR_ENABLE_WIFI_BT                L"EnableWifiBt"
 #define DASHARO_VAR_FAN_CURVE_OPTION              L"FanCurveOption"
+#define DASHARO_VAR_FAN_CURVE_OPTION2             L"FanCurveOption2"
 #define DASHARO_VAR_FIRMWARE_UPDATE_MODE_REQUEST  L"FirmwareUpdateModeRequest"
 #define DASHARO_VAR_FIRMWARE_UPDATE_MODE_ACTIVE   L"FirmwareUpdateMode"
 #define DASHARO_VAR_HYPER_THREADING               L"HyperThreading"
