@@ -83,6 +83,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 // Capacity of DASHARO_CUSTOM_FAN_CURVE. Raise to allow longer curves
 #define DASHARO_FAN_CURVE_MAX_POINTS           4
+#define DASHARO_FAN_CURVE_MAX_FANS             2
 
 #define DASHARO_BATTERY_PROFILE_STANDARD       0
 #define DASHARO_BATTERY_PROFILE_LONGEVITY      1
@@ -162,6 +163,10 @@ typedef struct {
   DASHARO_FAN_POINT  Points[DASHARO_FAN_CURVE_MAX_POINTS];
 } DASHARO_CUSTOM_FAN_CURVE;
 
+typedef struct {
+  DASHARO_CUSTOM_FAN_CURVE  Fans[DASHARO_FAN_CURVE_MAX_FANS];
+} DASHARO_CUSTOM_FAN_CURVES;
+
 #pragma pack(pop)
 
 // Set of possible values of Dasharo variables.
@@ -172,7 +177,7 @@ typedef union {
   DASHARO_WATCHDOG_CONFIG  Watchdog;
   DASHARO_IOMMU_CONFIG     Iommu;
   DASHARO_BATTERY_CONFIG   Battery;
-  DASHARO_CUSTOM_FAN_CURVE FanCurve;
+  DASHARO_CUSTOM_FAN_CURVES FanCurves;
 } DASHARO_VAR_DATA;
 
 #endif
