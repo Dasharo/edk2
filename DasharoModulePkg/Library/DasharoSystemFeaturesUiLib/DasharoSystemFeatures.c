@@ -176,6 +176,57 @@ LocateAcpiTableBySignature (
   return Status;
 }
 
+// The variable holds multiple curves but setup menu controls them all at once
+// so the generic LOAD_VAR does not apply, curve of one fan needs
+// to be extracted
+STATIC
+DASHARO_CUSTOM_FAN_CURVE
+LoadCustomFanCurve (
+  VOID
+  )
+{
+  EFI_STATUS                 Status;
+  UINTN                      BufferSize;
+  DASHARO_CUSTOM_FAN_CURVES  FanCurves;
+
+  BufferSize = sizeof (FanCurves);
+  Status = gRT->GetVariable (
+      DASHARO_VAR_CUSTOM_FAN_CURVE,
+      &gDasharoSystemFeaturesGuid,
+      NULL,
+      &BufferSize,
+      &FanCurves
+      );
+  if (EFI_ERROR (Status) || BufferSize != sizeof (FanCurves))
+    FanCurves = DasharoGetVariableDefault (DASHARO_VAR_CUSTOM_FAN_CURVE).FanCurves;
+
+  // Setup menu steers all curves at once, but other drivers might configure them
+  // separately. Returning 0 here is as good as any other idx.
+  return FanCurves.Fans[0];
+}
+
+STATIC
+EFI_STATUS
+StoreCustomFanCurve (
+  IN CONST DASHARO_CUSTOM_FAN_CURVE  *FanCurve
+  )
+{
+  DASHARO_CUSTOM_FAN_CURVES  FanCurves;
+  UINTN                      Index;
+
+  // Steering all fans with one curve
+  for (Index = 0; Index < DASHARO_FAN_CURVE_MAX_FANS; Index++)
+    FanCurves.Fans[Index] = *FanCurve;
+
+  return gRT->SetVariable (
+      DASHARO_VAR_CUSTOM_FAN_CURVE,
+      &gDasharoSystemFeaturesGuid,
+      DasharoGetVariableAttributes (DASHARO_VAR_CUSTOM_FAN_CURVE),
+      sizeof (FanCurves),
+      &FanCurves
+      );
+}
+
 /**
   Install Dasharo System Features Menu driver.
 
@@ -339,13 +390,12 @@ DasharoSystemFeaturesUiLibConstructor (
                                 UINT8: DasharoGetVariableDefault(var).Uint8,    \
               DASHARO_WATCHDOG_CONFIG: DasharoGetVariableDefault(var).Watchdog, \
                  DASHARO_IOMMU_CONFIG: DasharoGetVariableDefault(var).Iommu,    \
-               DASHARO_BATTERY_CONFIG: DasharoGetVariableDefault(var).Battery,  \
-             DASHARO_CUSTOM_FAN_CURVE: DasharoGetVariableDefault(var).FanCurve  \
+               DASHARO_BATTERY_CONFIG: DasharoGetVariableDefault(var).Battery   \
     );                                                                          \
   } while (FALSE)
 
   LOAD_VAR (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig);
-  LOAD_VAR (DASHARO_VAR_CUSTOM_FAN_CURVE, CustomFanCurve);
+  PRIVATE_DATA(CustomFanCurve) = LoadCustomFanCurve ();
   LOAD_VAR (DASHARO_VAR_BOOT_MANAGER_ENABLED, BootManagerEnabled);
   LOAD_VAR (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset);
   LOAD_VAR (DASHARO_VAR_ENABLE_CAMERA, EnableCamera);
@@ -662,7 +712,17 @@ DasharoSystemFeaturesRouteConfig (
     STORE_VAR_IF (DASHARO_VAR_POWER_FAILURE_STATE, PowerFailureState,
                   FixedPcdGet8 (PcdDefaultPowerFailureState) != POWER_FAILURE_STATE_HIDDEN);
     STORE_VAR_IF (DASHARO_VAR_FAN_CURVE_OPTION, FanCurveOption, FixedPcdGetBool (PcdPowerMenuShowFanCurve));
-    STORE_VAR_IF (DASHARO_VAR_CUSTOM_FAN_CURVE, CustomFanCurve, FixedPcdGetBool (PcdPowerMenuCustomFanCurve));
+    // Variable holds multiple curves but we treat them as one in setup menu,
+    // so STORE_VAR_IF does not work here
+    if (FixedPcdGetBool (PcdPowerMenuCustomFanCurve) &&
+        CompareMem (&Private->DasharoFeaturesData.CustomFanCurve,
+                    &DasharoFeaturesData.CustomFanCurve,
+                    sizeof (DasharoFeaturesData.CustomFanCurve)) != 0) {
+      Status = StoreCustomFanCurve (&DasharoFeaturesData.CustomFanCurve);
+      if (EFI_ERROR (Status)) {
+        return Status;
+      }
+    }
     STORE_VAR_IF (DASHARO_VAR_BATTERY_CONFIG, BatteryConfig, FixedPcdGetBool (PcdPowerMenuShowBatteryThresholds));
     STORE_VAR_IF (DASHARO_VAR_CPU_THROTTLING_OFFSET, CpuThrottlingOffset, FixedPcdGetBool (PcdShowCpuThrottlingThreshold));
     STORE_VAR_IF (DASHARO_VAR_USB_PORT_POWER, UsbPortPower, FixedPcdGetBool (PcdPowerMenuShowUsbPowerOption));
@@ -848,7 +908,7 @@ DasharoSystemFeaturesCallback (
           DASHARO_FAN_POINT  Point;
 
           Point = DasharoGetVariableDefault (DASHARO_VAR_CUSTOM_FAN_CURVE)
-                    .FanCurve.Points[(QuestionId - CUSTOM_FAN_CURVE_QUESTION_ID_BASE) / 2];
+                    .FanCurves.Fans[0].Points[(QuestionId - CUSTOM_FAN_CURVE_QUESTION_ID_BASE) / 2];
           Value->u8 = (QuestionId - CUSTOM_FAN_CURVE_QUESTION_ID_BASE) % 2 ? Point.Duty : Point.Temp;
         } else {
           Status = EFI_UNSUPPORTED;
