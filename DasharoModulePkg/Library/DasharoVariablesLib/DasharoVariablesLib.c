@@ -110,6 +110,7 @@ GetVariableInfo (
   VAR_INFO          Value;
   DASHARO_VAR_DATA  Data;
   UINTN             Size;
+  UINTN             Index;
   UINT32            ExtraAttrs;
 
   SetMem (&Data, sizeof (Data), 0);
@@ -128,12 +129,15 @@ GetVariableInfo (
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_CUSTOM_FAN_CURVE) == 0) {
     // Starting point for editing
-    Data.FanCurve.PointCount = 4;
-    Data.FanCurve.Points[0].Temp = 0;   Data.FanCurve.Points[0].Duty = 20;
-    Data.FanCurve.Points[1].Temp = 70;  Data.FanCurve.Points[1].Duty = 25;
-    Data.FanCurve.Points[2].Temp = 85;  Data.FanCurve.Points[2].Duty = 45;
-    Data.FanCurve.Points[3].Temp = 95;  Data.FanCurve.Points[3].Duty = 100;
-    Size = sizeof (Data.FanCurve);
+    Data.FanCurves.Fans[0].PointCount = 4;
+    Data.FanCurves.Fans[0].Points[0].Temp = 0;   Data.FanCurves.Fans[0].Points[0].Duty = 20;
+    Data.FanCurves.Fans[0].Points[1].Temp = 70;  Data.FanCurves.Fans[0].Points[1].Duty = 25;
+    Data.FanCurves.Fans[0].Points[2].Temp = 85;  Data.FanCurves.Fans[0].Points[2].Duty = 45;
+    Data.FanCurves.Fans[0].Points[3].Temp = 95;  Data.FanCurves.Fans[0].Points[3].Duty = 100;
+    for (Index = 1; Index < DASHARO_FAN_CURVE_MAX_FANS; Index++) {
+      Data.FanCurves.Fans[Index] = Data.FanCurves.Fans[0];
+    }
+    Size = sizeof (Data.FanCurves);
     ExtraAttrs = EFI_VARIABLE_RUNTIME_ACCESS;
   } else if (StrCmp (VarName, DASHARO_VAR_ENABLE_CAMERA) == 0) {
     Data.Boolean = TRUE;
