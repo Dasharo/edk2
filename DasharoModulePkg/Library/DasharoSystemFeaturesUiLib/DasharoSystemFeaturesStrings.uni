@@ -184,6 +184,15 @@
 #string STR_WIFI_BT_ENABLE_PROMPT    #language en-US "Enable Wi-Fi + BT radios"
 #string STR_WIFI_BT_ENABLE_HELP      #language en-US "When not enabled, WiFi + Bluetooth card slot is disabled."
 
+#string STR_BATTERY_PROFILE_PROMPT    #language en-US "Battery Charge Profile"
+#string STR_BATTERY_PROFILE_HELP      #language en-US "Selects the battery charging thresholds.\n\n"
+                                                      "Standard - charge starts below 95% and stops at 98%.\n"
+                                                      "Longevity - charge starts below 60% and stops at 80%. Recommended if the device is mostly used when connected to an AC adapter, as keeping the battery at a high charge level accelerates wear and swelling.\n"
+                                                      "Custom - set the start and stop thresholds manually."
+#string STR_BATTERY_PROFILE_STANDARD    #language en-US "Standard"
+#string STR_BATTERY_PROFILE_LONGEVITY   #language en-US "Longevity"
+#string STR_BATTERY_PROFILE_CUSTOM      #language en-US "Custom"
+
 #string STR_BATTERY_START_THRESHOLD_PROMPT    #language en-US "Battery Start Charge Threshold"
 #string STR_BATTERY_START_THRESHOLD_HELP      #language en-US "The battery will only start charging once the charge level drops below this value. Consider lowering the value to around 70% if the device is mostly used when connected to an AC adapter to reduce battery wear."
 
