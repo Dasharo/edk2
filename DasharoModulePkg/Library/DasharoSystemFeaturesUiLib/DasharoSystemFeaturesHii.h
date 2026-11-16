@@ -213,6 +213,8 @@ typedef struct {
   BOOLEAN                  MemoryIbecc;
   BOOLEAN                  StmEnable;
   UINT8                    PcieBifurcation;
+  // Not stored in a variable, derived from BatteryConfig
+  UINT8                    BatteryProfile;
   // FIXME: Do not put anything after IBG_STATUS. There is something wrong
   // with alignments/accesses to this structure, which causes values
   // overwrites that are after IBG_STATUS in the DASHARO_FEATURES_DATA
@@ -232,6 +234,10 @@ typedef struct {
 #define FAN_CURVE_OPTION_PERFORMANCE   DASHARO_FAN_CURVE_OPTION_PERFORMANCE
 #define FAN_CURVE_OPTION_OFF           DASHARO_FAN_CURVE_OPTION_OFF
 #define FAN_CURVE_OPTION_CUSTOM        DASHARO_FAN_CURVE_OPTION_CUSTOM
+
+#define BATTERY_PROFILE_STANDARD       DASHARO_BATTERY_PROFILE_STANDARD
+#define BATTERY_PROFILE_LONGEVITY      DASHARO_BATTERY_PROFILE_LONGEVITY
+#define BATTERY_PROFILE_CUSTOM         DASHARO_BATTERY_PROFILE_CUSTOM
 
 #define ME_MODE_ENABLE                 DASHARO_ME_MODE_ENABLE
 #define ME_MODE_DISABLE_HECI           DASHARO_ME_MODE_DISABLE_HECI
@@ -309,5 +315,6 @@ typedef struct {
 #define FAN_POINT3_DUTY_QUESTION_ID          0x8025
 #define FAN_POINT4_TEMP_QUESTION_ID          0x8026
 #define FAN_POINT4_DUTY_QUESTION_ID          0x8027
+#define BATTERY_PROFILE_QUESTION_ID          0x8019
 
 #endif

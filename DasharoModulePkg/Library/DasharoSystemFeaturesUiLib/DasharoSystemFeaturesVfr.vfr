@@ -885,6 +885,18 @@ formset
     endif;
 
     disableif ideqval FeaturesData.PowerMenuShowBatteryThresholds == 0;
+      oneof varid  = FeaturesData.BatteryProfile,
+            questionid = BATTERY_PROFILE_QUESTION_ID,
+            prompt = STRING_TOKEN(STR_BATTERY_PROFILE_PROMPT),
+            help   = STRING_TOKEN(STR_BATTERY_PROFILE_HELP),
+            flags  = INTERACTIVE | RESET_REQUIRED,
+
+            option text = STRING_TOKEN(STR_BATTERY_PROFILE_STANDARD), value = BATTERY_PROFILE_STANDARD, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_BATTERY_PROFILE_LONGEVITY), value = BATTERY_PROFILE_LONGEVITY, flags = 0;
+            option text = STRING_TOKEN(STR_BATTERY_PROFILE_CUSTOM), value = BATTERY_PROFILE_CUSTOM, flags = 0;
+      endoneof;
+
+    suppressif NOT ideqval FeaturesData.BatteryProfile == BATTERY_PROFILE_CUSTOM;
       numeric varid   = FeaturesData.BatteryConfig.StartThreshold,
               questionid = BATTERY_START_THRESHOLD_QUESTION_ID,
               prompt  = STRING_TOKEN(STR_BATTERY_START_THRESHOLD_PROMPT),
@@ -895,6 +907,7 @@ formset
               step    = 1,
 
               nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                  ideqval FeaturesData.BatteryProfile == BATTERY_PROFILE_CUSTOM AND
                   ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
               endif
       endnumeric;
@@ -909,9 +922,11 @@ formset
               step    = 1,
 
               nosubmitif prompt = STRING_TOKEN(STR_BATTERY_THRESHOLD_RANGE_ERROR),
+                  ideqval FeaturesData.BatteryProfile == BATTERY_PROFILE_CUSTOM AND
                   ideqid FeaturesData.BatteryConfig.StartThreshold > FeaturesData.BatteryConfig.StopThreshold
               endif
       endnumeric;
+    endif;
     endif;
 
     disableif ideqval FeaturesData.ShowCpuThrottlingThreshold == 0;

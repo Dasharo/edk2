@@ -55,6 +55,62 @@ STATIC HII_VENDOR_DEVICE_PATH  mDasharoSystemFeaturesHiiVendorDevicePath = {
 };
 
 /**
+  Determine which battery profile matches the given charge thresholds.
+
+  The profile isn't stored separately, the thresholds are the only source of
+  truth (coreboot reads them from the BatteryConfig variable and programs the
+  EC).
+
+  @param[in] Config  Battery charge thresholds.
+
+  @retval Matching BATTERY_PROFILE_* value, BATTERY_PROFILE_CUSTOM if none.
+**/
+STATIC
+UINT8
+GetBatteryProfile (
+  IN CONST DASHARO_BATTERY_CONFIG  *Config
+  )
+{
+  if (Config->StartThreshold == DASHARO_BATTERY_STANDARD_START_THRESHOLD &&
+      Config->StopThreshold == DASHARO_BATTERY_STANDARD_STOP_THRESHOLD)
+    return BATTERY_PROFILE_STANDARD;
+
+  if (Config->StartThreshold == DASHARO_BATTERY_LONGEVITY_START_THRESHOLD &&
+      Config->StopThreshold == DASHARO_BATTERY_LONGEVITY_STOP_THRESHOLD)
+    return BATTERY_PROFILE_LONGEVITY;
+
+  return BATTERY_PROFILE_CUSTOM;
+}
+
+/**
+  Set the charge thresholds of a predefined battery profile. Thresholds are
+  left untouched for BATTERY_PROFILE_CUSTOM.
+
+  @param[in]     Profile  BATTERY_PROFILE_* value.
+  @param[in,out] Config   Battery charge thresholds to update.
+**/
+STATIC
+VOID
+ApplyBatteryProfile (
+  IN     UINT8                   Profile,
+  IN OUT DASHARO_BATTERY_CONFIG  *Config
+  )
+{
+  switch (Profile) {
+  case BATTERY_PROFILE_STANDARD:
+    Config->StartThreshold = DASHARO_BATTERY_STANDARD_START_THRESHOLD;
+    Config->StopThreshold = DASHARO_BATTERY_STANDARD_STOP_THRESHOLD;
+    break;
+  case BATTERY_PROFILE_LONGEVITY:
+    Config->StartThreshold = DASHARO_BATTERY_LONGEVITY_START_THRESHOLD;
+    Config->StopThreshold = DASHARO_BATTERY_LONGEVITY_STOP_THRESHOLD;
+    break;
+  default:
+    break;
+  }
+}
+
+/**
   This function uses the ACPI SDT protocol to locate an ACPI table.
   It is really only useful for finding tables that only have a single instance,
   e.g. FADT, FACS, MADT, etc.  It is not good for locating SSDT, etc.
@@ -327,6 +383,8 @@ DasharoSystemFeaturesUiLibConstructor (
 
 #undef LOAD_VAR
 
+  PRIVATE_DATA(BatteryProfile) = GetBatteryProfile (&PRIVATE_DATA(BatteryConfig));
+
   PRIVATE_DATA(CpuThrottlingThreshold) =
     FixedPcdGet8(PcdCpuMaxTemperature) - PRIVATE_DATA(CpuThrottlingOffset);
 
@@ -558,6 +616,10 @@ DasharoSystemFeaturesRouteConfig (
 
   // Can use CompareMem() on structures instead of a per-field comparison as
   // long as they are packed.
+  // Thresholds of a predefined profile override whatever values the hidden
+  // numeric inputs hold.
+  ApplyBatteryProfile (DasharoFeaturesData.BatteryProfile, &DasharoFeaturesData.BatteryConfig);
+
 #define STORE_VAR_IF(var, field, cond) do {                        \
     if (cond) {                                                    \
       if (CompareMem (&Private->DasharoFeaturesData.field,         \
@@ -748,6 +810,14 @@ DasharoSystemFeaturesCallback (
         break;
       case BATTERY_STOP_THRESHOLD_QUESTION_ID:
         Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_BATTERY_CONFIG).Battery.StopThreshold;
+        break;
+      case BATTERY_PROFILE_QUESTION_ID:
+        {
+          DASHARO_BATTERY_CONFIG  BatteryConfig;
+
+          BatteryConfig = DasharoGetVariableDefault (DASHARO_VAR_BATTERY_CONFIG).Battery;
+          Value->u8 = GetBatteryProfile (&BatteryConfig);
+        }
         break;
       case INTEL_ME_MODE_QUESTION_ID:
         Value->u8 = DasharoGetVariableDefault (DASHARO_VAR_ME_MODE).Uint8;

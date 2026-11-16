@@ -84,6 +84,18 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // Capacity of DASHARO_CUSTOM_FAN_CURVE. Raise to allow longer curves
 #define DASHARO_FAN_CURVE_MAX_POINTS           4
 
+#define DASHARO_BATTERY_PROFILE_STANDARD       0
+#define DASHARO_BATTERY_PROFILE_LONGEVITY      1
+#define DASHARO_BATTERY_PROFILE_CUSTOM         2
+
+//
+// Charge thresholds (in percent) applied by the battery profiles.
+//
+#define DASHARO_BATTERY_STANDARD_START_THRESHOLD   95
+#define DASHARO_BATTERY_STANDARD_STOP_THRESHOLD    98
+#define DASHARO_BATTERY_LONGEVITY_START_THRESHOLD  60
+#define DASHARO_BATTERY_LONGEVITY_STOP_THRESHOLD   80
+
 #define DASHARO_ME_MODE_ENABLE                 0
 #define DASHARO_ME_MODE_DISABLE_HECI           1
 #define DASHARO_ME_MODE_DISABLE_HAP            2
