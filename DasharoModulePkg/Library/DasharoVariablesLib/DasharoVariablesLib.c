@@ -117,8 +117,8 @@ GetVariableInfo (
   ExtraAttrs = 0;
 
   if (StrCmp (VarName, DASHARO_VAR_BATTERY_CONFIG) == 0) {
-    Data.Battery.StartThreshold = 95;
-    Data.Battery.StopThreshold = 98;
+    Data.Battery.StartThreshold = DASHARO_BATTERY_STANDARD_START_THRESHOLD;
+    Data.Battery.StopThreshold = DASHARO_BATTERY_STANDARD_STOP_THRESHOLD;
     Size = sizeof (Data.Battery);
   } else if (StrCmp (VarName, DASHARO_VAR_BOOT_MANAGER_ENABLED) == 0) {
     Data.Boolean = TRUE;
