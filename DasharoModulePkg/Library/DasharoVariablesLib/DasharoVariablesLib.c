@@ -146,9 +146,20 @@ GetVariableInfo (
   } else if (StrCmp (VarName, DASHARO_VAR_ENABLE_WIFI_BT) == 0) {
     Data.Boolean = TRUE;
     Size = sizeof (Data.Boolean);
-  } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION) == 0 ||
-             StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION2) == 0) {
+  } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION) == 0) {
     Data.Uint8 = DASHARO_FAN_CURVE_OPTION_SILENT;
+    Size = sizeof (Data.Uint8);
+  } else if (StrCmp (VarName, DASHARO_VAR_FAN_CURVE_OPTION2) == 0) {
+    Size = sizeof (Data.Uint8);
+    if (EFI_ERROR (gRT->GetVariable (
+                          DASHARO_VAR_FAN_CURVE_OPTION,
+                          &gDasharoSystemFeaturesGuid,
+                          NULL,
+                          &Size,
+                          &Data.Uint8
+                          ))) {
+      Data.Uint8 = DASHARO_FAN_CURVE_OPTION_SILENT;
+    }
     Size = sizeof (Data.Uint8);
   } else if (StrCmp (VarName, DASHARO_VAR_IOMMU_CONFIG) == 0) {
     Data.Iommu.IommuEnable = FixedPcdGetBool (PcdIommuDefaultState);
