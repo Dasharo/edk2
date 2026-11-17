@@ -187,7 +187,7 @@
 #string STR_BATTERY_PROFILE_PROMPT    #language en-US "Battery Charge Profile"
 #string STR_BATTERY_PROFILE_HELP      #language en-US "Selects the battery charging thresholds.\n\n"
                                                       "Standard - charge starts below 95% and stops at 98%.\n"
-                                                      "Longevity - charge starts below 60% and stops at 80%. Recommended if the device is mostly used when connected to an AC adapter, as keeping the battery at a high charge level accelerates wear and swelling.\n"
+                                                      "Longevity - charge starts below 78% and stops at 80%. Recommended if the device is mostly used when connected to an AC adapter, as keeping the battery at a high charge level accelerates wear and swelling.\n"
                                                       "Custom - set the start and stop thresholds manually."
 #string STR_BATTERY_PROFILE_STANDARD    #language en-US "Standard"
 #string STR_BATTERY_PROFILE_LONGEVITY   #language en-US "Longevity"
