@@ -614,12 +614,12 @@ DasharoSystemFeaturesRouteConfig (
       return EFI_INVALID_PARAMETER;
   }
 
-  // Can use CompareMem() on structures instead of a per-field comparison as
-  // long as they are packed.
   // Thresholds of a predefined profile override whatever values the hidden
   // numeric inputs hold.
   ApplyBatteryProfile (DasharoFeaturesData.BatteryProfile, &DasharoFeaturesData.BatteryConfig);
 
+  // Can use CompareMem() on structures instead of a per-field comparison as
+  // long as they are packed.
 #define STORE_VAR_IF(var, field, cond) do {                        \
     if (cond) {                                                    \
       if (CompareMem (&Private->DasharoFeaturesData.field,         \

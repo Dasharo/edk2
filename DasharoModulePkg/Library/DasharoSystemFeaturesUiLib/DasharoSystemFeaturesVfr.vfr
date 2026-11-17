@@ -896,6 +896,12 @@ formset
             option text = STRING_TOKEN(STR_BATTERY_PROFILE_CUSTOM), value = BATTERY_PROFILE_CUSTOM, flags = 0;
       endoneof;
 
+    //
+    // nosubmitif is evaluated for suppressed questions too, so it's limited to
+    // the Custom profile. Otherwise invalid stored thresholds would block
+    // saving a predefined profile with an error about hidden options. The
+    // thresholds of a predefined profile replace these values on save anyway.
+    //
     suppressif NOT ideqval FeaturesData.BatteryProfile == BATTERY_PROFILE_CUSTOM;
       numeric varid   = FeaturesData.BatteryConfig.StartThreshold,
               questionid = BATTERY_START_THRESHOLD_QUESTION_ID,
