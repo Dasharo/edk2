@@ -9,7 +9,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         files: ^DasharoModulePkg/
@@ -27,14 +27,14 @@ repos:
         files: ^DasharoModulePkg/
 
   - repo: https://github.com/talos-systems/conform
-    rev: v0.1.0-alpha.27
+    rev: v0.1.0-alpha.31
     hooks:
       - id: conform
         stages:
           - commit-msg
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
+    rev: v2.4.3
     hooks:
       - id: codespell
         files: ^DasharoModulePkg/
