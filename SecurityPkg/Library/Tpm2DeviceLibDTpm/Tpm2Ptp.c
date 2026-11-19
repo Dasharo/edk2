@@ -227,8 +227,6 @@ PtpAmdCrbTpmCommand (
   UINT8       RetryCnt;
   UINT64      CmdBuf;
   UINT64      RespBuf;
-  TPM2_COMMAND_HEADER *TpmHdr;
-  TPM_CC      TpmCommandCode;
 
   if (SizeIn > SIZE_16KB) {
     DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Input buffer bigger than TPM2 buffer!\n"));
@@ -300,26 +298,16 @@ PtpAmdCrbTpmCommand (
 
   SetMem ((VOID *)(UINTN)RespBuf, SIZE_16KB, 0x0);
 
-  TpmHdr = (TPM2_COMMAND_HEADER *)(UINTN)CmdBuf;
-  TpmCommandCode = SwapBytes32 (TpmHdr->commandCode);
-
   MmioWrite8 ((UINTN)&CrbReg->CrbControlStart, PTP_CRB_CONTROL_START);
-  if ((TpmCommandCode == TPM_CC_CreatePrimary) ||
-      (TpmCommandCode == TPM_CC_Create)) {
-    Status = PtpCrbWaitRegisterBits (
-              &CrbReg->CrbControlStart,
-              0,
-              PTP_CRB_CONTROL_START,
-              PTP_TIMEOUT_MAX
-              );
-  } else {
-    Status = PtpCrbWaitRegisterBits (
-              &CrbReg->CrbControlStart,
-              0,
-              PTP_CRB_CONTROL_START,
-              PTP_TIMEOUT_B
-              );
-  }
+  //
+  // The AMD fTPM can take tens of seconds for any command
+  //
+  Status = PtpCrbWaitRegisterBits (
+            &CrbReg->CrbControlStart,
+            0,
+            PTP_CRB_CONTROL_START,
+            PTP_TIMEOUT_MAX
+            );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "PtpAmdCrbTpmCommand - Command execution failure!\n"));
     goto AmdCrbExit;
