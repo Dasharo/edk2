@@ -56,7 +56,15 @@ Tpm2IsPtpPresence (
 {
   UINT8  RegRead;
 
-  RegRead = MmioRead8 ((UINTN)Reg);
+  //
+  // The AMD fTPM only implements the CRB control area
+  //
+  if (GetCachedPtpInterface () == Tpm2PtpInterfaceAmdCrb) {
+    RegRead = MmioRead8 ((UINTN)&((PTP_CRB_REGISTERS *)Reg)->CrbControlStatus);
+  } else {
+    RegRead = MmioRead8 ((UINTN)Reg);
+  }
+
   if (RegRead == 0xFF) {
     //
     // No TPM chip
