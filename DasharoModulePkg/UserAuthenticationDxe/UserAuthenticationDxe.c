@@ -53,6 +53,9 @@ GetUserInput (
   EFI_INPUT_KEY                InputKey;
   UINTN                        InputLength;
   CHAR16                       *Mask;
+  CHAR16                       *Separator;
+  UINTN                        PopUpWidth;
+  UINTN                        PrevPopUpWidth;
 
   UserInput[0] = 0;
   Mask = AllocateZeroPool ((UserInputMaxLen + 1) * sizeof(CHAR16));
@@ -60,17 +63,32 @@ GetUserInput (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  InputLength = 0;
+  InputLength    = 0;
+  Separator      = L"--------------------------------";
+  PrevPopUpWidth = 0;
 
   while (TRUE) {
     if (InputLength < UserInputMaxLen) {
       Mask[InputLength] = L'_';
     }
+
+    //
+    // The popup is as wide as its longest line, so it shrinks when a long
+    // mask gets shorter. CreatePopUp() does not erase the old, wider popup,
+    // so clear the screen before drawing a narrower one.
+    //
+    PopUpWidth = MAX (StrLen (PopUpString), StrLen (Separator));
+    PopUpWidth = MAX (PopUpWidth, StrLen (Mask));
+    if (PopUpWidth < PrevPopUpWidth) {
+      gST->ConOut->ClearScreen (gST->ConOut);
+    }
+    PrevPopUpWidth = PopUpWidth;
+
     CreatePopUp (
       EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
       &InputKey,
       PopUpString,
-      L"--------------------------------",
+      Separator,
       Mask,
       NULL
       );
