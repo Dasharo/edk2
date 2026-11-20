@@ -124,6 +124,8 @@
   DEFINE CAPSULE_MAIN_FW_GUID           =
   DEFINE CAPSULE_EC_FW_GUID             =
   DEFINE CAPSULES_V2                    = FALSE
+  DEFINE CUSTOM_COLOR_THEME_ENABLE      = FALSE
+  DEFINE COLOR_THEME_FILE               = DasharoPayloadPkg/DasharoColorTheme.dsc.inc
 
   DEFINE AMD_GOP_DRIVER_GUID    = 2C4CB22B-E0F8-4457-A238-576A3D0201D6
   DEFINE AMD_GOP_VBIOS_GUID     = C38A9A34-2005-496E-94F2-8E1020B8FC6E
@@ -555,6 +557,7 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdeModulePkgTokenSpaceGuid.PcdInstallAcpiSdtProtocol|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdPs2KbdExtendedVerification|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdSupportUpdateCapsuleReset|$(CAPSULE_SUPPORT)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteSupported|$(CUSTOM_COLOR_THEME_ENABLE)
 
 [PcdsFixedAtBuild]
   # UEFI spec: Minimal value is 0x8000!
@@ -748,7 +751,9 @@ OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrd
   gEfiMdePkgTokenSpaceGuid.PcdFSBClock|1000000000
 !endif
 
-!include DasharoPayloadPkg/DasharoColorTheme.dsc.inc
+!if $(CUSTOM_COLOR_THEME_ENABLE) == TRUE
+!include $(COLOR_THEME_FILE)
+!endif
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE

@@ -65,6 +65,7 @@
   gEdkiiFormBrowserExProtocolGuid               ## CONSUMES
 
 [FeaturePcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConsoleCustomPaletteSupported   ## CONSUMES
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdUefiVariableDefaultPlatformLangCodes  ## CONSUMES
