@@ -1663,8 +1663,8 @@ AreImageBtgKeysCompatible (
   UINT8       *CurrentOemKeyHash, *UpdatedOemKeyHash;
   BOOLEAN     KeysCompatible;
 
-  // Platform is unfused and unlocked, so different BtG key doesn't matter.
-  if (!IsPlatformFused () && !IsDescriptorLocked())
+  // Platform is unfused and ME is unlocked, so different BtG key doesn't matter.
+  if (!IsPlatformFused () && (!IsDescriptorLocked () || IsMeRegionWriteable ()))
     return TRUE;
 
   // Boot Guard is not currently deployed.
