@@ -4,6 +4,9 @@
 
 version: '3'
 
+includes:
+  upstream: tasks/upstream.yml
+
 vars:
   REPO_ROOT:
     sh: git rev-parse --show-toplevel
@@ -82,3 +85,9 @@ tasks:
     cmds:
       - rm -rf coreboot
       - '{{if .HOSTPATH}}rm -rf {{.HOSTPATH}}{{end}}'
+
+  ci:upstream:pull:
+    desc: Update the master branch containing upstream state
+    dir:  '{{.REPO_ROOT}}'
+    cmds:
+      - task: upstream:pull
