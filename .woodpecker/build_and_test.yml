@@ -7,6 +7,8 @@ when:
     event: [pull_request, push, manual]
   - branch: woodpecker-build-test-ci
     event: [manual]
+  - event: push
+    branch: rebase/dasharo-rebased/rebased/**
 
 labels:
   network: ${NETWORK}
