@@ -22,6 +22,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define DASHARO_VAR_CUSTOM_FAN_CURVE              L"CustomFanCurve"
 #define DASHARO_VAR_DESCRIPTOR_WRITEABLE          L"DescriptorWriteable"
 #define DASHARO_VAR_ME_REGION_WRITEABLE           L"MeRegionWriteable"
+#define DASHARO_VAR_DGPU_PRESENT                  L"DGPUPresent"
 #define DASHARO_VAR_DGPU_STATE                    L"DGPUState"
 #define DASHARO_VAR_DISK_CAPSULES_BOOT            L"DiskCapsulesBoot"
 #define DASHARO_VAR_ENABLE_CAMERA                 L"EnableCamera"
