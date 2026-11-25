@@ -186,6 +186,36 @@ WriteNewCapsuleResultVariable (
   return Status;
 }
 
+//
+// Set by DxeCapsuleProcessLib.c while it processes a capsule loaded from disk.
+//
+extern BOOLEAN  mProcessingCapsuleOnDisk;
+
+/**
+  Check whether the result of processing a capsule should be recorded in a
+  Capsule#### variable.
+
+  A capsule passed to UpdateCapsule() without CAPSULE_FLAGS_PERSIST_ACROSS_RESET
+  is processed right away and its status is returned to the caller, so no
+  variable is needed. A capsule loaded from disk doesn't need the flag to
+  survive a reset, but the OS can only learn its result from the variable, so
+  record it regardless of the flag.
+
+  @param[in] CapsuleHeader  The capsule image header
+
+  @retval TRUE   Record the result.
+  @retval FALSE  Don't record the result.
+**/
+STATIC
+BOOLEAN
+ShouldRecordCapsuleResult (
+  IN EFI_CAPSULE_HEADER  *CapsuleHeader
+  )
+{
+  return ((CapsuleHeader->Flags & CAPSULE_FLAGS_PERSIST_ACROSS_RESET) != 0) ||
+         mProcessingCapsuleOnDisk;
+}
+
 /**
   Record capsule status variable and to local cache.
 
@@ -212,7 +242,7 @@ RecordCapsuleStatusVariable (
   CapsuleResultVariable.CapsuleStatus = CapsuleStatus;
 
   Status = EFI_SUCCESS;
-  if ((CapsuleHeader->Flags & CAPSULE_FLAGS_PERSIST_ACROSS_RESET) != 0) {
+  if (ShouldRecordCapsuleResult (CapsuleHeader)) {
     Status = WriteNewCapsuleResultVariable (&CapsuleResultVariable, sizeof (CapsuleResultVariable));
   }
 
@@ -303,7 +333,7 @@ RecordFmpCapsuleStatusVariable (
   }
 
   Status = EFI_SUCCESS;
-  if ((CapsuleHeader->Flags & CAPSULE_FLAGS_PERSIST_ACROSS_RESET) != 0) {
+  if (ShouldRecordCapsuleResult (CapsuleHeader)) {
     Status = WriteNewCapsuleResultVariable (CapsuleResultVariable, CapsuleResultVariableSize);
   }
 

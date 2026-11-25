@@ -150,6 +150,14 @@ VOID        **mCapsulePtr;
 CHAR16      **mCapsuleNamePtr;
 EFI_STATUS  *mCapsuleStatusArray;
 UINT32      mCapsuleTotalNumber;
+//
+// Which of the capsules in mCapsulePtr were loaded from disk, and whether the
+// capsule being processed now is one of them. On-disk capsules don't need
+// CAPSULE_FLAGS_PERSIST_ACROSS_RESET, but their results still have to be
+// recorded, see RecordCapsuleStatusVariable().
+//
+BOOLEAN     *mCapsuleOnDisk;
+BOOLEAN     mProcessingCapsuleOnDisk = FALSE;
 
 STATIC CAPSULE_TRANSFORMATION_PROTOCOL  *CapsuleTransformation;
 
@@ -352,6 +360,7 @@ InitCapsulePtr (
   EFI_HANDLE            EspFsHandle;
   UINT16                LoadOptionNumber;
   VOID                  *Tmp;
+  BOOLEAN               OnDisk;
 
   CapsuleNameNumber             = 0;
   CapsuleNameTotalNumber        = 0;
@@ -436,6 +445,15 @@ InitCapsulePtr (
 
   SetMemN (mCapsuleStatusArray, sizeof (EFI_STATUS) * mCapsuleTotalNumber, EFI_NOT_READY);
 
+  //
+  // Not fatal: without it the results of on-disk capsules without
+  // CAPSULE_FLAGS_PERSIST_ACROSS_RESET just aren't recorded.
+  //
+  mCapsuleOnDisk = (BOOLEAN *)AllocateZeroPool (sizeof (BOOLEAN) * mCapsuleTotalNumber);
+  if (mCapsuleOnDisk == NULL) {
+    DEBUG ((DEBUG_ERROR, "Allocate mCapsuleOnDisk fail!\n"));
+  }
+
   CapsuleNameCapsulePtr =  (VOID **)AllocateZeroPool (sizeof (VOID *) * CapsuleNameCapsuleTotalNumber);
   if (CapsuleNameCapsulePtr == NULL) {
     DEBUG ((DEBUG_ERROR, "Allocate CapsuleNameCapsulePtr fail!\n"));
@@ -465,6 +483,10 @@ InitCapsulePtr (
   }
 
   for (Index2 = 0; Index2 < CapsuleOnDiskNum; Index2++) {
+    if (mCapsuleOnDisk != NULL) {
+      mCapsuleOnDisk[Index] = TRUE;
+    }
+
     mCapsulePtr[Index++] = CapsuleOnDiskBuf[Index2].ImageAddress;
   }
 
@@ -525,6 +547,12 @@ InitCapsulePtr (
       Tmp                 = mCapsulePtr[Index2];
       mCapsulePtr[Index2] = mCapsulePtr[Index];
       mCapsulePtr[Index]  = Tmp;
+
+      if (mCapsuleOnDisk != NULL) {
+        OnDisk                 = mCapsuleOnDisk[Index2];
+        mCapsuleOnDisk[Index2] = mCapsuleOnDisk[Index];
+        mCapsuleOnDisk[Index]  = OnDisk;
+      }
 
       if (mCapsuleNamePtr != NULL) {
         // Capsule names are in 1-to-1 correspondence with capsules, so keep
@@ -762,7 +790,8 @@ ProcessTheseCapsules (
     CapsuleHeader = (EFI_CAPSULE_HEADER *)mCapsulePtr[Index];
     CapsuleName   = (mCapsuleNamePtr == NULL) ? NULL : mCapsuleNamePtr[Index];
     if (CompareGuid (&CapsuleHeader->CapsuleGuid, &gWindowsUxCapsuleGuid)) {
-      CapsuleResult = ReportAddCapsule (Report, Index, CapsuleHeader);
+      mProcessingCapsuleOnDisk = (mCapsuleOnDisk != NULL) && mCapsuleOnDisk[Index];
+      CapsuleResult            = ReportAddCapsule (Report, Index, CapsuleHeader);
 
       DEBUG ((DEBUG_INFO, "ProcessThisCapsuleImage (Ux) - 0x%x\n", CapsuleHeader));
       DEBUG ((DEBUG_INFO, "Display logo capsule is found.\n"));
@@ -774,6 +803,8 @@ ProcessTheseCapsules (
       break;
     }
   }
+
+  mProcessingCapsuleOnDisk = FALSE;
 
   DEBUG ((DEBUG_INFO, "Updating the firmware ......\n"));
 
@@ -789,6 +820,8 @@ ProcessTheseCapsules (
     CapsuleHeader = (EFI_CAPSULE_HEADER *)mCapsulePtr[Index];
     CapsuleName   = (mCapsuleNamePtr == NULL) ? NULL : mCapsuleNamePtr[Index];
     if (!CompareGuid (&CapsuleHeader->CapsuleGuid, &gWindowsUxCapsuleGuid)) {
+      mProcessingCapsuleOnDisk = (mCapsuleOnDisk != NULL) && mCapsuleOnDisk[Index];
+
       //
       // Call capsule library to process capsule image.
       //
@@ -877,6 +910,8 @@ ProcessTheseCapsules (
       }
     }
   }
+
+  mProcessingCapsuleOnDisk = FALSE;
 
   Status = gBS->LocateProtocol (&gEsrtManagementProtocolGuid, NULL, (VOID **)&EsrtManagement);
   //
