@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 when:
-  - branch: [dasharo,dasharo-stable202602]
+  - branch: [dasharo]
     event: [pull_request, push, manual]
   - branch: woodpecker-build-test-ci
     event: [manual]
   - event: push
-    branch: rebase/dasharo-rebased/rebased/**
+    branch: rebase/dasharo/rebased/**
 
 labels:
   network: ${NETWORK}
